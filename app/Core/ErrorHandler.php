@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Core;
@@ -63,4 +62,3 @@ class ErrorHandler
         file_put_contents($logPath, $message, FILE_APPEND);
     }
 }
-

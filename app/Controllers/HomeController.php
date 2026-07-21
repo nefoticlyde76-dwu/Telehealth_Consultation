@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Controllers;
@@ -12,4 +11,3 @@ class HomeController extends Controller
         echo 'TeleHealth Consultation System - Home';
     }
 }
-

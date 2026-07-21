@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Core;
@@ -57,4 +56,3 @@ class Router
         return '#^' . $pattern . '$#';
     }
 }
-

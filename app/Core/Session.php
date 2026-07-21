@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Core;
@@ -71,4 +70,3 @@ class Session
         session_regenerate_id(true);
     }
 }
-

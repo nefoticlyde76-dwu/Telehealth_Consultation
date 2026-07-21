@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Core;
@@ -12,4 +11,3 @@ class Model
         $this->db = Database::getInstance();
     }
 }
-

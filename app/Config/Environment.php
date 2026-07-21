@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Config;
@@ -44,4 +43,3 @@ class Environment
         return $value;
     }
 }
-

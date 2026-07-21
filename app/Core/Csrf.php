@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Core;
@@ -28,4 +27,3 @@ class Csrf
         return hash_equals($storedToken, $token);
     }
 }
-

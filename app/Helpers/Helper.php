@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Helpers;
@@ -21,4 +20,3 @@ class Helper
         return rtrim($_ENV['APP_URL'], '/') . '/' . ltrim($path, '/');
     }
 }
-

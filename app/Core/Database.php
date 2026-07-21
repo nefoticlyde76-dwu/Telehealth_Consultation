@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Core;
@@ -38,4 +37,3 @@ class Database
         return self::$instance;
     }
 }
-
