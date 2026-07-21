@@ -2,9 +2,18 @@
 
 namespace App\Core;
 
+use App\Config\Environment;
+
 class Router
 {
     private array $routes = [];
+    private string $basePath;
+
+    public function __construct()
+    {
+        $appUrl = Environment::get('APP_URL', 'http://localhost');
+        $this->basePath = parse_url($appUrl, PHP_URL_PATH) ?: '';
+    }
 
     public function add(string $method, string $path, array $handler): void
     {
@@ -29,6 +38,16 @@ class Router
     {
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+        // Strip base path from request URI
+        if ($this->basePath && strpos($requestUri, $this->basePath) === 0) {
+            $requestUri = substr($requestUri, strlen($this->basePath));
+        }
+
+        // Ensure the URI starts with '/' and is at least '/'
+        if (empty($requestUri) || $requestUri[0] !== '/') {
+            $requestUri = '/' . $requestUri;
+        }
 
         foreach ($this->routes as $route) {
             if ($route['method'] !== $requestMethod) {
