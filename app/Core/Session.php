@@ -10,13 +10,21 @@ class Session
     {
         if (session_status() === PHP_SESSION_NONE) {
             $config = AppConfig::getConfig();
+            $isSecure = parse_url($config['url'], PHP_URL_SCHEME) === 'https';
+            $sessionPath = dirname(__DIR__, 2) . '/tmp/sessions';
+
+            if (!is_dir($sessionPath)) {
+                mkdir($sessionPath, 0775, true);
+            }
+
+            session_save_path($sessionPath);
 
             session_name($config['session']['name']);
             session_set_cookie_params([
                 'lifetime' => $config['session']['lifetime'],
                 'path' => '/',
                 'domain' => '',
-                'secure' => false,
+                'secure' => $isSecure,
                 'httponly' => true,
                 'samesite' => 'Strict',
             ]);
@@ -68,5 +76,26 @@ class Session
     public static function regenerate(): void
     {
         session_regenerate_id(true);
+    }
+
+    public static function flash(string $key, mixed $value): void
+    {
+        $_SESSION['_flash'][$key] = $value;
+    }
+
+    public static function getFlash(string $key, mixed $default = null): mixed
+    {
+        if (!isset($_SESSION['_flash'][$key])) {
+            return $default;
+        }
+
+        $value = $_SESSION['_flash'][$key];
+        unset($_SESSION['_flash'][$key]);
+
+        if (empty($_SESSION['_flash'])) {
+            unset($_SESSION['_flash']);
+        }
+
+        return $value;
     }
 }

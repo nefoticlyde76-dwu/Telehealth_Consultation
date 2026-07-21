@@ -1,0 +1,248 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Core\Controller;
+use App\Core\Csrf;
+use App\Core\Session;
+use App\Helpers\Helper;
+use App\Models\User;
+use App\Services\AuthService;
+
+class AuthController extends Controller
+{
+    public function login(): void
+    {
+        $errors = [];
+        $oldInput = ['email' => ''];
+
+        if (AuthService::isAuthenticated()) {
+            $this->redirectAuthenticatedUser();
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+            $password = (string) ($_POST['password'] ?? '');
+            $oldInput['email'] = $email;
+            $errors = $this->validateLoginRequest($email, $password, (string) ($_POST['_token'] ?? ''));
+
+            if (empty($errors)) {
+                try {
+                    $user = AuthService::authenticate($email, $password);
+                    if ($user && $user->getRole()) {
+                        AuthService::login($user->id, $user->getRole());
+                        Helper::redirect(AuthService::getRoleRedirectUrl($user->getRole()));
+                        return;
+                    }
+
+                    $errors[] = 'Invalid email, password, or account status.';
+                } catch (\Throwable $exception) {
+                    error_log('Authentication error: ' . $exception->getMessage());
+                    $errors[] = 'Authentication is temporarily unavailable. Please try again later.';
+                }
+            }
+        }
+
+        $this->render('auth/login', [
+            'title' => 'Login | TeleHealth Consultation System',
+            'csrfToken' => Csrf::generate(),
+            'errors' => $errors,
+            'oldInput' => $oldInput,
+            'statusMessage' => Session::getFlash('status'),
+        ]);
+    }
+
+    public function register(): void
+    {
+        $errors = [];
+        $oldInput = [
+            'full_name' => '',
+            'email' => '',
+            'dob' => '',
+            'gender' => '',
+            'address' => '',
+        ];
+
+        if (AuthService::isAuthenticated()) {
+            $this->redirectAuthenticatedUser();
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $formData = $this->getRegistrationFormData();
+            $oldInput = $formData;
+            $errors = $this->validateRegistrationRequest(
+                $formData,
+                (string) ($_POST['password'] ?? ''),
+                (string) ($_POST['confirm_password'] ?? ''),
+                (string) ($_POST['_token'] ?? ''),
+                isset($_POST['terms'])
+            );
+
+            if (empty($errors)) {
+                try {
+                    $user = AuthService::register(array_merge($formData, [
+                        'password' => (string) $_POST['password'],
+                    ]));
+
+                    if ($user && $user->getRole()) {
+                        AuthService::login($user->id, $user->getRole());
+                        Helper::redirect(AuthService::getRoleRedirectUrl($user->getRole()));
+                        return;
+                    }
+
+                    $errors[] = 'Registration failed. Please review your information and try again.';
+                } catch (\Throwable $exception) {
+                    error_log('Registration error: ' . $exception->getMessage());
+                    $errors[] = 'Registration is temporarily unavailable. Please try again later.';
+                }
+            }
+        }
+
+        $this->render('auth/register', [
+            'title' => 'Register | TeleHealth Consultation System',
+            'csrfToken' => Csrf::generate(),
+            'errors' => $errors,
+            'oldInput' => $oldInput,
+        ]);
+    }
+
+    public function logout(): void
+    {
+        if (!Csrf::verify((string) ($_POST['_token'] ?? ''))) {
+            Session::flash('status', [
+                'type' => 'danger',
+                'message' => 'Unable to complete logout because the request could not be verified.',
+            ]);
+            Helper::redirect('/');
+        }
+
+        AuthService::logout();
+        Session::flash('status', [
+            'type' => 'success',
+            'message' => 'You have been logged out securely.',
+        ]);
+        Helper::redirect('/');
+    }
+
+    private function redirectAuthenticatedUser(): void
+    {
+        $role = AuthService::getUserRole();
+        Helper::redirect(AuthService::getRoleRedirectUrl((string) $role));
+    }
+
+    private function validateLoginRequest(string $email, string $password, string $csrfToken): array
+    {
+        $errors = [];
+
+        if (!Csrf::verify($csrfToken)) {
+            $errors[] = 'Your session security token is invalid. Please refresh the page and try again.';
+        }
+
+        if ($email === '') {
+            $errors[] = 'Email address is required.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Please provide a valid email address.';
+        }
+
+        if ($password === '') {
+            $errors[] = 'Password is required.';
+        }
+
+        return $errors;
+    }
+
+    private function getRegistrationFormData(): array
+    {
+        return [
+            'full_name' => trim((string) ($_POST['full_name'] ?? '')),
+            'email' => strtolower(trim((string) ($_POST['email'] ?? ''))),
+            'dob' => trim((string) ($_POST['dob'] ?? '')),
+            'gender' => trim((string) ($_POST['gender'] ?? '')),
+            'address' => trim((string) ($_POST['address'] ?? '')),
+        ];
+    }
+
+    private function validateRegistrationRequest(
+        array $formData,
+        string $password,
+        string $confirmPassword,
+        string $csrfToken,
+        bool $acceptedTerms
+    ): array {
+        $errors = [];
+        $allowedGenders = ['male', 'female', 'other'];
+
+        if (!Csrf::verify($csrfToken)) {
+            $errors[] = 'Your session security token is invalid. Please refresh the page and try again.';
+        }
+
+        if ($formData['full_name'] === '') {
+            $errors[] = 'Full name is required.';
+        } elseif (mb_strlen($formData['full_name']) > 255) {
+            $errors[] = 'Full name must be 255 characters or fewer.';
+        }
+
+        if ($formData['email'] === '') {
+            $errors[] = 'Email address is required.';
+        } elseif (!filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Please provide a valid email address.';
+        } else {
+            try {
+                if (User::findByEmail($formData['email'])) {
+                    $errors[] = 'An account with this email address already exists.';
+                }
+            } catch (\Throwable $exception) {
+                error_log('Registration validation error: ' . $exception->getMessage());
+                $errors[] = 'Registration is temporarily unavailable. Please try again later.';
+            }
+        }
+
+        if ($password === '') {
+            $errors[] = 'Password is required.';
+        } elseif (!$this->isStrongPassword($password)) {
+            $errors[] = 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.';
+        }
+
+        if ($confirmPassword === '') {
+            $errors[] = 'Please confirm your password.';
+        } elseif ($password !== $confirmPassword) {
+            $errors[] = 'Passwords do not match.';
+        }
+
+        if ($formData['dob'] !== '') {
+            $dob = \DateTime::createFromFormat('Y-m-d', $formData['dob']);
+            $isValidDate = $dob && $dob->format('Y-m-d') === $formData['dob'];
+
+            if (!$isValidDate) {
+                $errors[] = 'Date of birth must be a valid date.';
+            } elseif ($dob > new \DateTime('today')) {
+                $errors[] = 'Date of birth cannot be in the future.';
+            }
+        }
+
+        if ($formData['gender'] !== '' && !in_array($formData['gender'], $allowedGenders, true)) {
+            $errors[] = 'Please select a valid gender option.';
+        }
+
+        if (mb_strlen($formData['address']) > 1000) {
+            $errors[] = 'Address must be 1000 characters or fewer.';
+        }
+
+        if (!$acceptedTerms) {
+            $errors[] = 'You must accept the terms and privacy notice to continue.';
+        }
+
+        return $errors;
+    }
+
+    private function isStrongPassword(string $password): bool
+    {
+        return strlen($password) >= 8
+            && preg_match('/[A-Z]/', $password)
+            && preg_match('/[a-z]/', $password)
+            && preg_match('/\d/', $password)
+            && preg_match('/[^A-Za-z0-9]/', $password);
+    }
+}

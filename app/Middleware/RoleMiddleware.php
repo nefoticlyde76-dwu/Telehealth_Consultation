@@ -3,6 +3,7 @@
 namespace App\Middleware;
 
 use App\Core\Session;
+use App\Helpers\Helper;
 
 class RoleMiddleware implements Middleware
 {
@@ -17,7 +18,11 @@ class RoleMiddleware implements Middleware
     {
         $userRole = Session::get('user_role');
 
-        if (!$userRole || !in_array($userRole, $this->allowedRoles)) {
+        if (!$userRole) {
+            Helper::redirect('/login');
+        }
+
+        if (!in_array($userRole, $this->allowedRoles, true)) {
             http_response_code(403);
             echo '403 Forbidden';
             exit;

@@ -15,23 +15,24 @@ class Router
         $this->basePath = parse_url($appUrl, PHP_URL_PATH) ?: '';
     }
 
-    public function add(string $method, string $path, array $handler): void
+    public function add(string $method, string $path, array $handler, array $middleware = []): void
     {
         $this->routes[] = [
             'method' => strtoupper($method),
             'path' => $path,
             'handler' => $handler,
+            'middleware' => $middleware,
         ];
     }
 
-    public function get(string $path, array $handler): void
+    public function get(string $path, array $handler, array $middleware = []): void
     {
-        $this->add('GET', $path, $handler);
+        $this->add('GET', $path, $handler, $middleware);
     }
 
-    public function post(string $path, array $handler): void
+    public function post(string $path, array $handler, array $middleware = []): void
     {
-        $this->add('POST', $path, $handler);
+        $this->add('POST', $path, $handler, $middleware);
     }
 
     public function dispatch(): void
@@ -57,6 +58,7 @@ class Router
             $pattern = $this->convertToRegex($route['path']);
             if (preg_match($pattern, $requestUri, $matches)) {
                 array_shift($matches);
+                $this->runMiddleware($route['middleware'] ?? []);
                 [$controller, $method] = $route['handler'];
 
                 $controllerInstance = new $controller();
@@ -73,5 +75,23 @@ class Router
     {
         $pattern = preg_replace('#\{([a-zA-Z0-9_]+)\}#', '(?P<$1>[^/]+)', $path);
         return '#^' . $pattern . '$#';
+    }
+
+    private function runMiddleware(array $middlewares): void
+    {
+        foreach ($middlewares as $middleware) {
+            if (is_string($middleware)) {
+                $middleware = new $middleware();
+            }
+
+            if (is_callable($middleware)) {
+                $middleware();
+                continue;
+            }
+
+            if (is_object($middleware) && method_exists($middleware, 'handle')) {
+                $middleware->handle();
+            }
+        }
     }
 }

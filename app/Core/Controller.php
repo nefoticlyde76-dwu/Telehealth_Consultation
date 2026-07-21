@@ -15,4 +15,14 @@ class Controller
             throw new \RuntimeException('View not found: ' . $view);
         }
     }
+
+    protected function render(string $view, array $data = [], string $layout = 'layouts/app'): void
+    {
+        extract($data);
+        ob_start();
+        $this->view($view, $data);
+        $content = ob_get_clean();
+
+        $this->view($layout, array_merge($data, ['content' => $content]));
+    }
 }
