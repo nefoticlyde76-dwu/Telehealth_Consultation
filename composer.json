@@ -1,0 +1,25 @@
+{
+  "name": "milnebay/telehealth-consultation-system",
+  "description": "Production-grade TeleHealth Consultation System for Milne Bay Provincial Health Authority",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Final Year Capstone Project Team"
+    }
+  ],
+  "require": {
+    "php": ">=8.0",
+    "ext-pdo": "*",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}
