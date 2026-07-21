@@ -97,6 +97,7 @@ copy .env.example .env
 ```
 
 4. Update `.env` with your local database credentials and application URL.
+   - For typical XAMPP local setups, use `DB_HOST=localhost`.
 5. Ensure Apache and MySQL are running in XAMPP.
 6. Import the migration file:
 
@@ -113,6 +114,9 @@ mysql -u root -p < database/migrations/001_initial_schema.sql
 - Patients, doctors, and administrators use the shared login page.
 - Successful login redirects each user to the correct role dashboard.
 - Logout is handled through a secure POST request with CSRF protection.
+- Default seeded administrator account after running the migration:
+  - Email: `admin@telehealth.local`
+  - Password: `admin123`
 
 ## Security Highlights
 
@@ -132,11 +136,12 @@ mysql -u root -p < database/migrations/001_initial_schema.sql
 - Browser smoke test of the landing page, login page, registration page, dashboard shell, and contact form flow
 - Verified contact form validation and successful inquiry logging
 - Verified graceful user-facing handling when database connectivity is unavailable
+- Verified administrator login and redirect after correcting the default admin seed password
 
 ## Known Environment Requirement
 
 - Full login and registration submission require an active MySQL service matching the local `.env` configuration.
-- During the latest verification, the application code handled database unavailability gracefully, but end-to-end authentication remained dependent on the local MySQL service being online.
+- For common XAMPP local environments, `DB_HOST=localhost` is the recommended database host value.
 
 ## Screenshots
 

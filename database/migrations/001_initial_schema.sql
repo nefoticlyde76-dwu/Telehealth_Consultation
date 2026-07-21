@@ -166,7 +166,7 @@ INSERT INTO roles (name) VALUES
 
 -- Insert default admin user (password: admin123)
 INSERT INTO users (role_id, full_name, email, password, status) VALUES
-(1, 'System Administrator', 'admin@telehealth.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'active');
+(1, 'System Administrator', 'admin@telehealth.local', '$2y$10$iCQxLpuu12uiBBNZWkiZi.aMA9K/VcbZsJrTANxUaamMdF5eq9PzK', 'active');
 
 -- Insert admin subclass record
 INSERT INTO admin (user_id, employee_id) VALUES
