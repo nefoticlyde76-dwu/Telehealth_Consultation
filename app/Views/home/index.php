@@ -1,75 +1,97 @@
 <?php require __DIR__ . '/../partials/public/navbar.php'; ?>
 
 <main id="home">
-  <section class="hero-section py-5 py-xl-6">
-    <div class="container">
-      <div class="row align-items-center g-5 content-row">
-        <div class="col-lg-6">
-          <div class="mb-4">
-            <?php
-            $brandVariant = 'hero';
-            $brandSubtitle = '';
-            $brandShowTitle = false;
-            $brandLink = \App\Helpers\Helper::url('/');
-            require __DIR__ . '/../partials/shared/brand_logo.php';
-            ?>
-          </div>
-          <span class="section-badge mb-3">
-            <i class="bi bi-shield-check"></i>
-            Secure TeleHealth Access For Milne Bay
-          </span>
-          <h1 class="display-5 fw-bold hero-title mb-4">
-            Professional digital consultations for safer, faster, and more connected patient care.
-          </h1>
-          <p class="hero-copy mb-4">
-            MBPHA TeleHealth helps patients, doctors, and administrators coordinate consultations
-            through a secure healthcare platform built for accessibility, trust, and operational clarity.
-          </p>
+  <section class="hero-section hero-section-agh py-5 py-xl-6">
+    <div class="container hero-shell position-relative">
+      <div class="row align-items-center g-4 g-xl-5 content-row">
+        <div class="col-xl-7">
+          <div class="hero-content-panel">
+            <div class="mb-4">
+              <?php
+              $brandVariant = 'hero';
+              $brandSubtitle = '';
+              $brandShowTitle = false;
+              $brandLink = \App\Helpers\Helper::url('/');
+              require __DIR__ . '/../partials/shared/brand_logo.php';
+              ?>
+            </div>
 
-          <div class="d-flex flex-column flex-sm-row gap-3 mb-4">
-            <a href="<?= \App\Helpers\Helper::url('/register') ?>" class="btn btn-primary btn-lg rounded-pill px-4">
-              Register As Patient
-            </a>
-            <a href="<?= \App\Helpers\Helper::url('/login') ?>" class="btn btn-outline-primary btn-lg rounded-pill px-4">
-              Secure Login
-            </a>
-          </div>
+            <span class="section-badge section-badge-inverse mb-3">
+              <i class="bi bi-buildings"></i>
+              Milne Bay Provincial Health Authority
+            </span>
 
-          <div class="row g-3 hero-highlights">
-            <div class="col-sm-4">
-              <div class="metric-card">
-                <strong>Protected</strong>
-                <span>Session and CSRF safeguards</span>
+            <h1 class="display-4 fw-bold hero-title text-white mb-4">
+              Connected digital healthcare for Alotau General Hospital and communities across Milne Bay Province.
+            </h1>
+
+            <p class="hero-copy hero-copy-light mb-4">
+              MBPHA TeleHealth brings secure access, trusted coordination, and professional digital consultation workflows
+              into one modern healthcare platform designed for patients, doctors, and administrators.
+            </p>
+
+            <div class="d-flex flex-column flex-sm-row gap-3 mb-4">
+              <a href="<?= \App\Helpers\Helper::url('/register') ?>" class="btn btn-success btn-lg rounded-pill px-4">
+                Register As Patient
+              </a>
+              <a href="<?= \App\Helpers\Helper::url('/login') ?>" class="btn btn-hero-outline btn-lg rounded-pill px-4">
+                Secure Login
+              </a>
+            </div>
+
+            <div class="row g-3 hero-highlights">
+              <div class="col-sm-4">
+                <div class="metric-card metric-card-hero">
+                  <strong>Trusted Access</strong>
+                  <span>Secure sessions and protected authentication flows</span>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="metric-card metric-card-hero">
+                  <strong>Hospital Identity</strong>
+                  <span>Aligned visually with MBPHA and Alotau General Hospital</span>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="metric-card metric-card-hero">
+                  <strong>Responsive Care</strong>
+                  <span>Modern healthcare access across desktop, tablet, and mobile</span>
+                </div>
               </div>
             </div>
-            <div class="col-sm-4">
-              <div class="metric-card">
-                <strong>Accessible</strong>
-                <span>Responsive patient-first experience</span>
-              </div>
-            </div>
-            <div class="col-sm-4">
-              <div class="metric-card">
-                <strong>Structured</strong>
-                <span>Role-based clinical workflows</span>
-              </div>
-            </div>
+
+            <a href="<?= \App\Helpers\Helper::url('/#about') ?>" class="hero-scroll-indicator mt-4">
+              <span class="hero-scroll-icon"><i class="bi bi-chevron-double-down"></i></span>
+              <span>Explore the platform</span>
+            </a>
           </div>
         </div>
 
-        <div class="col-lg-6">
-          <div class="hero-visual card border-0 overflow-hidden">
-            <div class="hero-visual-overlay"></div>
-            <img
-              src="https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=professional%20telehealth%20consultation%20platform%20illustration%2C%20diverse%20doctor%20and%20patient%20in%20secure%20video%20consultation%2C%20modern%20medical%20saas%20dashboard%2C%20premium%20healthcare%20interface%2C%20clean%20clinical%20lighting%2C%20realistic%2C%20blue%20and%20teal%20palette&image_size=landscape_16_9"
-              alt="Professional telehealth consultation platform illustration"
-              class="img-fluid hero-image"
-            >
-            <div class="hero-floating-card card border-0 shadow-lg">
-              <div class="card-body">
-                <span class="mini-label">Healthcare Experience</span>
-                <h2 class="h5 mb-2">Designed for patient confidence and operational efficiency</h2>
-                <p class="text-muted mb-0">Professional interfaces, secure authentication, and a scalable MVC foundation.</p>
+        <div class="col-xl-5 d-none d-xl-block hero-spotlight-column">
+          <div class="hero-spotlight-card">
+            <span class="mini-label">Healthcare Mission</span>
+            <h2 class="h3 text-white mb-3">Designed for confidence, continuity, and coordinated patient care.</h2>
+            <p class="hero-spotlight-copy mb-4">
+              The official AGH environment is blended into a professional MBPHA interface so the platform feels grounded
+              in the real healthcare context it serves.
+            </p>
+
+            <div class="hero-spotlight-grid">
+              <div class="hero-spotlight-item">
+                <span class="hero-spotlight-label">Facility</span>
+                <strong>Alotau General Hospital</strong>
+              </div>
+              <div class="hero-spotlight-item">
+                <span class="hero-spotlight-label">Brand System</span>
+                <strong>Official MBPHA TeleHealth</strong>
+              </div>
+              <div class="hero-spotlight-item">
+                <span class="hero-spotlight-label">Access Layer</span>
+                <strong>Patient, Doctor, Admin</strong>
+              </div>
+              <div class="hero-spotlight-item">
+                <span class="hero-spotlight-label">Security</span>
+                <strong>CSRF, Sessions, Role Protection</strong>
               </div>
             </div>
           </div>

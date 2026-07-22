@@ -1,58 +1,22 @@
 <?php require __DIR__ . '/../partials/public/navbar.php'; ?>
 
-<main class="auth-page py-5">
-  <div class="container">
-    <div class="row justify-content-center align-items-stretch g-4 content-row">
-      <div class="col-lg-5">
-        <div class="auth-panel auth-panel-accent h-100">
-          <div class="mb-4">
-            <?php
-            $brandVariant = 'auth';
-            $brandSubtitle = '';
-            $brandShowTitle = false;
-            $brandLink = \App\Helpers\Helper::url('/');
-            require __DIR__ . '/../partials/shared/brand_logo.php';
-            ?>
-          </div>
-          <span class="section-badge mb-3">
-            <i class="bi bi-box-arrow-in-right"></i>
-            Secure Access
-          </span>
-          <h1 class="display-6 fw-bold mb-3">Sign in to continue your MBPHA TeleHealth workflow.</h1>
-          <p class="text-muted mb-4">
-            Patients, doctors, and administrators use the same secure login point and are redirected
-            automatically to the correct dashboard after authentication.
-          </p>
-
-          <div class="auth-highlight-list">
-            <div class="auth-highlight-item">
-              <i class="bi bi-shield-lock"></i>
-              <div>
-                <strong>Protected sessions</strong>
-                <span>Session regeneration and CSRF verification are enforced.</span>
-              </div>
-            </div>
-            <div class="auth-highlight-item">
-              <i class="bi bi-signpost-split"></i>
-              <div>
-                <strong>Role-based redirects</strong>
-                <span>Each authenticated user is directed to the proper dashboard.</span>
-              </div>
-            </div>
-            <div class="auth-highlight-item">
-              <i class="bi bi-phone"></i>
-              <div>
-                <strong>Responsive sign-in</strong>
-                <span>Built for desktop and mobile access with accessible form patterns.</span>
-              </div>
-            </div>
-          </div>
-        </div>
+<main class="auth-page auth-page-agh py-4 py-lg-5">
+  <div class="container auth-shell-container">
+    <div class="auth-shell row g-0 overflow-hidden">
+      <div class="col-lg-5 order-2 order-lg-1">
+        <?php
+        $authVisualBadge = 'Welcome to MBPHA TeleHealth';
+        $authVisualTitle = 'Secure sign-in for digital healthcare coordination.';
+        $authVisualCopy = 'Access a professional care platform inspired by Alotau General Hospital and built for trusted healthcare delivery.';
+        $authVisualQuote = 'Connecting patients, clinicians, and administrators through a premium MBPHA experience.';
+        require __DIR__ . '/../partials/shared/auth_visual_panel.php';
+        ?>
       </div>
 
-      <div class="col-lg-6">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-          <div class="card-body p-4 p-lg-5">
+      <div class="col-lg-7 order-1 order-lg-2">
+        <div class="auth-form-panel h-100">
+          <div class="auth-form-card card border-0 h-100">
+            <div class="card-body p-4 p-lg-5">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
               <div>
                 <p class="text-primary fw-semibold mb-2">Welcome back</p>
@@ -93,12 +57,13 @@
               </div>
 
               <div class="d-grid gap-3 mt-4">
-                <button type="submit" class="btn btn-primary btn-lg rounded-pill">Login Securely</button>
+                <button type="submit" class="btn btn-success btn-lg rounded-pill">Login Securely</button>
                 <a href="<?= \App\Helpers\Helper::url('/register') ?>" class="btn btn-outline-primary rounded-pill">
                   Create Patient Account
                 </a>
               </div>
             </form>
+            </div>
           </div>
         </div>
       </div>

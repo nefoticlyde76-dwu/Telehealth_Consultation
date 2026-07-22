@@ -5,7 +5,7 @@ $currentRole = \App\Services\AuthService::getUserRole();
 $dashboardUrl = $currentRole ? \App\Services\AuthService::getRoleRedirectUrl($currentRole) : '/';
 ?>
 
-<nav class="navbar navbar-expand-xl navbar-dark sticky-top public-navbar">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top public-navbar">
   <div class="container">
     <?php
     $brandVariant = 'navbar';

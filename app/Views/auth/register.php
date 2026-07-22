@@ -1,58 +1,22 @@
 <?php require __DIR__ . '/../partials/public/navbar.php'; ?>
 
-<main class="auth-page py-5">
-  <div class="container">
-    <div class="row justify-content-center align-items-stretch g-4 content-row">
-      <div class="col-lg-5">
-        <div class="auth-panel h-100">
-          <div class="mb-4">
-            <?php
-            $brandVariant = 'auth';
-            $brandSubtitle = '';
-            $brandShowTitle = false;
-            $brandLink = \App\Helpers\Helper::url('/');
-            require __DIR__ . '/../partials/shared/brand_logo.php';
-            ?>
-          </div>
-          <span class="section-badge mb-3">
-            <i class="bi bi-person-plus"></i>
-            Patient Registration
-          </span>
-          <h1 class="display-6 fw-bold mb-3">Create a secure patient account in a few guided steps.</h1>
-          <p class="text-muted mb-4">
-            MBPHA TeleHealth registration is designed for patients only and uses layered validation to protect account quality,
-            privacy, and long-term maintainability.
-          </p>
-
-          <div class="auth-highlight-list">
-            <div class="auth-highlight-item">
-              <i class="bi bi-check2-circle"></i>
-              <div>
-                <strong>Server-side validation</strong>
-                <span>Validates names, email, password rules, duplicate accounts, and trusted date values.</span>
-              </div>
-            </div>
-            <div class="auth-highlight-item">
-              <i class="bi bi-key"></i>
-              <div>
-                <strong>Password strength guidance</strong>
-                <span>Live password strength and confirmation feedback support better patient account security.</span>
-              </div>
-            </div>
-            <div class="auth-highlight-item">
-              <i class="bi bi-database-check"></i>
-              <div>
-                <strong>Transactional registration</strong>
-                <span>User and patient records are written together to preserve data integrity.</span>
-              </div>
-            </div>
-          </div>
-        </div>
+<main class="auth-page auth-page-agh py-4 py-lg-5">
+  <div class="container auth-shell-container">
+    <div class="auth-shell row g-0 overflow-hidden">
+      <div class="col-lg-5 order-2 order-lg-1">
+        <?php
+        $authVisualBadge = 'Patient Registration';
+        $authVisualTitle = 'Create a trusted patient account for MBPHA TeleHealth.';
+        $authVisualCopy = 'Start with a secure registration experience shaped by the identity of Alotau General Hospital and the MBPHA digital care vision.';
+        $authVisualQuote = 'Professional onboarding, strong validation, and healthcare-ready access in one unified experience.';
+        require __DIR__ . '/../partials/shared/auth_visual_panel.php';
+        ?>
       </div>
 
-      <div class="col-lg-7">
-        <div class="card border-0 shadow-sm rounded-4 h-100">
-          <div class="card-body p-4 p-lg-5">
+      <div class="col-lg-7 order-1 order-lg-2">
+        <div class="auth-form-panel h-100">
+          <div class="auth-form-card card border-0 h-100">
+            <div class="card-body p-4 p-lg-5">
             <div class="mb-4">
               <p class="text-primary fw-semibold mb-2">Create account</p>
               <h2 class="h3 mb-1">Patient registration form</h2>
@@ -157,12 +121,13 @@
               </div>
 
               <div class="col-12 d-grid gap-3 mt-2">
-                <button type="submit" class="btn btn-primary btn-lg rounded-pill">Create Patient Account</button>
+                <button type="submit" class="btn btn-success btn-lg rounded-pill">Create Patient Account</button>
                 <a href="<?= \App\Helpers\Helper::url('/login') ?>" class="btn btn-outline-primary rounded-pill">
                   Already have an account? Login
                 </a>
               </div>
             </form>
+            </div>
           </div>
         </div>
       </div>
