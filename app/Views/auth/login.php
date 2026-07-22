@@ -2,7 +2,7 @@
 
 <main class="auth-page py-5">
   <div class="container">
-    <div class="row justify-content-center align-items-stretch g-4">
+    <div class="row justify-content-center align-items-stretch g-4 content-row">
       <div class="col-lg-5">
         <div class="auth-panel auth-panel-accent h-100">
           <span class="section-badge mb-3">
@@ -50,7 +50,7 @@
                 <h2 class="h3 mb-1">Login to your account</h2>
                 <p class="text-muted mb-0">Use your registered email address and password.</p>
               </div>
-              <span class="badge text-bg-light rounded-pill px-3 py-2 border">Patients, Doctors, Administrators</span>
+              <span class="badge badge-soft-neutral rounded-pill px-3 py-2 border">Patients, Doctors, Administrators</span>
             </div>
 
             <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>

@@ -2,7 +2,7 @@
 
 <main class="auth-page py-5">
   <div class="container">
-    <div class="row justify-content-center align-items-stretch g-4">
+    <div class="row justify-content-center align-items-stretch g-4 content-row">
       <div class="col-lg-5">
         <div class="auth-panel h-100">
           <span class="section-badge mb-3">

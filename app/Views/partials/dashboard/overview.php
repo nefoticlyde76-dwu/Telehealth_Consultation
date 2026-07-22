@@ -51,7 +51,7 @@
               <h3 class="h5 mb-1">Quick Actions</h3>
               <p class="text-muted mb-0">Primary entry points prepared for this role.</p>
             </div>
-            <span class="badge text-bg-light rounded-pill border"><?= count($quickActions ?? []) ?> actions</span>
+            <span class="badge badge-soft-neutral rounded-pill border"><?= count($quickActions ?? []) ?> actions</span>
           </div>
 
           <div class="row g-3">
@@ -63,7 +63,7 @@
                   </div>
                   <h4 class="h6"><?= \App\Helpers\Helper::escape($action['title'] ?? '') ?></h4>
                   <p class="text-muted small mb-3"><?= \App\Helpers\Helper::escape($action['description'] ?? '') ?></p>
-                  <span class="text-primary fw-semibold small"><?= \App\Helpers\Helper::escape($action['status'] ?? 'Ready') ?></span>
+                  <span class="quick-action-status small"><?= \App\Helpers\Helper::escape($action['status'] ?? 'Ready') ?></span>
                 </div>
               </div>
             <?php endforeach; ?>
@@ -80,7 +80,7 @@
               <h3 class="h5 mb-1">Recent Activity</h3>
               <p class="text-muted mb-0">Role-specific visibility prepared for future modules.</p>
             </div>
-            <span class="badge text-bg-light rounded-pill border">Live when data is available</span>
+            <span class="badge badge-soft-neutral rounded-pill border">Live when data is available</span>
           </div>
 
           <div class="activity-list">

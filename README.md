@@ -11,6 +11,7 @@ Production-quality TeleHealth Consultation System for the Milne Bay Provincial H
 - Authentication: Implemented for patient registration, login, logout, session handling, CSRF, and role-based redirects
 - Public Website: Implemented
 - Dashboards: Initial patient, doctor, and administrator dashboards implemented
+- Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 
 ## Implemented Features
 
@@ -128,6 +129,13 @@ mysql -u root -p < database/migrations/001_initial_schema.sql
 - PDO prepared statements
 - Output escaping in views
 - Request-aware base URL generation with `APP_URL` fallback
+
+## Design System
+
+- The application now uses the official MBPHA TeleHealth Design System across public pages, forms, navigation, footer, and dashboards
+- Core palette is centralized in [theme.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/theme.css)
+- Shared UI refinements are applied through [style.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/style.css)
+- Colours are managed through CSS variables instead of page-level hardcoded values
 
 ## Testing Summary
 

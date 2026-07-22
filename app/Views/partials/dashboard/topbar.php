@@ -21,7 +21,7 @@
       <div class="topbar-chip">
         <i class="bi bi-bell"></i>
         <span>Notifications</span>
-        <span class="badge rounded-pill text-bg-light">0</span>
+        <span class="badge rounded-pill badge-soft-info">0</span>
       </div>
 
       <div class="dropdown">

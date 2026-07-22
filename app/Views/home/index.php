@@ -3,7 +3,7 @@
 <main id="home">
   <section class="hero-section py-5 py-xl-6">
     <div class="container">
-      <div class="row align-items-center g-5">
+      <div class="row align-items-center g-5 content-row">
         <div class="col-lg-6">
           <span class="section-badge mb-3">
             <i class="bi bi-shield-check"></i>
@@ -71,7 +71,7 @@
 
   <section id="about" class="py-5">
     <div class="container">
-      <div class="row g-4 align-items-center">
+      <div class="row g-4 align-items-center content-row">
         <div class="col-lg-5">
           <span class="section-badge mb-3">
             <i class="bi bi-hospital"></i>
@@ -130,7 +130,7 @@
         <p class="section-copy">The Week 2 experience prepares core access paths for patients, clinicians, and administrators.</p>
       </div>
 
-      <div class="row g-4">
+      <div class="row g-4 content-row">
         <div class="col-md-6 col-xl-3">
           <div class="service-card h-100">
             <div class="service-icon"><i class="bi bi-person-plus"></i></div>
@@ -165,7 +165,7 @@
 
   <section id="features" class="py-5">
     <div class="container">
-      <div class="row g-4 align-items-center">
+      <div class="row g-4 align-items-center content-row">
         <div class="col-lg-5">
           <span class="section-badge mb-3">
             <i class="bi bi-stars"></i>
@@ -246,7 +246,7 @@
         <h2 class="section-title">A clear workflow from first visit to role-specific access.</h2>
       </div>
 
-      <div class="row g-4">
+      <div class="row g-4 content-row">
         <div class="col-md-6 col-xl-3">
           <div class="workflow-card h-100">
             <span class="workflow-step">01</span>
@@ -281,7 +281,7 @@
 
   <section id="faq" class="py-5">
     <div class="container">
-      <div class="row g-5 align-items-start">
+      <div class="row g-5 align-items-start content-row">
         <div class="col-lg-5">
           <span class="section-badge mb-3">
             <i class="bi bi-question-circle"></i>
@@ -340,7 +340,7 @@
 
   <section id="contact" class="py-5 bg-soft">
     <div class="container">
-      <div class="row g-4">
+      <div class="row g-4 content-row">
         <div class="col-lg-5">
           <span class="section-badge mb-3">
             <i class="bi bi-envelope-paper"></i>

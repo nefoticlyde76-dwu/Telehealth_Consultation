@@ -22,6 +22,11 @@ function initializeBootstrapValidation() {
 
 function initializePasswordStrength() {
   const passwordInputs = document.querySelectorAll("[data-password-strength]");
+  const theme = getComputedStyle(document.documentElement);
+  const danger = theme.getPropertyValue("--danger").trim();
+  const warning = theme.getPropertyValue("--warning").trim();
+  const primary = theme.getPropertyValue("--primary").trim();
+  const success = theme.getPropertyValue("--success").trim();
 
   passwordInputs.forEach((input) => {
     const strengthBar = input.parentElement.querySelector("[data-password-strength-bar]");
@@ -53,13 +58,13 @@ function initializePasswordStrength() {
       strengthBar.style.width = `${score}%`;
 
       if (score <= 25) {
-        strengthBar.style.backgroundColor = "#ef4444";
+        strengthBar.style.backgroundColor = danger;
       } else if (score <= 50) {
-        strengthBar.style.backgroundColor = "#f59e0b";
+        strengthBar.style.backgroundColor = warning;
       } else if (score <= 75) {
-        strengthBar.style.backgroundColor = "#2a9d8f";
+        strengthBar.style.backgroundColor = primary;
       } else {
-        strengthBar.style.backgroundColor = "#22c55e";
+        strengthBar.style.backgroundColor = success;
       }
     };
 
