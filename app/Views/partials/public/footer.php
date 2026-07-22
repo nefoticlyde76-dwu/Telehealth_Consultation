@@ -2,14 +2,14 @@
   <div class="container">
     <div class="row g-4">
       <div class="col-lg-4">
-        <div class="d-flex align-items-center gap-3 mb-3">
-          <span class="brand-mark">
-            <i class="bi bi-heart-pulse-fill"></i>
-          </span>
-          <div>
-            <h2 class="h5 mb-0 text-white">TeleHealth PNG</h2>
-            <p class="text-white-50 mb-0">Milne Bay Provincial Health Authority</p>
-          </div>
+        <div class="mb-3">
+          <?php
+          $brandVariant = 'footer';
+          $brandSubtitle = '';
+          $brandShowTitle = false;
+          $brandLink = \App\Helpers\Helper::url('/');
+          require __DIR__ . '/../shared/brand_logo.php';
+          ?>
         </div>
         <p class="text-white-50 mb-0">
           Secure, patient-centred telehealth access designed to improve consultation workflows,
@@ -49,7 +49,7 @@
     </div>
 
     <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-5 pt-4">
-      <p class="text-white-50 mb-0">© <span data-current-year></span> TeleHealth PNG. All rights reserved.</p>
+      <p class="text-white-50 mb-0">© <span data-current-year></span> MBPHA TeleHealth. All rights reserved.</p>
       <div class="d-flex align-items-center gap-3 text-white-50 small">
         <span>Healthcare-grade privacy mindset</span>
         <span class="dot-separator"></span>

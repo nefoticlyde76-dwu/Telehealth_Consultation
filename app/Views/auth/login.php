@@ -5,11 +5,20 @@
     <div class="row justify-content-center align-items-stretch g-4 content-row">
       <div class="col-lg-5">
         <div class="auth-panel auth-panel-accent h-100">
+          <div class="mb-4">
+            <?php
+            $brandVariant = 'auth';
+            $brandSubtitle = '';
+            $brandShowTitle = false;
+            $brandLink = \App\Helpers\Helper::url('/');
+            require __DIR__ . '/../partials/shared/brand_logo.php';
+            ?>
+          </div>
           <span class="section-badge mb-3">
             <i class="bi bi-box-arrow-in-right"></i>
             Secure Access
           </span>
-          <h1 class="display-6 fw-bold mb-3">Sign in to continue your TeleHealth workflow.</h1>
+          <h1 class="display-6 fw-bold mb-3">Sign in to continue your MBPHA TeleHealth workflow.</h1>
           <p class="text-muted mb-4">
             Patients, doctors, and administrators use the same secure login point and are redirected
             automatically to the correct dashboard after authentication.

@@ -12,7 +12,7 @@ class HomeController extends Controller
     public function index(): void
     {
         $this->render('home/index', [
-            'title' => 'Home | TeleHealth Consultation System',
+            'title' => 'Home | MBPHA TeleHealth Consultation System',
             'csrfToken' => Csrf::generate(),
             'contactErrors' => Session::getFlash('contact_errors', []),
             'contactStatus' => Session::getFlash('contact_status'),

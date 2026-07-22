@@ -3,7 +3,7 @@
 
 ## Project Information
 
-- **Project Title**: TeleHealth Consultation System
+- **Project Title**: MBPHA TeleHealth Consultation System
 - **Client**: Milne Bay Provincial Health Authority
 - **Developer**: Final Year Capstone Project Team
 - **Week Number**: 1
@@ -14,7 +14,7 @@
 
 ## Week 1 Objectives
 
-The objective of Week 1 was to establish the complete foundation for the TeleHealth Consultation System, including development environment setup, project configuration, MVC architecture, database schema, and core security and functionality components.
+The objective of Week 1 was to establish the complete foundation for the MBPHA TeleHealth Consultation System, including development environment setup, project configuration, MVC architecture, database schema, and core security and functionality components.
 
 ---
 
@@ -248,7 +248,7 @@ Telehealth_Consultation_System/
 
 - **Number of Commits**: 1
 - **Important Commit Messages**:
-  - feat(week1): initialize TeleHealth Consultation System foundation
+  - feat(week1): initialize MBPHA TeleHealth Consultation System foundation
 - **Current Branch**: master
 
 ---
@@ -275,4 +275,4 @@ Planned Week 2 implementation tasks include:
 
 ## Conclusion
 
-Week 1 has been successfully completed, laying a solid, secure, and maintainable foundation for the TeleHealth Consultation System. All planned tasks were executed as per the requirements, with particular attention to security, code quality, and adherence to best practices (SOLID, PSR-12, MVC). The project is ready to move forward with Week 2 implementation of user-facing features.
+Week 1 has been successfully completed, laying a solid, secure, and maintainable foundation for the MBPHA TeleHealth Consultation System. All planned tasks were executed as per the requirements, with particular attention to security, code quality, and adherence to best practices (SOLID, PSR-12, MVC). The project is ready to move forward with Week 2 implementation of user-facing features.

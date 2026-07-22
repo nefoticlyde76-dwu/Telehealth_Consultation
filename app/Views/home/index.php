@@ -5,6 +5,15 @@
     <div class="container">
       <div class="row align-items-center g-5 content-row">
         <div class="col-lg-6">
+          <div class="mb-4">
+            <?php
+            $brandVariant = 'hero';
+            $brandSubtitle = '';
+            $brandShowTitle = false;
+            $brandLink = \App\Helpers\Helper::url('/');
+            require __DIR__ . '/../partials/shared/brand_logo.php';
+            ?>
+          </div>
           <span class="section-badge mb-3">
             <i class="bi bi-shield-check"></i>
             Secure TeleHealth Access For Milne Bay
@@ -13,7 +22,7 @@
             Professional digital consultations for safer, faster, and more connected patient care.
           </h1>
           <p class="hero-copy mb-4">
-            TeleHealth PNG helps patients, doctors, and administrators coordinate consultations
+            MBPHA TeleHealth helps patients, doctors, and administrators coordinate consultations
             through a secure healthcare platform built for accessibility, trust, and operational clarity.
           </p>
 
@@ -346,7 +355,7 @@
             <i class="bi bi-envelope-paper"></i>
             Contact
           </span>
-          <h2 class="section-title">Reach the TeleHealth team through a validated public contact channel.</h2>
+          <h2 class="section-title">Reach the MBPHA TeleHealth team through a validated public contact channel.</h2>
           <p class="section-copy">
             Use the contact form for general support, onboarding questions, or implementation-related communication.
           </p>

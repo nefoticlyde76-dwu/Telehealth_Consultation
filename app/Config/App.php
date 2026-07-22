@@ -7,7 +7,7 @@ class App
     public static function getConfig(): array
     {
         return [
-            'name' => Environment::get('APP_NAME', 'TeleHealth Consultation System'),
+            'name' => Environment::get('APP_NAME', 'MBPHA TeleHealth Consultation System'),
             'env' => Environment::get('APP_ENV', 'development'),
             'debug' => (bool) Environment::get('APP_DEBUG', true),
             'url' => Environment::get('APP_URL', 'http://localhost'),

@@ -17,7 +17,7 @@ class AdminController extends Controller
         $user = AuthService::getUser();
 
         $this->render('admin/dashboard', [
-            'title' => 'Admin Dashboard | TeleHealth Consultation System',
+            'title' => 'Administrator Dashboard | MBPHA TeleHealth Consultation System',
             'user' => $user,
             'dashboardRole' => 'admin',
             'dashboardRoleLabel' => 'Administrator Dashboard',

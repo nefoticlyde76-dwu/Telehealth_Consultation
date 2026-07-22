@@ -7,15 +7,13 @@ $dashboardUrl = $currentRole ? \App\Services\AuthService::getRoleRedirectUrl($cu
 
 <nav class="navbar navbar-expand-xl navbar-dark sticky-top public-navbar">
   <div class="container">
-    <a class="navbar-brand d-flex align-items-center gap-3" href="<?= \App\Helpers\Helper::url('/') ?>">
-      <span class="brand-mark">
-        <i class="bi bi-heart-pulse-fill"></i>
-      </span>
-      <span>
-        <span class="brand-title">TeleHealth PNG</span>
-        <span class="brand-subtitle d-block">Milne Bay Provincial Health Authority</span>
-      </span>
-    </a>
+    <?php
+    $brandVariant = 'navbar';
+    $brandSubtitle = '';
+    $brandShowTitle = false;
+    $brandLink = \App\Helpers\Helper::url('/');
+    require __DIR__ . '/../shared/brand_logo.php';
+    ?>
 
     <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#publicNavbar" aria-controls="publicNavbar" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>

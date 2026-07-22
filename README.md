@@ -1,6 +1,6 @@
-# TeleHealth Consultation System
+# MBPHA TeleHealth Consultation System
 
-Production-quality TeleHealth Consultation System for the Milne Bay Provincial Health Authority (MBPHA), developed as a final year Bachelor of Information Systems capstone project.
+Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provincial Health Authority (MBPHA), developed as a final year Bachelor of Information Systems capstone project.
 
 ## Current Status
 
@@ -12,6 +12,7 @@ Production-quality TeleHealth Consultation System for the Milne Bay Provincial H
 - Public Website: Implemented
 - Dashboards: Initial patient, doctor, and administrator dashboards implemented
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
+- Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
 ## Implemented Features
 

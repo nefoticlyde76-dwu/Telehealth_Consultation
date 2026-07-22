@@ -17,7 +17,7 @@ class DoctorController extends Controller
         $user = AuthService::getUser();
 
         $this->render('doctor/dashboard', [
-            'title' => 'Doctor Dashboard | TeleHealth Consultation System',
+            'title' => 'Doctor Dashboard | MBPHA TeleHealth Consultation System',
             'user' => $user,
             'dashboardRole' => 'doctor',
             'dashboardRoleLabel' => 'Doctor Dashboard',

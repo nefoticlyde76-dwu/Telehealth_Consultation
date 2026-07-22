@@ -17,7 +17,7 @@ class PatientController extends Controller
         $user = AuthService::getUser();
 
         $this->render('patient/dashboard', [
-            'title' => 'Patient Dashboard | TeleHealth Consultation System',
+            'title' => 'Patient Dashboard | MBPHA TeleHealth Consultation System',
             'user' => $user,
             'dashboardRole' => 'patient',
             'dashboardRoleLabel' => 'Patient Dashboard',

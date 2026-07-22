@@ -5,13 +5,22 @@
     <div class="row justify-content-center align-items-stretch g-4 content-row">
       <div class="col-lg-5">
         <div class="auth-panel h-100">
+          <div class="mb-4">
+            <?php
+            $brandVariant = 'auth';
+            $brandSubtitle = '';
+            $brandShowTitle = false;
+            $brandLink = \App\Helpers\Helper::url('/');
+            require __DIR__ . '/../partials/shared/brand_logo.php';
+            ?>
+          </div>
           <span class="section-badge mb-3">
             <i class="bi bi-person-plus"></i>
             Patient Registration
           </span>
           <h1 class="display-6 fw-bold mb-3">Create a secure patient account in a few guided steps.</h1>
           <p class="text-muted mb-4">
-            Registration is designed for patients only and uses layered validation to protect account quality,
+            MBPHA TeleHealth registration is designed for patients only and uses layered validation to protect account quality,
             privacy, and long-term maintainability.
           </p>
 

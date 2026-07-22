@@ -2,7 +2,7 @@
 
 ## Project Information
 
-- Project Title: TeleHealth Consultation System
+- Project Title: MBPHA TeleHealth Consultation System
 - Client: Milne Bay Provincial Health Authority
 - Week Number: 2
 - Development Period: July 21, 2026
@@ -142,7 +142,10 @@
 - [app/Controllers/DoctorController.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Controllers/DoctorController.php)
 - [app/Controllers/AdminController.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Controllers/AdminController.php)
 - [app/Views/layouts/app.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Views/layouts/app.php)
+- [app/Views/auth/login.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Views/auth/login.php)
+- [app/Views/auth/register.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Views/auth/register.php)
 - [public/css/style.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/style.css)
+- [.env.example](file:///c:/xampp/htdocs/Telehealth_Consultation_System/.env.example)
 - [.gitignore](file:///c:/xampp/htdocs/Telehealth_Consultation_System/.gitignore)
 
 ## Authentication Implemented

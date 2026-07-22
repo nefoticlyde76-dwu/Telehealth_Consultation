@@ -45,7 +45,7 @@ class AuthController extends Controller
         }
 
         $this->render('auth/login', [
-            'title' => 'Login | TeleHealth Consultation System',
+            'title' => 'Login | MBPHA TeleHealth Consultation System',
             'csrfToken' => Csrf::generate(),
             'errors' => $errors,
             'oldInput' => $oldInput,
@@ -101,7 +101,7 @@ class AuthController extends Controller
         }
 
         $this->render('auth/register', [
-            'title' => 'Register | TeleHealth Consultation System',
+            'title' => 'Register | MBPHA TeleHealth Consultation System',
             'csrfToken' => Csrf::generate(),
             'errors' => $errors,
             'oldInput' => $oldInput,
