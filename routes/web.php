@@ -27,3 +27,11 @@ $router->get('/doctor/dashboard', [DoctorController::class, 'dashboard'], [
 $router->get('/admin/dashboard', [AdminController::class, 'dashboard'], [
     new RoleMiddleware(['admin']),
 ]);
+
+$router->get('/admin/users', [AdminController::class, 'users'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/users/{id}', [AdminController::class, 'showUser'], [
+    new RoleMiddleware(['admin']),
+]);

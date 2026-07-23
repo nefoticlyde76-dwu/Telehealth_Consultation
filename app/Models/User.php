@@ -104,4 +104,191 @@ class User
 
         return $stmt->fetchColumn() ?: null;
     }
+
+    public static function getRoleMap(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT id, name FROM roles ORDER BY id ASC");
+        $roleMap = [];
+
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $role) {
+            $roleMap[(int) $role['id']] = $role['name'];
+        }
+
+        return $roleMap;
+    }
+
+    public static function getUserManagementSummary(): array
+    {
+        $db = Database::getInstance();
+
+        $summary = [
+            'total_users' => 0,
+            'active_users' => 0,
+            'inactive_users' => 0,
+            'admin_users' => 0,
+            'doctor_users' => 0,
+            'patient_users' => 0,
+        ];
+
+        $stmt = $db->query(
+            "SELECT
+                COUNT(*) AS total_users,
+                SUM(CASE WHEN users.status = 'active' THEN 1 ELSE 0 END) AS active_users,
+                SUM(CASE WHEN users.status = 'inactive' THEN 1 ELSE 0 END) AS inactive_users,
+                SUM(CASE WHEN roles.name = 'admin' THEN 1 ELSE 0 END) AS admin_users,
+                SUM(CASE WHEN roles.name = 'doctor' THEN 1 ELSE 0 END) AS doctor_users,
+                SUM(CASE WHEN roles.name = 'patient' THEN 1 ELSE 0 END) AS patient_users
+            FROM users
+            INNER JOIN roles ON roles.id = users.role_id"
+        );
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($row) {
+            foreach ($summary as $key => $value) {
+                $summary[$key] = (int) ($row[$key] ?? 0);
+            }
+        }
+
+        return $summary;
+    }
+
+    public static function getLatestUsers(int $limit = 5): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                users.id,
+                users.full_name,
+                users.email,
+                users.status,
+                users.created_at,
+                roles.name AS role_name
+            FROM users
+            INNER JOIN roles ON roles.id = users.role_id
+            ORDER BY users.created_at DESC, users.id DESC
+            LIMIT :limit"
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function countForManagement(array $filters = []): int
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT COUNT(*) FROM users INNER JOIN roles ON roles.id = users.role_id";
+        $conditions = [];
+        $parameters = [];
+
+        self::appendManagementFilters($filters, $conditions, $parameters);
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $stmt = $db->prepare($sql);
+        self::bindManagementParameters($stmt, $parameters);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function findForManagement(array $filters = [], int $limit = 10, int $offset = 0): array
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT
+                users.id,
+                users.full_name,
+                users.email,
+                users.status,
+                users.created_at,
+                roles.name AS role_name
+            FROM users
+            INNER JOIN roles ON roles.id = users.role_id";
+        $conditions = [];
+        $parameters = [];
+
+        self::appendManagementFilters($filters, $conditions, $parameters);
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY users.created_at DESC, users.id DESC LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
+        self::bindManagementParameters($stmt, $parameters);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function findManagementDetailById(int $id): ?array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                users.id,
+                users.full_name,
+                users.email,
+                users.status,
+                users.created_at,
+                users.updated_at,
+                roles.name AS role_name,
+                admin.employee_id,
+                doctor.specialization,
+                doctor.license_number,
+                doctor.clinic_address,
+                patient.dob,
+                patient.gender,
+                patient.address
+            FROM users
+            INNER JOIN roles ON roles.id = users.role_id
+            LEFT JOIN admin ON admin.user_id = users.id
+            LEFT JOIN doctor ON doctor.user_id = users.id
+            LEFT JOIN patient ON patient.user_id = users.id
+            WHERE users.id = :id
+            LIMIT 1"
+        );
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
+    private static function appendManagementFilters(array $filters, array &$conditions, array &$parameters): void
+    {
+        $search = trim((string) ($filters['search'] ?? ''));
+        $role = trim((string) ($filters['role'] ?? ''));
+        $status = trim((string) ($filters['status'] ?? ''));
+
+        if ($search !== '') {
+            $conditions[] = '(users.full_name LIKE :search_name OR users.email LIKE :search_email)';
+            $parameters[':search_name'] = '%' . $search . '%';
+            $parameters[':search_email'] = '%' . $search . '%';
+        }
+
+        if ($role !== '') {
+            $conditions[] = 'roles.name = :role';
+            $parameters[':role'] = $role;
+        }
+
+        if ($status !== '') {
+            $conditions[] = 'users.status = :status';
+            $parameters[':status'] = $status;
+        }
+    }
+
+    private static function bindManagementParameters(\PDOStatement $stmt, array $parameters): void
+    {
+        foreach ($parameters as $name => $value) {
+            $stmt->bindValue($name, $value, PDO::PARAM_STR);
+        }
+    }
 }

@@ -2,6 +2,8 @@
 
 $currentPath = \App\Helpers\Helper::currentPath();
 $sidebarItems = $sidebarItems ?? [];
+$sidebarStatusTitle = $sidebarStatusTitle ?? 'Week 2 Access Layer';
+$sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are live and ready for upcoming module integration.';
 ?>
 
 <aside class="dashboard-sidebar d-none d-lg-flex flex-column">
@@ -35,8 +37,8 @@ $sidebarItems = $sidebarItems ?? [];
   <div class="px-4 pb-4">
     <div class="sidebar-support-card">
       <span class="small text-uppercase text-white-50 d-block mb-2">Platform Status</span>
-      <h2 class="h6 text-white mb-2">Week 2 Access Layer</h2>
-      <p class="text-white-50 small mb-0">Core dashboards are live and ready for upcoming module integration.</p>
+      <h2 class="h6 text-white mb-2"><?= \App\Helpers\Helper::escape($sidebarStatusTitle) ?></h2>
+      <p class="text-white-50 small mb-0"><?= \App\Helpers\Helper::escape($sidebarStatusDescription) ?></p>
     </div>
   </div>
 </aside>

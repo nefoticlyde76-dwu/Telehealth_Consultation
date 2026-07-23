@@ -57,12 +57,24 @@ class Router
 
             $pattern = $this->convertToRegex($route['path']);
             if (preg_match($pattern, $requestUri, $matches)) {
-                array_shift($matches);
+                $parameters = [];
+
+                foreach ($matches as $key => $value) {
+                    if (is_string($key)) {
+                        $parameters[] = $value;
+                    }
+                }
+
+                if ($parameters === []) {
+                    array_shift($matches);
+                    $parameters = array_values($matches);
+                }
+
                 $this->runMiddleware($route['middleware'] ?? []);
                 [$controller, $method] = $route['handler'];
 
                 $controllerInstance = new $controller();
-                call_user_func_array([$controllerInstance, $method], $matches);
+                call_user_func_array([$controllerInstance, $method], $parameters);
                 return;
             }
         }

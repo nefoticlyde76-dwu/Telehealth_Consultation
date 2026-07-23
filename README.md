@@ -4,13 +4,14 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ## Current Status
 
-- Current Week: Week 2
+- Current Week: Week 3
 - Architecture: Custom MVC (PHP 8.x)
 - Database: MySQL with PDO prepared statements
 - Frontend: HTML5, CSS3, Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
 - Authentication: Implemented for patient registration, login, logout, session handling, CSRF, and role-based redirects
 - Public Website: Implemented
 - Dashboards: Initial patient, doctor, and administrator dashboards implemented
+- Administration: Week 3 Day 1 user management foundation implemented for administrators
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -48,6 +49,18 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Initial administrator dashboard
 - Secure logout
 
+### Week 3 Features
+
+- Administrator dashboard enhancements with real user statistics
+- Administrator user management foundation
+- View all users
+- Search users by name or email
+- Filter users by role
+- Filter users by account status
+- View user details
+- Responsive administrator user table
+- Pagination support for user listing
+
 ## Project Structure
 
 ```text
@@ -80,7 +93,8 @@ Telehealth_Consultation_System/
 ├── .gitignore
 ├── README.md
 ├── WEEK1_REPORT.md
-└── WEEK2_REPORT.md
+├── WEEK2_REPORT.md
+└── WEEK3_REPORT.md
 ```
 
 ## Installation
@@ -119,6 +133,7 @@ mysql -u root -p < database/migrations/001_initial_schema.sql
 - Default seeded administrator account after running the migration:
   - Email: `admin@telehealth.local`
   - Password: `admin123`
+- Administrator-only user management is currently available at `/admin/users` after successful administrator login.
 
 ## Security Highlights
 
