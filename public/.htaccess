@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Let Apache serve real files and directories directly.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Route all other requests through the front controller.
+RewriteRule ^ index.php [QSA,L]
