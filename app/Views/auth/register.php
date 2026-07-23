@@ -9,18 +9,28 @@
         $authVisualTitle = 'Create a trusted patient account for MBPHA TeleHealth.';
         $authVisualCopy = 'Start with a secure registration experience shaped by the identity of Alotau General Hospital and the MBPHA digital care vision.';
         $authVisualQuote = 'Professional onboarding, strong validation, and healthcare-ready access in one unified experience.';
+        $authVisualPoints = [
+            'Validated patient onboarding with strong password requirements.',
+            'Healthcare-first interface designed for trust and clarity.',
+            'Future-ready access to bookings, consultations, and care workflows.',
+        ];
         require __DIR__ . '/../partials/shared/auth_visual_panel.php';
         ?>
       </div>
 
       <div class="col-lg-7 order-1 order-lg-2">
         <div class="auth-form-panel h-100">
-          <div class="auth-form-card card border-0 h-100">
+          <div class="auth-form-card card border-0 h-100 reveal-on-scroll reveal-slide-up">
             <div class="card-body p-4 p-lg-5">
             <div class="mb-4">
               <p class="text-primary fw-semibold mb-2">Create account</p>
               <h2 class="h3 mb-1">Patient registration form</h2>
               <p class="text-muted mb-0">Complete the required information below to access the patient dashboard.</p>
+            </div>
+
+            <div class="auth-form-meta mb-4">
+              <span class="auth-meta-chip"><i class="bi bi-patch-check"></i> Strong validation standards</span>
+              <span class="auth-meta-chip"><i class="bi bi-person-plus"></i> Patient-focused onboarding</span>
             </div>
 
             <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>

@@ -5,7 +5,7 @@
     <div class="container hero-shell position-relative">
       <div class="row align-items-center g-4 g-xl-5 content-row">
         <div class="col-xl-7">
-          <div class="hero-content-panel">
+          <div class="hero-content-panel reveal-on-scroll reveal-slide-up">
             <div class="mb-4">
               <?php
               $brandVariant = 'hero';
@@ -39,6 +39,21 @@
               </a>
             </div>
 
+            <div class="hero-trust-row mb-4">
+              <span class="hero-trust-chip">
+                <i class="bi bi-shield-check"></i>
+                Secure access layer
+              </span>
+              <span class="hero-trust-chip">
+                <i class="bi bi-hospital"></i>
+                AGH-aligned experience
+              </span>
+              <span class="hero-trust-chip">
+                <i class="bi bi-phone"></i>
+                Responsive on every device
+              </span>
+            </div>
+
             <div class="row g-3 hero-highlights">
               <div class="col-sm-4">
                 <div class="metric-card metric-card-hero">
@@ -68,7 +83,7 @@
         </div>
 
         <div class="col-xl-5 d-none d-xl-block hero-spotlight-column">
-          <div class="hero-spotlight-card">
+          <div class="hero-spotlight-card reveal-on-scroll reveal-slide-left">
             <span class="mini-label">Healthcare Mission</span>
             <h2 class="h3 text-white mb-3">Designed for confidence, continuity, and coordinated patient care.</h2>
             <p class="hero-spotlight-copy mb-4">
@@ -100,10 +115,47 @@
     </div>
   </section>
 
+  <section class="py-4 py-lg-5">
+    <div class="container">
+      <div class="public-stats-band reveal-on-scroll reveal-fade">
+        <div class="row g-3 g-lg-4 content-row">
+          <div class="col-sm-6 col-xl-3">
+            <div class="public-stat-card">
+              <span class="public-stat-label">Care Access</span>
+              <strong class="public-stat-value" data-counter="3">3</strong>
+              <p class="mb-0">Dedicated user pathways for patients, doctors, and administrators.</p>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="public-stat-card">
+              <span class="public-stat-label">Security Controls</span>
+              <strong class="public-stat-value" data-counter="4">4</strong>
+              <p class="mb-0">Core protection pillars already active across the authentication layer.</p>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="public-stat-card">
+              <span class="public-stat-label">Responsive Surfaces</span>
+              <strong class="public-stat-value" data-counter="100">100</strong>
+              <p class="mb-0">Designed to support accessible experiences on desktop, tablet, and mobile.</p>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="public-stat-card">
+              <span class="public-stat-label">Healthcare Focus</span>
+              <strong class="public-stat-value" data-counter="1">1</strong>
+              <p class="mb-0">One trusted platform vision for MBPHA and Alotau General Hospital care delivery.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="about" class="py-5">
     <div class="container">
       <div class="row g-4 align-items-center content-row">
-        <div class="col-lg-5">
+        <div class="col-lg-5 reveal-on-scroll reveal-slide-up">
           <span class="section-badge mb-3">
             <i class="bi bi-hospital"></i>
             About The Platform
@@ -114,7 +166,7 @@
             administrators while preserving a clean healthcare-first experience appropriate for a real deployment.
           </p>
         </div>
-        <div class="col-lg-7">
+        <div class="col-lg-7 reveal-on-scroll reveal-slide-left">
           <div class="row g-3">
             <div class="col-md-6">
               <div class="feature-panel h-100">
@@ -152,7 +204,7 @@
 
   <section id="services" class="py-5 bg-soft">
     <div class="container">
-      <div class="section-heading text-center mx-auto">
+      <div class="section-heading text-center mx-auto reveal-on-scroll reveal-slide-up">
         <span class="section-badge justify-content-center mb-3">
           <i class="bi bi-activity"></i>
           Services
@@ -163,28 +215,28 @@
 
       <div class="row g-4 content-row">
         <div class="col-md-6 col-xl-3">
-          <div class="service-card h-100">
+          <div class="service-card h-100 reveal-on-scroll reveal-slide-up" data-reveal-delay="0">
             <div class="service-icon"><i class="bi bi-person-plus"></i></div>
             <h3 class="h5">Patient Onboarding</h3>
             <p class="mb-0">Secure patient self-registration with validation, password confirmation, and responsive forms.</p>
           </div>
         </div>
         <div class="col-md-6 col-xl-3">
-          <div class="service-card h-100">
+          <div class="service-card h-100 reveal-on-scroll reveal-slide-up" data-reveal-delay="80">
             <div class="service-icon"><i class="bi bi-box-arrow-in-right"></i></div>
             <h3 class="h5">Role-Based Access</h3>
             <p class="mb-0">Single login experience for patients, doctors, and administrators with appropriate dashboard routing.</p>
           </div>
         </div>
         <div class="col-md-6 col-xl-3">
-          <div class="service-card h-100">
+          <div class="service-card h-100 reveal-on-scroll reveal-slide-up" data-reveal-delay="160">
             <div class="service-icon"><i class="bi bi-columns-gap"></i></div>
             <h3 class="h5">Operational Dashboards</h3>
             <p class="mb-0">Dedicated dashboard layouts provide role-specific visibility, navigation, and action entry points.</p>
           </div>
         </div>
         <div class="col-md-6 col-xl-3">
-          <div class="service-card h-100">
+          <div class="service-card h-100 reveal-on-scroll reveal-slide-up" data-reveal-delay="240">
             <div class="service-icon"><i class="bi bi-headset"></i></div>
             <h3 class="h5">Public Support Contact</h3>
             <p class="mb-0">A validated contact channel helps visitors send inquiries through a secure public-facing form.</p>
@@ -197,7 +249,7 @@
   <section id="features" class="py-5">
     <div class="container">
       <div class="row g-4 align-items-center content-row">
-        <div class="col-lg-5">
+        <div class="col-lg-5 reveal-on-scroll reveal-slide-up">
           <span class="section-badge mb-3">
             <i class="bi bi-stars"></i>
             Platform Features
@@ -205,7 +257,7 @@
           <h2 class="section-title">Purpose-built features for a premium healthcare SaaS experience.</h2>
           <p class="section-copy">The interface prioritises clarity, trust, and maintainability without sacrificing polish.</p>
         </div>
-        <div class="col-lg-7">
+        <div class="col-lg-7 reveal-on-scroll reveal-slide-left">
           <div class="row g-3">
             <div class="col-sm-6">
               <div class="feature-list-card h-100">
@@ -267,9 +319,62 @@
     </div>
   </section>
 
+  <section class="py-5">
+    <div class="container">
+      <div class="testimonial-shell reveal-on-scroll reveal-fade">
+        <div class="row g-4 align-items-center content-row">
+          <div class="col-lg-4">
+            <span class="section-badge mb-3">
+              <i class="bi bi-chat-square-quote"></i>
+              Stakeholder Perspective
+            </span>
+            <h2 class="section-title mb-3">Designed to earn confidence before future clinical modules go live.</h2>
+            <p class="section-copy mb-0">These placeholder viewpoints demonstrate how the public experience can communicate trust, structure, and healthcare readiness.</p>
+          </div>
+          <div class="col-lg-8">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <article class="testimonial-card h-100">
+                  <div class="testimonial-rating">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                  <p class="mb-4">“The interface immediately feels credible and aligned with a real healthcare authority. It balances professionalism with clarity.”</p>
+                  <div class="testimonial-meta">
+                    <strong>Healthcare Leadership View</strong>
+                    <span>Placeholder testimonial</span>
+                  </div>
+                </article>
+              </div>
+              <div class="col-md-6">
+                <article class="testimonial-card h-100">
+                  <div class="testimonial-rating">
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                  <p class="mb-4">“Patients and clinicians need a calm digital entry point. The current presentation makes that goal feel realistic and deployment-oriented.”</p>
+                  <div class="testimonial-meta">
+                    <strong>Implementation Readiness View</strong>
+                    <span>Placeholder testimonial</span>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="how-it-works" class="py-5 bg-soft">
     <div class="container">
-      <div class="section-heading text-center mx-auto">
+      <div class="section-heading text-center mx-auto reveal-on-scroll reveal-slide-up">
         <span class="section-badge justify-content-center mb-3">
           <i class="bi bi-diagram-3"></i>
           How It Works
@@ -279,28 +384,28 @@
 
       <div class="row g-4 content-row">
         <div class="col-md-6 col-xl-3">
-          <div class="workflow-card h-100">
+          <div class="workflow-card h-100 reveal-on-scroll reveal-slide-up" data-reveal-delay="0">
             <span class="workflow-step">01</span>
             <h3 class="h5">Visit The Home Page</h3>
             <p class="mb-0">Patients and staff begin from a polished public landing page with clear navigation and support paths.</p>
           </div>
         </div>
         <div class="col-md-6 col-xl-3">
-          <div class="workflow-card h-100">
+          <div class="workflow-card h-100 reveal-on-scroll reveal-slide-up" data-reveal-delay="90">
             <span class="workflow-step">02</span>
             <h3 class="h5">Register Or Sign In</h3>
             <p class="mb-0">Patients create secure accounts, while doctors and administrators access the shared login portal.</p>
           </div>
         </div>
         <div class="col-md-6 col-xl-3">
-          <div class="workflow-card h-100">
+          <div class="workflow-card h-100 reveal-on-scroll reveal-slide-up" data-reveal-delay="180">
             <span class="workflow-step">03</span>
             <h3 class="h5">Authenticate Securely</h3>
             <p class="mb-0">The authentication layer validates user credentials, role assignments, and session security controls.</p>
           </div>
         </div>
         <div class="col-md-6 col-xl-3">
-          <div class="workflow-card h-100">
+          <div class="workflow-card h-100 reveal-on-scroll reveal-slide-up" data-reveal-delay="270">
             <span class="workflow-step">04</span>
             <h3 class="h5">Access The Right Dashboard</h3>
             <p class="mb-0">Each user is redirected to a professional dashboard aligned to patient, doctor, or administrator workflows.</p>
@@ -313,7 +418,7 @@
   <section id="faq" class="py-5">
     <div class="container">
       <div class="row g-5 align-items-start content-row">
-        <div class="col-lg-5">
+        <div class="col-lg-5 reveal-on-scroll reveal-slide-up">
           <span class="section-badge mb-3">
             <i class="bi bi-question-circle"></i>
             Frequently Asked Questions
@@ -321,7 +426,7 @@
           <h2 class="section-title">Answers that help users understand access, security, and support.</h2>
           <p class="section-copy">The FAQ area provides concise guidance without overwhelming first-time visitors.</p>
         </div>
-        <div class="col-lg-7">
+        <div class="col-lg-7 reveal-on-scroll reveal-slide-left">
           <div class="accordion faq-accordion" id="faqAccordion">
             <div class="accordion-item">
               <h3 class="accordion-header">
@@ -372,7 +477,7 @@
   <section id="contact" class="py-5 bg-soft">
     <div class="container">
       <div class="row g-4 content-row">
-        <div class="col-lg-5">
+        <div class="col-lg-5 reveal-on-scroll reveal-slide-up">
           <span class="section-badge mb-3">
             <i class="bi bi-envelope-paper"></i>
             Contact
@@ -407,7 +512,7 @@
           </div>
         </div>
 
-        <div class="col-lg-7">
+        <div class="col-lg-7 reveal-on-scroll reveal-slide-left">
           <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4 p-lg-5">
               <?php
@@ -486,6 +591,29 @@
                   <button type="submit" class="btn btn-primary btn-lg rounded-pill px-4">Send Inquiry</button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5">
+    <div class="container">
+      <div class="public-cta-banner reveal-on-scroll reveal-fade">
+        <div class="row align-items-center g-4 content-row">
+          <div class="col-lg-8">
+            <span class="section-badge section-badge-inverse mb-3">
+              <i class="bi bi-shield-lock"></i>
+              MBPHA TeleHealth Access
+            </span>
+            <h2 class="h2 text-white mb-3">Start with a secure, premium healthcare entry point built for MBPHA.</h2>
+            <p class="mb-0 text-white-50">Whether you are registering as a patient or returning through secure login, the public platform is prepared for trusted digital care delivery.</p>
+          </div>
+          <div class="col-lg-4">
+            <div class="d-grid gap-3">
+              <a href="<?= \App\Helpers\Helper::url('/register') ?>" class="btn btn-light btn-lg rounded-pill">Register As Patient</a>
+              <a href="<?= \App\Helpers\Helper::url('/login') ?>" class="btn btn-outline-light btn-lg rounded-pill">Secure Login</a>
             </div>
           </div>
         </div>

@@ -9,13 +9,18 @@
         $authVisualTitle = 'Secure sign-in for digital healthcare coordination.';
         $authVisualCopy = 'Access a professional care platform inspired by Alotau General Hospital and built for trusted healthcare delivery.';
         $authVisualQuote = 'Connecting patients, clinicians, and administrators through a premium MBPHA experience.';
+        $authVisualPoints = [
+            'Protected login experience with role-aware access flows.',
+            'Professional healthcare interface aligned to MBPHA branding.',
+            'Responsive access for desktop, tablet, and mobile devices.',
+        ];
         require __DIR__ . '/../partials/shared/auth_visual_panel.php';
         ?>
       </div>
 
       <div class="col-lg-7 order-1 order-lg-2">
         <div class="auth-form-panel h-100">
-          <div class="auth-form-card card border-0 h-100">
+          <div class="auth-form-card card border-0 h-100 reveal-on-scroll reveal-slide-up">
             <div class="card-body p-4 p-lg-5">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
               <div>
@@ -24,6 +29,11 @@
                 <p class="text-muted mb-0">Use your registered email address and password.</p>
               </div>
               <span class="badge badge-soft-neutral rounded-pill px-3 py-2 border">Patients, Doctors, Administrators</span>
+            </div>
+
+            <div class="auth-form-meta mb-4">
+              <span class="auth-meta-chip"><i class="bi bi-shield-check"></i> Secure session controls</span>
+              <span class="auth-meta-chip"><i class="bi bi-box-arrow-in-right"></i> Role-based dashboard routing</span>
             </div>
 
             <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
