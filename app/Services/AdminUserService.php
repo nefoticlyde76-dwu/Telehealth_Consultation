@@ -50,9 +50,9 @@ class AdminUserService
                     'status' => 'Available now',
                 ],
                 [
-                    'title' => 'Review Active Access',
-                    'description' => 'Confirm that administrator, doctor, and patient accounts are visible under the correct roles and statuses.',
-                    'icon' => 'bi-person-lines-fill',
+                    'title' => 'Manage Doctor Accounts',
+                    'description' => 'Create doctor accounts, update clinician profiles, control status, and reset passwords securely.',
+                    'icon' => 'bi-person-badge-fill',
                     'status' => 'Available now',
                 ],
                 [
@@ -63,9 +63,9 @@ class AdminUserService
                 ],
                 [
                     'title' => 'Prepare Future Governance',
-                    'description' => 'This foundation is ready for later enhancement into controlled account administration workflows.',
+                    'description' => 'The administration workspace is now ready for later workflow expansion across booking, consultation, and availability modules.',
                     'icon' => 'bi-kanban',
-                    'status' => 'Week 3 foundation',
+                    'status' => 'Week 3 progression',
                 ],
             ],
             'recentActivity' => self::buildRecentActivity($latestUsers),

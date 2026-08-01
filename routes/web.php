@@ -35,3 +35,39 @@ $router->get('/admin/users', [AdminController::class, 'users'], [
 $router->get('/admin/users/{id}', [AdminController::class, 'showUser'], [
     new RoleMiddleware(['admin']),
 ]);
+
+$router->get('/admin/doctors', [AdminController::class, 'doctors'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/doctors/create', [AdminController::class, 'createDoctor'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/doctors/create', [AdminController::class, 'createDoctor'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/doctors/{id}/edit', [AdminController::class, 'editDoctor'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/doctors/{id}/edit', [AdminController::class, 'editDoctor'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/doctors/{id}/activate', [AdminController::class, 'activateDoctor'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/doctors/{id}/deactivate', [AdminController::class, 'deactivateDoctor'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/doctors/{id}/reset-password', [AdminController::class, 'resetDoctorPassword'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/doctors/{id}/reset-password', [AdminController::class, 'resetDoctorPassword'], [
+    new RoleMiddleware(['admin']),
+]);

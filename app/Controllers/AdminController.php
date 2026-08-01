@@ -3,8 +3,10 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
+use App\Services\AdminDoctorService;
 use App\Services\AuthService;
 use App\Services\AdminUserService;
 
@@ -20,6 +22,7 @@ class AdminController extends Controller
 
         $dashboardData = AdminUserService::getDashboardData();
         $summary = $dashboardData['summary'];
+        $doctorSummary = AdminDoctorService::getDashboardSummary();
 
         $this->render('admin/dashboard', array_merge(
             $this->getAdminViewData($user, [
@@ -28,18 +31,19 @@ class AdminController extends Controller
                 'dashboardDescription' => 'Operational visibility for secure platform administration.',
             ]),
             [
-                'welcomeMessage' => 'This administrator workspace now includes the first user management foundation for secure account oversight.',
-                'focusTitle' => 'User governance foundation',
-                'focusDescription' => 'Search, filtering, detail review, and user visibility are now available while broader administration features continue in later weeks.',
+                'welcomeMessage' => 'This administrator workspace now supports doctor account provisioning alongside secure user oversight.',
+                'focusTitle' => 'Account governance controls',
+                'focusDescription' => 'Administrators can now manage doctor onboarding, status controls, password resets, and user visibility from one coordinated workspace.',
                 'stats' => $dashboardData['stats'],
                 'quickActions' => $dashboardData['quickActions'],
                 'recentActivity' => $dashboardData['recentActivity'],
                 'emptyState' => [
                     'icon' => 'bi-people',
-                    'title' => 'Administrative user management is now available',
-                    'description' => 'Use the user management page to review registered accounts, filter by role or status, and inspect individual account details securely.',
+                    'title' => 'Administrative governance tools are now available',
+                    'description' => 'Use the doctor account and user management pages to provision clinicians, review registered accounts, and apply role-aware governance securely.',
                 ],
                 'userSummary' => $summary,
+                'doctorSummary' => $doctorSummary,
                 'latestUsers' => $dashboardData['latestUsers'],
             ]
         ), 'layouts/dashboard');
@@ -73,6 +77,204 @@ class AdminController extends Controller
         ), 'layouts/dashboard');
     }
 
+    public function doctors(): void
+    {
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $pageData = AdminDoctorService::getDoctorManagementPageData($_GET);
+
+        $this->render('admin/doctors/index', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Doctor Account Management | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Doctor Account Management',
+                'dashboardDescription' => 'Create and manage secure clinician accounts for the platform.',
+            ]),
+            [
+                'filters' => $pageData['filters'],
+                'doctors' => $pageData['doctors'],
+                'summary' => $pageData['summary'],
+                'pagination' => $pageData['pagination'],
+                'statusOptions' => $pageData['statusOptions'],
+                'statusMessage' => Session::getFlash('status'),
+                'csrfToken' => Csrf::generate(),
+            ]
+        ), 'layouts/dashboard');
+    }
+
+    public function createDoctor(): void
+    {
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $errors = [];
+        $fieldErrors = [];
+        $formData = AdminDoctorService::getDoctorFormData();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $result = AdminDoctorService::createDoctorAccount($_POST);
+
+            if ($result['success'] ?? false) {
+                Session::flash('status', [
+                    'type' => 'success',
+                    'message' => $result['message'] ?? 'Doctor account created successfully.',
+                ]);
+                Helper::redirect('/admin/doctors');
+                return;
+            }
+
+            $errors = $result['errors'] ?? [];
+            $fieldErrors = $result['fieldErrors'] ?? [];
+            $formData = $result['formData'] ?? $formData;
+        }
+
+        $this->render('admin/doctors/create', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Create Doctor Account | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Create Doctor Account',
+                'dashboardDescription' => 'Register a new clinician account with secure access managed by the administrator.',
+            ]),
+            [
+                'errors' => $errors,
+                'fieldErrors' => $fieldErrors,
+                'formData' => $formData,
+                'genderOptions' => AdminDoctorService::getGenderOptions(),
+                'statusOptions' => AdminDoctorService::getStatusOptions(),
+                'csrfToken' => Csrf::generate(),
+            ]
+        ), 'layouts/dashboard');
+    }
+
+    public function editDoctor(string $id): void
+    {
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $userId = (int) $id;
+        $doctor = AdminDoctorService::getDoctorDetail($userId);
+
+        if ($doctor === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested doctor account could not be found.',
+            ]);
+            Helper::redirect('/admin/doctors');
+            return;
+        }
+
+        $errors = [];
+        $fieldErrors = [];
+        $formData = AdminDoctorService::getDoctorFormData($doctor);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $result = AdminDoctorService::updateDoctorAccount($userId, $_POST);
+
+            if ($result['success'] ?? false) {
+                Session::flash('status', [
+                    'type' => 'success',
+                    'message' => $result['message'] ?? 'Doctor account updated successfully.',
+                ]);
+                Helper::redirect('/admin/doctors/' . $userId . '/edit');
+                return;
+            }
+
+            $errors = $result['errors'] ?? [];
+            $fieldErrors = $result['fieldErrors'] ?? [];
+            $formData = $result['formData'] ?? $formData;
+        }
+
+        $this->render('admin/doctors/edit', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Edit Doctor Account | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Edit Doctor Account',
+                'dashboardDescription' => 'Update clinician account identity, profile, and access status securely.',
+            ]),
+            [
+                'doctor' => $doctor,
+                'errors' => $errors,
+                'fieldErrors' => $fieldErrors,
+                'formData' => $formData,
+                'genderOptions' => AdminDoctorService::getGenderOptions(),
+                'statusOptions' => AdminDoctorService::getStatusOptions(),
+                'csrfToken' => Csrf::generate(),
+            ]
+        ), 'layouts/dashboard');
+    }
+
+    public function activateDoctor(string $id): void
+    {
+        $this->handleDoctorStatusUpdate((int) $id, 'active');
+    }
+
+    public function deactivateDoctor(string $id): void
+    {
+        $this->handleDoctorStatusUpdate((int) $id, 'inactive');
+    }
+
+    public function resetDoctorPassword(string $id): void
+    {
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $userId = (int) $id;
+        $doctor = AdminDoctorService::getDoctorDetail($userId);
+
+        if ($doctor === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested doctor account could not be found.',
+            ]);
+            Helper::redirect('/admin/doctors');
+            return;
+        }
+
+        $errors = [];
+        $fieldErrors = [];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $result = AdminDoctorService::resetDoctorPassword($userId, $_POST);
+
+            if ($result['success'] ?? false) {
+                Session::flash('status', [
+                    'type' => 'success',
+                    'message' => $result['message'] ?? 'Doctor password reset successfully.',
+                ]);
+                Helper::redirect('/admin/doctors');
+                return;
+            }
+
+            $errors = $result['errors'] ?? [];
+            $fieldErrors = $result['fieldErrors'] ?? [];
+            $doctor = $result['doctor'] ?? $doctor;
+        }
+
+        $this->render('admin/doctors/reset_password', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Reset Doctor Password | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Reset Doctor Password',
+                'dashboardDescription' => 'Issue a secure new password for a clinician account.',
+            ]),
+            [
+                'doctor' => $doctor,
+                'errors' => $errors,
+                'fieldErrors' => $fieldErrors,
+                'csrfToken' => Csrf::generate(),
+            ]
+        ), 'layouts/dashboard');
+    }
+
     public function showUser(string $id): void
     {
         $user = $this->requireAdminUser();
@@ -90,6 +292,7 @@ class AdminController extends Controller
                 'message' => 'The requested user record could not be found.',
             ]);
             Helper::redirect('/admin/users');
+            return;
         }
 
         $this->render('admin/users/show', array_merge(
@@ -129,10 +332,29 @@ class AdminController extends Controller
             'dashboardRoleLabel' => 'Administrator Dashboard',
             'sidebarItems' => [
                 ['path' => '/admin/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/admin/doctors', 'label' => 'Doctor Accounts', 'icon' => 'bi-person-badge-fill'],
                 ['path' => '/admin/users', 'label' => 'User Management', 'icon' => 'bi-people-fill'],
             ],
-            'sidebarStatusTitle' => 'Week 3 User Governance',
-            'sidebarStatusDescription' => 'Administrator user visibility, filtering, and detail review are now active.',
+            'sidebarStatusTitle' => 'Week 3 Account Governance',
+            'sidebarStatusDescription' => 'Doctor onboarding and administrator user oversight are now active.',
         ], $overrides);
+    }
+
+    private function handleDoctorStatusUpdate(int $userId, string $status): void
+    {
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $result = AdminDoctorService::updateDoctorStatus($userId, $status, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Doctor account status update completed.',
+        ]);
+
+        Helper::redirect('/admin/doctors');
     }
 }

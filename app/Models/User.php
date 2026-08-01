@@ -48,6 +48,18 @@ class User
         return null;
     }
 
+    public static function findByEmailExcludingId(string $email, int $excludeId): ?self
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT * FROM users WHERE email = :email AND id != :exclude_id LIMIT 1");
+        $stmt->bindValue(':email', $email);
+        $stmt->bindValue(':exclude_id', $excludeId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ? self::fromArray($row) : null;
+    }
+
     public static function fromArray(array $data): self
     {
         $user = new self();
@@ -116,6 +128,39 @@ class User
         }
 
         return $roleMap;
+    }
+
+    public static function findRoleIdByName(string $roleName): ?int
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT id FROM roles WHERE name = :name LIMIT 1");
+        $stmt->bindValue(':name', $roleName);
+        $stmt->execute();
+        $roleId = $stmt->fetchColumn();
+
+        return $roleId !== false ? (int) $roleId : null;
+    }
+
+    public static function updateStatus(int $id, string $status): bool
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("UPDATE users SET status = :status WHERE id = :id");
+
+        return $stmt->execute([
+            ':status' => $status,
+            ':id' => $id,
+        ]);
+    }
+
+    public static function updatePasswordHash(int $id, string $passwordHash): bool
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("UPDATE users SET password = :password WHERE id = :id");
+
+        return $stmt->execute([
+            ':password' => $passwordHash,
+            ':id' => $id,
+        ]);
     }
 
     public static function getUserManagementSummary(): array
@@ -241,7 +286,11 @@ class User
                 users.updated_at,
                 roles.name AS role_name,
                 admin.employee_id,
+                doctor.phone,
+                doctor.gender AS doctor_gender,
+                doctor.professional_title,
                 doctor.specialization,
+                doctor.employee_id AS doctor_employee_id,
                 doctor.license_number,
                 doctor.clinic_address,
                 patient.dob,

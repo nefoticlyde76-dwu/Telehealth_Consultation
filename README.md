@@ -12,6 +12,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Public Website: Implemented
 - Dashboards: Initial patient, doctor, and administrator dashboards implemented
 - Administration: Week 3 Day 1 user management foundation implemented for administrators
+- Doctor Accounts: Week 3 Day 2 doctor account management implemented for administrator-controlled clinician onboarding
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -60,6 +61,14 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - View user details
 - Responsive administrator user table
 - Pagination support for user listing
+- Doctor account management
+- Create doctor account
+- Edit doctor account
+- Activate doctor account
+- Deactivate doctor account
+- Reset doctor password
+- Linked `users` and `doctor` record creation with transaction support
+- Doctor profile fields for full name, email, phone, gender, professional title, specialization, employee ID, and status
 
 ## Project Structure
 
@@ -115,10 +124,11 @@ copy .env.example .env
 4. Update `.env` with your local database credentials and application URL.
    - For typical XAMPP local setups, use `DB_HOST=localhost`.
 5. Ensure Apache and MySQL are running in XAMPP.
-6. Import the migration file:
+6. Import the migration files:
 
 ```bash
 mysql -u root -p < database/migrations/001_initial_schema.sql
+mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.sql
 ```
 
 7. Open the application using the configured `APP_URL`.
@@ -134,6 +144,7 @@ mysql -u root -p < database/migrations/001_initial_schema.sql
   - Email: `admin@telehealth.local`
   - Password: `admin123`
 - Administrator-only user management is currently available at `/admin/users` after successful administrator login.
+- Administrator-only doctor account management is currently available at `/admin/doctors` after successful administrator login.
 
 ## Security Highlights
 
@@ -161,6 +172,7 @@ mysql -u root -p < database/migrations/001_initial_schema.sql
 - Verified contact form validation and successful inquiry logging
 - Verified graceful user-facing handling when database connectivity is unavailable
 - Verified administrator login and redirect after correcting the default admin seed password
+- Verified administrator doctor-management flows in code for create, edit, activate, deactivate, and password reset handling with CSRF validation and prepared statements
 
 ## Known Environment Requirement
 
