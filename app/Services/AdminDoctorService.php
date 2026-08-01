@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Helpers\Helper;
 use App\Models\Doctor;
 use App\Models\User;
 
@@ -465,7 +466,7 @@ class AdminDoctorService
         if ($isCreate) {
             if ($password === '') {
                 $fieldErrors['password'] = 'Initial password is required.';
-            } elseif (!self::isStrongPassword($password)) {
+            } elseif (!Helper::isStrongPassword($password)) {
                 $fieldErrors['password'] = 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.';
             }
 
@@ -485,14 +486,5 @@ class AdminDoctorService
         }
 
         return [$errors, $fieldErrors];
-    }
-
-    private static function isStrongPassword(string $password): bool
-    {
-        return strlen($password) >= 8
-            && preg_match('/[A-Z]/', $password)
-            && preg_match('/[a-z]/', $password)
-            && preg_match('/\d/', $password)
-            && preg_match('/[^A-Za-z0-9]/', $password);
     }
 }

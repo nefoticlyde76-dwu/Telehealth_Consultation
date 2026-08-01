@@ -1,7 +1,7 @@
 <header class="dashboard-topbar">
   <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
     <div class="d-flex align-items-start gap-3">
-      <button class="btn btn-outline-primary d-lg-none rounded-circle topbar-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardSidebar" aria-controls="dashboardSidebar">
+      <button class="btn btn-outline-primary d-lg-none rounded-circle topbar-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardSidebar" aria-controls="dashboardSidebar" aria-label="Open dashboard navigation">
         <i class="bi bi-list"></i>
       </button>
 
@@ -18,7 +18,7 @@
     </div>
 
     <div class="d-flex align-items-center gap-3">
-      <div class="topbar-chip">
+      <div class="topbar-chip" aria-label="Notifications placeholder">
         <i class="bi bi-bell"></i>
         <span>Notifications</span>
         <span class="badge rounded-pill badge-soft-info">0</span>

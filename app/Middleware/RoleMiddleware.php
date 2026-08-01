@@ -4,6 +4,7 @@ namespace App\Middleware;
 
 use App\Core\Session;
 use App\Helpers\Helper;
+use App\Services\AuthService;
 
 class RoleMiddleware implements Middleware
 {
@@ -19,13 +20,21 @@ class RoleMiddleware implements Middleware
         $userRole = Session::get('user_role');
 
         if (!$userRole) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'Please sign in to continue.',
+            ]);
             Helper::redirect('/login');
         }
 
         if (!in_array($userRole, $this->allowedRoles, true)) {
-            http_response_code(403);
-            echo '403 Forbidden';
-            exit;
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'You do not have permission to access that page with the current account.',
+            ]);
+
+            $redirectUrl = AuthService::getRoleRedirectUrl((string) $userRole);
+            Helper::redirect($redirectUrl !== '/' ? $redirectUrl : '/');
         }
     }
 }

@@ -126,6 +126,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
 
       <div class="table-responsive">
         <table class="table admin-user-table align-middle mb-0">
+          <caption class="visually-hidden">Doctor directory showing clinician identity, specialization, contact details, account status, and administrator actions.</caption>
           <thead>
             <tr>
               <th scope="col">Doctor</th>
@@ -183,18 +184,18 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     </span>
                   </td>
                   <td class="text-end">
-                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
-                      <a href="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/edit') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <div class="admin-action-group">
+                      <a href="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/edit') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3" aria-label="Edit doctor account for <?= \App\Helpers\Helper::escape((string) ($doctor['full_name'] ?? 'this doctor')) ?>">
                         <i class="bi bi-pencil-square me-2"></i>
                         Edit
                       </a>
-                      <a href="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/reset-password') ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                      <a href="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/reset-password') ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3" aria-label="Reset password for <?= \App\Helpers\Helper::escape((string) ($doctor['full_name'] ?? 'this doctor')) ?>">
                         <i class="bi bi-key me-2"></i>
                         Reset Password
                       </a>
                       <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/' . ($isActive ? 'deactivate' : 'activate')) ?>" class="d-inline">
                         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
-                        <button type="submit" class="btn <?= $isActive ? 'btn-outline-danger' : 'btn-outline-success' ?> btn-sm rounded-pill px-3">
+                        <button type="submit" class="btn <?= $isActive ? 'btn-outline-danger' : 'btn-outline-success' ?> btn-sm rounded-pill px-3" aria-label="<?= ($isActive ? 'Deactivate' : 'Activate') . ' doctor account for ' . \App\Helpers\Helper::escape((string) ($doctor['full_name'] ?? 'this doctor')) ?>">
                           <i class="bi <?= $isActive ? 'bi-person-dash' : 'bi-person-check' ?> me-2"></i>
                           <?= $isActive ? 'Deactivate' : 'Activate' ?>
                         </button>

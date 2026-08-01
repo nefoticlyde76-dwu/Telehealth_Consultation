@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Session;
 use App\Services\AuthService;
 
 class DoctorController extends Controller
@@ -29,6 +30,7 @@ class DoctorController extends Controller
             'welcomeMessage' => 'Your clinician workspace is ready to support availability management, appointment review, and consultation delivery as modules are activated.',
             'focusTitle' => 'Clinical workspace ready',
             'focusDescription' => 'Doctor availability, bookings, and records will connect to this dashboard in upcoming sprints.',
+            'statusMessage' => Session::getFlash('status'),
             'stats' => [
                 ['label' => 'Availability Slots', 'value' => '0', 'icon' => 'bi-clock-history', 'description' => 'Prepared for doctor availability management in the next module.'],
                 ['label' => 'Pending Consultations', 'value' => '0', 'icon' => 'bi-clipboard-check', 'description' => 'Tracks future consultation requests requiring review.'],

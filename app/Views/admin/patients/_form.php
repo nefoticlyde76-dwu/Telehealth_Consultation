@@ -28,6 +28,7 @@ $statusOptions = $statusOptions ?? [];
               name="full_name"
               value="<?= \App\Helpers\Helper::escape((string) ($formData['full_name'] ?? '')) ?>"
               maxlength="255"
+              autocomplete="name"
               required
             >
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['full_name'] ?? 'Full name is required.') ?></div>
@@ -42,6 +43,7 @@ $statusOptions = $statusOptions ?? [];
               name="email"
               value="<?= \App\Helpers\Helper::escape((string) ($formData['email'] ?? '')) ?>"
               maxlength="255"
+              autocomplete="email"
               required
             >
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['email'] ?? 'Please provide a valid email address.') ?></div>
@@ -79,6 +81,7 @@ $statusOptions = $statusOptions ?? [];
               id="address"
               name="address"
               rows="4"
+              autocomplete="street-address"
             ><?= \App\Helpers\Helper::escape((string) ($formData['address'] ?? '')) ?></textarea>
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['address'] ?? 'Please provide a valid address.') ?></div>
           </div>

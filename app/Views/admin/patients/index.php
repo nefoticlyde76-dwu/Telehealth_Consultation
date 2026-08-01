@@ -122,6 +122,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
 
       <div class="table-responsive">
         <table class="table admin-user-table align-middle mb-0">
+          <caption class="visually-hidden">Patient directory showing identity, demographics, address, account status, and administrator actions.</caption>
           <thead>
             <tr>
               <th scope="col">Patient</th>
@@ -161,7 +162,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     <div class="d-flex flex-column">
                       <span>
                         DOB:
-                        <?= \App\Helpers\Helper::escape(!empty($patient['dob']) ? date('d M Y', strtotime((string) $patient['dob'])) : 'Not provided') ?>
+                        <?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate($patient['dob'] ?? null, 'd M Y', 'Not provided')) ?>
                       </span>
                       <span class="text-muted small">
                         Gender:
@@ -178,14 +179,14 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     </span>
                   </td>
                   <td class="text-end">
-                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
-                      <a href="<?= \App\Helpers\Helper::url('/admin/patients/' . $patientId . '/edit') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <div class="admin-action-group">
+                      <a href="<?= \App\Helpers\Helper::url('/admin/patients/' . $patientId . '/edit') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3" aria-label="Edit patient account for <?= \App\Helpers\Helper::escape((string) ($patient['full_name'] ?? 'this patient')) ?>">
                         <i class="bi bi-pencil-square me-2"></i>
                         Edit
                       </a>
                       <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/patients/' . $patientId . '/' . ($isActive ? 'deactivate' : 'activate')) ?>" class="d-inline">
                         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
-                        <button type="submit" class="btn <?= $isActive ? 'btn-outline-danger' : 'btn-outline-success' ?> btn-sm rounded-pill px-3">
+                        <button type="submit" class="btn <?= $isActive ? 'btn-outline-danger' : 'btn-outline-success' ?> btn-sm rounded-pill px-3" aria-label="<?= ($isActive ? 'Deactivate' : 'Activate') . ' patient account for ' . \App\Helpers\Helper::escape((string) ($patient['full_name'] ?? 'this patient')) ?>">
                           <i class="bi <?= $isActive ? 'bi-person-dash' : 'bi-person-check' ?> me-2"></i>
                           <?= $isActive ? 'Deactivate' : 'Activate' ?>
                         </button>

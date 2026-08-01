@@ -201,7 +201,7 @@ class AuthController extends Controller
 
         if ($password === '') {
             $errors[] = 'Password is required.';
-        } elseif (!$this->isStrongPassword($password)) {
+        } elseif (!Helper::isStrongPassword($password)) {
             $errors[] = 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.';
         }
 
@@ -235,14 +235,5 @@ class AuthController extends Controller
         }
 
         return $errors;
-    }
-
-    private function isStrongPassword(string $password): bool
-    {
-        return strlen($password) >= 8
-            && preg_match('/[A-Z]/', $password)
-            && preg_match('/[a-z]/', $password)
-            && preg_match('/\d/', $password)
-            && preg_match('/[^A-Za-z0-9]/', $password);
     }
 }

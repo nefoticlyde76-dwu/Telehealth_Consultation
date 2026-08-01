@@ -60,4 +60,28 @@ class Helper
 
         return $requestUri === '' ? '/' : $requestUri;
     }
+
+    public static function isStrongPassword(string $password): bool
+    {
+        return strlen($password) >= 8
+            && preg_match('/[A-Z]/', $password)
+            && preg_match('/[a-z]/', $password)
+            && preg_match('/\d/', $password)
+            && preg_match('/[^A-Za-z0-9]/', $password);
+    }
+
+    public static function formatDate(?string $date, string $format = 'd M Y', string $fallback = 'Not available'): string
+    {
+        if ($date === null || trim($date) === '') {
+            return $fallback;
+        }
+
+        $timestamp = strtotime($date);
+
+        if ($timestamp === false) {
+            return $fallback;
+        }
+
+        return date($format, $timestamp);
+    }
 }

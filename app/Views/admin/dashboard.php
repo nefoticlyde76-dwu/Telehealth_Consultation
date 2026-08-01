@@ -68,20 +68,29 @@
           </div>
 
           <div class="admin-user-preview-list">
-            <?php foreach (($latestUsers ?? []) as $latestUser): ?>
+            <?php if (($latestUsers ?? []) === []): ?>
               <div class="admin-user-preview-item">
                 <div>
-                  <strong class="d-block"><?= \App\Helpers\Helper::escape($latestUser['full_name'] ?? 'User') ?></strong>
-                  <span class="small text-muted"><?= \App\Helpers\Helper::escape($latestUser['email'] ?? '') ?></span>
-                </div>
-                <div class="text-end">
-                  <span class="badge <?= ($latestUser['status'] ?? '') === 'active' ? 'badge-soft-success' : 'badge-soft-warning' ?> rounded-pill mb-2">
-                    <?= \App\Helpers\Helper::escape(ucfirst((string) ($latestUser['status'] ?? 'unknown'))) ?>
-                  </span>
-                  <span class="d-block small text-muted"><?= \App\Helpers\Helper::escape(ucfirst((string) ($latestUser['role_name'] ?? 'user'))) ?></span>
+                  <strong class="d-block">No recent users available</strong>
+                  <span class="small text-muted">Recent account activity will appear here as more records are added to the platform.</span>
                 </div>
               </div>
-            <?php endforeach; ?>
+            <?php else: ?>
+              <?php foreach (($latestUsers ?? []) as $latestUser): ?>
+                <div class="admin-user-preview-item">
+                  <div>
+                    <strong class="d-block"><?= \App\Helpers\Helper::escape($latestUser['full_name'] ?? 'User') ?></strong>
+                    <span class="small text-muted"><?= \App\Helpers\Helper::escape($latestUser['email'] ?? '') ?></span>
+                  </div>
+                  <div class="text-end">
+                    <span class="badge <?= ($latestUser['status'] ?? '') === 'active' ? 'badge-soft-success' : 'badge-soft-warning' ?> rounded-pill mb-2">
+                      <?= \App\Helpers\Helper::escape(ucfirst((string) ($latestUser['status'] ?? 'unknown'))) ?>
+                    </span>
+                    <span class="d-block small text-muted"><?= \App\Helpers\Helper::escape(ucfirst((string) ($latestUser['role_name'] ?? 'user'))) ?></span>
+                  </div>
+                </div>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </div>
         </div>
       </div>

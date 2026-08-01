@@ -40,6 +40,7 @@ class AdminController extends Controller
                 'stats' => $dashboardData['stats'],
                 'quickActions' => $dashboardData['quickActions'],
                 'recentActivity' => $dashboardData['recentActivity'],
+                'statusMessage' => Session::getFlash('status'),
                 'emptyState' => [
                     'icon' => 'bi-people',
                     'title' => 'Administrative governance tools are now available',
@@ -219,6 +220,10 @@ class AdminController extends Controller
         $profile = AdminProfileService::getProfileDetail((int) $user->id);
 
         if ($profile === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The administrator profile could not be loaded.',
+            ]);
             Helper::redirect('/admin/dashboard');
             return;
         }
@@ -236,6 +241,7 @@ class AdminController extends Controller
                 $result = AdminProfileService::updatePassword((int) $user->id, $_POST);
 
                 if ($result['success'] ?? false) {
+                    Session::regenerate();
                     Session::flash('status', [
                         'type' => 'success',
                         'message' => $result['message'] ?? 'Administrator password updated successfully.',
@@ -524,6 +530,11 @@ class AdminController extends Controller
 
     private function handleDoctorStatusUpdate(int $userId, string $status): void
     {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/doctors');
+            return;
+        }
+
         $user = $this->requireAdminUser();
 
         if ($user === null) {
@@ -542,6 +553,11 @@ class AdminController extends Controller
 
     private function handlePatientStatusUpdate(int $userId, string $status): void
     {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/patients');
+            return;
+        }
+
         $user = $this->requireAdminUser();
 
         if ($user === null) {

@@ -142,6 +142,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
 
       <div class="table-responsive">
         <table class="table admin-user-table align-middle mb-0">
+          <caption class="visually-hidden">Administrator user directory showing account identity, role, status, creation date, and detail access.</caption>
           <thead>
             <tr>
               <th scope="col">User</th>
@@ -184,10 +185,10 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     </span>
                   </td>
                   <td class="text-muted small">
-                    <?= \App\Helpers\Helper::escape(date('d M Y', strtotime((string) ($managedUser['created_at'] ?? 'now')))) ?>
+                    <?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate($managedUser['created_at'] ?? null)) ?>
                   </td>
                   <td class="text-end">
-                    <a href="<?= \App\Helpers\Helper::url('/admin/users/' . (int) ($managedUser['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <a href="<?= \App\Helpers\Helper::url('/admin/users/' . (int) ($managedUser['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3" aria-label="View details for <?= \App\Helpers\Helper::escape((string) ($managedUser['full_name'] ?? 'this user')) ?>">
                       <i class="bi bi-eye me-2"></i>
                       View Details
                     </a>

@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Session;
 use App\Services\AuthService;
 
 class PatientController extends Controller
@@ -29,6 +30,7 @@ class PatientController extends Controller
             'welcomeMessage' => 'Your account is active and ready for consultation booking, care updates, and future appointment history.',
             'focusTitle' => 'Patient access is ready',
             'focusDescription' => 'As booking and consultation modules come online, this workspace will display live healthcare activity.',
+            'statusMessage' => Session::getFlash('status'),
             'stats' => [
                 ['label' => 'Upcoming Consultations', 'value' => '0', 'icon' => 'bi-calendar2-check', 'description' => 'Live appointment data will appear here once booking is enabled.'],
                 ['label' => 'Pending Requests', 'value' => '0', 'icon' => 'bi-hourglass-split', 'description' => 'Tracks consultation requests awaiting action.'],

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Helpers\Helper;
 use App\Models\Admin;
 use App\Models\User;
 
@@ -143,8 +144,10 @@ class AdminProfileService
 
         if ($password === '') {
             $fieldErrors['password'] = 'New password is required.';
-        } elseif (!self::isStrongPassword($password)) {
+        } elseif (!Helper::isStrongPassword($password)) {
             $fieldErrors['password'] = 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.';
+        } elseif (password_verify($password, (string) $user->password)) {
+            $fieldErrors['password'] = 'Please choose a new password that is different from the current password.';
         }
 
         if ($confirmPassword === '') {
@@ -237,14 +240,5 @@ class AdminProfileService
         }
 
         return [$errors, $fieldErrors];
-    }
-
-    private static function isStrongPassword(string $password): bool
-    {
-        return strlen($password) >= 8
-            && preg_match('/[A-Z]/', $password)
-            && preg_match('/[a-z]/', $password)
-            && preg_match('/\d/', $password)
-            && preg_match('/[^A-Za-z0-9]/', $password);
     }
 }

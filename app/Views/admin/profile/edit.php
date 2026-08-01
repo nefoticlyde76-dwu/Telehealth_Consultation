@@ -11,14 +11,7 @@ $csrfToken = $csrfToken ?? '';
 ?>
 
 <section class="mb-4">
-  <?php if (is_array($statusMessage) && !empty($statusMessage['message'])): ?>
-    <div class="alert alert-<?= \App\Helpers\Helper::escape($statusMessage['type'] ?? 'info') ?> border-0 shadow-sm rounded-4 mb-4" role="alert">
-      <div class="d-flex align-items-center gap-3">
-        <i class="bi bi-info-circle fs-4"></i>
-        <div><?= \App\Helpers\Helper::escape($statusMessage['message']) ?></div>
-      </div>
-    </div>
-  <?php endif; ?>
+  <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
   <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
     <div>
@@ -71,6 +64,7 @@ $csrfToken = $csrfToken ?? '';
                 name="full_name"
                 value="<?= \App\Helpers\Helper::escape((string) ($formData['full_name'] ?? '')) ?>"
                 maxlength="255"
+                autocomplete="name"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['full_name'] ?? 'Full name is required.') ?></div>
@@ -85,6 +79,7 @@ $csrfToken = $csrfToken ?? '';
                 name="email"
                 value="<?= \App\Helpers\Helper::escape((string) ($formData['email'] ?? '')) ?>"
                 maxlength="255"
+                autocomplete="email"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['email'] ?? 'Please provide a valid email address.') ?></div>
@@ -99,6 +94,7 @@ $csrfToken = $csrfToken ?? '';
                 name="employee_id"
                 value="<?= \App\Helpers\Helper::escape((string) ($formData['employee_id'] ?? '')) ?>"
                 maxlength="100"
+                autocomplete="off"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['employee_id'] ?? 'Employee ID is required.') ?></div>
@@ -154,6 +150,7 @@ $csrfToken = $csrfToken ?? '';
                 class="form-control <?= isset($passwordFieldErrors['current_password']) ? 'is-invalid' : '' ?>"
                 id="current_password"
                 name="current_password"
+                autocomplete="current-password"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($passwordFieldErrors['current_password'] ?? 'Current password is required.') ?></div>
@@ -167,6 +164,7 @@ $csrfToken = $csrfToken ?? '';
                 id="password"
                 name="password"
                 data-password-strength
+                autocomplete="new-password"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($passwordFieldErrors['password'] ?? 'Please provide a strong new password.') ?></div>
@@ -184,6 +182,7 @@ $csrfToken = $csrfToken ?? '';
                 id="confirm_password"
                 name="confirm_password"
                 data-confirm-password="#password"
+                autocomplete="new-password"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($passwordFieldErrors['confirm_password'] ?? 'Please confirm the password.') ?></div>

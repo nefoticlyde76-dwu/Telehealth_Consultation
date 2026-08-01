@@ -29,6 +29,7 @@ $showPasswordFields = $showPasswordFields ?? false;
               name="full_name"
               value="<?= \App\Helpers\Helper::escape((string) ($formData['full_name'] ?? '')) ?>"
               maxlength="255"
+              autocomplete="name"
               required
             >
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['full_name'] ?? 'Full name is required.') ?></div>
@@ -43,6 +44,7 @@ $showPasswordFields = $showPasswordFields ?? false;
               name="email"
               value="<?= \App\Helpers\Helper::escape((string) ($formData['email'] ?? '')) ?>"
               maxlength="255"
+              autocomplete="email"
               required
             >
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['email'] ?? 'Please provide a valid email address.') ?></div>
@@ -57,6 +59,7 @@ $showPasswordFields = $showPasswordFields ?? false;
               name="phone"
               value="<?= \App\Helpers\Helper::escape((string) ($formData['phone'] ?? '')) ?>"
               maxlength="30"
+              autocomplete="tel"
               required
             >
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['phone'] ?? 'Phone number is required.') ?></div>
@@ -114,6 +117,7 @@ $showPasswordFields = $showPasswordFields ?? false;
               name="employee_id"
               value="<?= \App\Helpers\Helper::escape((string) ($formData['employee_id'] ?? '')) ?>"
               maxlength="100"
+              autocomplete="off"
             >
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['employee_id'] ?? 'Please provide a valid employee ID or leave it blank.') ?></div>
           </div>
@@ -139,6 +143,7 @@ $showPasswordFields = $showPasswordFields ?? false;
                 id="password"
                 name="password"
                 data-password-strength
+                autocomplete="new-password"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['password'] ?? 'Please provide a strong initial password.') ?></div>
@@ -156,6 +161,7 @@ $showPasswordFields = $showPasswordFields ?? false;
                 id="confirm_password"
                 name="confirm_password"
                 data-confirm-password="#password"
+                autocomplete="new-password"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['confirm_password'] ?? 'Please confirm the password.') ?></div>

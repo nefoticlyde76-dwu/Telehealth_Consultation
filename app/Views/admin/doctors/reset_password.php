@@ -98,6 +98,7 @@ $statusMessage = $statusMessage ?? null;
                 id="password"
                 name="password"
                 data-password-strength
+                autocomplete="new-password"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['password'] ?? 'Please provide a strong new password.') ?></div>
@@ -115,6 +116,7 @@ $statusMessage = $statusMessage ?? null;
                 id="confirm_password"
                 name="confirm_password"
                 data-confirm-password="#password"
+                autocomplete="new-password"
                 required
               >
               <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['confirm_password'] ?? 'Please confirm the password.') ?></div>
