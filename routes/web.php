@@ -36,6 +36,26 @@ $router->get('/admin/users/{id}', [AdminController::class, 'showUser'], [
     new RoleMiddleware(['admin']),
 ]);
 
+$router->get('/admin/patients', [AdminController::class, 'patients'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/patients/{id}/edit', [AdminController::class, 'editPatient'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/patients/{id}/edit', [AdminController::class, 'editPatient'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/patients/{id}/activate', [AdminController::class, 'activatePatient'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/patients/{id}/deactivate', [AdminController::class, 'deactivatePatient'], [
+    new RoleMiddleware(['admin']),
+]);
+
 $router->get('/admin/doctors', [AdminController::class, 'doctors'], [
     new RoleMiddleware(['admin']),
 ]);
@@ -69,5 +89,13 @@ $router->get('/admin/doctors/{id}/reset-password', [AdminController::class, 'res
 ]);
 
 $router->post('/admin/doctors/{id}/reset-password', [AdminController::class, 'resetDoctorPassword'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/profile', [AdminController::class, 'profile'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/profile', [AdminController::class, 'profile'], [
     new RoleMiddleware(['admin']),
 ]);

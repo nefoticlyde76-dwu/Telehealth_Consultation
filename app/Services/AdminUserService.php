@@ -44,9 +44,15 @@ class AdminUserService
             ],
             'quickActions' => [
                 [
+                    'title' => 'Manage Patient Accounts',
+                    'description' => 'Review patient registrations, search accounts, update profile information, and control access status.',
+                    'icon' => 'bi-people-fill',
+                    'status' => 'Available now',
+                ],
+                [
                     'title' => 'Open User Management',
                     'description' => 'Review all platform accounts with search, role filters, status filters, and responsive table support.',
-                    'icon' => 'bi-people-fill',
+                    'icon' => 'bi-diagram-3-fill',
                     'status' => 'Available now',
                 ],
                 [
@@ -62,10 +68,10 @@ class AdminUserService
                     'status' => 'Available now',
                 ],
                 [
-                    'title' => 'Prepare Future Governance',
-                    'description' => 'The administration workspace is now ready for later workflow expansion across booking, consultation, and availability modules.',
-                    'icon' => 'bi-kanban',
-                    'status' => 'Week 3 progression',
+                    'title' => 'Update Administrator Profile',
+                    'description' => 'Maintain administrator identity details and change the current administrator password securely.',
+                    'icon' => 'bi-person-gear',
+                    'status' => 'Available now',
                 ],
             ],
             'recentActivity' => self::buildRecentActivity($latestUsers),

@@ -13,6 +13,8 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Dashboards: Initial patient, doctor, and administrator dashboards implemented
 - Administration: Week 3 Day 1 user management foundation implemented for administrators
 - Doctor Accounts: Week 3 Day 2 doctor account management implemented for administrator-controlled clinician onboarding
+- Patient Management: Week 3 Day 3 patient management implemented for administrator oversight and account maintenance
+- Administrator Profile: Week 3 Day 3 profile editing and password management implemented for administrators
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -69,6 +71,16 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Reset doctor password
 - Linked `users` and `doctor` record creation with transaction support
 - Doctor profile fields for full name, email, phone, gender, professional title, specialization, employee ID, and status
+- Patient management
+- View patients
+- Search patients
+- Edit patient accounts
+- Activate and deactivate patient accounts
+- Linked `users` and `patient` record updates for administrator patient management
+- Administrator profile management
+- Edit administrator profile
+- Update administrator profile information
+- Change administrator password
 
 ## Project Structure
 
@@ -145,6 +157,8 @@ mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.
   - Password: `admin123`
 - Administrator-only user management is currently available at `/admin/users` after successful administrator login.
 - Administrator-only doctor account management is currently available at `/admin/doctors` after successful administrator login.
+- Administrator-only patient management is currently available at `/admin/patients` after successful administrator login.
+- Administrator profile management is currently available at `/admin/profile` after successful administrator login.
 
 ## Security Highlights
 
@@ -173,6 +187,8 @@ mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.
 - Verified graceful user-facing handling when database connectivity is unavailable
 - Verified administrator login and redirect after correcting the default admin seed password
 - Verified administrator doctor-management flows in code for create, edit, activate, deactivate, and password reset handling with CSRF validation and prepared statements
+- Verified administrator patient-management flows in code for search, edit, activate, and deactivate handling with CSRF validation and prepared statements
+- Verified administrator profile update and password change handling in code with duplicate checks and password strength validation
 
 ## Known Environment Requirement
 

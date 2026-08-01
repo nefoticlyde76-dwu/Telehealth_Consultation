@@ -10,10 +10,16 @@
               <h3 class="h5 mb-1">User Management Snapshot</h3>
               <p class="text-muted mb-0">Current platform distribution across patient, doctor, and administrator accounts.</p>
             </div>
-            <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary rounded-pill px-4">
-              <i class="bi bi-people me-2"></i>
-              Open User Management
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="<?= \App\Helpers\Helper::url('/admin/patients') ?>" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="bi bi-people me-2"></i>
+                Manage Patients
+              </a>
+              <a href="<?= \App\Helpers\Helper::url('/admin/profile') ?>" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-person-gear me-2"></i>
+                Profile Settings
+              </a>
+            </div>
           </div>
 
           <div class="row g-3">

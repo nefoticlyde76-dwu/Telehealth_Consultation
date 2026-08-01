@@ -165,7 +165,7 @@ $statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
             </div>
             <div class="admin-foundation-item">
               <i class="bi bi-info-circle"></i>
-              <span>Account creation, editing, or doctor onboarding are intentionally out of scope for today’s task.</span>
+              <span>Patient management, doctor account management, and administrator profile maintenance are now handled through their dedicated Week 3 administration screens.</span>
             </div>
           </div>
         </div>

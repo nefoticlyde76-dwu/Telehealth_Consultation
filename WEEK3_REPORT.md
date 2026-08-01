@@ -4,7 +4,7 @@
 
 - Project Title: MBPHA TeleHealth Consultation System
 - Week: Week 3
-- Scope Covered in This Report: Day 1 Administrator User Management Foundation and Day 2 Doctor Account Management
+- Scope Covered in This Report: Day 1 Administrator User Management Foundation, Day 2 Doctor Account Management, and Day 3 Patient Management with Administrator Profile Management
 
 ## Week 3 Day 1 Objective
 
@@ -36,6 +36,21 @@ The work completed today focused only on:
 - Reset doctor password
 - Extend the linked doctor profile with required Week 3 Day 2 clinician fields
 - Maintain administrator-only provisioning for doctor accounts
+
+## Week 3 Day 3 Objective
+
+The objective of this implementation was to extend the existing Week 3 administration layer with patient account governance and administrator self-management while preserving the current MVC architecture, shared authentication flow, and existing security controls.
+
+The work completed today focused only on:
+
+- View patients
+- Search patients
+- Edit patient
+- Activate patient
+- Deactivate patient
+- Edit administrator profile
+- Change administrator password
+- Update administrator profile information
 
 ## Completed Work
 
@@ -113,10 +128,47 @@ The administrator dashboard was extended to surface doctor account governance di
 - direct navigation to create doctor account
 - updated governance messaging aligned with Week 3 Day 2 scope
 
+### 6. Patient Management
+
+An administrator-only patient management module was added with:
+
+- `/admin/patients`
+- `/admin/patients/{id}/edit`
+- `/admin/patients/{id}/activate`
+- `/admin/patients/{id}/deactivate`
+
+This module supports:
+
+- patient listing with pagination
+- search by full name, email, or address
+- filtering by account status
+- editing linked `users` and `patient` data
+- patient account activation and deactivation
+- responsive Bootstrap-based management screens
+
+### 7. Administrator Profile Management
+
+An administrator profile management module was added with:
+
+- `/admin/profile`
+
+This module supports:
+
+- editing administrator profile information
+- updating administrator full name
+- updating administrator email
+- updating administrator employee ID
+- changing the current administrator password
+- strong password validation
+- duplicate email and employee ID prevention
+- continued use of CSRF verification and prepared statements
+
 ## Files Created
 
 - `app/Services/AdminUserService.php`
 - `app/Services/AdminDoctorService.php`
+- `app/Services/AdminPatientService.php`
+- `app/Services/AdminProfileService.php`
 - `app/Views/admin/users/index.php`
 - `app/Views/admin/users/show.php`
 - `app/Views/admin/doctors/index.php`
@@ -124,6 +176,10 @@ The administrator dashboard was extended to surface doctor account governance di
 - `app/Views/admin/doctors/edit.php`
 - `app/Views/admin/doctors/reset_password.php`
 - `app/Views/admin/doctors/_form.php`
+- `app/Views/admin/patients/index.php`
+- `app/Views/admin/patients/edit.php`
+- `app/Views/admin/patients/_form.php`
+- `app/Views/admin/profile/edit.php`
 - `database/migrations/003_add_doctor_account_management_fields.sql`
 - `WEEK3_REPORT.md`
 
@@ -132,6 +188,8 @@ The administrator dashboard was extended to surface doctor account governance di
 - `app/Controllers/AdminController.php`
 - `app/Core/Router.php`
 - `app/Models/Doctor.php`
+- `app/Models/Admin.php`
+- `app/Models/Patient.php`
 - `app/Models/User.php`
 - `app/Views/admin/dashboard.php`
 - `app/Views/partials/dashboard/overview.php`
@@ -215,6 +273,40 @@ This migration adds:
 - `professional_title`
 - `employee_id`
 
+### Day 3 Service Layer
+
+`AdminPatientService` was introduced to centralize:
+
+- patient listing filters
+- pagination preparation
+- patient form normalization
+- patient account update validation
+- linked user and patient record persistence
+- patient status updates
+
+`AdminProfileService` was introduced to centralize:
+
+- administrator profile detail loading
+- profile form normalization
+- administrator profile validation
+- profile updates across `users` and `admin`
+- administrator password updates
+
+### Day 3 Model Layer
+
+The `Patient` model was extended with management-focused repository methods for:
+
+- patient summaries
+- patient listing
+- patient detail retrieval
+- patient management filtering
+
+The `Admin` model was extended to support:
+
+- profile detail retrieval
+- employee ID uniqueness checks
+- administrator detail persistence
+
 ## Testing Performed
 
 The following was verified in the browser using the seeded administrator account:
@@ -238,6 +330,14 @@ The following doctor account management flows were also verified in code and thr
 - Activate and deactivate actions submit through CSRF-protected POST requests
 - Reset password form requires a strong password and matching confirmation
 - Service layer uses PDO prepared statements and transactions for linked record creation
+
+The following patient and administrator Day 3 flows were also verified in code and through interface review:
+
+- Patient management page renders with summary cards, search, status filter, and action controls
+- Patient edit form preserves existing registration data and updates linked `users` and `patient` records
+- Patient activate and deactivate actions submit through CSRF-protected POST requests
+- Administrator profile form updates identity details while preserving the authenticated admin account
+- Administrator password change requires the current password and a strong replacement password
 
 ## Issues Encountered
 
@@ -271,7 +371,7 @@ Resolution:
 
 ## Current Status
 
-Week 3 Day 1 and Day 2 are now complete for the implemented administrator governance scope.
+Week 3 Day 1, Day 2, and Day 3 are now complete for the implemented administrator governance scope.
 
 The system currently supports:
 
@@ -284,6 +384,10 @@ The system currently supports:
 - doctor activation and deactivation
 - secure doctor password reset
 - linked user and doctor profile persistence
+- administrator-managed patient account review and editing
+- patient activation and deactivation
+- administrator profile editing
+- administrator password changes
 
 The following are intentionally not included in today’s scope:
 
@@ -298,8 +402,9 @@ This foundation is now ready for future controlled administrator functions such 
 - role-specific management workflows
 - expanded audit and governance features
 - doctor availability scheduling in its own scoped module
+- patient booking workflows in their own scoped module
 
 ## Git
 
 - Recommended commit:
-  - `feat(week3-day2): doctor account management`
+  - `feat(week3-day3): patient and administrator management`

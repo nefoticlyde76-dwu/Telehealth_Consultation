@@ -35,6 +35,15 @@
         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-4 p-2">
           <li><span class="dropdown-item-text text-muted small"><?= \App\Helpers\Helper::escape($user->email ?? '') ?></span></li>
           <li><hr class="dropdown-divider"></li>
+          <?php if (($dashboardRole ?? '') === 'admin'): ?>
+            <li>
+              <a href="<?= \App\Helpers\Helper::url('/admin/profile') ?>" class="dropdown-item rounded-3">
+                <i class="bi bi-person-gear me-2"></i>
+                Profile Settings
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+          <?php endif; ?>
           <li>
             <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
               <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(\App\Core\Csrf::generate()) ?>">
