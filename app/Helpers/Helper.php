@@ -6,9 +6,9 @@ use App\Config\Environment;
 
 class Helper
 {
-    public static function escape(string $string): string
+    public static function escape(?string $string): string
     {
-        return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+        return htmlspecialchars((string) $string, ENT_QUOTES, 'UTF-8');
     }
 
     public static function baseUrl(): string
@@ -83,5 +83,23 @@ class Helper
         }
 
         return date($format, $timestamp);
+    }
+
+    public static function initials(?string $name): string
+    {
+        $name = trim((string) $name);
+
+        if ($name === '') {
+            return 'U';
+        }
+
+        $parts = preg_split('/\s+/', $name) ?: [];
+        $initials = '';
+
+        foreach (array_slice($parts, 0, 2) as $part) {
+            $initials .= mb_strtoupper(mb_substr($part, 0, 1));
+        }
+
+        return $initials !== '' ? $initials : 'U';
     }
 }

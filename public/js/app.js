@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeCurrentYear();
   initializeRevealAnimations();
   initializeCounters();
+  initializeProfileImageCropper();
 });
 
 function initializeBootstrapValidation() {
@@ -213,4 +214,220 @@ function initializeCounters() {
 
 function easeOutCubic(value) {
   return 1 - ((1 - value) ** 3);
+}
+
+function initializeProfileImageCropper() {
+  const modalElement = document.querySelector("[data-profile-crop-modal]");
+  const cropInputs = document.querySelectorAll("[data-profile-crop-input]");
+
+  if (!modalElement || cropInputs.length === 0 || typeof Cropper === "undefined") {
+    return;
+  }
+
+  const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+  const imageElement = modalElement.querySelector("[data-profile-crop-image]");
+  const previewElement = modalElement.querySelector("[data-profile-crop-preview]");
+  const confirmButton = modalElement.querySelector("[data-profile-crop-confirm]");
+  const zoomInButton = modalElement.querySelector("[data-profile-crop-zoom-in]");
+  const zoomOutButton = modalElement.querySelector("[data-profile-crop-zoom-out]");
+  let cropper = null;
+  let activeInput = null;
+  let activeObjectUrl = null;
+  let cropConfirmed = false;
+
+  const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+  const maxFileSize = 5 * 1024 * 1024;
+
+  const setFeedback = (input, message, type = "info") => {
+    const feedback = input
+      .closest("form")
+      ?.querySelector("[data-profile-crop-feedback]");
+
+    if (!feedback) {
+      return;
+    }
+
+    feedback.textContent = message;
+    feedback.classList.remove("d-none", "text-danger", "text-success", "text-muted");
+
+    if (type === "error") {
+      feedback.classList.add("text-danger");
+    } else if (type === "success") {
+      feedback.classList.add("text-success");
+    } else {
+      feedback.classList.add("text-muted");
+    }
+  };
+
+  const clearActiveObjectUrl = () => {
+    if (activeObjectUrl) {
+      URL.revokeObjectURL(activeObjectUrl);
+      activeObjectUrl = null;
+    }
+  };
+
+  const destroyCropper = () => {
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  };
+
+  const resetActiveInput = ({ clearValue } = { clearValue: false }) => {
+    if (!activeInput) {
+      return;
+    }
+
+    activeInput.dataset.croppedReady = "false";
+
+    if (clearValue) {
+      activeInput.value = "";
+    }
+  };
+
+  cropInputs.forEach((input) => {
+    input.dataset.croppedReady = "false";
+
+    input.addEventListener("change", () => {
+      const [file] = input.files || [];
+
+      if (!file) {
+        input.dataset.croppedReady = "false";
+        return;
+      }
+
+      if (!allowedMimeTypes.includes(file.type)) {
+        input.value = "";
+        input.dataset.croppedReady = "false";
+        setFeedback(input, "Only JPG, JPEG, PNG, or WEBP profile pictures are allowed.", "error");
+        return;
+      }
+
+      if (file.size > maxFileSize) {
+        input.value = "";
+        input.dataset.croppedReady = "false";
+        setFeedback(input, "Profile picture must be 5 MB or smaller.", "error");
+        return;
+      }
+
+      activeInput = input;
+      cropConfirmed = false;
+      clearActiveObjectUrl();
+      destroyCropper();
+
+      activeObjectUrl = URL.createObjectURL(file);
+      imageElement.src = activeObjectUrl;
+      imageElement.alt = `Cropping ${input.dataset.profileCropLabel || "profile picture"}`;
+      previewElement.innerHTML = "";
+
+      modal.show();
+    });
+  });
+
+  modalElement.addEventListener("shown.bs.modal", () => {
+    if (!activeInput || !imageElement.getAttribute("src")) {
+      return;
+    }
+
+    cropper = new Cropper(imageElement, {
+      aspectRatio: 1,
+      viewMode: 1,
+      dragMode: "move",
+      autoCropArea: 1,
+      responsive: true,
+      restore: false,
+      guides: false,
+      center: true,
+      highlight: false,
+      background: false,
+      preview: previewElement,
+      cropBoxMovable: false,
+      cropBoxResizable: false,
+      toggleDragModeOnDblclick: false,
+    });
+  });
+
+  modalElement.addEventListener("hidden.bs.modal", () => {
+    destroyCropper();
+    clearActiveObjectUrl();
+
+    if (!cropConfirmed) {
+      resetActiveInput({ clearValue: true });
+
+      if (activeInput) {
+        setFeedback(activeInput, "Image selection cancelled. Choose a file to crop and save.", "info");
+      }
+    }
+  });
+
+  zoomInButton?.addEventListener("click", () => {
+    cropper?.zoom(0.1);
+  });
+
+  zoomOutButton?.addEventListener("click", () => {
+    cropper?.zoom(-0.1);
+  });
+
+  confirmButton?.addEventListener("click", () => {
+    if (!cropper || !activeInput) {
+      return;
+    }
+
+    confirmButton.disabled = true;
+    confirmButton.querySelector(".button-label")?.classList.add("d-none");
+    confirmButton.querySelector(".spinner-border")?.classList.remove("d-none");
+
+    cropper.getCroppedCanvas({
+      width: 300,
+      height: 300,
+      fillColor: "#ffffff",
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: "high",
+    }).toBlob((blob) => {
+      confirmButton.disabled = false;
+      confirmButton.querySelector(".button-label")?.classList.remove("d-none");
+      confirmButton.querySelector(".spinner-border")?.classList.add("d-none");
+
+      if (!blob || !activeInput) {
+        setFeedback(activeInput, "Unable to generate the cropped profile picture. Please try again.", "error");
+        return;
+      }
+
+      const croppedFile = new File(
+        [blob],
+        `cropped_${Date.now()}.jpg`,
+        { type: "image/jpeg" },
+      );
+      const transfer = new DataTransfer();
+      transfer.items.add(croppedFile);
+      activeInput.files = transfer.files;
+      activeInput.dataset.croppedReady = "true";
+      cropConfirmed = true;
+      setFeedback(activeInput, "Cropped profile picture is ready to upload.", "success");
+      modal.hide();
+    }, "image/jpeg", 0.9);
+  });
+
+  document.querySelectorAll("[data-profile-photo-form]").forEach((form) => {
+    form.addEventListener("submit", (event) => {
+      const input = form.querySelector("[data-profile-crop-input]");
+      const submitButton = form.querySelector("[data-profile-submit-button]");
+
+      if (input && input.files.length > 0 && input.dataset.croppedReady !== "true") {
+        event.preventDefault();
+        event.stopPropagation();
+        setFeedback(input, "Please crop the selected profile picture before saving.", "error");
+        return;
+      }
+
+      if (!form.checkValidity()) {
+        return;
+      }
+
+      submitButton?.setAttribute("disabled", "disabled");
+      submitButton?.classList.add("profile-submit-loading");
+      submitButton?.querySelector(".button-label")?.classList.add("d-none");
+      submitButton?.querySelector(".spinner-border")?.classList.remove("d-none");
+    });
+  });
 }

@@ -253,7 +253,7 @@ class AdminController extends Controller
                 $passwordErrors = $result['errors'] ?? [];
                 $passwordFieldErrors = $result['fieldErrors'] ?? [];
             } else {
-                $result = AdminProfileService::updateProfile((int) $user->id, $_POST);
+                $result = AdminProfileService::updateProfile((int) $user->id, $_POST, $_FILES);
 
                 if ($result['success'] ?? false) {
                     Session::flash('status', [
@@ -285,6 +285,7 @@ class AdminController extends Controller
                 'passwordFieldErrors' => $passwordFieldErrors,
                 'statusMessage' => Session::getFlash('status'),
                 'csrfToken' => Csrf::generate(),
+                'enableImageCropper' => true,
             ]
         ), 'layouts/dashboard');
     }

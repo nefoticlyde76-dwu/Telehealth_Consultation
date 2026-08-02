@@ -41,14 +41,12 @@ $statusMessage = $statusMessage ?? null;
         </div>
 
         <div class="doctor-profile-photo-shell">
-          <?php if (!empty($profilePhotoPath)): ?>
-            <img class="doctor-profile-photo" src="<?= \App\Helpers\Helper::asset($profilePhotoPath) ?>" alt="Doctor profile photo">
-          <?php else: ?>
-            <div class="doctor-profile-photo-placeholder">
-              <i class="bi bi-person-bounding-box"></i>
-              <span>No profile photo uploaded</span>
-            </div>
-          <?php endif; ?>
+          <?php
+          $avatarPath = $profilePhotoPath;
+          $fullName = $profile['full_name'] ?? 'Doctor';
+          $avatarClass = 'user-avatar user-avatar--profile';
+          require __DIR__ . '/../../partials/shared/user_avatar.php';
+          ?>
         </div>
 
         <div class="admin-foundation-list mt-4">
@@ -126,4 +124,3 @@ $statusMessage = $statusMessage ?? null;
     </div>
   </div>
 </div>
-

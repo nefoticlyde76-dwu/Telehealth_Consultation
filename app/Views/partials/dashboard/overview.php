@@ -3,14 +3,24 @@
 <section class="dashboard-banner mb-4">
   <div class="row g-4 align-items-center">
     <div class="col-lg-8">
-      <span class="section-badge mb-3">
-        <i class="bi bi-speedometer2"></i>
-        <?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard Overview') ?>
-      </span>
-      <h2 class="h3 mb-3">Welcome back, <?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?>.</h2>
-      <p class="text-muted mb-0">
-        <?= \App\Helpers\Helper::escape($welcomeMessage ?? 'Your role-specific workspace is ready.') ?>
-      </p>
+      <div class="dashboard-banner-intro mb-3">
+        <?php
+        $avatarPath = $user->profile_photo_path ?? null;
+        $fullName = $user->full_name ?? 'User';
+        $avatarClass = 'user-avatar user-avatar--lg';
+        require __DIR__ . '/../shared/user_avatar.php';
+        ?>
+        <div>
+          <span class="section-badge mb-3">
+            <i class="bi bi-speedometer2"></i>
+            <?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard Overview') ?>
+          </span>
+          <h2 class="h3 mb-3">Welcome back, <?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?>.</h2>
+          <p class="text-muted mb-0">
+            <?= \App\Helpers\Helper::escape($welcomeMessage ?? 'Your role-specific workspace is ready.') ?>
+          </p>
+        </div>
+      </div>
     </div>
     <div class="col-lg-4">
       <div class="dashboard-banner-card">

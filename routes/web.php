@@ -20,6 +20,18 @@ $router->get('/patient/dashboard', [PatientController::class, 'dashboard'], [
     new RoleMiddleware(['patient']),
 ]);
 
+$router->get('/patient/profile', [PatientController::class, 'profile'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/profile/edit', [PatientController::class, 'editProfile'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->post('/patient/profile/edit', [PatientController::class, 'editProfile'], [
+    new RoleMiddleware(['patient']),
+]);
+
 $router->get('/doctor/dashboard', [DoctorController::class, 'dashboard'], [
     new RoleMiddleware(['doctor']),
 ]);

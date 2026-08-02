@@ -13,6 +13,7 @@ class User
     public ?string $email = null;
     public ?string $password = null;
     public ?string $status = null;
+    public ?string $profile_photo_path = null;
 
     public function __construct()
     {
@@ -21,7 +22,17 @@ class User
     public static function findById(int $id): ?self
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare("SELECT * FROM users WHERE id = :id LIMIT 1");
+        $stmt = $db->prepare(
+            "SELECT
+                users.*,
+                COALESCE(admin.profile_photo_path, doctor.profile_photo_path, patient.profile_photo_path) AS profile_photo_path
+            FROM users
+            LEFT JOIN admin ON admin.user_id = users.id
+            LEFT JOIN doctor ON doctor.user_id = users.id
+            LEFT JOIN patient ON patient.user_id = users.id
+            WHERE users.id = :id
+            LIMIT 1"
+        );
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -36,7 +47,17 @@ class User
     public static function findByEmail(string $email): ?self
     {
         $db = Database::getInstance();
-        $stmt = $db->prepare("SELECT * FROM users WHERE email = :email LIMIT 1");
+        $stmt = $db->prepare(
+            "SELECT
+                users.*,
+                COALESCE(admin.profile_photo_path, doctor.profile_photo_path, patient.profile_photo_path) AS profile_photo_path
+            FROM users
+            LEFT JOIN admin ON admin.user_id = users.id
+            LEFT JOIN doctor ON doctor.user_id = users.id
+            LEFT JOIN patient ON patient.user_id = users.id
+            WHERE users.email = :email
+            LIMIT 1"
+        );
         $stmt->bindParam(':email', $email);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -69,6 +90,7 @@ class User
         $user->email = $data['email'] ?? null;
         $user->password = $data['password'] ?? null;
         $user->status = $data['status'] ?? null;
+        $user->profile_photo_path = $data['profile_photo_path'] ?? null;
         return $user;
     }
 

@@ -67,14 +67,14 @@ $signaturePath = $doctorProfile['signature_path'] ?? null;
             <div class="col-md-6">
               <div class="doctor-asset-card h-100">
                 <span class="doctor-asset-label">Profile Photo</span>
-                <?php if (!empty($profilePhotoPath)): ?>
-                  <img class="doctor-asset-image" src="<?= \App\Helpers\Helper::asset($profilePhotoPath) ?>" alt="Doctor profile photo">
-                <?php else: ?>
-                  <div class="doctor-asset-placeholder">
-                    <i class="bi bi-person-bounding-box"></i>
-                    <span>No photo uploaded</span>
-                  </div>
-                <?php endif; ?>
+                <div class="doctor-asset-avatar-shell">
+                  <?php
+                  $avatarPath = $profilePhotoPath;
+                  $fullName = $doctorProfile['full_name'] ?? ($user->full_name ?? 'Doctor');
+                  $avatarClass = 'user-avatar user-avatar--asset';
+                  require __DIR__ . '/../partials/shared/user_avatar.php';
+                  ?>
+                </div>
               </div>
             </div>
             <div class="col-md-6">

@@ -18,6 +18,21 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
     ?>
   </div>
 
+  <div class="px-4 pb-4">
+    <div class="sidebar-user-card">
+      <?php
+      $avatarPath = $user->profile_photo_path ?? null;
+      $fullName = $user->full_name ?? 'User';
+      $avatarClass = 'user-avatar user-avatar--sm';
+      require __DIR__ . '/../shared/user_avatar.php';
+      ?>
+      <div>
+        <strong class="d-block text-white"><?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?></strong>
+        <span class="sidebar-user-role"><?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard') ?></span>
+      </div>
+    </div>
+  </div>
+
   <div class="px-3 pb-4 flex-grow-1">
     <p class="sidebar-caption mb-3 px-3">Navigation</p>
     <nav class="nav flex-column gap-2">
@@ -58,6 +73,19 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
     <button type="button" class="btn-close text-reset shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body">
+    <div class="sidebar-user-card sidebar-user-card-offcanvas mb-4">
+      <?php
+      $avatarPath = $user->profile_photo_path ?? null;
+      $fullName = $user->full_name ?? 'User';
+      $avatarClass = 'user-avatar user-avatar--sm';
+      require __DIR__ . '/../shared/user_avatar.php';
+      ?>
+      <div>
+        <strong class="d-block text-white"><?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?></strong>
+        <span class="sidebar-user-role"><?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard') ?></span>
+      </div>
+    </div>
+
     <nav class="nav flex-column gap-2">
       <?php foreach ($sidebarItems as $item): ?>
         <?php $isActive = $currentPath === ($item['path'] ?? '#'); ?>

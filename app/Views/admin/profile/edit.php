@@ -40,7 +40,7 @@ $csrfToken = $csrfToken ?? '';
       </div>
     <?php endif; ?>
 
-    <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/profile') ?>" class="needs-validation" novalidate>
+    <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/profile') ?>" enctype="multipart/form-data" class="needs-validation" novalidate data-profile-photo-form>
       <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
       <input type="hidden" name="form_action" value="profile">
 
@@ -55,6 +55,41 @@ $csrfToken = $csrfToken ?? '';
           </div>
 
           <div class="row g-3">
+            <div class="col-12">
+              <div class="profile-photo-editor-card">
+                <div>
+                  <span class="user-detail-label mb-2">Current Profile Picture</span>
+                  <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <?php
+                    $avatarPath = $profile['profile_photo_path'] ?? null;
+                    $fullName = $profile['full_name'] ?? 'Administrator';
+                    $avatarClass = 'user-avatar user-avatar--xl';
+                    require __DIR__ . '/../../partials/shared/user_avatar.php';
+                    ?>
+                    <div>
+                      <strong class="d-block">Administrator avatar</strong>
+                      <p class="text-muted small mb-0">Crop to a square before saving. The final uploaded image is optimized to 300 x 300 pixels.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-3">
+                  <label for="admin_profile_photo" class="form-label">Change Profile Picture <span class="text-muted">(JPG/JPEG/PNG/WEBP, max 5MB)</span></label>
+                  <input
+                    type="file"
+                    class="form-control <?= isset($fieldErrors['profile_photo']) ? 'is-invalid' : '' ?>"
+                    id="admin_profile_photo"
+                    name="profile_photo"
+                    accept="image/png,image/jpeg,image/webp"
+                    data-profile-crop-input
+                    data-profile-crop-label="administrator profile picture"
+                  >
+                  <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['profile_photo'] ?? 'Choose an image to crop before saving.') ?></div>
+                  <div class="profile-crop-feedback mt-2 d-none" data-profile-crop-feedback></div>
+                </div>
+              </div>
+            </div>
+
             <div class="col-md-6">
               <label for="full_name" class="form-label">Full Name</label>
               <input
@@ -112,9 +147,12 @@ $csrfToken = $csrfToken ?? '';
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary rounded-pill px-4">
-              <i class="bi bi-save me-2"></i>
-              Update Profile
+            <button type="submit" class="btn btn-primary rounded-pill px-4" data-profile-submit-button>
+              <span class="button-label">
+                <i class="bi bi-save me-2"></i>
+                Update Profile
+              </span>
+              <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
             </button>
           </div>
         </div>

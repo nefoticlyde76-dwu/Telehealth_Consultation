@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" href="<?= \App\Helpers\Helper::asset('images/LOGOS.png') ?>">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/theme.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/style.css') ?>">
 </head>
@@ -24,7 +25,12 @@
     </div>
   </div>
 
+  <?php if (!empty($enableImageCropper)): ?>
+    <?php require __DIR__ . '/../partials/shared/profile_image_cropper_modal.php'; ?>
+  <?php endif; ?>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script src="<?= \App\Helpers\Helper::asset('js/app.js') ?>"></script>
 </body>
 </html>

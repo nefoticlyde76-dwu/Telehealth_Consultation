@@ -29,7 +29,7 @@ class AdminProfileService
         ];
     }
 
-    public static function updateProfile(int $userId, array $input): array
+    public static function updateProfile(int $userId, array $input, array $files = []): array
     {
         $profile = self::getProfileDetail($userId);
 
@@ -55,6 +55,7 @@ class AdminProfileService
         }
 
         $db = Database::getInstance();
+        $uploadedProfilePhotoPath = null;
 
         try {
             $db->beginTransaction();
@@ -75,6 +76,21 @@ class AdminProfileService
 
             $admin->employee_id = $formData['employee_id'];
 
+            if (
+                isset($files['profile_photo'])
+                && is_array($files['profile_photo'])
+                && ($files['profile_photo']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE
+            ) {
+                $upload = ProfilePhotoService::storeCroppedProfilePhoto(
+                    $userId,
+                    'admins',
+                    $files['profile_photo'],
+                    $admin->profile_photo_path
+                );
+                $admin->profile_photo_path = (string) ($upload['path'] ?? $admin->profile_photo_path);
+                $uploadedProfilePhotoPath = $admin->profile_photo_path;
+            }
+
             if (!$admin->save()) {
                 throw new \RuntimeException('The administrator profile details could not be updated.');
             }
@@ -85,10 +101,35 @@ class AdminProfileService
                 'success' => true,
                 'message' => 'Administrator profile updated successfully.',
             ];
+        } catch (\RuntimeException $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            ProfilePhotoService::deleteStoredPath($uploadedProfilePhotoPath);
+
+            $fieldErrors = [];
+
+            if (
+                isset($files['profile_photo'])
+                && is_array($files['profile_photo'])
+                && ($files['profile_photo']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE
+            ) {
+                $fieldErrors['profile_photo'] = $exception->getMessage();
+            }
+
+            return [
+                'success' => false,
+                'errors' => [$exception->getMessage()],
+                'fieldErrors' => $fieldErrors,
+                'formData' => $formData,
+            ];
         } catch (\Throwable $exception) {
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
+
+            ProfilePhotoService::deleteStoredPath($uploadedProfilePhotoPath);
 
             error_log('Administrator profile update failed: ' . $exception->getMessage());
 

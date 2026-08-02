@@ -12,6 +12,7 @@ class Patient
     public ?string $gender = null;
     public ?string $address = null;
     public ?string $medical_history = null;
+    public ?string $profile_photo_path = null;
 
     public static function findByUserId(int $userId): ?self
     {
@@ -36,6 +37,7 @@ class Patient
         $patient->gender = $row['gender'] ?? null;
         $patient->address = $row['address'] ?? null;
         $patient->medical_history = $row['medical_history'] ?? null;
+        $patient->profile_photo_path = $row['profile_photo_path'] ?? null;
 
         return $patient;
     }
@@ -45,9 +47,9 @@ class Patient
         $db = Database::getInstance();
 
         if (self::findByUserId($this->user_id)) {
-            $stmt = $db->prepare("UPDATE patient SET dob = :dob, gender = :gender, address = :address, medical_history = :medical_history WHERE user_id = :user_id");
+            $stmt = $db->prepare("UPDATE patient SET dob = :dob, gender = :gender, address = :address, medical_history = :medical_history, profile_photo_path = :profile_photo_path WHERE user_id = :user_id");
         } else {
-            $stmt = $db->prepare("INSERT INTO patient (user_id, dob, gender, address, medical_history) VALUES (:user_id, :dob, :gender, :address, :medical_history)");
+            $stmt = $db->prepare("INSERT INTO patient (user_id, dob, gender, address, medical_history, profile_photo_path) VALUES (:user_id, :dob, :gender, :address, :medical_history, :profile_photo_path)");
         }
 
         $stmt->bindParam(':user_id', $this->user_id, PDO::PARAM_INT);
@@ -55,8 +57,38 @@ class Patient
         $stmt->bindParam(':gender', $this->gender);
         $stmt->bindParam(':address', $this->address);
         $stmt->bindParam(':medical_history', $this->medical_history);
+        $stmt->bindParam(':profile_photo_path', $this->profile_photo_path);
 
         return $stmt->execute();
+    }
+
+    public static function findProfileDetailByUserId(int $userId): ?array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                users.id,
+                users.full_name,
+                users.email,
+                users.status,
+                users.created_at,
+                users.updated_at,
+                patient.dob,
+                patient.gender,
+                patient.address,
+                patient.medical_history,
+                patient.profile_photo_path
+            FROM patient
+            INNER JOIN users ON users.id = patient.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'patient' AND users.id = :user_id
+            LIMIT 1"
+        );
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
     }
 
     public static function getManagementSummary(): array
@@ -113,7 +145,8 @@ class Patient
                 users.created_at,
                 patient.dob,
                 patient.gender,
-                patient.address
+                patient.address,
+                patient.profile_photo_path
             FROM patient
             INNER JOIN users ON users.id = patient.user_id
             INNER JOIN roles ON roles.id = users.role_id";
@@ -151,7 +184,8 @@ class Patient
                 patient.dob,
                 patient.gender,
                 patient.address,
-                patient.medical_history
+                patient.medical_history,
+                patient.profile_photo_path
             FROM patient
             INNER JOIN users ON users.id = patient.user_id
             INNER JOIN roles ON roles.id = users.role_id

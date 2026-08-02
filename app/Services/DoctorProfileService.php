@@ -10,7 +10,6 @@ use App\Models\User;
 
 class DoctorProfileService
 {
-    private const MAX_PROFILE_PHOTO_BYTES = 5242880;
     private const MAX_SIGNATURE_BYTES = 2097152;
 
     public static function getProfileDetail(int $userId): ?array
@@ -71,6 +70,7 @@ class DoctorProfileService
         }
 
         $db = Database::getInstance();
+        $uploadedPaths = [];
 
         try {
             $db->beginTransaction();
@@ -79,6 +79,10 @@ class DoctorProfileService
             $doctor->specialization = $formData['specialization'];
 
             $uploads = self::handleProfileUploads($userId, $doctor, $files);
+            $uploadedPaths = array_values(array_filter([
+                $uploads['profile_photo']['path'] ?? null,
+                $uploads['signature']['path'] ?? null,
+            ]));
 
             if (!$doctor->update()) {
                 throw new \RuntimeException('Doctor profile updates did not persist.');
@@ -94,9 +98,47 @@ class DoctorProfileService
                 'profile' => $updatedProfile,
                 'uploads' => $uploads,
             ];
+        } catch (\RuntimeException $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            foreach ($uploadedPaths as $uploadedPath) {
+                ProfilePhotoService::deleteStoredPath((string) $uploadedPath);
+            }
+
+            $fieldErrors = [];
+
+            if (
+                isset($files['profile_photo'])
+                && is_array($files['profile_photo'])
+                && ($files['profile_photo']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE
+            ) {
+                $fieldErrors['profile_photo'] = $exception->getMessage();
+            }
+
+            if (
+                isset($files['signature'])
+                && is_array($files['signature'])
+                && ($files['signature']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE
+            ) {
+                $fieldErrors['signature'] = $exception->getMessage();
+            }
+
+            return [
+                'success' => false,
+                'errors' => [$exception->getMessage()],
+                'fieldErrors' => $fieldErrors,
+                'formData' => $formData,
+                'profile' => $profile,
+            ];
         } catch (\Throwable $exception) {
             if ($db->inTransaction()) {
                 $db->rollBack();
+            }
+
+            foreach ($uploadedPaths as $uploadedPath) {
+                ProfilePhotoService::deleteStoredPath((string) $uploadedPath);
             }
 
             error_log('Doctor profile update failed: ' . $exception->getMessage());
@@ -257,11 +299,12 @@ class DoctorProfileService
         }
 
         if (isset($files['profile_photo']) && is_array($files['profile_photo']) && ($files['profile_photo']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-            $results['profile_photo'] = self::storeUpload($userId, $files['profile_photo'], $uploadRoot, 'profile_photo', self::MAX_PROFILE_PHOTO_BYTES, [
-                'image/jpeg' => 'jpg',
-                'image/png' => 'png',
-                'image/webp' => 'webp',
-            ], $doctor->profile_photo_path);
+            $results['profile_photo'] = ProfilePhotoService::storeCroppedProfilePhoto(
+                $userId,
+                'doctors',
+                $files['profile_photo'],
+                $doctor->profile_photo_path
+            );
 
             $doctor->profile_photo_path = $results['profile_photo']['path'] ?? $doctor->profile_photo_path;
         }
@@ -338,22 +381,6 @@ class DoctorProfileService
 
     private static function deletePreviousUpload(int $userId, ?string $existingPath): void
     {
-        if ($existingPath === null || trim($existingPath) === '') {
-            return;
-        }
-
-        $existingPath = str_replace(['\\', "\0"], ['/', ''], $existingPath);
-        $expectedPrefix = 'uploads/doctors/' . $userId . '/';
-
-        if (strpos($existingPath, $expectedPrefix) !== 0) {
-            return;
-        }
-
-        $absolutePath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $existingPath);
-
-        if (is_file($absolutePath)) {
-            @unlink($absolutePath);
-        }
+        ProfilePhotoService::deletePreviousUpload($existingPath, 'uploads/doctors/' . $userId . '/');
     }
 }
-

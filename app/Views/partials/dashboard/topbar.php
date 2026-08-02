@@ -26,7 +26,12 @@
 
       <div class="dropdown">
         <button class="btn profile-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <span class="profile-avatar"><?= strtoupper(substr($user->full_name ?? 'U', 0, 1)) ?></span>
+          <?php
+          $avatarPath = $user->profile_photo_path ?? null;
+          $fullName = $user->full_name ?? 'User';
+          $avatarClass = 'user-avatar user-avatar--xs';
+          require __DIR__ . '/../shared/user_avatar.php';
+          ?>
           <span class="text-start">
             <strong class="d-block"><?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?></strong>
             <small class="text-muted"><?= \App\Helpers\Helper::escape(ucfirst($dashboardRole ?? 'account')) ?></small>
@@ -47,6 +52,14 @@
             <li>
               <a href="<?= \App\Helpers\Helper::url('/doctor/profile') ?>" class="dropdown-item rounded-3">
                 <i class="bi bi-person-vcard me-2"></i>
+                My Profile
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+          <?php elseif (($dashboardRole ?? '') === 'patient'): ?>
+            <li>
+              <a href="<?= \App\Helpers\Helper::url('/patient/profile') ?>" class="dropdown-item rounded-3">
+                <i class="bi bi-person-circle me-2"></i>
                 My Profile
               </a>
             </li>

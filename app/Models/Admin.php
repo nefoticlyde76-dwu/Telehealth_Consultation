@@ -9,6 +9,7 @@ class Admin
 {
     public ?int $user_id = null;
     public ?string $employee_id = null;
+    public ?string $profile_photo_path = null;
 
     public static function findByUserId(int $userId): ?self
     {
@@ -30,6 +31,7 @@ class Admin
         $admin = new self();
         $admin->user_id = isset($row['user_id']) ? (int) $row['user_id'] : null;
         $admin->employee_id = $row['employee_id'] ?? null;
+        $admin->profile_photo_path = $row['profile_photo_path'] ?? null;
 
         return $admin;
     }
@@ -45,19 +47,21 @@ class Admin
         if (self::findByUserId($this->user_id) !== null) {
             $stmt = $db->prepare(
                 "UPDATE admin
-                SET employee_id = :employee_id
+                SET employee_id = :employee_id,
+                    profile_photo_path = :profile_photo_path
                 WHERE user_id = :user_id"
             );
         } else {
             $stmt = $db->prepare(
-                "INSERT INTO admin (user_id, employee_id)
-                VALUES (:user_id, :employee_id)"
+                "INSERT INTO admin (user_id, employee_id, profile_photo_path)
+                VALUES (:user_id, :employee_id, :profile_photo_path)"
             );
         }
 
         return $stmt->execute([
             ':user_id' => $this->user_id,
             ':employee_id' => $this->employee_id,
+            ':profile_photo_path' => $this->profile_photo_path,
         ]);
     }
 
@@ -102,7 +106,8 @@ class Admin
                 users.status,
                 users.created_at,
                 users.updated_at,
-                admin.employee_id
+                admin.employee_id,
+                admin.profile_photo_path
             FROM admin
             INNER JOIN users ON users.id = admin.user_id
             INNER JOIN roles ON roles.id = users.role_id
