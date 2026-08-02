@@ -37,9 +37,12 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
     <p class="sidebar-caption mb-3 px-3">Navigation</p>
     <nav class="nav flex-column gap-2">
       <?php foreach ($sidebarItems as $item): ?>
-        <?php $isActive = $currentPath === ($item['path'] ?? '#'); ?>
+        <?php
+        $itemPath = (string) ($item['path'] ?? '#');
+        $isActive = $currentPath === $itemPath || ($itemPath !== '/' && str_starts_with($currentPath, $itemPath . '/'));
+        ?>
         <a
-          href="<?= \App\Helpers\Helper::url($item['path'] ?? '/') ?>"
+          href="<?= \App\Helpers\Helper::url($itemPath) ?>"
           class="sidebar-link <?= $isActive ? 'active' : '' ?>"
         >
           <span><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
@@ -88,9 +91,12 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
 
     <nav class="nav flex-column gap-2">
       <?php foreach ($sidebarItems as $item): ?>
-        <?php $isActive = $currentPath === ($item['path'] ?? '#'); ?>
+        <?php
+        $itemPath = (string) ($item['path'] ?? '#');
+        $isActive = $currentPath === $itemPath || ($itemPath !== '/' && str_starts_with($currentPath, $itemPath . '/'));
+        ?>
         <a
-          href="<?= \App\Helpers\Helper::url($item['path'] ?? '/') ?>"
+          href="<?= \App\Helpers\Helper::url($itemPath) ?>"
           class="sidebar-link <?= $isActive ? 'active' : '' ?>"
         >
           <span><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>

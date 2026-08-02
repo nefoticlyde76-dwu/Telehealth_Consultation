@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
+use App\Services\DoctorAvailabilityService;
 use App\Services\AuthService;
 use App\Services\DoctorDashboardService;
 use App\Services\DoctorProfileService;
@@ -37,6 +38,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'A professional workspace for secure clinician profile and dashboard visibility.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
             ],
             'welcomeMessage' => 'Your clinician workspace is ready for secure profile management, dashboard visibility, and future-ready clinical workflows.',
@@ -85,6 +87,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'Review your clinician identity, specialization, and uploaded assets securely.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
                 ['path' => '/doctor/profile/edit', 'label' => 'Edit Profile', 'icon' => 'bi-person-gear'],
             ],
@@ -170,6 +173,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'Update your phone number, specialization, profile photo, signature, and password securely.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
                 ['path' => '/doctor/profile/edit', 'label' => 'Edit Profile', 'icon' => 'bi-person-gear'],
             ],
@@ -183,5 +187,192 @@ class DoctorController extends Controller
             'csrfToken' => Csrf::generate(),
             'enableImageCropper' => true,
         ], 'layouts/dashboard');
+    }
+
+    public function availability(): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $pageData = DoctorAvailabilityService::getAvailabilityPageData((int) $user->id, $_GET);
+
+        $this->render('doctor/availability/index', [
+            'title' => 'Doctor Availability | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'doctor',
+            'dashboardRoleLabel' => 'Doctor Dashboard',
+            'dashboardTitle' => 'Availability Scheduling',
+            'dashboardDescription' => 'Create, review, update, and remove consultation availability slots securely.',
+            'sidebarItems' => [
+                ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
+                ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
+            ],
+            'filters' => $pageData['filters'],
+            'availability' => $pageData['availability'],
+            'summary' => $pageData['summary'],
+            'pagination' => $pageData['pagination'],
+            'statusOptions' => $pageData['statusOptions'],
+            'statusMessage' => Session::getFlash('status'),
+            'csrfToken' => Csrf::generate(),
+        ], 'layouts/dashboard');
+    }
+
+    public function createAvailability(): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $errors = [];
+        $fieldErrors = [];
+        $formData = DoctorAvailabilityService::getAvailabilityFormData();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $result = DoctorAvailabilityService::createAvailability((int) $user->id, $_POST);
+
+            if ($result['success'] ?? false) {
+                Session::flash('status', [
+                    'type' => 'success',
+                    'message' => $result['message'] ?? 'Availability slot created successfully.',
+                ]);
+                Helper::redirect('/doctor/availability');
+                return;
+            }
+
+            $errors = $result['errors'] ?? [];
+            $fieldErrors = $result['fieldErrors'] ?? [];
+            $formData = $result['formData'] ?? $formData;
+        }
+
+        $this->render('doctor/availability/create', [
+            'title' => 'Create Availability | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'doctor',
+            'dashboardRoleLabel' => 'Doctor Dashboard',
+            'dashboardTitle' => 'Create Availability',
+            'dashboardDescription' => 'Schedule a new consultation slot with secure validation and conflict protection.',
+            'sidebarItems' => [
+                ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
+                ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
+            ],
+            'formData' => $formData,
+            'errors' => $errors,
+            'fieldErrors' => $fieldErrors,
+            'statusOptions' => DoctorAvailabilityService::getStatusOptions(),
+            'statusMessage' => Session::getFlash('status'),
+            'csrfToken' => Csrf::generate(),
+        ], 'layouts/dashboard');
+    }
+
+    public function editAvailability(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $availabilityId = (int) $id;
+        $availability = DoctorAvailabilityService::getAvailabilityDetail((int) $user->id, $availabilityId);
+
+        if ($availability === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested availability slot could not be found.',
+            ]);
+            Helper::redirect('/doctor/availability');
+            return;
+        }
+
+        $errors = [];
+        $fieldErrors = [];
+        $formData = DoctorAvailabilityService::getAvailabilityFormData($availability);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $result = DoctorAvailabilityService::updateAvailability((int) $user->id, $availabilityId, $_POST);
+
+            if ($result['success'] ?? false) {
+                Session::flash('status', [
+                    'type' => 'success',
+                    'message' => $result['message'] ?? 'Availability slot updated successfully.',
+                ]);
+                Helper::redirect('/doctor/availability');
+                return;
+            }
+
+            $errors = $result['errors'] ?? [];
+            $fieldErrors = $result['fieldErrors'] ?? [];
+            $formData = $result['formData'] ?? $formData;
+        }
+
+        $this->render('doctor/availability/edit', [
+            'title' => 'Edit Availability | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'doctor',
+            'dashboardRoleLabel' => 'Doctor Dashboard',
+            'dashboardTitle' => 'Edit Availability',
+            'dashboardDescription' => 'Update an existing consultation slot while preserving conflict-free scheduling.',
+            'sidebarItems' => [
+                ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
+                ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
+            ],
+            'availability' => $availability,
+            'formData' => $formData,
+            'errors' => $errors,
+            'fieldErrors' => $fieldErrors,
+            'statusOptions' => DoctorAvailabilityService::getStatusOptions(),
+            'statusMessage' => Session::getFlash('status'),
+            'csrfToken' => Csrf::generate(),
+        ], 'layouts/dashboard');
+    }
+
+    public function deleteAvailability(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $result = DoctorAvailabilityService::deleteAvailability((int) $user->id, (int) $id, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? (($result['success'] ?? false) ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Availability slot request completed.',
+        ]);
+
+        Helper::redirect('/doctor/availability');
     }
 }

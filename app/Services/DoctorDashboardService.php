@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Doctor;
+use App\Models\DoctorAvailability;
 use App\Models\User;
 
 class DoctorDashboardService
@@ -11,6 +12,7 @@ class DoctorDashboardService
     {
         $user = User::findById($userId);
         $doctor = Doctor::findProfileDetailByUserId($userId);
+        $availabilitySummary = DoctorAvailability::getSummaryForDoctor($userId);
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
         $hasSignature = !empty($doctor['signature_path'] ?? '');
@@ -33,10 +35,10 @@ class DoctorDashboardService
                     'description' => 'A professional profile photo improves clinician trust and identity verification.',
                 ],
                 [
-                    'label' => 'Digital Signature',
-                    'value' => $hasSignature ? 'Uploaded' : 'Not uploaded',
-                    'icon' => $hasSignature ? 'bi-pen' : 'bi-pen-fill',
-                    'description' => 'Signature is stored for future-ready prescriptions and consultation documentation.',
+                    'label' => 'Availability Slots',
+                    'value' => (string) ($availabilitySummary['upcoming_slots'] ?? 0),
+                    'icon' => 'bi-calendar-week',
+                    'description' => 'Upcoming consultation slots currently scheduled in your availability calendar.',
                 ],
                 [
                     'label' => 'Account Status',
@@ -63,10 +65,12 @@ class DoctorDashboardService
                     'action_label' => 'Edit Profile',
                 ],
                 [
-                    'title' => 'Prepare Availability Module',
-                    'description' => 'Availability scheduling will connect to this dashboard in a separate scoped task.',
+                    'title' => 'Manage Availability',
+                    'description' => 'Create, review, update, and delete consultation slots from your clinician workspace.',
                     'icon' => 'bi-calendar-week',
-                    'status' => 'Not in scope today',
+                    'status' => 'Available now',
+                    'url' => '/doctor/availability',
+                    'action_label' => 'Open Availability',
                 ],
                 [
                     'title' => 'Secure Session Controls',
@@ -82,15 +86,15 @@ class DoctorDashboardService
                     'meta' => 'Current session',
                 ],
                 [
-                    'title' => 'Profile management ready',
-                    'description' => 'Doctor profile editing and asset uploads are available in this workspace.',
-                    'meta' => 'Week 4 Day 1',
+                    'title' => 'Availability scheduling ready',
+                    'description' => 'Doctor availability management now supports creation, filtering, editing, and deletion with validation.',
+                    'meta' => 'Week 4 Day 2',
                 ],
             ],
             'emptyState' => [
                 'icon' => 'bi-clipboard2-pulse',
                 'title' => 'No clinical activity to show yet',
-                'description' => 'Availability scheduling and consultation workflows will populate this dashboard once those modules are activated.',
+                'description' => 'Your availability calendar is now active, and future consultation workflows will build on these scheduled slots.',
             ],
         ];
     }
@@ -119,4 +123,3 @@ class DoctorDashboardService
         return (int) round(($completed / count($checks)) * 100);
     }
 }
-

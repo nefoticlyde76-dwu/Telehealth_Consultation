@@ -36,6 +36,30 @@ $router->get('/doctor/dashboard', [DoctorController::class, 'dashboard'], [
     new RoleMiddleware(['doctor']),
 ]);
 
+$router->get('/doctor/availability', [DoctorController::class, 'availability'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->get('/doctor/availability/create', [DoctorController::class, 'createAvailability'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/availability/create', [DoctorController::class, 'createAvailability'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->get('/doctor/availability/{id}/edit', [DoctorController::class, 'editAvailability'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/availability/{id}/edit', [DoctorController::class, 'editAvailability'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/availability/{id}/delete', [DoctorController::class, 'deleteAvailability'], [
+    new RoleMiddleware(['doctor']),
+]);
+
 $router->get('/doctor/profile', [DoctorController::class, 'profile'], [
     new RoleMiddleware(['doctor']),
 ]);

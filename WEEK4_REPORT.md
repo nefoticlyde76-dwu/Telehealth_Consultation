@@ -4,7 +4,7 @@
 
 - Project Title: MBPHA TeleHealth Consultation System
 - Week: Week 4
-- Scope Covered in This Report: Day 1 Doctor Dashboard and Doctor Profile Management
+- Scope Covered in This Report: Day 1 Doctor Dashboard and Doctor Profile Management, plus Day 2 Doctor Availability Scheduling
 
 ## Week 4 Day 1 Objective
 
@@ -27,6 +27,28 @@ The following were intentionally not implemented in today’s scope:
 
 - doctor availability scheduling
 - booking workflows
+- consultation records
+
+## Week 4 Day 2 Objective
+
+The objective of this implementation was to add secure doctor availability scheduling on top of the completed doctor dashboard and profile module, while preserving the existing MVC architecture, authentication flow, CSRF handling, and doctor-only role protection.
+
+The work completed today focused only on:
+
+- create availability
+- view availability
+- edit availability
+- delete availability
+- search availability
+- filter availability by date
+- filter availability by status
+- responsive listing with pagination
+- conflict-prevention validation
+
+The following remain intentionally out of scope for today:
+
+- patient booking
+- consultation request approval workflows
 - consultation records
 
 ## Completed Work
@@ -88,6 +110,41 @@ Doctor profile asset uploads were implemented with:
 - MIME validation using `finfo(FILEINFO_MIME_TYPE)`
 - safe deletion of the previous uploaded file only when it is inside the expected clinician upload directory prefix
 
+### 6. Doctor Availability Scheduling
+
+A dedicated doctor scheduling module was added with the following routes:
+
+- `/doctor/availability`
+- `/doctor/availability/create`
+- `/doctor/availability/{id}/edit`
+
+The module provides:
+
+- consultation slot creation
+- slot listing in a responsive Bootstrap table
+- search by date, time, and notes
+- filtering by consultation date and status
+- pagination for larger schedules
+- secure editing and deletion
+
+### 7. Availability Validation Rules
+
+The scheduling workflow now prevents:
+
+- overlapping consultation slots for the same doctor on the same date
+- exact duplicate slots
+- past dates
+- invalid time ranges where end time is not greater than start time
+
+### 8. Availability Status Support
+
+The existing schema already provided a status field, so the module now supports:
+
+- `Available` (default)
+- `Booked`
+
+No patient booking workflow was implemented in this task. The status field is maintained only as part of the doctor availability scheduling record.
+
 ## Database Work
 
 Instead of rewriting the initial schema, a minimal migration was added to extend the existing doctor table safely:
@@ -98,13 +155,28 @@ This migration adds:
 
 - `doctor.profile_photo_path` for storing the public path to the clinician profile photo
 
+Another minimal migration was added for availability scheduling:
+
+- `database/migrations/006_add_notes_to_doctor_availability.sql`
+
+This migration adds:
+
+- `doctor_availability.notes` for optional slot-specific notes
+
 ## Files Created
 
 - `app/Services/DoctorDashboardService.php`
 - `app/Services/DoctorProfileService.php`
+- `app/Models/DoctorAvailability.php`
+- `app/Services/DoctorAvailabilityService.php`
+- `app/Views/doctor/availability/_form.php`
+- `app/Views/doctor/availability/index.php`
+- `app/Views/doctor/availability/create.php`
+- `app/Views/doctor/availability/edit.php`
 - `app/Views/doctor/profile/show.php`
 - `app/Views/doctor/profile/edit.php`
 - `database/migrations/004_add_doctor_profile_assets.sql`
+- `database/migrations/006_add_notes_to_doctor_availability.sql`
 - `WEEK4_REPORT.md`
 
 ## Files Modified
@@ -113,6 +185,7 @@ This migration adds:
 - `app/Controllers/DoctorController.php`
 - `app/Models/Doctor.php`
 - `app/Views/doctor/dashboard.php`
+- `app/Views/partials/dashboard/sidebar.php`
 - `app/Views/partials/dashboard/topbar.php`
 - `public/css/style.css`
 - `.gitignore`
@@ -141,6 +214,14 @@ Two new service classes were introduced to keep business logic out of the contro
   - validates and stores uploads
   - updates doctor password hashes with strong password validation
 
+One additional service class now supports doctor scheduling:
+
+- `DoctorAvailabilityService`
+  - normalizes schedule form data
+  - validates CSRF, date, time, duplicate, and overlap rules
+  - prepares filtered/paginated listing data
+  - coordinates create, update, and delete scheduling operations
+
 ### Model Layer
 
 The `Doctor` model was extended to support the new asset path:
@@ -150,6 +231,14 @@ The `Doctor` model was extended to support the new asset path:
 It also includes a profile-detail query used by doctor profile views:
 
 - `Doctor::findProfileDetailByUserId()`
+
+A dedicated availability model was added:
+
+- `DoctorAvailability`
+  - handles filtered listing queries
+  - provides doctor-specific summaries
+  - checks duplicate and overlapping slots
+  - persists schedule changes
 
 ## Testing Performed
 
@@ -167,10 +256,21 @@ The following was verified via live HTTP sessions and database checks:
   - rejects reusing the current password
   - enforces strong password rules
   - regenerates the session cookie after success
+- doctor-only access to `/doctor/availability`, `/doctor/availability/create`, and `/doctor/availability/{id}/edit`
+- successful availability creation persisted a new doctor slot in `doctor_availability`
+- duplicate slot creation was rejected
+- overlapping slot creation was rejected
+- past-date slot creation was rejected
+- invalid time ranges were rejected
+- search and filter combinations returned the expected availability rows
+- invalid CSRF deletion requests left the selected availability slot unchanged
+- availability edit persisted updated time, notes, and status values
+- availability deletion removed the selected slot from the database
+- pagination rendered a second page correctly when more than 10 availability slots existed
 
 ## Current Status
 
-Week 4 Day 1 doctor dashboard and profile management is now complete for the implemented clinician profile scope.
+Week 4 currently includes completed doctor dashboard/profile management and doctor availability scheduling.
 
 The system currently supports:
 
@@ -179,10 +279,11 @@ The system currently supports:
 - secure clinician profile updates (phone, specialization)
 - secure clinician asset uploads (profile photo, digital signature)
 - secure clinician password changes
+- doctor availability creation, listing, editing, and deletion
+- doctor schedule filtering, validation, and pagination
 
 The following remain intentionally out of scope for today:
 
-- doctor availability scheduling
 - patient booking module work
 
 ## Git

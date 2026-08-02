@@ -17,6 +17,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Administrator Profile: Week 3 Day 3 profile editing and password management implemented for administrators
 - Week 3 Finalization: Administrator Management module reviewed and hardened for validation, security, accessibility, responsive behavior, and UI consistency
 - Doctor Dashboard: Week 4 Day 1 professional doctor dashboard and profile management implemented for clinicians
+- Doctor Availability: Week 4 Day 2 availability scheduling implemented for doctor-managed consultation slots
 - Profile Pictures: Client-side profile picture cropping with live avatar updates is now implemented for administrator, doctor, and patient profiles
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
@@ -104,6 +105,26 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Upload/update doctor digital signature (PNG/JPG, max 2MB)
 - Doctor password change requiring the current password, strong password validation, and session regeneration
 
+### Week 4 Day 2 Features
+
+- Doctor availability listing at `/doctor/availability`
+- Create doctor availability at `/doctor/availability/create`
+- Edit doctor availability at `/doctor/availability/{id}/edit`
+- Delete doctor availability via secure POST action
+- Availability fields:
+  - consultation date
+  - start time
+  - end time
+  - optional notes
+  - status (`Available` by default)
+- Validation rules:
+  - prevent overlapping slots
+  - prevent duplicate slots
+  - prevent past dates
+  - require end time to be greater than start time
+- Responsive Bootstrap table with search, date filter, status filter, and pagination
+- Doctor dashboard quick action updated to link directly to availability management
+
 ### Profile Enhancement
 
 - Client-side profile picture cropping with `Cropper.js`
@@ -177,6 +198,7 @@ mysql -u root -p < database/migrations/001_initial_schema.sql
 mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.sql
 mysql -u root -p < database/migrations/004_add_doctor_profile_assets.sql
 mysql -u root -p < database/migrations/005_add_profile_photo_fields_for_admin_and_patient.sql
+mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
 ```
 
 7. Open the application using the configured `APP_URL`.
@@ -244,6 +266,17 @@ mysql -u root -p < database/migrations/005_add_profile_photo_fields_for_admin_an
 - Verified administrator, doctor, and patient dashboard HTML immediately renders the updated avatar path in shared sidebar, topbar, and welcome components after save
 - Verified replacing an existing patient avatar removes the previous stored file and keeps only the latest processed image
 - Verified invalid profile photo submissions reject non-cropped dimensions and invalid file types with professional validation messages
+- Verified doctor-only access to `/doctor/availability`, `/doctor/availability/create`, and `/doctor/availability/{id}/edit`
+- Verified doctor availability creation persists a valid slot in `doctor_availability`
+- Verified duplicate slots are rejected
+- Verified overlapping slots are rejected
+- Verified past dates are rejected
+- Verified invalid time ranges where end time is not greater than start time are rejected
+- Verified doctor availability search and date/status filters return the expected slot rows
+- Verified invalid CSRF availability deletion leaves the selected slot unchanged in the database
+- Verified doctor availability edits persist updated time, notes, and status values
+- Verified doctor availability deletion removes the selected slot from the database
+- Verified availability pagination renders the second page correctly when more than 10 slots exist
 
 ## Known Environment Requirement
 
@@ -254,7 +287,7 @@ mysql -u root -p < database/migrations/005_add_profile_photo_fields_for_admin_an
 
 - Week 1: Foundation completed
 - Week 2: Public website and authentication module completed in code
-- Week 3: Doctor availability module
+- Week 3: Administrator management module completed
 - Week 4: Patient booking module
 - Week 5: Admin booking management
 - Week 6: Video consultation
