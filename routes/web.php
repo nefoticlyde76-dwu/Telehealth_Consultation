@@ -24,6 +24,18 @@ $router->get('/doctor/dashboard', [DoctorController::class, 'dashboard'], [
     new RoleMiddleware(['doctor']),
 ]);
 
+$router->get('/doctor/profile', [DoctorController::class, 'profile'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->get('/doctor/profile/edit', [DoctorController::class, 'editProfile'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/profile/edit', [DoctorController::class, 'editProfile'], [
+    new RoleMiddleware(['doctor']),
+]);
+
 $router->get('/admin/dashboard', [AdminController::class, 'dashboard'], [
     new RoleMiddleware(['admin']),
 ]);

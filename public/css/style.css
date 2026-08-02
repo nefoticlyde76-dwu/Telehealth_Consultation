@@ -1387,6 +1387,117 @@ textarea.form-control {
   gap: 0.5rem;
 }
 
+.doctor-asset-card {
+  padding: 1.25rem;
+  border-radius: 1.4rem;
+  background: rgba(var(--white-rgb), 0.96);
+  border: 1px solid rgba(var(--medium-gray-rgb), 0.9);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.doctor-asset-label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.doctor-asset-image {
+  width: 100%;
+  height: 9.25rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(var(--medical-blue-rgb), 0.12);
+  object-fit: cover;
+  background: rgba(var(--medical-blue-rgb), 0.03);
+}
+
+.doctor-signature-image {
+  object-fit: contain;
+  background: rgba(var(--white-rgb), 0.98);
+}
+
+.doctor-asset-placeholder {
+  flex: 1;
+  border-radius: 1rem;
+  border: 1px dashed rgba(var(--medical-blue-rgb), 0.25);
+  background: rgba(var(--medical-blue-rgb), 0.04);
+  display: grid;
+  place-items: center;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  gap: 0.65rem;
+}
+
+.doctor-asset-placeholder i {
+  font-size: 1.8rem;
+  color: var(--primary);
+}
+
+.doctor-profile-photo-shell {
+  border-radius: 1.6rem;
+  border: 1px solid rgba(var(--medical-blue-rgb), 0.12);
+  background: rgba(var(--medical-blue-rgb), 0.04);
+  padding: 1.25rem;
+}
+
+.doctor-profile-photo {
+  width: 100%;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(var(--medical-blue-rgb), 0.12);
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+  background: rgba(var(--white-rgb), 0.98);
+}
+
+.doctor-profile-photo-placeholder {
+  border-radius: 1.35rem;
+  border: 1px dashed rgba(var(--medical-blue-rgb), 0.24);
+  background: rgba(var(--white-rgb), 0.98);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  gap: 0.75rem;
+  color: var(--text-muted);
+}
+
+.doctor-profile-photo-placeholder i {
+  font-size: 2.25rem;
+  color: var(--primary);
+}
+
+.doctor-signature-preview {
+  width: 100%;
+  max-height: 10rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(var(--medium-gray-rgb), 0.9);
+  background: rgba(var(--white-rgb), 0.98);
+  object-fit: contain;
+  padding: 1rem;
+}
+
+.doctor-signature-placeholder {
+  border-radius: 1.1rem;
+  border: 1px dashed rgba(var(--medical-blue-rgb), 0.24);
+  background: rgba(var(--medical-blue-rgb), 0.04);
+  padding: 2.1rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+  gap: 0.65rem;
+}
+
+.doctor-signature-placeholder i {
+  font-size: 1.8rem;
+  color: var(--primary);
+}
+
 .user-filter-form {
   padding: 1.1rem;
   border-radius: 1.35rem;

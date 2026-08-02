@@ -18,6 +18,7 @@ class Doctor
     public ?float $consultation_fee = null;
     public ?string $signature_path = null;
     public ?string $consent_doc_path = null;
+    public ?string $profile_photo_path = null;
 
     public static function findByUserId(int $userId): ?self
     {
@@ -48,6 +49,7 @@ class Doctor
         $doctor->consultation_fee = isset($row['consultation_fee']) ? (float) $row['consultation_fee'] : null;
         $doctor->signature_path = $row['signature_path'] ?? null;
         $doctor->consent_doc_path = $row['consent_doc_path'] ?? null;
+        $doctor->profile_photo_path = $row['profile_photo_path'] ?? null;
 
         return $doctor;
     }
@@ -71,7 +73,8 @@ class Doctor
                 clinic_address,
                 consultation_fee,
                 signature_path,
-                consent_doc_path
+                consent_doc_path,
+                profile_photo_path
             ) VALUES (
                 :user_id,
                 :phone,
@@ -83,7 +86,8 @@ class Doctor
                 :clinic_address,
                 :consultation_fee,
                 :signature_path,
-                :consent_doc_path
+                :consent_doc_path,
+                :profile_photo_path
             )"
         );
 
@@ -99,6 +103,7 @@ class Doctor
             ':consultation_fee' => $this->consultation_fee,
             ':signature_path' => $this->signature_path,
             ':consent_doc_path' => $this->consent_doc_path,
+            ':profile_photo_path' => $this->profile_photo_path,
         ]);
     }
 
@@ -116,7 +121,9 @@ class Doctor
                 gender = :gender,
                 professional_title = :professional_title,
                 specialization = :specialization,
-                employee_id = :employee_id
+                employee_id = :employee_id,
+                signature_path = :signature_path,
+                profile_photo_path = :profile_photo_path
             WHERE user_id = :user_id"
         );
 
@@ -126,8 +133,41 @@ class Doctor
             ':professional_title' => $this->professional_title,
             ':specialization' => $this->specialization,
             ':employee_id' => $this->employee_id,
+            ':signature_path' => $this->signature_path,
+            ':profile_photo_path' => $this->profile_photo_path,
             ':user_id' => $this->user_id,
         ]);
+    }
+
+    public static function findProfileDetailByUserId(int $userId): ?array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                users.id,
+                users.full_name,
+                users.email,
+                users.status,
+                users.created_at,
+                users.updated_at,
+                doctor.phone,
+                doctor.gender,
+                doctor.professional_title,
+                doctor.specialization,
+                doctor.employee_id,
+                doctor.signature_path,
+                doctor.profile_photo_path
+            FROM doctor
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'doctor' AND users.id = :user_id
+            LIMIT 1"
+        );
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
     }
 
     public static function findByEmployeeId(string $employeeId, ?int $excludeUserId = null): ?self

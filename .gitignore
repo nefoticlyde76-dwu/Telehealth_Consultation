@@ -8,3 +8,4 @@ composer.lock
 logs/
 tmp/
 cache/
+public/uploads/

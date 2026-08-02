@@ -4,7 +4,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ## Current Status
 
-- Current Week: Week 3
+- Current Week: Week 4
 - Architecture: Custom MVC (PHP 8.x)
 - Database: MySQL with PDO prepared statements
 - Frontend: HTML5, CSS3, Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
@@ -16,6 +16,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Patient Management: Week 3 Day 3 patient management implemented for administrator oversight and account maintenance
 - Administrator Profile: Week 3 Day 3 profile editing and password management implemented for administrators
 - Week 3 Finalization: Administrator Management module reviewed and hardened for validation, security, accessibility, responsive behavior, and UI consistency
+- Doctor Dashboard: Week 4 Day 1 professional doctor dashboard and profile management implemented for clinicians
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -91,6 +92,17 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Hardened CSRF handling verification for administrator status and profile flows
 - Final Week 3 review for validation, error handling, security, and UI consistency
 
+### Week 4 Day 1 Features
+
+- Professional doctor dashboard experience using the shared dashboard layout and MBPHA design system
+- Doctor dashboard statistics cards and quick action cards focused on profile readiness (no availability scheduling included)
+- Doctor profile viewer (`/doctor/profile`)
+- Doctor profile editing (`/doctor/profile/edit`)
+- Update doctor phone number and specialization
+- Upload/change doctor profile picture (JPG/PNG/WEBP, max 5MB)
+- Upload/update doctor digital signature (PNG/JPG, max 2MB)
+- Doctor password change requiring the current password, strong password validation, and session regeneration
+
 ## Project Structure
 
 ```text
@@ -150,6 +162,7 @@ copy .env.example .env
 ```bash
 mysql -u root -p < database/migrations/001_initial_schema.sql
 mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.sql
+mysql -u root -p < database/migrations/004_add_doctor_profile_assets.sql
 ```
 
 7. Open the application using the configured `APP_URL`.
@@ -179,6 +192,7 @@ mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.
 - PDO prepared statements
 - Output escaping in views
 - Request-aware base URL generation with `APP_URL` fallback
+- Clinician profile uploads validated by size and MIME type and stored under `public/uploads/` (gitignored)
 
 ## Design System
 
@@ -205,6 +219,12 @@ mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.
 - Verified invalid administrator password change returns the expected current-password error message
 - Verified database integrity checks for orphaned `admin`, `doctor`, and `patient` records returned zero issues
 - Verified stored administrator password remains hashed in the database
+- Verified doctor login through a live HTTP session and confirmed `200 OK` for `/doctor/dashboard`, `/doctor/profile`, and `/doctor/profile/edit`
+- Verified doctor profile updates persist phone number and specialization using CSRF-protected POST handling
+- Verified doctor profile photo and signature uploads pass MIME/size checks, store files under `public/uploads/doctors/{userId}/`, and update the linked doctor record paths
+- Verified replacing a doctor upload removes the previous file within the expected clinician upload directory
+- Verified invalid CSRF submissions for doctor profile updates leave protected fields unchanged in the database
+- Verified doctor password change requires the current password, rejects reuse of the same password, and regenerates the session cookie
 
 ## Known Environment Requirement
 

@@ -43,6 +43,14 @@
               </a>
             </li>
             <li><hr class="dropdown-divider"></li>
+          <?php elseif (($dashboardRole ?? '') === 'doctor'): ?>
+            <li>
+              <a href="<?= \App\Helpers\Helper::url('/doctor/profile') ?>" class="dropdown-item rounded-3">
+                <i class="bi bi-person-vcard me-2"></i>
+                My Profile
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
           <?php endif; ?>
           <li>
             <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
