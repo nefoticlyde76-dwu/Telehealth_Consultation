@@ -185,9 +185,9 @@ class DoctorController extends Controller
             'passwordFieldErrors' => $passwordFieldErrors,
             'statusMessage' => Session::getFlash('status'),
             'csrfToken' => Csrf::generate(),
-            'enableImageCropper' => true,
         ], 'layouts/dashboard');
     }
+
 
     public function availability(): void
     {

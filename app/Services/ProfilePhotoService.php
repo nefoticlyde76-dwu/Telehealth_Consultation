@@ -5,8 +5,6 @@ namespace App\Services;
 class ProfilePhotoService
 {
     public const MAX_PROFILE_PHOTO_BYTES = 5242880;
-    private const TARGET_WIDTH = 300;
-    private const TARGET_HEIGHT = 300;
 
     /**
      * @param array<string, mixed> $file
@@ -59,10 +57,6 @@ class ProfilePhotoService
         $width = (int) ($imageInfo[0] ?? 0);
         $height = (int) ($imageInfo[1] ?? 0);
 
-        if ($width !== self::TARGET_WIDTH || $height !== self::TARGET_HEIGHT) {
-            throw new \RuntimeException('Please crop the profile photo before saving. The final image must be 300 x 300 pixels.');
-        }
-
         $uploadRoot = dirname(__DIR__, 2)
             . DIRECTORY_SEPARATOR
             . 'public'
@@ -82,7 +76,7 @@ class ProfilePhotoService
         $destination = $uploadRoot . DIRECTORY_SEPARATOR . $filename;
 
         if (!move_uploaded_file($tmpName, $destination)) {
-            throw new \RuntimeException('Unable to store the cropped profile photo.');
+            throw new \RuntimeException('Unable to store the uploaded profile photo.');
         }
 
         $relativePath = 'uploads/' . $directoryName . '/' . $userId . '/' . $filename;

@@ -50,7 +50,7 @@ $statusMessage = $statusMessage ?? null;
         <div class="admin-foundation-list mt-4">
           <div class="admin-foundation-item">
             <i class="bi bi-crop"></i>
-            <span>Your saved profile picture is the cropped 300 x 300 version only.</span>
+            <span>Your saved profile picture is stored securely and displayed consistently across your dashboard experience.</span>
           </div>
           <div class="admin-foundation-item">
             <i class="bi bi-phone"></i>

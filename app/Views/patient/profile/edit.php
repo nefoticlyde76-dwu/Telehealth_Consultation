@@ -16,8 +16,8 @@ $csrfToken = $csrfToken ?? '';
         <i class="bi bi-camera"></i>
         Patient Profile Picture
       </span>
-      <h2 class="h4 mb-2">Crop and update your profile picture</h2>
-      <p class="text-muted mb-0">Select an image, crop it to a perfect square, and save the optimized version only.</p>
+      <h2 class="h4 mb-2">Update your profile picture</h2>
+      <p class="text-muted mb-0">Select a professional image and upload it securely. Your avatar updates across the dashboard after saving.</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
       <a href="<?= \App\Helpers\Helper::url('/patient/profile') ?>" class="btn btn-outline-primary rounded-pill px-4">
@@ -43,7 +43,7 @@ $csrfToken = $csrfToken ?? '';
       </div>
     <?php endif; ?>
 
-    <form method="POST" action="<?= \App\Helpers\Helper::url('/patient/profile/edit') ?>" enctype="multipart/form-data" class="needs-validation" novalidate data-profile-photo-form>
+    <form method="POST" action="<?= \App\Helpers\Helper::url('/patient/profile/edit') ?>" enctype="multipart/form-data" class="needs-validation" novalidate>
       <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
 
       <div class="card border-0 shadow-sm rounded-4 h-100">
@@ -66,7 +66,7 @@ $csrfToken = $csrfToken ?? '';
               ?>
               <div>
                 <strong class="d-block">Current profile picture</strong>
-                <p class="text-muted small mb-0">Use a clear headshot or professional profile image. The saved output is limited to 300 x 300 pixels.</p>
+                <p class="text-muted small mb-0">Use a clear headshot or professional profile image. The updated avatar will appear across your dashboard after saving.</p>
               </div>
             </div>
 
@@ -78,22 +78,16 @@ $csrfToken = $csrfToken ?? '';
                 id="patient_profile_photo"
                 name="profile_photo"
                 accept="image/png,image/jpeg,image/webp"
-                data-profile-crop-input
-                data-profile-crop-label="patient profile picture"
                 required
               >
-              <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['profile_photo'] ?? 'Choose an image to crop before saving.') ?></div>
-              <div class="profile-crop-feedback mt-2 d-none" data-profile-crop-feedback></div>
+              <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['profile_photo'] ?? 'Choose a valid profile picture to upload.') ?></div>
             </div>
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary rounded-pill px-4" data-profile-submit-button>
-              <span class="button-label">
-                <i class="bi bi-save me-2"></i>
-                Save Profile Picture
-              </span>
-              <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            <button type="submit" class="btn btn-primary rounded-pill px-4">
+              <i class="bi bi-save me-2"></i>
+              Save Profile Picture
             </button>
           </div>
         </div>
@@ -109,10 +103,6 @@ $csrfToken = $csrfToken ?? '';
           <div class="admin-foundation-item">
             <i class="bi bi-shield-lock"></i>
             <span>Profile picture updates continue using the existing authenticated patient session and CSRF protection.</span>
-          </div>
-          <div class="admin-foundation-item">
-            <i class="bi bi-crop"></i>
-            <span>The cropper produces a 1:1 square image so only the processed version is saved.</span>
           </div>
           <div class="admin-foundation-item">
             <i class="bi bi-image"></i>

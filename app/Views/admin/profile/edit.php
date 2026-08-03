@@ -40,7 +40,7 @@ $csrfToken = $csrfToken ?? '';
       </div>
     <?php endif; ?>
 
-    <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/profile') ?>" enctype="multipart/form-data" class="needs-validation" novalidate data-profile-photo-form>
+    <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/profile') ?>" enctype="multipart/form-data" class="needs-validation" novalidate>
       <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
       <input type="hidden" name="form_action" value="profile">
 
@@ -68,7 +68,7 @@ $csrfToken = $csrfToken ?? '';
                     ?>
                     <div>
                       <strong class="d-block">Administrator avatar</strong>
-                      <p class="text-muted small mb-0">Crop to a square before saving. The final uploaded image is optimized to 300 x 300 pixels.</p>
+                      <p class="text-muted small mb-0">Upload a professional profile picture. The image will appear across your dashboard experience after saving.</p>
                     </div>
                   </div>
                 </div>
@@ -81,11 +81,8 @@ $csrfToken = $csrfToken ?? '';
                     id="admin_profile_photo"
                     name="profile_photo"
                     accept="image/png,image/jpeg,image/webp"
-                    data-profile-crop-input
-                    data-profile-crop-label="administrator profile picture"
                   >
-                  <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['profile_photo'] ?? 'Choose an image to crop before saving.') ?></div>
-                  <div class="profile-crop-feedback mt-2 d-none" data-profile-crop-feedback></div>
+                  <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['profile_photo'] ?? 'Choose a valid profile picture to upload.') ?></div>
                 </div>
               </div>
             </div>
@@ -147,12 +144,9 @@ $csrfToken = $csrfToken ?? '';
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary rounded-pill px-4" data-profile-submit-button>
-              <span class="button-label">
-                <i class="bi bi-save me-2"></i>
-                Update Profile
-              </span>
-              <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            <button type="submit" class="btn btn-primary rounded-pill px-4">
+              <i class="bi bi-save me-2"></i>
+              Update Profile
             </button>
           </div>
         </div>

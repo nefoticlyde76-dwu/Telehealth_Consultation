@@ -18,7 +18,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Week 3 Finalization: Administrator Management module reviewed and hardened for validation, security, accessibility, responsive behavior, and UI consistency
 - Doctor Dashboard: Week 4 Day 1 professional doctor dashboard and profile management implemented for clinicians
 - Doctor Availability: Week 4 Day 2 availability scheduling implemented for doctor-managed consultation slots
-- Profile Pictures: Client-side profile picture cropping with live avatar updates is now implemented for administrator, doctor, and patient profiles
+- Profile Pictures: Direct profile picture uploads with live avatar updates are implemented for administrator, doctor, and patient profiles
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -127,12 +127,10 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ### Profile Enhancement
 
-- Client-side profile picture cropping with `Cropper.js`
-- Professional Bootstrap crop modal with zoom controls, drag repositioning, circular live preview, cancel action, and crop/save confirmation
-- Cropped profile pictures optimized to `300 x 300` before upload
+- Direct profile picture uploads without a cropping step
 - Shared live avatar rendering in the dashboard sidebar, top navigation, dashboard welcome section, and profile screens
 - Administrator profile photo updates
-- Doctor profile photo cropping integrated into existing doctor profile management
+- Doctor profile photo uploads integrated into existing doctor profile management
 - Patient profile view/edit screens for profile photo management
 - Secure server validation for JPG, JPEG, PNG, and WEBP uploads up to 5 MB
 - Unique filename generation and secure storage under role-specific upload directories
@@ -229,7 +227,7 @@ mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
 - Output escaping in views
 - Request-aware base URL generation with `APP_URL` fallback
 - Clinician profile uploads validated by size and MIME type and stored under `public/uploads/` (gitignored)
-- Cropped profile picture uploads validated by MIME type, size, and enforced `300 x 300` processed dimensions before the database path is updated
+- Profile picture uploads validated by MIME type and size before the database path is updated
 
 ## Design System
 
@@ -262,10 +260,10 @@ mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
 - Verified replacing a doctor upload removes the previous file within the expected clinician upload directory
 - Verified invalid CSRF submissions for doctor profile updates leave protected fields unchanged in the database
 - Verified doctor password change requires the current password, rejects reuse of the same password, and regenerates the session cookie
-- Verified administrator, doctor, and patient profile photo uploads persist cropped image paths in the correct role tables
+- Verified administrator, doctor, and patient profile photo uploads persist image paths in the correct role tables
 - Verified administrator, doctor, and patient dashboard HTML immediately renders the updated avatar path in shared sidebar, topbar, and welcome components after save
 - Verified replacing an existing patient avatar removes the previous stored file and keeps only the latest processed image
-- Verified invalid profile photo submissions reject non-cropped dimensions and invalid file types with professional validation messages
+- Verified invalid profile photo submissions reject invalid file types and oversized uploads with professional validation messages
 - Verified doctor-only access to `/doctor/availability`, `/doctor/availability/create`, and `/doctor/availability/{id}/edit`
 - Verified doctor availability creation persists a valid slot in `doctor_availability`
 - Verified duplicate slots are rejected
