@@ -60,6 +60,7 @@ class DoctorAvailabilityService
     public static function createAvailability(int $doctorId, array $input): array
     {
         $formData = self::normalizeFormData($input);
+        $formData['status'] = 'Available';
         [$errors, $fieldErrors] = self::validateAvailabilityForm($doctorId, $formData);
 
         if ($errors !== []) {
@@ -77,7 +78,7 @@ class DoctorAvailabilityService
         $availability->start_time = $formData['start_time'];
         $availability->end_time = $formData['end_time'];
         $availability->notes = $formData['notes'] !== '' ? $formData['notes'] : null;
-        $availability->status = $formData['status'];
+        $availability->status = 'Available';
 
         try {
             if (!$availability->save()) {
@@ -115,6 +116,16 @@ class DoctorAvailabilityService
         }
 
         $formData = self::normalizeFormData($input);
+        $formData['status'] = (string) ($existingAvailability['status'] ?? 'Available');
+
+        if ($formData['status'] !== 'Available') {
+            return [
+                'success' => false,
+                'errors' => ['Only unbooked availability slots can be edited.'],
+                'fieldErrors' => [],
+                'formData' => self::getAvailabilityFormData($existingAvailability),
+            ];
+        }
         [$errors, $fieldErrors] = self::validateAvailabilityForm($doctorId, $formData, $availabilityId);
 
         if ($errors !== []) {
@@ -131,7 +142,7 @@ class DoctorAvailabilityService
         $availability->start_time = $formData['start_time'];
         $availability->end_time = $formData['end_time'];
         $availability->notes = $formData['notes'] !== '' ? $formData['notes'] : null;
-        $availability->status = $formData['status'];
+        $availability->status = (string) ($existingAvailability['status'] ?? 'Available');
 
         try {
             if (!$availability->save()) {
@@ -171,6 +182,14 @@ class DoctorAvailabilityService
             return [
                 'success' => false,
                 'message' => 'The requested availability slot could not be found.',
+                'type' => 'warning',
+            ];
+        }
+
+        if (($availability['status'] ?? 'Available') !== 'Available') {
+            return [
+                'success' => false,
+                'message' => 'Only unbooked availability slots can be deleted.',
                 'type' => 'warning',
             ];
         }
@@ -224,19 +243,13 @@ class DoctorAvailabilityService
 
     private static function normalizeFormData(array $input): array
     {
-        $status = trim((string) ($input['status'] ?? 'Available'));
-
-        if (!in_array($status, self::getStatusOptions(), true)) {
-            $status = 'Available';
-        }
-
         return [
             '_token' => (string) ($input['_token'] ?? ''),
             'consultation_date' => trim((string) ($input['consultation_date'] ?? '')),
             'start_time' => self::normalizeTimeForStorage((string) ($input['start_time'] ?? '')),
             'end_time' => self::normalizeTimeForStorage((string) ($input['end_time'] ?? '')),
             'notes' => trim((string) ($input['notes'] ?? '')),
-            'status' => $status,
+            'status' => 'Available',
         ];
     }
 

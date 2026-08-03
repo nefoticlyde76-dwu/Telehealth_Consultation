@@ -6,6 +6,9 @@ $fieldErrors = $fieldErrors ?? [];
 $statusOptions = $statusOptions ?? [];
 $statusMessage = $statusMessage ?? null;
 $csrfToken = $csrfToken ?? '';
+$formData['status'] = 'Available';
+$showStatus = true;
+$disabled = false;
 ?>
 
 <section class="mb-4">

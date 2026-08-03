@@ -57,10 +57,13 @@ The following remain intentionally out of scope for today:
 
 The doctor dashboard was upgraded from an initial shell to a professional clinician workspace that now includes:
 
-- profile readiness-focused statistics cards
-- quick actions linking to doctor profile and profile editing
+- statistics cards aligned with availability scheduling:
+  - total available slots
+  - total booked slots
+  - upcoming consultations (booked, future-dated)
+  - completed consultations (booked, past-dated)
+- quick actions linking to profile management and availability scheduling
 - clinician profile snapshot section for identity and assets
-- a future-ready “recent activity” placeholder area without introducing availability or booking logic
 
 ### 2. Doctor Profile Viewer
 
@@ -125,7 +128,7 @@ The module provides:
 - search by date, time, and notes
 - filtering by consultation date and status
 - pagination for larger schedules
-- secure editing and deletion
+- secure editing and deletion for unbooked slots only
 
 ### 7. Availability Validation Rules
 
@@ -143,7 +146,7 @@ The existing schema already provided a status field, so the module now supports:
 - `Available` (default)
 - `Booked`
 
-No patient booking workflow was implemented in this task. The status field is maintained only as part of the doctor availability scheduling record.
+No patient booking workflow was implemented in this task. Newly created slots default to `Available`, and `Booked` slots are locked from edits and deletions to preserve schedule integrity.
 
 ## Database Work
 

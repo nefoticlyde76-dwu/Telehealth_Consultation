@@ -2,7 +2,8 @@
 
 $formData = $formData ?? [];
 $fieldErrors = $fieldErrors ?? [];
-$statusOptions = $statusOptions ?? [];
+$showStatus = $showStatus ?? true;
+$disabled = $disabled ?? false;
 ?>
 
 <div class="row g-3">
@@ -14,6 +15,7 @@ $statusOptions = $statusOptions ?? [];
       id="consultation_date"
       name="consultation_date"
       value="<?= \App\Helpers\Helper::escape((string) ($formData['consultation_date'] ?? '')) ?>"
+      <?= $disabled ? 'disabled' : '' ?>
       required
     >
     <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['consultation_date'] ?? 'Consultation date is required.') ?></div>
@@ -27,6 +29,7 @@ $statusOptions = $statusOptions ?? [];
       id="start_time"
       name="start_time"
       value="<?= \App\Helpers\Helper::escape((string) ($formData['start_time'] ?? '')) ?>"
+      <?= $disabled ? 'disabled' : '' ?>
       required
     >
     <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['start_time'] ?? 'Start time is required.') ?></div>
@@ -40,22 +43,21 @@ $statusOptions = $statusOptions ?? [];
       id="end_time"
       name="end_time"
       value="<?= \App\Helpers\Helper::escape((string) ($formData['end_time'] ?? '')) ?>"
+      <?= $disabled ? 'disabled' : '' ?>
       required
     >
     <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['end_time'] ?? 'End time is required.') ?></div>
   </div>
 
-  <div class="col-md-4">
-    <label for="status" class="form-label">Status</label>
-    <select class="form-select <?= isset($fieldErrors['status']) ? 'is-invalid' : '' ?>" id="status" name="status">
-      <?php foreach ($statusOptions as $statusOption): ?>
-        <option value="<?= \App\Helpers\Helper::escape($statusOption) ?>" <?= ($formData['status'] ?? 'Available') === $statusOption ? 'selected' : '' ?>>
-          <?= \App\Helpers\Helper::escape($statusOption) ?>
-        </option>
-      <?php endforeach; ?>
-    </select>
-    <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['status'] ?? 'Please select a valid availability status.') ?></div>
-  </div>
+  <?php if ($showStatus): ?>
+    <div class="col-md-4">
+      <label class="form-label">Status</label>
+      <div class="form-control bg-body-tertiary">
+        <?= \App\Helpers\Helper::escape((string) ($formData['status'] ?? 'Available')) ?>
+      </div>
+      <input type="hidden" name="status" value="<?= \App\Helpers\Helper::escape((string) ($formData['status'] ?? 'Available')) ?>">
+    </div>
+  <?php endif; ?>
 
   <div class="col-12">
     <label for="notes" class="form-label">Optional Notes</label>
@@ -66,6 +68,7 @@ $statusOptions = $statusOptions ?? [];
       rows="4"
       maxlength="1000"
       placeholder="Add optional notes for this availability slot"
+      <?= $disabled ? 'disabled' : '' ?>
     ><?= \App\Helpers\Helper::escape((string) ($formData['notes'] ?? '')) ?></textarea>
     <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['notes'] ?? 'Optional notes must be 1000 characters or fewer.') ?></div>
   </div>

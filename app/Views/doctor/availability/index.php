@@ -191,17 +191,28 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                   </td>
                   <td class="text-end">
                     <div class="admin-action-group">
-                      <a href="<?= \App\Helpers\Helper::url('/doctor/availability/' . $slotId . '/edit') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3" aria-label="Edit availability slot on <?= \App\Helpers\Helper::escape((string) ($slot['consultation_date'] ?? 'selected date')) ?>">
-                        <i class="bi bi-pencil-square me-2"></i>
-                        Edit
-                      </a>
-                      <form method="POST" action="<?= \App\Helpers\Helper::url('/doctor/availability/' . $slotId . '/delete') ?>" class="d-inline">
-                        <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
-                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" aria-label="Delete availability slot on <?= \App\Helpers\Helper::escape((string) ($slot['consultation_date'] ?? 'selected date')) ?>">
-                          <i class="bi bi-trash me-2"></i>
+                      <?php if ($isAvailable): ?>
+                        <a href="<?= \App\Helpers\Helper::url('/doctor/availability/' . $slotId . '/edit') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3" aria-label="Edit availability slot on <?= \App\Helpers\Helper::escape((string) ($slot['consultation_date'] ?? 'selected date')) ?>">
+                          <i class="bi bi-pencil-square me-2"></i>
+                          Edit
+                        </a>
+                        <form method="POST" action="<?= \App\Helpers\Helper::url('/doctor/availability/' . $slotId . '/delete') ?>" class="d-inline">
+                          <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
+                          <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" aria-label="Delete availability slot on <?= \App\Helpers\Helper::escape((string) ($slot['consultation_date'] ?? 'selected date')) ?>">
+                            <i class="bi bi-trash me-2"></i>
+                            Delete
+                          </button>
+                        </form>
+                      <?php else: ?>
+                        <span class="btn btn-outline-secondary btn-sm rounded-pill px-3 disabled" aria-disabled="true">
+                          <i class="bi bi-lock-fill me-2"></i>
+                          Edit
+                        </span>
+                        <span class="btn btn-outline-secondary btn-sm rounded-pill px-3 disabled" aria-disabled="true">
+                          <i class="bi bi-lock-fill me-2"></i>
                           Delete
-                        </button>
-                      </form>
+                        </span>
+                      <?php endif; ?>
                     </div>
                   </td>
                 </tr>

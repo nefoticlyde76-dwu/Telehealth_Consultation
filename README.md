@@ -117,12 +117,15 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
   - start time
   - end time
   - optional notes
-  - status (`Available` by default)
+  - status (`Available` by default; `Booked` is reserved for Week 5 booking workflows)
 - Validation rules:
   - prevent overlapping slots
   - prevent duplicate slots
   - prevent past dates
   - require end time to be greater than start time
+- Management rules:
+  - only unbooked (`Available`) slots can be edited or deleted
+  - booked slots are displayed as locked to preserve schedule integrity
 - Responsive Bootstrap table with search, date filter, status filter, and pagination
 - Doctor dashboard quick action updated to link directly to availability management
 
