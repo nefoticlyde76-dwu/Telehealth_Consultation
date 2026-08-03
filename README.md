@@ -211,15 +211,6 @@ mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.
 - Full login and registration submission require an active MySQL service matching the local `.env` configuration.
 - For common XAMPP local environments, `DB_HOST=localhost` is the recommended database host value.
 
-## Screenshots
-
-- Landing page screenshot: pending capture
-- Login page screenshot: pending capture
-- Registration page screenshot: pending capture
-- Patient dashboard screenshot: pending capture
-- Doctor dashboard screenshot: pending capture
-- Administrator dashboard screenshot: pending capture
-
 ## Roadmap
 
 - Week 1: Foundation completed
