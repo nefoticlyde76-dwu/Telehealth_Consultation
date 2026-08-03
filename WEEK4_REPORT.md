@@ -4,7 +4,7 @@
 
 - Project Title: MBPHA TeleHealth Consultation System
 - Week: Week 4
-- Scope Covered in This Report: Day 1 Doctor Dashboard and Doctor Profile Management, plus Day 2 Doctor Availability Scheduling
+- Scope Covered in This Report: Day 1 Doctor Dashboard and Doctor Profile Management, Day 2 Doctor Availability Scheduling, and Week 4 patient-facing doctor browsing finalisation
 
 ## Week 4 Day 1 Objective
 
@@ -50,6 +50,27 @@ The following remain intentionally out of scope for today:
 - patient booking
 - consultation request approval workflows
 - consultation records
+
+## Week 4 Finalisation Objective
+
+The objective of the final Week 4 implementation was to expose doctor availability to patients through a professional doctor directory and consultation slot viewer, while preserving the existing MVC architecture, patient role protection, responsive dashboard design system, and Week 4 rule that patients may browse but not book consultation slots.
+
+The work completed in this finalisation focused on:
+
+- patient-facing doctor directory
+- patient-facing consultation slot viewer
+- doctor filtering
+- specialization filtering
+- consultation date filtering
+- responsive dashboard integration for patient browsing
+- Week 4 verification for role protection, validation behaviour, and database integrity
+
+The following remained intentionally out of scope:
+
+- patient booking creation
+- doctor slot reservation by patients
+- consultation approval workflows
+- consultation history and clinical records
 
 ## Completed Work
 
@@ -148,6 +169,40 @@ The existing schema already provided a status field, so the module now supports:
 
 No patient booking workflow was implemented in this task. Newly created slots default to `Available`, and `Booked` slots are locked from edits and deletions to preserve schedule integrity.
 
+### 9. Patient Doctor Directory
+
+A patient-facing doctor directory was added at:
+
+- `/patient/doctors`
+
+This screen provides:
+
+- doctor profile photo
+- clinician full name
+- professional title
+- specialization
+- preview of available consultation days
+- preview of available consultation times
+
+Only active doctors with at least one future slot marked `Available` are shown to patients.
+
+### 10. Patient Consultation Slot Viewer
+
+A patient-facing consultation slot viewer was added at:
+
+- `/patient/available-slots`
+
+This screen provides:
+
+- future consultation slots only
+- doctor filtering
+- specialization filtering
+- consultation date filtering
+- responsive Bootstrap table output
+- pagination for larger visible schedules
+
+Booked and past slots are intentionally excluded from patient visibility.
+
 ## Database Work
 
 Instead of rewriting the initial schema, a minimal migration was added to extend the existing doctor table safely:
@@ -172,10 +227,13 @@ This migration adds:
 - `app/Services/DoctorProfileService.php`
 - `app/Models/DoctorAvailability.php`
 - `app/Services/DoctorAvailabilityService.php`
+- `app/Services/PatientDirectoryService.php`
 - `app/Views/doctor/availability/_form.php`
 - `app/Views/doctor/availability/index.php`
 - `app/Views/doctor/availability/create.php`
 - `app/Views/doctor/availability/edit.php`
+- `app/Views/patient/doctors/index.php`
+- `app/Views/patient/slots/index.php`
 - `app/Views/doctor/profile/show.php`
 - `app/Views/doctor/profile/edit.php`
 - `database/migrations/004_add_doctor_profile_assets.sql`
@@ -185,6 +243,7 @@ This migration adds:
 ## Files Modified
 
 - `routes/web.php`
+- `app/Controllers/PatientController.php`
 - `app/Controllers/DoctorController.php`
 - `app/Models/Doctor.php`
 - `app/Views/doctor/dashboard.php`
@@ -225,6 +284,14 @@ One additional service class now supports doctor scheduling:
   - prepares filtered/paginated listing data
   - coordinates create, update, and delete scheduling operations
 
+One final patient-facing service class was added:
+
+- `PatientDirectoryService`
+  - prepares patient dashboard browsing summaries
+  - normalizes patient-facing slot filters
+  - coordinates doctor directory pagination
+  - coordinates patient-visible slot listing and option filters
+
 ### Model Layer
 
 The `Doctor` model was extended to support the new asset path:
@@ -242,6 +309,13 @@ A dedicated availability model was added:
   - provides doctor-specific summaries
   - checks duplicate and overlapping slots
   - persists schedule changes
+
+The existing `Doctor` and `DoctorAvailability` models were also extended to support:
+
+- patient-facing doctor directory queries
+- patient-facing available slot queries
+- patient-facing doctor and specialization filter options
+- patient-facing preview data for available days and times
 
 ## Testing Performed
 
@@ -270,10 +344,17 @@ The following was verified via live HTTP sessions and database checks:
 - availability edit persisted updated time, notes, and status values
 - availability deletion removed the selected slot from the database
 - pagination rendered a second page correctly when more than 10 availability slots existed
+- unauthenticated access to `/patient/doctors` redirected away from the protected route
+- unauthenticated access to `/patient/available-slots` redirected away from the protected route
+- authenticated patient access rendered the doctor directory successfully
+- authenticated patient access rendered the consultation slot viewer successfully
+- patient browsing shows only future slots with status `Available`
+- patient browsing excludes booked slots from visible slot results
+- doctor and availability relationship integrity checks returned zero orphan rows
 
 ## Current Status
 
-Week 4 currently includes completed doctor dashboard/profile management and doctor availability scheduling.
+Week 4 currently includes completed doctor dashboard/profile management, doctor availability scheduling, and patient-facing doctor browsing.
 
 The system currently supports:
 
@@ -284,6 +365,8 @@ The system currently supports:
 - secure clinician password changes
 - doctor availability creation, listing, editing, and deletion
 - doctor schedule filtering, validation, and pagination
+- patient doctor directory browsing
+- patient consultation slot browsing with filters
 
 The following remain intentionally out of scope for today:
 
@@ -291,5 +374,5 @@ The following remain intentionally out of scope for today:
 
 ## Git
 
-- Recommended commit:
-  - `feat(week4-day1): implement doctor dashboard and profile management`
+- Requested final Week 4 commit:
+  - `feat(week4): complete doctor availability management module`

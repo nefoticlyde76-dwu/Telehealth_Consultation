@@ -1645,6 +1645,33 @@ textarea.form-control {
   pointer-events: none;
 }
 
+.patient-directory-card {
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, rgba(var(--white-rgb), 0.98), rgba(var(--soft-cyan-rgb), 0.08));
+  border: 1px solid rgba(var(--medium-gray-rgb), 0.9);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.patient-directory-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px rgba(var(--dark-navy-rgb), 0.12);
+}
+
+.patient-directory-meta + .patient-directory-meta {
+  margin-top: 1rem;
+}
+
+.patient-directory-label {
+  display: block;
+  margin-bottom: 0.55rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 @media (max-width: 991.98px) {
   .dashboard-banner-intro {
     align-items: flex-start;

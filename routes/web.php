@@ -32,6 +32,14 @@ $router->post('/patient/profile/edit', [PatientController::class, 'editProfile']
     new RoleMiddleware(['patient']),
 ]);
 
+$router->get('/patient/doctors', [PatientController::class, 'doctors'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/available-slots', [PatientController::class, 'availableSlots'], [
+    new RoleMiddleware(['patient']),
+]);
+
 $router->get('/doctor/dashboard', [DoctorController::class, 'dashboard'], [
     new RoleMiddleware(['doctor']),
 ]);

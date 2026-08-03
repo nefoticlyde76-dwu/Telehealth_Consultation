@@ -254,6 +254,116 @@ class DoctorAvailability
         return (int) $stmt->fetchColumn() > 0;
     }
 
+    public static function countAvailableForPatients(array $filters = []): int
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT COUNT(*)
+            FROM doctor_availability
+            INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id";
+        $conditions = [
+            "roles.name = 'doctor'",
+            "users.status = 'active'",
+            "doctor_availability.status = 'Available'",
+            'doctor_availability.consultation_date >= CURDATE()',
+        ];
+        $parameters = [];
+
+        self::appendPatientFilters($filters, $conditions, $parameters);
+
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        $stmt = $db->prepare($sql);
+        self::bindPatientParameters($stmt, $parameters);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function findAvailableForPatients(array $filters = [], int $limit = 10, int $offset = 0): array
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT
+                doctor_availability.id,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time,
+                doctor_availability.notes,
+                doctor_availability.status,
+                doctor.user_id AS doctor_id,
+                doctor.professional_title,
+                doctor.specialization,
+                doctor.profile_photo_path,
+                users.full_name
+            FROM doctor_availability
+            INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id";
+        $conditions = [
+            "roles.name = 'doctor'",
+            "users.status = 'active'",
+            "doctor_availability.status = 'Available'",
+            'doctor_availability.consultation_date >= CURDATE()',
+        ];
+        $parameters = [];
+
+        self::appendPatientFilters($filters, $conditions, $parameters);
+
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        $sql .= ' ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, users.full_name ASC LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
+        self::bindPatientParameters($stmt, $parameters);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function getAvailableDoctorOptionsForPatients(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query(
+            "SELECT DISTINCT
+                doctor.user_id AS doctor_id,
+                users.full_name
+            FROM doctor_availability
+            INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'doctor'
+              AND users.status = 'active'
+              AND doctor_availability.status = 'Available'
+              AND doctor_availability.consultation_date >= CURDATE()
+            ORDER BY users.full_name ASC"
+        );
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function getAvailableDaysAndTimesForDoctor(int $doctorId, int $limit = 3): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_date,
+                start_time,
+                end_time
+            FROM doctor_availability
+            WHERE doctor_id = :doctor_id
+              AND status = 'Available'
+              AND consultation_date >= CURDATE()
+            ORDER BY consultation_date ASC, start_time ASC
+            LIMIT :limit"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     private static function appendFilters(array $filters, array &$conditions, array &$parameters): void
     {
         $search = trim((string) ($filters['search'] ?? ''));
@@ -289,6 +399,39 @@ class DoctorAvailability
     {
         foreach ($parameters as $name => $value) {
             $stmt->bindValue($name, $value, $name === ':doctor_id' ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+    }
+
+    private static function appendPatientFilters(array $filters, array &$conditions, array &$parameters): void
+    {
+        $doctorId = (int) ($filters['doctor_id'] ?? 0);
+        $specialization = trim((string) ($filters['specialization'] ?? ''));
+        $consultationDate = trim((string) ($filters['consultation_date'] ?? ''));
+
+        if ($doctorId > 0) {
+            $conditions[] = 'doctor.user_id = :patient_filter_doctor_id';
+            $parameters[':patient_filter_doctor_id'] = $doctorId;
+        }
+
+        if ($specialization !== '') {
+            $conditions[] = 'doctor.specialization = :patient_filter_specialization';
+            $parameters[':patient_filter_specialization'] = $specialization;
+        }
+
+        if ($consultationDate !== '') {
+            $conditions[] = 'doctor_availability.consultation_date = :patient_filter_consultation_date';
+            $parameters[':patient_filter_consultation_date'] = $consultationDate;
+        }
+    }
+
+    private static function bindPatientParameters(\PDOStatement $stmt, array $parameters): void
+    {
+        foreach ($parameters as $name => $value) {
+            $stmt->bindValue(
+                $name,
+                $value,
+                $name === ':patient_filter_doctor_id' ? PDO::PARAM_INT : PDO::PARAM_STR
+            );
         }
     }
 }

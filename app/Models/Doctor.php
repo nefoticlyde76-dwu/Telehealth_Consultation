@@ -309,6 +309,99 @@ class Doctor
         return $row ?: null;
     }
 
+    public static function countForPatientDirectory(): int
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query(
+            "SELECT COUNT(*)
+            FROM doctor
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'doctor'
+              AND users.status = 'active'
+              AND EXISTS (
+                  SELECT 1
+                  FROM doctor_availability
+                  WHERE doctor_availability.doctor_id = doctor.user_id
+                    AND doctor_availability.status = 'Available'
+                    AND doctor_availability.consultation_date >= CURDATE()
+              )"
+        );
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function findForPatientDirectory(int $limit = 6, int $offset = 0): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                users.id,
+                users.full_name,
+                users.email,
+                doctor.professional_title,
+                doctor.specialization,
+                doctor.profile_photo_path,
+                (
+                    SELECT COUNT(*)
+                    FROM doctor_availability
+                    WHERE doctor_availability.doctor_id = doctor.user_id
+                      AND doctor_availability.status = 'Available'
+                      AND doctor_availability.consultation_date >= CURDATE()
+                ) AS available_slot_count,
+                (
+                    SELECT MIN(doctor_availability.consultation_date)
+                    FROM doctor_availability
+                    WHERE doctor_availability.doctor_id = doctor.user_id
+                      AND doctor_availability.status = 'Available'
+                      AND doctor_availability.consultation_date >= CURDATE()
+                ) AS next_available_date
+            FROM doctor
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'doctor'
+              AND users.status = 'active'
+              AND EXISTS (
+                  SELECT 1
+                  FROM doctor_availability
+                  WHERE doctor_availability.doctor_id = doctor.user_id
+                    AND doctor_availability.status = 'Available'
+                    AND doctor_availability.consultation_date >= CURDATE()
+              )
+            ORDER BY next_available_date ASC, users.full_name ASC
+            LIMIT :limit OFFSET :offset"
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function getSpecializationOptionsForPatients(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query(
+            "SELECT DISTINCT doctor.specialization
+            FROM doctor
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            INNER JOIN doctor_availability ON doctor_availability.doctor_id = doctor.user_id
+            WHERE roles.name = 'doctor'
+              AND users.status = 'active'
+              AND doctor.specialization IS NOT NULL
+              AND doctor.specialization != ''
+              AND doctor_availability.status = 'Available'
+              AND doctor_availability.consultation_date >= CURDATE()
+            ORDER BY doctor.specialization ASC"
+        );
+
+        return array_map(
+            static fn (array $row): string => (string) $row['specialization'],
+            $stmt->fetchAll(PDO::FETCH_ASSOC) ?: []
+        );
+    }
+
     private static function appendManagementFilters(array $filters, array &$conditions, array &$parameters): void
     {
         $search = trim((string) ($filters['search'] ?? ''));

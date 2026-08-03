@@ -7,6 +7,7 @@ use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
 use App\Services\AuthService;
+use App\Services\PatientDirectoryService;
 use App\Services\PatientProfileService;
 
 class PatientController extends Controller
@@ -19,6 +20,7 @@ class PatientController extends Controller
         }
 
         $user = AuthService::getUser();
+        $browseSummary = PatientDirectoryService::getBrowseSummary();
 
         $this->render('patient/dashboard', [
             'title' => 'Patient Dashboard | MBPHA TeleHealth Consultation System',
@@ -29,35 +31,112 @@ class PatientController extends Controller
             'dashboardDescription' => 'Your secure home for upcoming digital care interactions.',
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
+                ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
                 ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
             ],
-            'welcomeMessage' => 'Your account is active and ready for consultation booking, care updates, profile maintenance, and future appointment history.',
-            'focusTitle' => 'Profile readiness',
-            'focusDescription' => 'Keep your patient profile photo up to date so your account identity stays consistent across the MBPHA TeleHealth experience.',
+            'welcomeMessage' => 'Browse active clinicians, review upcoming availability, and prepare for patient booking without leaving your secure dashboard.',
+            'focusTitle' => 'Browse available care',
+            'focusDescription' => 'Week 4 now lets patients review active doctors and available consultation slots before booking is introduced in Week 5.',
             'statusMessage' => Session::getFlash('status'),
             'stats' => [
-                ['label' => 'Upcoming Consultations', 'value' => '0', 'icon' => 'bi-calendar2-check', 'description' => 'Live appointment data will appear here once booking is enabled.'],
-                ['label' => 'Pending Requests', 'value' => '0', 'icon' => 'bi-hourglass-split', 'description' => 'Tracks consultation requests awaiting action.'],
-                ['label' => 'Messages Requiring Review', 'value' => '0', 'icon' => 'bi-chat-dots', 'description' => 'Reserved for future communication updates.'],
+                ['label' => 'Available Doctors', 'value' => (string) ($browseSummary['available_doctors'] ?? 0), 'icon' => 'bi-person-badge', 'description' => 'Doctors with at least one future consultation slot currently available.'],
+                ['label' => 'Open Consultation Slots', 'value' => (string) ($browseSummary['available_slots'] ?? 0), 'icon' => 'bi-calendar2-check', 'description' => 'Patient-visible availability that can be reviewed before booking goes live.'],
+                ['label' => 'Specializations Available', 'value' => (string) ($browseSummary['specializations'] ?? 0), 'icon' => 'bi-hospital', 'description' => 'Distinct clinician specialization options patients can browse today.'],
                 ['label' => 'Account Status', 'value' => 'Active', 'icon' => 'bi-shield-check', 'description' => 'Your patient account is authenticated and available.'],
             ],
             'quickActions' => [
-                ['title' => 'View My Profile', 'description' => 'Review your patient account identity and profile photo in one place.', 'icon' => 'bi-person-badge', 'status' => 'Available now', 'url' => '/patient/profile', 'action_label' => 'Open Profile'],
+                ['title' => 'Browse Doctors', 'description' => 'Review clinician photos, titles, specializations, and previewed consultation availability.', 'icon' => 'bi-person-badge', 'status' => 'Available now', 'url' => '/patient/doctors', 'action_label' => 'Open Directory'],
+                ['title' => 'View Available Slots', 'description' => 'Filter future consultation slots by doctor, specialization, and consultation date.', 'icon' => 'bi-calendar2-week', 'status' => 'Available now', 'url' => '/patient/available-slots', 'action_label' => 'Browse Slots'],
+                ['title' => 'View My Profile', 'description' => 'Review your patient account identity and profile photo in one place.', 'icon' => 'bi-person-circle', 'status' => 'Available now', 'url' => '/patient/profile', 'action_label' => 'Open Profile'],
                 ['title' => 'Change Profile Picture', 'description' => 'Upload a profile photo that updates your dashboard avatar after saving.', 'icon' => 'bi-camera', 'status' => 'Available now', 'url' => '/patient/profile/edit', 'action_label' => 'Edit Photo'],
-                ['title' => 'Prepare For Booking', 'description' => 'This area is ready to connect to the booking workflow in the next module.', 'icon' => 'bi-journal-check', 'status' => 'Ready for integration'],
-                ['title' => 'Monitor Consultation Updates', 'description' => 'Recent activity cards are structured for future appointment and consultation history.', 'icon' => 'bi-clipboard2-pulse', 'status' => 'Structured placeholder'],
             ],
             'recentActivity' => [
-                ['title' => 'Dashboard access confirmed', 'description' => 'Your authenticated patient dashboard is available and role protected.', 'meta' => 'Current session'],
-                ['title' => 'Profile photo workspace ready', 'description' => 'You can now upload a profile picture that updates your dashboard avatar after save.', 'meta' => 'Week 4 enhancement'],
-                ['title' => 'Booking workflow pending', 'description' => 'Appointment booking data will populate once the patient booking module is implemented.', 'meta' => 'Prepared for Week 4'],
-                ['title' => 'Consultation history placeholder', 'description' => 'Historical care records will appear here when consultation records become available.', 'meta' => 'Future module integration'],
+                ['title' => 'Dashboard access confirmed', 'description' => 'Your authenticated patient dashboard remains role protected and session aware.', 'meta' => 'Current session'],
+                ['title' => 'Doctor directory enabled', 'description' => 'Patients can now browse clinicians with future available consultation schedules.', 'meta' => 'Week 4 completion'],
+                ['title' => 'Available slot viewer enabled', 'description' => 'Future slots can now be filtered by doctor, specialization, and consultation date.', 'meta' => 'Week 4 completion'],
+                ['title' => 'Booking workflow pending', 'description' => 'Consultation booking remains intentionally reserved for Week 5.', 'meta' => 'Next module'],
             ],
             'emptyState' => [
-                'icon' => 'bi-calendar-plus',
-                'title' => 'No consultation activity yet',
-                'description' => 'Once appointment booking and clinical workflows are enabled, this dashboard will display upcoming consultations and related records.',
+                'icon' => 'bi-search',
+                'title' => 'Start by browsing available care',
+                'description' => 'Use the doctor directory and available slot viewer to review future consultation options before patient booking is introduced.',
             ],
+        ], 'layouts/dashboard');
+    }
+
+    public function doctors(): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $pageData = PatientDirectoryService::getDoctorDirectoryPageData($_GET);
+
+        $this->render('patient/doctors/index', [
+            'title' => 'Doctor Directory | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'patient',
+            'dashboardRoleLabel' => 'Patient Dashboard',
+            'dashboardTitle' => 'Doctor Directory',
+            'dashboardDescription' => 'Browse active doctors with patient-visible consultation availability.',
+            'sidebarItems' => [
+                ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
+                ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
+                ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
+            ],
+            'doctors' => $pageData['doctors'],
+            'summary' => $pageData['summary'],
+            'pagination' => $pageData['pagination'],
+            'statusMessage' => Session::getFlash('status'),
+        ], 'layouts/dashboard');
+    }
+
+    public function availableSlots(): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $pageData = PatientDirectoryService::getAvailableSlotsPageData($_GET);
+
+        $this->render('patient/slots/index', [
+            'title' => 'Available Consultation Slots | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'patient',
+            'dashboardRoleLabel' => 'Patient Dashboard',
+            'dashboardTitle' => 'Available Consultation Slots',
+            'dashboardDescription' => 'Review patient-visible consultation slots before booking is enabled in Week 5.',
+            'sidebarItems' => [
+                ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
+                ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
+                ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
+            ],
+            'filters' => $pageData['filters'],
+            'slots' => $pageData['slots'],
+            'summary' => $pageData['summary'],
+            'pagination' => $pageData['pagination'],
+            'doctorOptions' => $pageData['doctorOptions'],
+            'specializationOptions' => $pageData['specializationOptions'],
+            'statusMessage' => Session::getFlash('status'),
         ], 'layouts/dashboard');
     }
 
@@ -95,6 +174,8 @@ class PatientController extends Controller
             'dashboardDescription' => 'Review your patient account identity and profile photo securely.',
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
+                ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
                 ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
                 ['path' => '/patient/profile/edit', 'label' => 'Edit Profile Photo', 'icon' => 'bi-camera'],
             ],
@@ -157,6 +238,8 @@ class PatientController extends Controller
             'dashboardDescription' => 'Upload a professional patient profile picture securely.',
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
+                ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
                 ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
                 ['path' => '/patient/profile/edit', 'label' => 'Edit Profile Photo', 'icon' => 'bi-camera'],
             ],

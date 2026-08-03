@@ -18,6 +18,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Week 3 Finalization: Administrator Management module reviewed and hardened for validation, security, accessibility, responsive behavior, and UI consistency
 - Doctor Dashboard: Week 4 Day 1 professional doctor dashboard and profile management implemented for clinicians
 - Doctor Availability: Week 4 Day 2 availability scheduling implemented for doctor-managed consultation slots
+- Patient Browsing: Week 4 patient-facing doctor directory and consultation slot viewer implemented for patient review workflows
 - Profile Pictures: Direct profile picture uploads with live avatar updates are implemented for administrator, doctor, and patient profiles
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
@@ -128,6 +129,25 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
   - booked slots are displayed as locked to preserve schedule integrity
 - Responsive Bootstrap table with search, date filter, status filter, and pagination
 - Doctor dashboard quick action updated to link directly to availability management
+
+### Week 4 Finalisation Features
+
+- Patient doctor directory at `/patient/doctors`
+- Patient consultation slot viewer at `/patient/available-slots`
+- Patient doctor directory displays:
+  - doctor profile photo
+  - full name
+  - professional title
+  - specialization
+  - available consultation days
+  - available consultation times
+- Patient consultation slot viewer displays only future slots with status `Available`
+- Patient slot viewer filters:
+  - doctor
+  - specialization
+  - consultation date
+- Patient dashboard updated with Week 4 browsing statistics and quick actions
+- Week 4 role access, database integrity, and patient-visible availability rules verified
 
 ### Profile Enhancement
 
@@ -279,6 +299,11 @@ mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
 - Verified doctor availability edits persist updated time, notes, and status values
 - Verified doctor availability deletion removes the selected slot from the database
 - Verified availability pagination renders the second page correctly when more than 10 slots exist
+- Verified unauthenticated access to `/patient/doctors` and `/patient/available-slots` redirects away from protected pages
+- Verified authenticated patient access renders the doctor directory and consultation slot viewer successfully
+- Verified patient doctor directory shows only active doctors with future available slots
+- Verified patient slot viewer excludes booked slots and past slots from the visible patient listing
+- Verified Week 4 doctor availability relationships have no orphaned `doctor_availability` or `doctor` records
 
 ## Known Environment Requirement
 
@@ -290,7 +315,7 @@ mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
 - Week 1: Foundation completed
 - Week 2: Public website and authentication module completed in code
 - Week 3: Administrator management module completed
-- Week 4: Patient booking module
+- Week 4: Doctor availability management and patient browsing completed
 - Week 5: Admin booking management
 - Week 6: Video consultation
 - Week 7: Consultation records and prescription module
