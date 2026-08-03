@@ -166,7 +166,9 @@ class DoctorAvailability
                 COUNT(*) AS total_slots,
                 SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS available_slots,
                 SUM(CASE WHEN status = 'Booked' THEN 1 ELSE 0 END) AS booked_slots,
-                SUM(CASE WHEN consultation_date >= CURDATE() THEN 1 ELSE 0 END) AS upcoming_slots
+                SUM(CASE WHEN consultation_date >= CURDATE() THEN 1 ELSE 0 END) AS upcoming_slots,
+                SUM(CASE WHEN status = 'Booked' AND consultation_date >= CURDATE() THEN 1 ELSE 0 END) AS upcoming_consultations,
+                SUM(CASE WHEN status = 'Booked' AND consultation_date < CURDATE() THEN 1 ELSE 0 END) AS completed_consultations
             FROM doctor_availability
             WHERE doctor_id = :doctor_id"
         );
@@ -179,6 +181,8 @@ class DoctorAvailability
             'available_slots' => (int) ($row['available_slots'] ?? 0),
             'booked_slots' => (int) ($row['booked_slots'] ?? 0),
             'upcoming_slots' => (int) ($row['upcoming_slots'] ?? 0),
+            'upcoming_consultations' => (int) ($row['upcoming_consultations'] ?? 0),
+            'completed_consultations' => (int) ($row['completed_consultations'] ?? 0),
         ];
     }
 

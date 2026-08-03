@@ -16,35 +16,34 @@ class DoctorDashboardService
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
         $hasSignature = !empty($doctor['signature_path'] ?? '');
-        $profileCompleteness = self::calculateProfileCompleteness($doctor);
 
         return [
             'user' => $user,
             'doctor' => $doctor,
             'stats' => [
                 [
-                    'label' => 'Profile Completeness',
-                    'value' => $profileCompleteness . '%',
-                    'icon' => 'bi-clipboard-check',
-                    'description' => 'Completeness of phone number, specialization, photo, and signature for clinical readiness.',
+                    'label' => 'Total Available Slots',
+                    'value' => (string) ($availabilitySummary['available_slots'] ?? 0),
+                    'icon' => 'bi-calendar2-check',
+                    'description' => 'Open consultation slots that are ready for future patient booking workflows.',
                 ],
                 [
-                    'label' => 'Profile Photo',
-                    'value' => $hasProfilePhoto ? 'Uploaded' : 'Not uploaded',
-                    'icon' => $hasProfilePhoto ? 'bi-person-bounding-box' : 'bi-person',
-                    'description' => 'A professional profile photo improves clinician trust and identity verification.',
+                    'label' => 'Total Booked Slots',
+                    'value' => (string) ($availabilitySummary['booked_slots'] ?? 0),
+                    'icon' => 'bi-journal-check',
+                    'description' => 'Consultation slots currently marked as booked in the scheduling module.',
                 ],
                 [
-                    'label' => 'Availability Slots',
-                    'value' => (string) ($availabilitySummary['upcoming_slots'] ?? 0),
-                    'icon' => 'bi-calendar-week',
-                    'description' => 'Upcoming consultation slots currently scheduled in your availability calendar.',
+                    'label' => 'Upcoming Consultations',
+                    'value' => (string) ($availabilitySummary['upcoming_consultations'] ?? 0),
+                    'icon' => 'bi-clock-history',
+                    'description' => 'Future booked consultations scheduled from today onward.',
                 ],
                 [
-                    'label' => 'Account Status',
-                    'value' => ucfirst((string) ($user?->status ?? 'active')),
-                    'icon' => ($user?->status ?? 'active') === 'active' ? 'bi-shield-check' : 'bi-shield-exclamation',
-                    'description' => 'Account status determines whether secure login is permitted.',
+                    'label' => 'Completed Consultations',
+                    'value' => (string) ($availabilitySummary['completed_consultations'] ?? 0),
+                    'icon' => 'bi-clipboard2-pulse',
+                    'description' => 'Booked consultations with dates earlier than today.',
                 ],
             ],
             'quickActions' => [
@@ -78,6 +77,14 @@ class DoctorDashboardService
                     'icon' => 'bi-shield-lock',
                     'status' => 'Active',
                 ],
+                [
+                    'title' => 'Upload Clinical Assets',
+                    'description' => 'Keep your profile photo and digital signature current for future consultation documentation.',
+                    'icon' => $hasProfilePhoto && $hasSignature ? 'bi-check2-circle' : 'bi-cloud-arrow-up',
+                    'status' => $hasProfilePhoto && $hasSignature ? 'Up to date' : 'Action recommended',
+                    'url' => '/doctor/profile/edit',
+                    'action_label' => 'Update Assets',
+                ],
             ],
             'recentActivity' => [
                 [
@@ -97,29 +104,5 @@ class DoctorDashboardService
                 'description' => 'Your availability calendar is now active, and future consultation workflows will build on these scheduled slots.',
             ],
         ];
-    }
-
-    private static function calculateProfileCompleteness(?array $doctor): int
-    {
-        if ($doctor === null) {
-            return 0;
-        }
-
-        $checks = [
-            !empty($doctor['phone'] ?? ''),
-            !empty($doctor['specialization'] ?? ''),
-            !empty($doctor['profile_photo_path'] ?? ''),
-            !empty($doctor['signature_path'] ?? ''),
-        ];
-
-        $completed = 0;
-
-        foreach ($checks as $check) {
-            if ($check) {
-                $completed++;
-            }
-        }
-
-        return (int) round(($completed / count($checks)) * 100);
     }
 }
