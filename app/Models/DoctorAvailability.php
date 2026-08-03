@@ -186,6 +186,53 @@ class DoctorAvailability
         ];
     }
 
+    public static function getTodaySummaryForDoctor(int $doctorId): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                COUNT(*) AS total_today_slots,
+                SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS available_today_slots,
+                SUM(CASE WHEN status = 'Booked' THEN 1 ELSE 0 END) AS booked_today_slots
+            FROM doctor_availability
+            WHERE doctor_id = :doctor_id
+              AND consultation_date = CURDATE()"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        return [
+            'total_today_slots' => (int) ($row['total_today_slots'] ?? 0),
+            'available_today_slots' => (int) ($row['available_today_slots'] ?? 0),
+            'booked_today_slots' => (int) ($row['booked_today_slots'] ?? 0),
+        ];
+    }
+
+    public static function getUpcomingForDoctor(int $doctorId, int $limit = 5): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                id,
+                consultation_date,
+                start_time,
+                end_time,
+                notes,
+                status
+            FROM doctor_availability
+            WHERE doctor_id = :doctor_id
+              AND consultation_date >= CURDATE()
+            ORDER BY consultation_date ASC, start_time ASC, id ASC
+            LIMIT :limit"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function hasDuplicateSlot(
         int $doctorId,
         string $consultationDate,

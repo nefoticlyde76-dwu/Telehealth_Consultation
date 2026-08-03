@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/theme.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/style.css') ?>">
 </head>
-<body class="dashboard-layout">
+<body class="dashboard-layout dashboard-layout--<?= \App\Helpers\Helper::escape((string) ($dashboardRole ?? 'default')) ?>">
   <div class="dashboard-shell">
     <?php require __DIR__ . '/../partials/dashboard/sidebar.php'; ?>
 

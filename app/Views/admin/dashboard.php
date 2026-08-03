@@ -3,14 +3,22 @@
 <section class="mt-4">
   <div class="row g-4">
     <div class="col-xl-8">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
+      <div class="card border-0 shadow-sm rounded-4 h-100 dashboard-widget-shell">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <div>
-              <h3 class="h5 mb-1">User Management Snapshot</h3>
-              <p class="text-muted mb-0">Current platform distribution across patient, doctor, and administrator accounts.</p>
+              <span class="section-badge mb-3">
+                <i class="bi bi-shield-lock"></i>
+                Administrative Command Center
+              </span>
+              <h3 class="h5 mb-1">System governance and account oversight</h3>
+              <p class="text-muted mb-0">Monitor account health, balance clinical access, and move directly into the areas that need administrative attention.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
+              <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="bi bi-diagram-3 me-2"></i>
+                Manage Users
+              </a>
               <a href="<?= \App\Helpers\Helper::url('/admin/patients') ?>" class="btn btn-outline-primary rounded-pill px-4">
                 <i class="bi bi-people me-2"></i>
                 Manage Patients
@@ -22,33 +30,95 @@
             </div>
           </div>
 
-          <div class="row g-3">
+          <div class="row g-3 mb-4">
             <div class="col-sm-6 col-lg-3">
-              <div class="admin-summary-card h-100">
+              <div class="admin-summary-card h-100 dashboard-emphasis-card">
                 <span class="admin-summary-label">Patients</span>
-                <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($userSummary['patient_users'] ?? 0)) ?></strong>
+                <strong class="admin-summary-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['patient_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['patient_users'] ?? 0)) ?></strong>
                 <span class="admin-summary-meta">Self-registered accounts currently stored</span>
               </div>
             </div>
             <div class="col-sm-6 col-lg-3">
               <div class="admin-summary-card h-100">
                 <span class="admin-summary-label">Doctors</span>
-                <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($userSummary['doctor_users'] ?? 0)) ?></strong>
+                <strong class="admin-summary-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['doctor_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['doctor_users'] ?? 0)) ?></strong>
                 <span class="admin-summary-meta">Clinician profiles visible for future scheduling workflows</span>
               </div>
             </div>
             <div class="col-sm-6 col-lg-3">
               <div class="admin-summary-card h-100">
                 <span class="admin-summary-label">Administrators</span>
-                <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($userSummary['admin_users'] ?? 0)) ?></strong>
+                <strong class="admin-summary-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['admin_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['admin_users'] ?? 0)) ?></strong>
                 <span class="admin-summary-meta">Governance accounts with secure operational access</span>
               </div>
             </div>
             <div class="col-sm-6 col-lg-3">
               <div class="admin-summary-card h-100">
                 <span class="admin-summary-label">Inactive</span>
-                <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($userSummary['inactive_users'] ?? 0)) ?></strong>
+                <strong class="admin-summary-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['inactive_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['inactive_users'] ?? 0)) ?></strong>
                 <span class="admin-summary-meta">Accounts retained but unavailable for login access</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-lg-7">
+              <div class="dashboard-info-panel h-100">
+                <span class="dashboard-info-label">System Activity</span>
+                <h4 class="h6 mb-2">Operational account health remains stable</h4>
+                <p class="text-muted small mb-4">The current Week 4 environment keeps doctor, patient, and administrator access grouped under one secured governance workspace.</p>
+
+                <div class="dashboard-progress-list">
+                  <?php
+                  $totalUsers = max(1, (int) ($userSummary['total_users'] ?? 0));
+                  $activeWidth = (int) round(((int) ($userSummary['active_users'] ?? 0) / $totalUsers) * 100);
+                  $patientWidth = (int) round(((int) ($userSummary['patient_users'] ?? 0) / $totalUsers) * 100);
+                  $doctorWidth = (int) round(((int) ($userSummary['doctor_users'] ?? 0) / $totalUsers) * 100);
+                  ?>
+                  <div class="dashboard-progress-item">
+                    <div class="d-flex justify-content-between gap-3 mb-2">
+                      <span>Active Accounts</span>
+                      <strong><?= \App\Helpers\Helper::escape((string) ($userSummary['active_users'] ?? 0)) ?></strong>
+                    </div>
+                    <div class="dashboard-progress-track"><span class="dashboard-progress-bar" style="width: <?= \App\Helpers\Helper::escape((string) $activeWidth) ?>%"></span></div>
+                  </div>
+                  <div class="dashboard-progress-item">
+                    <div class="d-flex justify-content-between gap-3 mb-2">
+                      <span>Patient Distribution</span>
+                      <strong><?= \App\Helpers\Helper::escape((string) ($userSummary['patient_users'] ?? 0)) ?></strong>
+                    </div>
+                    <div class="dashboard-progress-track"><span class="dashboard-progress-bar dashboard-progress-bar--teal" style="width: <?= \App\Helpers\Helper::escape((string) $patientWidth) ?>%"></span></div>
+                  </div>
+                  <div class="dashboard-progress-item">
+                    <div class="d-flex justify-content-between gap-3 mb-2">
+                      <span>Doctor Distribution</span>
+                      <strong><?= \App\Helpers\Helper::escape((string) ($userSummary['doctor_users'] ?? 0)) ?></strong>
+                    </div>
+                    <div class="dashboard-progress-track"><span class="dashboard-progress-bar dashboard-progress-bar--cyan" style="width: <?= \App\Helpers\Helper::escape((string) $doctorWidth) ?>%"></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-5">
+              <div class="dashboard-info-panel h-100">
+                <span class="dashboard-info-label">Pending Requests</span>
+                <h4 class="h6 mb-2">Workflow readiness snapshot</h4>
+                <div class="widget-mini-stat-list">
+                  <div class="widget-mini-stat">
+                    <span class="widget-mini-stat-label">Inactive Patients</span>
+                    <strong><?= \App\Helpers\Helper::escape((string) ($patientSummary['inactive_patients'] ?? 0)) ?></strong>
+                  </div>
+                  <div class="widget-mini-stat">
+                    <span class="widget-mini-stat-label">Inactive Doctors</span>
+                    <strong><?= \App\Helpers\Helper::escape((string) ($doctorSummary['inactive_doctors'] ?? 0)) ?></strong>
+                  </div>
+                  <div class="widget-mini-stat">
+                    <span class="widget-mini-stat-label">Active Accounts</span>
+                    <strong><?= \App\Helpers\Helper::escape((string) ($userSummary['active_users'] ?? 0)) ?></strong>
+                  </div>
+                </div>
+                <p class="text-muted small mb-0">Review inactive accounts and recent registrations to decide where governance action is needed next.</p>
               </div>
             </div>
           </div>
@@ -57,12 +127,12 @@
     </div>
 
     <div class="col-xl-4">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
+      <div class="card border-0 shadow-sm rounded-4 h-100 dashboard-widget-shell">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
               <h3 class="h5 mb-1">Latest Visible Users</h3>
-              <p class="text-muted mb-0">Most recently added user records in the current environment.</p>
+              <p class="text-muted mb-0">Recent account activity surfaced in a compact operational feed.</p>
             </div>
             <span class="badge badge-soft-info rounded-pill"><?= count($latestUsers ?? []) ?></span>
           </div>
@@ -91,6 +161,15 @@
                 </div>
               <?php endforeach; ?>
             <?php endif; ?>
+          </div>
+
+          <div class="dashboard-inline-callout mt-4">
+            <span class="dashboard-info-label">System Access Mix</span>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <span class="badge badge-soft-success rounded-pill px-3 py-2">Patients <?= \App\Helpers\Helper::escape((string) ($patientSummary['active_patients'] ?? 0)) ?></span>
+              <span class="badge badge-soft-info rounded-pill px-3 py-2">Doctors <?= \App\Helpers\Helper::escape((string) ($doctorSummary['active_doctors'] ?? 0)) ?></span>
+              <span class="badge badge-soft-neutral rounded-pill border px-3 py-2">Admins <?= \App\Helpers\Helper::escape((string) ($userSummary['admin_users'] ?? 0)) ?></span>
+            </div>
           </div>
         </div>
       </div>

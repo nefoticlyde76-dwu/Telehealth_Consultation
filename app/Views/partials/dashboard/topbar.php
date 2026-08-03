@@ -12,12 +12,21 @@
             <li class="breadcrumb-item active" aria-current="page"><?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard') ?></li>
           </ol>
         </nav>
+        <div class="topbar-role-pill mb-2">
+          <i class="bi bi-heart-pulse"></i>
+          <span><?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard Workspace') ?></span>
+        </div>
         <h1 class="h3 mb-1"><?= \App\Helpers\Helper::escape($dashboardTitle ?? 'Dashboard') ?></h1>
         <p class="text-muted mb-0"><?= \App\Helpers\Helper::escape($dashboardDescription ?? 'Overview') ?></p>
       </div>
     </div>
 
-    <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3 flex-wrap justify-content-lg-end">
+      <div class="topbar-chip" aria-label="Current dashboard date">
+        <i class="bi bi-calendar3"></i>
+        <span><?= \App\Helpers\Helper::escape(date('D, d M Y')) ?></span>
+      </div>
+
       <div class="topbar-chip" aria-label="Notifications placeholder">
         <i class="bi bi-bell"></i>
         <span>Notifications</span>
@@ -32,7 +41,7 @@
           $avatarClass = 'user-avatar user-avatar--xs';
           require __DIR__ . '/../shared/user_avatar.php';
           ?>
-          <span class="text-start">
+          <span class="text-start topbar-profile-meta">
             <strong class="d-block"><?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?></strong>
             <small class="text-muted"><?= \App\Helpers\Helper::escape(ucfirst($dashboardRole ?? 'account')) ?></small>
           </span>

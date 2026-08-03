@@ -19,6 +19,10 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
   </div>
 
   <div class="px-4 pb-4">
+    <div class="sidebar-workspace-badge mb-3">
+      <span class="sidebar-workspace-dot"></span>
+      <span><?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard Workspace') ?></span>
+    </div>
     <div class="sidebar-user-card">
       <?php
       $avatarPath = $user->profile_photo_path ?? null;
@@ -29,6 +33,7 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
       <div>
         <strong class="d-block text-white"><?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?></strong>
         <span class="sidebar-user-role"><?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard') ?></span>
+        <span class="sidebar-user-meta"><?= \App\Helpers\Helper::escape($user->email ?? '') ?></span>
       </div>
     </div>
   </div>
@@ -45,7 +50,7 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
           href="<?= \App\Helpers\Helper::url($itemPath) ?>"
           class="sidebar-link <?= $isActive ? 'active' : '' ?>"
         >
-          <span><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
+          <span class="sidebar-link-icon"><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
           <span><?= \App\Helpers\Helper::escape($item['label'] ?? 'Link') ?></span>
         </a>
       <?php endforeach; ?>
@@ -57,6 +62,16 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
       <span class="small text-uppercase text-white-50 d-block mb-2">Platform Status</span>
       <h2 class="h6 text-white mb-2"><?= \App\Helpers\Helper::escape($sidebarStatusTitle) ?></h2>
       <p class="text-white-50 small mb-0"><?= \App\Helpers\Helper::escape($sidebarStatusDescription) ?></p>
+      <div class="sidebar-support-metrics">
+        <div class="sidebar-support-stat">
+          <strong><?= \App\Helpers\Helper::escape((string) count($sidebarItems)) ?></strong>
+          <span>active links</span>
+        </div>
+        <div class="sidebar-support-stat">
+          <strong>W4</strong>
+          <span>current sprint</span>
+        </div>
+      </div>
     </div>
   </div>
 </aside>
@@ -99,7 +114,7 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
           href="<?= \App\Helpers\Helper::url($itemPath) ?>"
           class="sidebar-link <?= $isActive ? 'active' : '' ?>"
         >
-          <span><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
+          <span class="sidebar-link-icon"><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
           <span><?= \App\Helpers\Helper::escape($item['label'] ?? 'Link') ?></span>
         </a>
       <?php endforeach; ?>

@@ -21,6 +21,8 @@ class PatientController extends Controller
 
         $user = AuthService::getUser();
         $browseSummary = PatientDirectoryService::getBrowseSummary();
+        $featuredDoctors = PatientDirectoryService::getFeaturedDoctors(3);
+        $slotPreview = PatientDirectoryService::getUpcomingSlotPreview(4);
 
         $this->render('patient/dashboard', [
             'title' => 'Patient Dashboard | MBPHA TeleHealth Consultation System',
@@ -62,6 +64,8 @@ class PatientController extends Controller
                 'title' => 'Start by browsing available care',
                 'description' => 'Use the doctor directory and available slot viewer to review future consultation options before patient booking is introduced.',
             ],
+            'featuredDoctors' => $featuredDoctors,
+            'slotPreview' => $slotPreview,
         ], 'layouts/dashboard');
     }
 

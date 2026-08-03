@@ -68,6 +68,16 @@ class PatientDirectoryService
         ];
     }
 
+    public static function getFeaturedDoctors(int $limit = 3): array
+    {
+        return Doctor::findForPatientDirectory($limit, 0);
+    }
+
+    public static function getUpcomingSlotPreview(int $limit = 4): array
+    {
+        return DoctorAvailability::findAvailableForPatients([], $limit, 0);
+    }
+
     public static function getAvailableSlotsPageData(array $query): array
     {
         $page = max(1, (int) ($query['page'] ?? 1));

@@ -13,6 +13,8 @@ class DoctorDashboardService
         $user = User::findById($userId);
         $doctor = Doctor::findProfileDetailByUserId($userId);
         $availabilitySummary = DoctorAvailability::getSummaryForDoctor($userId);
+        $todaySummary = DoctorAvailability::getTodaySummaryForDoctor($userId);
+        $upcomingSlots = DoctorAvailability::getUpcomingForDoctor($userId, 4);
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
         $hasSignature = !empty($doctor['signature_path'] ?? '');
@@ -97,11 +99,24 @@ class DoctorDashboardService
                     'description' => 'Doctor availability management now supports creation, filtering, editing, and deletion with validation.',
                     'meta' => 'Week 4 Day 2',
                 ],
+                [
+                    'title' => $hasProfilePhoto && $hasSignature ? 'Clinical identity assets complete' : 'Clinical identity assets need review',
+                    'description' => $hasProfilePhoto && $hasSignature
+                        ? 'Your profile photo and signature are ready for future clinical documentation workflows.'
+                        : 'Complete your profile photo and signature to keep your clinician workspace fully prepared.',
+                    'meta' => $hasProfilePhoto && $hasSignature ? 'Profile readiness confirmed' : 'Profile update recommended',
+                ],
             ],
             'emptyState' => [
                 'icon' => 'bi-clipboard2-pulse',
                 'title' => 'No clinical activity to show yet',
                 'description' => 'Your availability calendar is now active, and future consultation workflows will build on these scheduled slots.',
+            ],
+            'todaySummary' => $todaySummary,
+            'upcomingSlots' => $upcomingSlots,
+            'assetReadiness' => [
+                'has_profile_photo' => $hasProfilePhoto,
+                'has_signature' => $hasSignature,
             ],
         ];
     }

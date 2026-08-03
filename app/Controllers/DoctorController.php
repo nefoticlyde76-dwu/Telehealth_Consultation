@@ -50,6 +50,9 @@ class DoctorController extends Controller
             'recentActivity' => $dashboardData['recentActivity'],
             'emptyState' => $dashboardData['emptyState'],
             'doctorProfile' => $dashboardData['doctor'],
+            'todaySummary' => $dashboardData['todaySummary'],
+            'upcomingSlots' => $dashboardData['upcomingSlots'],
+            'assetReadiness' => $dashboardData['assetReadiness'],
         ], 'layouts/dashboard');
     }
 

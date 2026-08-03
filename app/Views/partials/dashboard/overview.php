@@ -1,8 +1,14 @@
 <?php require __DIR__ . '/../shared/alerts.php'; ?>
 
+<?php
+$primaryAction = $quickActions[0] ?? null;
+$secondaryAction = $quickActions[1] ?? null;
+$spotlightStats = array_slice($stats ?? [], 0, 3);
+?>
+
 <section class="dashboard-banner mb-4">
   <div class="row g-4 align-items-center">
-    <div class="col-lg-8">
+    <div class="col-xl-7">
       <div class="dashboard-banner-intro mb-3">
         <?php
         $avatarPath = $user->profile_photo_path ?? null;
@@ -21,12 +27,44 @@
           </p>
         </div>
       </div>
+      <div class="dashboard-banner-actions">
+        <?php if (!empty($primaryAction['url'])): ?>
+          <a href="<?= \App\Helpers\Helper::url((string) $primaryAction['url']) ?>" class="btn btn-primary rounded-pill px-4">
+            <i class="bi <?= \App\Helpers\Helper::escape((string) ($primaryAction['icon'] ?? 'bi-arrow-right')) ?> me-2"></i>
+            <?= \App\Helpers\Helper::escape((string) ($primaryAction['action_label'] ?? 'Open')) ?>
+          </a>
+        <?php endif; ?>
+
+        <?php if (!empty($secondaryAction['url'])): ?>
+          <a href="<?= \App\Helpers\Helper::url((string) $secondaryAction['url']) ?>" class="btn btn-outline-primary rounded-pill px-4">
+            <i class="bi <?= \App\Helpers\Helper::escape((string) ($secondaryAction['icon'] ?? 'bi-grid')) ?> me-2"></i>
+            <?= \App\Helpers\Helper::escape((string) ($secondaryAction['action_label'] ?? 'Open')) ?>
+          </a>
+        <?php endif; ?>
+      </div>
     </div>
-    <div class="col-lg-4">
-      <div class="dashboard-banner-card">
-        <span class="small text-uppercase text-muted d-block mb-2">Current Focus</span>
-        <strong class="d-block mb-2"><?= \App\Helpers\Helper::escape($focusTitle ?? 'Platform readiness') ?></strong>
-        <p class="mb-0 text-muted small"><?= \App\Helpers\Helper::escape($focusDescription ?? 'Additional data will appear as more modules become active.') ?></p>
+    <div class="col-xl-5">
+      <div class="dashboard-spotlight-card">
+        <div class="dashboard-spotlight-header">
+          <div>
+            <span class="dashboard-spotlight-label">Current Focus</span>
+            <strong class="d-block mb-2"><?= \App\Helpers\Helper::escape($focusTitle ?? 'Platform readiness') ?></strong>
+            <p class="mb-0 text-muted small"><?= \App\Helpers\Helper::escape($focusDescription ?? 'Additional data will appear as more modules become active.') ?></p>
+          </div>
+          <span class="badge badge-soft-success rounded-pill">Live Workspace</span>
+        </div>
+
+        <div class="dashboard-spotlight-grid mt-4">
+          <?php foreach ($spotlightStats as $spotlightStat): ?>
+            <?php $spotlightValue = (string) ($spotlightStat['value'] ?? '0'); ?>
+            <div class="dashboard-spotlight-item">
+              <span class="dashboard-spotlight-item-label"><?= \App\Helpers\Helper::escape((string) ($spotlightStat['label'] ?? 'Metric')) ?></span>
+              <strong <?= is_numeric($spotlightValue) ? 'data-counter="' . \App\Helpers\Helper::escape($spotlightValue) . '"' : '' ?>>
+                <?= \App\Helpers\Helper::escape($spotlightValue) ?>
+              </strong>
+            </div>
+          <?php endforeach; ?>
+        </div>
       </div>
     </div>
   </div>
@@ -35,17 +73,19 @@
 <section class="mb-4">
   <div class="row g-4">
     <?php foreach (($stats ?? []) as $stat): ?>
+      <?php $statValue = (string) ($stat['value'] ?? '0'); ?>
       <div class="col-sm-6 col-xl-3">
-        <div class="stats-card h-100">
-          <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="stats-card h-100 reveal-on-scroll reveal-slide-up">
+          <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
             <div>
               <span class="stats-label"><?= \App\Helpers\Helper::escape($stat['label'] ?? '') ?></span>
-              <h3 class="stats-value"><?= \App\Helpers\Helper::escape($stat['value'] ?? '0') ?></h3>
+              <h3 class="stats-value" <?= is_numeric($statValue) ? 'data-counter="' . \App\Helpers\Helper::escape($statValue) . '"' : '' ?>><?= \App\Helpers\Helper::escape($statValue) ?></h3>
             </div>
             <span class="stats-icon">
               <i class="bi <?= \App\Helpers\Helper::escape($stat['icon'] ?? 'bi-graph-up') ?>"></i>
             </span>
           </div>
+          <span class="stats-pill">Updated for this workspace</span>
           <p class="text-muted mb-0 small"><?= \App\Helpers\Helper::escape($stat['description'] ?? '') ?></p>
         </div>
       </div>
@@ -116,7 +156,7 @@
 <section class="mb-4">
   <div class="row g-4">
     <div class="col-xl-6">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
+      <div class="card border-0 shadow-sm rounded-4 h-100 dashboard-widget-shell">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -133,6 +173,7 @@
                   <div class="quick-action-icon">
                     <i class="bi <?= \App\Helpers\Helper::escape($action['icon'] ?? 'bi-arrow-right') ?>"></i>
                   </div>
+                  <span class="quick-action-kicker"><?= \App\Helpers\Helper::escape((string) ($action['status'] ?? 'Ready')) ?></span>
                   <h4 class="h6"><?= \App\Helpers\Helper::escape($action['title'] ?? '') ?></h4>
                   <p class="text-muted small mb-3"><?= \App\Helpers\Helper::escape($action['description'] ?? '') ?></p>
                   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-auto">
@@ -152,7 +193,7 @@
     </div>
 
     <div class="col-xl-6">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
+      <div class="card border-0 shadow-sm rounded-4 h-100 dashboard-widget-shell">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -181,7 +222,7 @@
 </section>
 
 <section>
-  <div class="card border-0 shadow-sm rounded-4">
+  <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell">
     <div class="card-body p-4 p-lg-5">
       <div class="empty-state text-center">
         <div class="empty-state-icon">
@@ -191,6 +232,18 @@
         <p class="text-muted mx-auto mb-0 empty-state-copy">
           <?= \App\Helpers\Helper::escape($emptyState['description'] ?? 'Additional modules will populate this area as new workflows are activated.') ?>
         </p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+          <?php if (!empty($primaryAction['url'])): ?>
+            <a href="<?= \App\Helpers\Helper::url((string) $primaryAction['url']) ?>" class="btn btn-primary rounded-pill px-4">
+              <?= \App\Helpers\Helper::escape((string) ($primaryAction['action_label'] ?? 'Open')) ?>
+            </a>
+          <?php endif; ?>
+          <?php if (!empty($secondaryAction['url'])): ?>
+            <a href="<?= \App\Helpers\Helper::url((string) $secondaryAction['url']) ?>" class="btn btn-outline-primary rounded-pill px-4">
+              <?= \App\Helpers\Helper::escape((string) ($secondaryAction['action_label'] ?? 'Review')) ?>
+            </a>
+          <?php endif; ?>
+        </div>
       </div>
     </div>
   </div>
