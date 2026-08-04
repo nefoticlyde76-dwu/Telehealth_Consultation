@@ -50,6 +50,15 @@ class PatientConsultationBookingService
         return ConsultationRequest::findByIdForPatient($requestId, $patientId);
     }
 
+    public static function getLatestRequestSummary(int $patientId): ?array
+    {
+        if ($patientId <= 0) {
+            return null;
+        }
+
+        return ConsultationRequest::findLatestForPatient($patientId);
+    }
+
     public static function getBookingPageData(int $availabilityId, array $input = []): array
     {
         $slot = DoctorAvailability::findAvailableSlotForPatients($availabilityId);
@@ -209,4 +218,3 @@ class PatientConsultationBookingService
         ];
     }
 }
-

@@ -5,7 +5,6 @@ $consultationSummary = $consultationSummary ?? [];
 $recentConsultationRequests = $recentConsultationRequests ?? [];
 $consultationStatusBadgeMap = [
     'Pending' => 'badge-soft-warning',
-    'Assigned' => 'badge-soft-info',
     'Approved' => 'badge-soft-success',
     'Rejected' => 'badge-soft-danger',
     'Cancelled' => 'badge-soft-danger',

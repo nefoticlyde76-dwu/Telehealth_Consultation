@@ -31,6 +31,9 @@ class PatientController extends Controller
                 'approved_requests' => 0,
                 'upcoming_appointments' => 0,
                 'consultation_history' => 0,
+                'latest_status' => '',
+                'latest_status_display' => 'No requests yet',
+                'latest_request' => null,
             ];
 
         $this->render('patient/dashboard', [
@@ -53,9 +56,9 @@ class PatientController extends Controller
             'statusMessage' => Session::getFlash('status'),
             'stats' => [
                 ['label' => 'Pending Requests', 'value' => (string) ($bookingSummary['pending_requests'] ?? 0), 'icon' => 'bi-hourglass-split', 'description' => 'Consultation booking requests waiting for review.'],
-                ['label' => 'Approved Consultations', 'value' => (string) ($bookingSummary['approved_requests'] ?? 0), 'icon' => 'bi-check2-circle', 'description' => 'Consultation requests approved and ready for upcoming appointment handling.'],
-                ['label' => 'Upcoming Appointments', 'value' => (string) ($bookingSummary['upcoming_appointments'] ?? 0), 'icon' => 'bi-calendar2-check', 'description' => 'Booked consultation slots scheduled for today or later.'],
+                ['label' => 'Upcoming Consultation', 'value' => (string) ($bookingSummary['upcoming_appointments'] ?? 0), 'icon' => 'bi-calendar2-check', 'description' => 'Approved consultations scheduled for today or later.'],
                 ['label' => 'Consultation History', 'value' => (string) ($bookingSummary['consultation_history'] ?? 0), 'icon' => 'bi-clipboard2-data', 'description' => 'All consultation booking requests submitted from your patient account.'],
+                ['label' => 'Latest Consultation Status', 'value' => (string) ($bookingSummary['latest_status_display'] ?? 'No requests yet'), 'icon' => 'bi-activity', 'description' => 'The most recent consultation workflow status currently visible on your account.'],
             ],
             'quickActions' => [
                 ['title' => 'Browse Doctors', 'description' => 'Review clinician photos, titles, specializations, and the next available consultation slots.', 'icon' => 'bi-person-badge', 'status' => 'Booking live', 'url' => '/patient/doctors', 'action_label' => 'Open Directory'],
@@ -66,9 +69,13 @@ class PatientController extends Controller
             ],
             'recentActivity' => [
                 ['title' => 'Dashboard access confirmed', 'description' => 'Your authenticated patient dashboard remains role protected and session aware.', 'meta' => 'Current session'],
-                ['title' => 'Doctor directory enabled', 'description' => 'Patients can now browse clinicians with future available consultation schedules.', 'meta' => 'Week 4 completion'],
-                ['title' => 'Available slot viewer enabled', 'description' => 'Future slots can now be filtered by doctor, specialization, and consultation date.', 'meta' => 'Week 4 completion'],
-                ['title' => 'Consultation booking enabled', 'description' => 'Patients can now book an available slot by submitting a brief consultation reason.', 'meta' => 'Week 5 Day 1'],
+                [
+                    'title' => 'Latest consultation status',
+                    'description' => 'Your most recent consultation request is currently ' . (string) ($bookingSummary['latest_status_display'] ?? 'No requests yet') . '.',
+                    'meta' => !empty($bookingSummary['latest_request']['consultation_date']) ? 'Scheduled ' . \App\Helpers\Helper::formatDate((string) $bookingSummary['latest_request']['consultation_date'], 'd M Y', 'Not scheduled') : 'No consultation scheduled yet',
+                ],
+                ['title' => 'Doctor directory enabled', 'description' => 'Patients can browse clinicians with future available consultation schedules.', 'meta' => 'Week 4 completion'],
+                ['title' => 'Consultation workflow active', 'description' => 'Patients can now book, review history, and track consultation request status updates.', 'meta' => 'Week 5 refinement'],
             ],
             'emptyState' => [
                 'icon' => 'bi-search',

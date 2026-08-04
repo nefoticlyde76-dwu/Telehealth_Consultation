@@ -20,6 +20,7 @@ class DoctorDashboardService
         $recentApprovedAppointments = ConsultationRequest::countApprovedRecentlyForDoctor($userId, 7);
         $upcomingApprovedCount = ConsultationRequest::countUpcomingApprovedForDoctor($userId);
         $upcomingApprovedAppointments = ConsultationRequest::findUpcomingApprovedForDoctor($userId, 5);
+        $consultationSummary = ConsultationRequest::getDoctorStatusSummary($userId);
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
         $hasSignature = !empty($doctor['signature_path'] ?? '');
@@ -29,31 +30,39 @@ class DoctorDashboardService
             'doctor' => $doctor,
             'stats' => [
                 [
-                    'label' => 'Total Available Slots',
-                    'value' => (string) ($availabilitySummary['available_slots'] ?? 0),
-                    'icon' => 'bi-calendar2-check',
-                    'description' => 'Open consultation slots that are ready for future patient booking workflows.',
+                    'label' => "Today's Schedule",
+                    'value' => (string) ($todaySummary['total_today_slots'] ?? 0),
+                    'icon' => 'bi-calendar-date',
+                    'description' => 'Consultation slots currently scheduled on your calendar for today.',
                 ],
                 [
-                    'label' => 'Total Booked Slots',
-                    'value' => (string) ($availabilitySummary['booked_slots'] ?? 0),
-                    'icon' => 'bi-journal-check',
-                    'description' => 'Consultation slots currently marked as booked in the scheduling module.',
+                    'label' => 'Approved Appointments',
+                    'value' => (string) ($consultationSummary['approved_appointments'] ?? 0),
+                    'icon' => 'bi-check2-circle',
+                    'description' => 'Appointments approved by administration and assigned to your consultation workflow.',
+                ],
+                [
+                    'label' => 'Upcoming Consultations',
+                    'value' => (string) ($consultationSummary['upcoming_consultations'] ?? 0),
+                    'icon' => 'bi-clock-history',
+                    'description' => 'Approved consultations scheduled from today onward.',
                 ],
                 [
                     'label' => 'New Approved Appointments',
                     'value' => (string) $recentApprovedAppointments,
-                    'icon' => 'bi-check2-circle',
+                    'icon' => 'bi-bell',
                     'description' => 'Recently approved consultation requests assigned to your clinician schedule.',
-                ],
-                [
-                    'label' => 'Upcoming Consultations',
-                    'value' => (string) $upcomingApprovedCount,
-                    'icon' => 'bi-clock-history',
-                    'description' => 'Approved consultations scheduled from today onward.',
                 ],
             ],
             'quickActions' => [
+                [
+                    'title' => 'View Consultations',
+                    'description' => 'Review upcoming, approved, and completed consultations in one clinician view.',
+                    'icon' => 'bi-clipboard2-pulse',
+                    'status' => 'Week 5',
+                    'url' => '/doctor/consultations',
+                    'action_label' => 'Open Consultations',
+                ],
                 [
                     'title' => 'View My Profile',
                     'description' => 'Review your clinician identity, specialization, and uploaded assets.',
@@ -100,9 +109,9 @@ class DoctorDashboardService
                     'meta' => 'Current session',
                 ],
                 [
-                    'title' => 'Availability scheduling ready',
-                    'description' => 'Doctor availability management now supports creation, filtering, editing, and deletion with validation.',
-                    'meta' => 'Week 4 Day 2',
+                    'title' => 'Approved appointments visible',
+                    'description' => 'Approved consultations now flow through to your clinician dashboard and consultation workspace.',
+                    'meta' => $recentApprovedAppointments . ' new approvals',
                 ],
                 [
                     'title' => $hasProfilePhoto && $hasSignature ? 'Clinical identity assets complete' : 'Clinical identity assets need review',
@@ -124,6 +133,7 @@ class DoctorDashboardService
             'upcomingApprovedAppointments' => $upcomingApprovedAppointments,
             'recentApprovedAppointmentCount' => $recentApprovedAppointments,
             'upcomingApprovedAppointmentCount' => $upcomingApprovedCount,
+            'consultationSummary' => $consultationSummary,
             'assetReadiness' => [
                 'has_profile_photo' => $hasProfilePhoto,
                 'has_signature' => $hasSignature,

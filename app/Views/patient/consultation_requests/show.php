@@ -5,7 +5,6 @@ $status = (string) ($request['status'] ?? 'Pending');
 $requestId = (int) ($request['id'] ?? 0);
 $statusBadgeMap = [
     'Pending' => 'badge-soft-warning',
-    'Assigned' => 'badge-soft-info',
     'Approved' => 'badge-soft-success',
     'Rejected' => 'badge-soft-danger',
     'Cancelled' => 'badge-soft-danger',
@@ -81,4 +80,3 @@ $badgeClass = $statusBadgeMap[$status] ?? 'badge-soft-neutral';
     </div>
   </div>
 </section>
-

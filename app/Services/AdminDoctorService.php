@@ -304,7 +304,7 @@ class AdminDoctorService
 
         if ($password === '') {
             $fieldErrors['password'] = 'New password is required.';
-        } elseif (!self::isStrongPassword($password)) {
+        } elseif (!Helper::isStrongPassword($password)) {
             $fieldErrors['password'] = 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.';
         }
 

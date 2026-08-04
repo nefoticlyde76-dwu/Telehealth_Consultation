@@ -11,9 +11,40 @@ class AdminConsultationService
 
     public static function getDashboardSummary(): array
     {
+        $summary = ConsultationRequest::getAdminStatusSummary();
+        $recentRequests = ConsultationRequest::findRecentForAdmin(5);
+        $recentActivityCount = ConsultationRequest::countRecentForAdmin(7);
+
         return [
-            'summary' => ConsultationRequest::getAdminStatusSummary(),
-            'recentRequests' => ConsultationRequest::findRecentForAdmin(5),
+            'summary' => $summary,
+            'recentRequests' => $recentRequests,
+            'stats' => [
+                [
+                    'label' => 'Pending Requests',
+                    'value' => (string) ($summary['pending_requests'] ?? 0),
+                    'icon' => 'bi-hourglass-split',
+                    'description' => 'Consultation requests currently waiting for administrator review.',
+                ],
+                [
+                    'label' => 'Approved Appointments',
+                    'value' => (string) ($summary['approved_requests'] ?? 0),
+                    'icon' => 'bi-check2-circle',
+                    'description' => 'Consultation appointments approved and reserved in the schedule.',
+                ],
+                [
+                    'label' => 'Rejected Requests',
+                    'value' => (string) ($summary['rejected_requests'] ?? 0),
+                    'icon' => 'bi-x-circle',
+                    'description' => 'Consultation requests declined during administrator review.',
+                ],
+                [
+                    'label' => 'Recent Activity',
+                    'value' => (string) $recentActivityCount,
+                    'icon' => 'bi-activity',
+                    'description' => 'Consultation requests submitted within the last seven days.',
+                ],
+            ],
+            'recentActivity' => self::buildRecentActivity($recentRequests),
         ];
     }
 
@@ -65,9 +96,14 @@ class AdminConsultationService
         return self::updateRequestStatus($requestId, 'Rejected', $csrfToken);
     }
 
+    public static function cancelRequest(int $requestId, string $csrfToken): array
+    {
+        return self::updateRequestStatus($requestId, 'Cancelled', $csrfToken);
+    }
+
     public static function getStatusOptions(): array
     {
-        return ['Pending', 'Assigned', 'Approved', 'Rejected', 'Cancelled', 'Completed'];
+        return ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'];
     }
 
     private static function updateRequestStatus(int $requestId, string $targetStatus, string $csrfToken): array
@@ -129,5 +165,29 @@ class AdminConsultationService
             'consultation_date' => $consultationDate,
         ];
     }
-}
 
+    private static function buildRecentActivity(array $recentRequests): array
+    {
+        if ($recentRequests === []) {
+            return [
+                [
+                    'title' => 'No consultation workflow activity yet',
+                    'description' => 'Consultation requests will appear here once patients begin booking available appointments.',
+                    'meta' => 'Week 5 workflow ready',
+                ],
+            ];
+        }
+
+        $activity = [];
+
+        foreach ($recentRequests as $request) {
+            $activity[] = [
+                'title' => 'Request #' . (int) ($request['id'] ?? 0) . ' is ' . (string) ($request['status'] ?? 'Pending'),
+                'description' => (string) ($request['patient_name'] ?? 'Patient') . ' with ' . (string) ($request['doctor_name'] ?? 'Doctor'),
+                'meta' => 'Submitted ' . date('d M Y H:i', strtotime((string) ($request['request_date'] ?? 'now'))),
+            ];
+        }
+
+        return $activity;
+    }
+}

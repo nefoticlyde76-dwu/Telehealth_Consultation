@@ -2,8 +2,9 @@
 
 $currentPath = \App\Helpers\Helper::currentPath();
 $sidebarItems = $sidebarItems ?? [];
-$sidebarStatusTitle = $sidebarStatusTitle ?? 'Week 2 Access Layer';
-$sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are live and ready for upcoming module integration.';
+$sidebarStatusTitle = $sidebarStatusTitle ?? 'Week 5 Consultation Workflow';
+$sidebarStatusDescription = $sidebarStatusDescription ?? 'Booking, approval, status tracking, and clinician completion are active across the platform.';
+$sidebarSprintLabel = $sidebarSprintLabel ?? 'W5';
 ?>
 
 <aside class="dashboard-sidebar d-none d-lg-flex flex-column">
@@ -68,7 +69,7 @@ $sidebarStatusDescription = $sidebarStatusDescription ?? 'Core dashboards are li
           <span>active links</span>
         </div>
         <div class="sidebar-support-stat">
-          <strong>W4</strong>
+          <strong><?= \App\Helpers\Helper::escape($sidebarSprintLabel) ?></strong>
           <span>current sprint</span>
         </div>
       </div>

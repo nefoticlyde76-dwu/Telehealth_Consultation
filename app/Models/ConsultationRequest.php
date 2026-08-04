@@ -40,16 +40,22 @@ class ConsultationRequest
             WHERE consultation_requests.patient_id = :patient_id
               AND consultation_requests.availability_id IS NOT NULL
               AND doctor_availability.consultation_date >= CURDATE()
-              AND consultation_requests.status IN ('Pending', 'Assigned', 'Approved')"
+              AND consultation_requests.status = 'Approved'"
         );
         $upcomingStmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
         $upcomingStmt->execute();
+
+        $latestRequest = self::findLatestForPatient($patientId);
+        $latestStatus = (string) ($latestRequest['status'] ?? '');
 
         return [
             'pending_requests' => (int) ($row['pending_requests'] ?? 0),
             'approved_requests' => (int) ($row['approved_requests'] ?? 0),
             'upcoming_appointments' => (int) $upcomingStmt->fetchColumn(),
             'consultation_history' => (int) ($row['total_requests'] ?? 0),
+            'latest_status' => $latestStatus,
+            'latest_status_display' => $latestStatus !== '' ? $latestStatus : 'No requests yet',
+            'latest_request' => $latestRequest,
         ];
     }
 
@@ -114,6 +120,36 @@ class ConsultationRequest
         return $row ?: null;
     }
 
+    public static function findLatestForPatient(int $patientId): ?array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_requests.id,
+                consultation_requests.request_date,
+                consultation_requests.reason,
+                consultation_requests.status,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time,
+                doctor.professional_title AS doctor_title,
+                doctor.specialization,
+                users.full_name AS doctor_name
+            FROM consultation_requests
+            INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.patient_id = :patient_id
+            ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC
+            LIMIT 1"
+        );
+        $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
     public static function createBooking(int $patientId, int $doctorId, int $availabilityId, string $reason, string $status = 'Pending'): int
     {
         $db = Database::getInstance();
@@ -150,7 +186,7 @@ class ConsultationRequest
             FROM consultation_requests
             WHERE patient_id = :patient_id
               AND availability_id = :availability_id
-              AND status IN ('Pending', 'Assigned', 'Approved')"
+              AND status IN ('Pending', 'Approved')"
         );
         $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
         $stmt->bindValue(':availability_id', $availabilityId, PDO::PARAM_INT);
@@ -178,6 +214,21 @@ class ConsultationRequest
             'approved_requests' => (int) ($row['approved_requests'] ?? 0),
             'rejected_requests' => (int) ($row['rejected_requests'] ?? 0),
         ];
+    }
+
+    public static function countRecentForAdmin(int $days = 7): int
+    {
+        $days = max(1, $days);
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT COUNT(*)
+            FROM consultation_requests
+            WHERE request_date >= DATE_SUB(NOW(), INTERVAL :days DAY)"
+        );
+        $stmt->bindValue(':days', $days, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
     }
 
     public static function findRecentForAdmin(int $limit = 5): array
@@ -342,7 +393,7 @@ class ConsultationRequest
             ];
         }
 
-        if (!in_array($targetStatus, ['Approved', 'Rejected'], true)) {
+        if (!in_array($targetStatus, ['Approved', 'Rejected', 'Cancelled'], true)) {
             return [
                 'success' => false,
                 'message' => 'The requested consultation status change is not supported.',
@@ -385,11 +436,19 @@ class ConsultationRequest
                 ];
             }
 
-            if ($currentStatus !== 'Pending') {
+            $allowedTransitions = [
+                'Pending' => ['Approved', 'Rejected', 'Cancelled'],
+                'Approved' => ['Cancelled'],
+            ];
+
+            if (
+                !isset($allowedTransitions[$currentStatus])
+                || !in_array($targetStatus, $allowedTransitions[$currentStatus], true)
+            ) {
                 $db->rollBack();
                 return [
                     'success' => false,
-                    'message' => 'Only pending consultation requests can be updated at this stage.',
+                    'message' => 'The requested consultation status transition is not allowed.',
                     'type' => 'danger',
                 ];
             }
@@ -424,7 +483,7 @@ class ConsultationRequest
                     $updateSlot->execute();
                 }
 
-                if ($targetStatus === 'Rejected' && $slotStatus === 'Booked') {
+                if (in_array($targetStatus, ['Rejected', 'Cancelled'], true) && $slotStatus === 'Booked') {
                     $updateSlot = $db->prepare("UPDATE doctor_availability SET status = 'Available' WHERE id = :id");
                     $updateSlot->bindValue(':id', $availabilityId, PDO::PARAM_INT);
                     $updateSlot->execute();
@@ -536,6 +595,233 @@ class ConsultationRequest
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function getDoctorStatusSummary(int $doctorId): array
+    {
+        if ($doctorId <= 0) {
+            return [
+                'approved_appointments' => 0,
+                'upcoming_consultations' => 0,
+                'completed_consultations' => 0,
+            ];
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                SUM(CASE WHEN consultation_requests.status = 'Approved' THEN 1 ELSE 0 END) AS approved_appointments,
+                SUM(
+                    CASE
+                        WHEN consultation_requests.status = 'Approved'
+                         AND doctor_availability.consultation_date >= CURDATE()
+                        THEN 1
+                        ELSE 0
+                    END
+                ) AS upcoming_consultations,
+                SUM(CASE WHEN consultation_requests.status = 'Completed' THEN 1 ELSE 0 END) AS completed_consultations
+            FROM consultation_requests
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.doctor_id = :doctor_id"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        return [
+            'approved_appointments' => (int) ($row['approved_appointments'] ?? 0),
+            'upcoming_consultations' => (int) ($row['upcoming_consultations'] ?? 0),
+            'completed_consultations' => (int) ($row['completed_consultations'] ?? 0),
+        ];
+    }
+
+    public static function findForDoctor(int $doctorId, array $filters = [], int $limit = 10, int $offset = 0): array
+    {
+        if ($doctorId <= 0) {
+            return [];
+        }
+
+        $db = Database::getInstance();
+        $sql = "SELECT
+                consultation_requests.id,
+                consultation_requests.request_date,
+                consultation_requests.reason,
+                consultation_requests.status,
+                patient_user.full_name AS patient_name,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.doctor_id = :doctor_id";
+        $parameters = [':doctor_id' => $doctorId];
+
+        $status = trim((string) ($filters['status'] ?? ''));
+
+        if ($status !== '') {
+            $sql .= ' AND consultation_requests.status = :status';
+            $parameters[':status'] = $status;
+        }
+
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search !== '') {
+            $sql .= ' AND (patient_user.full_name LIKE :search OR consultation_requests.reason LIKE :search)';
+            $parameters[':search'] = '%' . $search . '%';
+        }
+
+        $sql .= ' ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, consultation_requests.id DESC LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
+        foreach ($parameters as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function countForDoctor(int $doctorId, array $filters = []): int
+    {
+        if ($doctorId <= 0) {
+            return 0;
+        }
+
+        $db = Database::getInstance();
+        $sql = "SELECT COUNT(*)
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.doctor_id = :doctor_id";
+        $parameters = [':doctor_id' => $doctorId];
+
+        $status = trim((string) ($filters['status'] ?? ''));
+
+        if ($status !== '') {
+            $sql .= ' AND consultation_requests.status = :status';
+            $parameters[':status'] = $status;
+        }
+
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search !== '') {
+            $sql .= ' AND (patient_user.full_name LIKE :search OR consultation_requests.reason LIKE :search)';
+            $parameters[':search'] = '%' . $search . '%';
+        }
+
+        $stmt = $db->prepare($sql);
+        foreach ($parameters as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function markCompletedForDoctor(int $requestId, int $doctorId): array
+    {
+        if ($requestId <= 0 || $doctorId <= 0) {
+            return [
+                'success' => false,
+                'message' => 'The consultation request is invalid.',
+                'type' => 'danger',
+            ];
+        }
+
+        $db = Database::getInstance();
+
+        try {
+            $db->beginTransaction();
+
+            $stmt = $db->prepare(
+                "SELECT
+                    consultation_requests.id,
+                    consultation_requests.status,
+                    doctor_availability.consultation_date,
+                    CURDATE() AS workflow_current_date
+                FROM consultation_requests
+                LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+                WHERE consultation_requests.id = :id
+                  AND consultation_requests.doctor_id = :doctor_id
+                FOR UPDATE"
+            );
+            $stmt->bindValue(':id', $requestId, PDO::PARAM_INT);
+            $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+            if ($row === null) {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'The requested consultation could not be found.',
+                    'type' => 'warning',
+                ];
+            }
+
+            $currentStatus = (string) ($row['status'] ?? '');
+
+            if ($currentStatus === 'Completed') {
+                $db->rollBack();
+                return [
+                    'success' => true,
+                    'message' => 'This consultation is already marked as completed.',
+                    'type' => 'info',
+                ];
+            }
+
+            if ($currentStatus !== 'Approved') {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Only approved consultations can be marked as completed.',
+                    'type' => 'danger',
+                ];
+            }
+
+            $consultationDate = (string) ($row['consultation_date'] ?? '');
+            $currentDate = (string) ($row['workflow_current_date'] ?? '');
+
+            if ($consultationDate !== '' && $currentDate !== '' && $consultationDate > $currentDate) {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'A future consultation cannot be marked as completed yet.',
+                    'type' => 'danger',
+                ];
+            }
+
+            $updateStmt = $db->prepare(
+                "UPDATE consultation_requests
+                SET status = 'Completed'
+                WHERE id = :id"
+            );
+            $updateStmt->bindValue(':id', $requestId, PDO::PARAM_INT);
+            $updateStmt->execute();
+
+            $db->commit();
+
+            return [
+                'success' => true,
+                'message' => 'Consultation marked as completed successfully.',
+                'type' => 'success',
+            ];
+        } catch (\Throwable $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            error_log('Doctor consultation completion failed: ' . $exception->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Consultation completion could not be processed right now.',
+                'type' => 'danger',
+            ];
+        }
     }
 
     private static function appendAdminFilters(array $filters, array &$conditions, array &$parameters): void

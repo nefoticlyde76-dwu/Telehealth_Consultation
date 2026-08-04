@@ -39,9 +39,9 @@ class AdminController extends Controller
                 'welcomeMessage' => 'This administrator workspace now supports patient oversight, doctor account provisioning, and administrator profile management.',
                 'focusTitle' => 'Account governance controls',
                 'focusDescription' => 'Administrators can now manage patient accounts, doctor onboarding, password controls, and profile maintenance from one coordinated workspace.',
-                'stats' => $dashboardData['stats'],
+                'stats' => $consultationDashboard['stats'] ?? $dashboardData['stats'],
                 'quickActions' => $dashboardData['quickActions'],
-                'recentActivity' => $dashboardData['recentActivity'],
+                'recentActivity' => $consultationDashboard['recentActivity'] ?? $dashboardData['recentActivity'],
                 'statusMessage' => Session::getFlash('status'),
                 'emptyState' => [
                     'icon' => 'bi-people',
@@ -640,6 +640,30 @@ class AdminController extends Controller
         Session::flash('status', [
             'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
             'message' => $result['message'] ?? 'Consultation request rejection completed.',
+        ]);
+
+        Helper::redirect('/admin/consultation-requests/' . $requestId);
+    }
+
+    public function cancelConsultationRequest(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/consultation-requests');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $requestId = (int) $id;
+        $result = AdminConsultationService::cancelRequest($requestId, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Consultation request cancellation completed.',
         ]);
 
         Helper::redirect('/admin/consultation-requests/' . $requestId);

@@ -60,6 +60,14 @@ $router->get('/doctor/dashboard', [DoctorController::class, 'dashboard'], [
     new RoleMiddleware(['doctor']),
 ]);
 
+$router->get('/doctor/consultations', [DoctorController::class, 'consultations'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/consultations/{id}/complete', [DoctorController::class, 'completeConsultation'], [
+    new RoleMiddleware(['doctor']),
+]);
+
 $router->get('/doctor/availability', [DoctorController::class, 'availability'], [
     new RoleMiddleware(['doctor']),
 ]);
@@ -121,6 +129,10 @@ $router->post('/admin/consultation-requests/{id}/approve', [AdminController::cla
 ]);
 
 $router->post('/admin/consultation-requests/{id}/reject', [AdminController::class, 'rejectConsultationRequest'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/consultation-requests/{id}/cancel', [AdminController::class, 'cancelConsultationRequest'], [
     new RoleMiddleware(['admin']),
 ]);
 

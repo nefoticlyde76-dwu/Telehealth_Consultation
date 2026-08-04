@@ -5,7 +5,6 @@ $csrfToken = $csrfToken ?? '';
 $status = (string) ($request['status'] ?? 'Pending');
 $statusBadgeMap = [
     'Pending' => 'badge-soft-warning',
-    'Assigned' => 'badge-soft-info',
     'Approved' => 'badge-soft-success',
     'Rejected' => 'badge-soft-danger',
     'Cancelled' => 'badge-soft-danger',
@@ -88,20 +87,29 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
         </div>
       </div>
 
-      <?php if ($status === 'Pending'): ?>
+      <?php if ($status === 'Pending' || $status === 'Approved'): ?>
         <div class="d-flex flex-wrap gap-2 justify-content-end">
-          <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/reject') ?>">
+          <?php if ($status === 'Pending'): ?>
+            <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/reject') ?>">
+              <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+              <button type="submit" class="btn btn-outline-danger rounded-pill px-4">
+                <i class="bi bi-x-circle me-2"></i>
+                Reject Request
+              </button>
+            </form>
+            <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/approve') ?>">
+              <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+              <button type="submit" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-check2-circle me-2"></i>
+                Approve Request
+              </button>
+            </form>
+          <?php endif; ?>
+          <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/cancel') ?>">
             <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-            <button type="submit" class="btn btn-outline-danger rounded-pill px-4">
-              <i class="bi bi-x-circle me-2"></i>
-              Reject Request
-            </button>
-          </form>
-          <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/approve') ?>">
-            <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-            <button type="submit" class="btn btn-primary rounded-pill px-4">
-              <i class="bi bi-check2-circle me-2"></i>
-              Approve Request
+            <button type="submit" class="btn btn-outline-secondary rounded-pill px-4">
+              <i class="bi bi-slash-circle me-2"></i>
+              Cancel Request
             </button>
           </form>
         </div>
@@ -114,4 +122,3 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
     </div>
   </div>
 </section>
-

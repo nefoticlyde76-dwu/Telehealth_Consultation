@@ -11,7 +11,6 @@ $buildPageUrl = static function (int $page): string {
 
 $statusBadgeMap = [
     'Pending' => 'badge-soft-warning',
-    'Assigned' => 'badge-soft-info',
     'Approved' => 'badge-soft-success',
     'Rejected' => 'badge-soft-danger',
     'Cancelled' => 'badge-soft-danger',
@@ -176,4 +175,3 @@ $statusBadgeMap = [
     </div>
   </div>
 </section>
-

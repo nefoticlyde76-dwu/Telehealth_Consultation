@@ -8,6 +8,7 @@ use App\Core\Session;
 use App\Helpers\Helper;
 use App\Services\DoctorAvailabilityService;
 use App\Services\AuthService;
+use App\Services\DoctorConsultationService;
 use App\Services\DoctorDashboardService;
 use App\Services\DoctorProfileService;
 
@@ -38,6 +39,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'A professional workspace for secure clinician profile and dashboard visibility.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
             ],
@@ -95,6 +97,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'Review your clinician identity, specialization, and uploaded assets securely.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
                 ['path' => '/doctor/profile/edit', 'label' => 'Edit Profile', 'icon' => 'bi-person-gear'],
@@ -181,6 +184,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'Update your phone number, specialization, profile photo, signature, and password securely.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
                 ['path' => '/doctor/profile/edit', 'label' => 'Edit Profile', 'icon' => 'bi-person-gear'],
@@ -222,6 +226,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'Create, review, update, and remove consultation availability slots securely.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
             ],
@@ -279,6 +284,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'Schedule a new consultation slot with secure validation and conflict protection.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
             ],
@@ -347,6 +353,7 @@ class DoctorController extends Controller
             'dashboardDescription' => 'Update an existing consultation slot while preserving conflict-free scheduling.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
             ],
@@ -382,5 +389,68 @@ class DoctorController extends Controller
         ]);
 
         Helper::redirect('/doctor/availability');
+    }
+
+    public function consultations(): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $pageData = DoctorConsultationService::getConsultationPageData((int) $user->id, $_GET);
+
+        $this->render('doctor/consultations/index', [
+            'title' => 'Doctor Consultations | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'doctor',
+            'dashboardRoleLabel' => 'Doctor Dashboard',
+            'dashboardTitle' => 'Consultations',
+            'dashboardDescription' => 'Review approved, upcoming, and completed consultations from your clinician workspace.',
+            'sidebarItems' => [
+                ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
+                ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
+            ],
+            'filters' => $pageData['filters'] ?? [],
+            'consultations' => $pageData['consultations'] ?? [],
+            'summary' => $pageData['summary'] ?? [],
+            'pagination' => $pageData['pagination'] ?? [],
+            'statusOptions' => $pageData['statusOptions'] ?? [],
+            'statusMessage' => Session::getFlash('status'),
+            'csrfToken' => Csrf::generate(),
+        ], 'layouts/dashboard');
+    }
+
+    public function completeConsultation(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $result = DoctorConsultationService::completeConsultation((int) $user->id, (int) $id, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? (($result['success'] ?? false) ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Consultation status update completed.',
+        ]);
+
+        Helper::redirect('/doctor/consultations');
     }
 }

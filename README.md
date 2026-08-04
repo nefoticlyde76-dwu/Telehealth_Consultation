@@ -21,7 +21,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Patient Browsing: Week 4 patient-facing doctor directory and consultation slot viewer implemented for patient review workflows
 - Dashboard UI: Administrator, doctor, and patient dashboards refined into a unified premium telemedicine workspace experience
 - Profile Pictures: Direct profile picture uploads with live avatar updates are implemented for administrator, doctor, and patient profiles
-- Patient Booking: Week 5 Day 1 patient consultation booking workflow implemented with slot selection and consultation history tracking
+- Consultation Workflow: Week 5 consultation request and appointment management workflow implemented across patient, administrator, and doctor dashboards
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -198,6 +198,36 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
   - new approved appointments counter
   - upcoming approved consultations list
 
+### Week 5 Workflow Completion
+
+- Consultation status lifecycle standardized across the active Week 5 workflow:
+  - `Pending`
+  - `Approved`
+  - `Rejected`
+  - `Cancelled`
+  - `Completed`
+- Administrator workflow refined to support:
+  - pending request review
+  - approval and rejection decisions
+  - cancellation of eligible requests
+  - recent consultation activity visibility on the dashboard
+- Doctor workflow refined to support:
+  - consultation workspace at `/doctor/consultations`
+  - upcoming, approved, and completed consultation views
+  - same-day completion of approved consultations
+- Patient workflow refined to support:
+  - consultation history with assigned doctor, date, time, chief complaint, and current status
+  - latest consultation status visibility on the patient dashboard
+  - upcoming consultation and consultation history summary metrics
+- Slot reservation logic verified so that:
+  - approved consultations keep the selected slot reserved
+  - rejected and cancelled consultations release the slot back to `Available`
+  - duplicate active bookings for the same patient and slot are prevented
+- Dashboard metrics aligned with the completed Week 5 workflow:
+  - Administrator: pending requests, approved appointments, rejected requests, recent activity
+  - Doctor: today's schedule, approved appointments, upcoming consultations
+  - Patient: pending requests, upcoming consultation, consultation history, latest consultation status
+
 ### Profile Enhancement
 
 - Direct profile picture uploads without a cropping step
@@ -355,6 +385,17 @@ mysql -u root -p < database/migrations/008_remove_unique_index_from_consultation
 - Verified patient doctor directory shows only active doctors with future available slots
 - Verified patient slot viewer excludes booked slots and past slots from the visible patient listing
 - Verified Week 4 doctor availability relationships have no orphaned `doctor_availability` or `doctor` records
+- Verified the full Week 5 workflow end to end with live HTTP requests:
+  - patient registration and booking submission
+  - administrator approval and rejection handling
+  - doctor password reset, login, and consultation completion
+  - patient history and dashboard status updates after workflow changes
+- Verified the completed consultation lifecycle persists expected final states:
+  - approved same-day request transitions to `Completed`
+  - rejected request remains `Rejected`
+  - approved slot remains `Booked`
+  - rejected slot returns to `Available`
+- Verified the reusable Week 5 PowerShell test script uses dynamic slots and authenticated page assertions for repeatable local validation
 
 ## Known Environment Requirement
 
