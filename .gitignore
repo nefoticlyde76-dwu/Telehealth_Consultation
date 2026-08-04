@@ -8,7 +8,4 @@ composer.lock
 logs/
 tmp/
 cache/
-public/uploads/*
-!public/uploads/consultation_requests/
-public/uploads/consultation_requests/*
-!public/uploads/consultation_requests/.htaccess
+public/uploads/

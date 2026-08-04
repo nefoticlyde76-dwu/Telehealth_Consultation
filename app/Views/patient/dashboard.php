@@ -3,8 +3,6 @@
 <?php
 $featuredDoctors = $featuredDoctors ?? [];
 $slotPreview = $slotPreview ?? [];
-$browseSummary = $browseSummary ?? [];
-$requestSummary = $requestSummary ?? [];
 $assignedDoctor = $featuredDoctors[0] ?? null;
 ?>
 
@@ -17,19 +15,15 @@ $assignedDoctor = $featuredDoctors[0] ?? null;
             <div>
               <span class="section-badge mb-3">
                 <i class="bi bi-calendar2-check"></i>
-                Consultation Requests
+                Consultation Status
               </span>
-              <h3 class="h5 mb-1">Submit requests and track approval progress</h3>
-              <p class="text-muted mb-0">Create consultation requests with specialization matching and optional supporting attachments, then monitor request status from one patient workspace.</p>
+              <h3 class="h5 mb-1">Upcoming consultation visibility before booking opens</h3>
+              <p class="text-muted mb-0">Track the next patient-visible consultation opportunities and stay ready for Week 5 booking without leaving your secure dashboard.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-              <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/create') ?>" class="btn btn-primary rounded-pill px-4">
-                <i class="bi bi-clipboard2-plus me-2"></i>
-                Submit Request
-              </a>
-              <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary rounded-pill px-4">
-                <i class="bi bi-clipboard2-data me-2"></i>
-                View Requests
+              <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-calendar2-week me-2"></i>
+                Browse Slots
               </a>
             </div>
           </div>
@@ -37,25 +31,25 @@ $assignedDoctor = $featuredDoctors[0] ?? null;
           <div class="row g-3 mb-4">
             <div class="col-md-5">
               <div class="widget-mini-stat h-100">
-                <span class="widget-mini-stat-label">Request Status</span>
-                <strong><?= ((int) ($requestSummary['pending_requests'] ?? 0)) > 0 ? 'Pending review' : 'Ready to submit' ?></strong>
+                <span class="widget-mini-stat-label">Upcoming Consultation</span>
+                <strong><?= $slotPreview === [] ? 'Not scheduled' : 'Available to browse' ?></strong>
                 <span class="admin-summary-meta">
-                  <?= ((int) ($requestSummary['pending_requests'] ?? 0)) > 0 ? 'One or more requests are awaiting clinician review.' : 'Submit a new consultation request to begin.' ?>
+                  <?= $slotPreview === [] ? 'No future consultation has been booked yet.' : 'Future consultation slots are visible and ready for review.' ?>
                 </span>
               </div>
             </div>
             <div class="col-md-3">
               <div class="widget-mini-stat h-100">
-                <span class="widget-mini-stat-label">Total Requests</span>
-                <strong data-counter="<?= \App\Helpers\Helper::escape((string) ((int) ($requestSummary['total_requests'] ?? 0))) ?>"><?= \App\Helpers\Helper::escape((string) ((int) ($requestSummary['total_requests'] ?? 0))) ?></strong>
-                <span class="admin-summary-meta">Submitted consultation requests to date</span>
+                <span class="widget-mini-stat-label">Consultation History</span>
+                <strong data-counter="0">0</strong>
+                <span class="admin-summary-meta">History becomes active after booking begins</span>
               </div>
             </div>
             <div class="col-md-4">
               <div class="widget-mini-stat h-100">
-                <span class="widget-mini-stat-label">Completed Consultations</span>
-                <strong data-counter="<?= \App\Helpers\Helper::escape((string) ((int) ($requestSummary['completed_consultations'] ?? 0))) ?>"><?= \App\Helpers\Helper::escape((string) ((int) ($requestSummary['completed_consultations'] ?? 0))) ?></strong>
-                <span class="admin-summary-meta">Consultations recorded in your history</span>
+                <span class="widget-mini-stat-label">Prescriptions</span>
+                <strong data-counter="0">0</strong>
+                <span class="admin-summary-meta">Prescription records will follow later consultation modules</span>
               </div>
             </div>
           </div>
@@ -144,11 +138,11 @@ $assignedDoctor = $featuredDoctors[0] ?? null;
                 </div>
                 <div class="widget-mini-stat">
                   <span class="widget-mini-stat-label">Available Doctors</span>
-                  <strong><?= \App\Helpers\Helper::escape((string) ($browseSummary['available_doctors'] ?? 0)) ?></strong>
+                  <strong><?= \App\Helpers\Helper::escape((string) ($stats[0]['value'] ?? '0')) ?></strong>
                 </div>
                 <div class="widget-mini-stat">
                   <span class="widget-mini-stat-label">Open Consultation Slots</span>
-                  <strong><?= \App\Helpers\Helper::escape((string) ($browseSummary['available_slots'] ?? 0)) ?></strong>
+                  <strong><?= \App\Helpers\Helper::escape((string) ($stats[1]['value'] ?? '0')) ?></strong>
                 </div>
               </div>
 
