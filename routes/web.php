@@ -40,6 +40,26 @@ $router->get('/patient/available-slots', [PatientController::class, 'availableSl
     new RoleMiddleware(['patient']),
 ]);
 
+$router->get('/patient/consultation-requests', [PatientController::class, 'consultationRequests'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/consultation-requests/create', [PatientController::class, 'createConsultationRequest'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->post('/patient/consultation-requests/create', [PatientController::class, 'createConsultationRequest'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/consultation-requests/{id}', [PatientController::class, 'showConsultationRequest'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/consultation-requests/{id}/attachment', [PatientController::class, 'downloadConsultationRequestAttachment'], [
+    new RoleMiddleware(['patient']),
+]);
+
 $router->get('/doctor/dashboard', [DoctorController::class, 'dashboard'], [
     new RoleMiddleware(['doctor']),
 ]);

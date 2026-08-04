@@ -402,6 +402,40 @@ class Doctor
         );
     }
 
+    public static function findBestDoctorIdForSpecialization(string $specialization): ?int
+    {
+        $specialization = trim($specialization);
+
+        if ($specialization === '') {
+            return null;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                doctor.user_id
+            FROM doctor
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            INNER JOIN doctor_availability ON doctor_availability.doctor_id = doctor.user_id
+            WHERE roles.name = 'doctor'
+              AND users.status = 'active'
+              AND doctor.specialization = :specialization
+              AND doctor_availability.status = 'Available'
+              AND doctor_availability.consultation_date >= CURDATE()
+            GROUP BY doctor.user_id
+            ORDER BY MIN(doctor_availability.consultation_date) ASC,
+                     MIN(doctor_availability.start_time) ASC,
+                     doctor.user_id ASC
+            LIMIT 1"
+        );
+        $stmt->bindValue(':specialization', $specialization);
+        $stmt->execute();
+        $doctorId = $stmt->fetchColumn();
+
+        return $doctorId !== false ? (int) $doctorId : null;
+    }
+
     private static function appendManagementFilters(array $filters, array &$conditions, array &$parameters): void
     {
         $search = trim((string) ($filters['search'] ?? ''));

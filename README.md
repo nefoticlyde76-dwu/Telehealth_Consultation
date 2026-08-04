@@ -4,7 +4,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ## Current Status
 
-- Current Week: Week 4
+- Current Week: Week 5
 - Architecture: Custom MVC (PHP 8.x)
 - Database: MySQL with PDO prepared statements
 - Frontend: HTML5, CSS3, Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
@@ -21,6 +21,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Patient Browsing: Week 4 patient-facing doctor directory and consultation slot viewer implemented for patient review workflows
 - Dashboard UI: Administrator, doctor, and patient dashboards refined into a unified premium telemedicine workspace experience
 - Profile Pictures: Direct profile picture uploads with live avatar updates are implemented for administrator, doctor, and patient profiles
+- Consultation Requests: Week 5 Day 1 patient consultation request submission and tracking module implemented
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -153,6 +154,30 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Administrator, doctor, and patient dashboards now use improved information hierarchy, spotlight panels, refined stat cards, and richer role-specific widgets
 - Sidebar, topbar, quick actions, activity panels, and dashboard cards were visually unified to feel like one platform
 - Dashboard layouts were further redesigned with telemedicine-inspired hierarchy including weekly schedule widgets, consultation overview panels, user distribution blocks, notifications areas, and cleaner role-specific information grouping
+
+### Week 5 Day 1 Features
+
+- Patient consultation request listing at `/patient/consultation-requests`
+- Patient consultation request submission at `/patient/consultation-requests/create`
+- Consultation request detail view at `/patient/consultation-requests/{id}`
+- Optional attachment download route at `/patient/consultation-requests/{id}/attachment`
+- Consultation request form fields:
+  - consultation reason / chief complaint (required, max 2000 characters)
+  - required medical specialization (restricted to specializations with active doctors and future availability)
+  - optional supporting attachment upload (PDF/JPG/PNG/WEBP, max 15 MB)
+- Consultation request processing:
+  - requests stored in `consultation_requests` linked to the authenticated patient
+  - default status set to `Pending`
+  - doctor automatically assigned based on specialization and earliest available clinician slot
+- Patient consultation request validation:
+  - CSRF verification
+  - required field validation
+  - strict server-side MIME validation for uploads with size enforcement
+- Patient dashboard updated to display consultation request statistics:
+  - total consultation requests
+  - pending requests
+  - approved requests
+  - completed consultations (from `consultation_records`)
 
 ### Profile Enhancement
 
