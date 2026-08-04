@@ -15,6 +15,7 @@ class DoctorDashboardService
         $availabilitySummary = DoctorAvailability::getSummaryForDoctor($userId);
         $todaySummary = DoctorAvailability::getTodaySummaryForDoctor($userId);
         $upcomingSlots = DoctorAvailability::getUpcomingForDoctor($userId, 4);
+        $weeklySchedule = DoctorAvailability::getDailyScheduleCountsForDoctor($userId, 7);
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
         $hasSignature = !empty($doctor['signature_path'] ?? '');
@@ -114,6 +115,8 @@ class DoctorDashboardService
             ],
             'todaySummary' => $todaySummary,
             'upcomingSlots' => $upcomingSlots,
+            'weeklySchedule' => $weeklySchedule,
+            'availabilitySummary' => $availabilitySummary,
             'assetReadiness' => [
                 'has_profile_photo' => $hasProfilePhoto,
                 'has_signature' => $hasSignature,

@@ -19,7 +19,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Doctor Dashboard: Week 4 Day 1 professional doctor dashboard and profile management implemented for clinicians
 - Doctor Availability: Week 4 Day 2 availability scheduling implemented for doctor-managed consultation slots
 - Patient Browsing: Week 4 patient-facing doctor directory and consultation slot viewer implemented for patient review workflows
-- Dashboard UI: Administrator, doctor, and patient dashboards refined into a unified premium healthcare workspace experience
+- Dashboard UI: Administrator, doctor, and patient dashboards refined into a unified premium telemedicine workspace experience
 - Profile Pictures: Direct profile picture uploads with live avatar updates are implemented for administrator, doctor, and patient profiles
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
@@ -152,6 +152,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Shared dashboard shell upgraded with a more premium healthcare SaaS layout inspired by modern telehealth UX patterns
 - Administrator, doctor, and patient dashboards now use improved information hierarchy, spotlight panels, refined stat cards, and richer role-specific widgets
 - Sidebar, topbar, quick actions, activity panels, and dashboard cards were visually unified to feel like one platform
+- Dashboard layouts were further redesigned with telemedicine-inspired hierarchy including weekly schedule widgets, consultation overview panels, user distribution blocks, notifications areas, and cleaner role-specific information grouping
 
 ### Profile Enhancement
 

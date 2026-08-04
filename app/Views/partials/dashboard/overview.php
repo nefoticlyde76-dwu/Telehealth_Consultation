@@ -4,6 +4,23 @@
 $primaryAction = $quickActions[0] ?? null;
 $secondaryAction = $quickActions[1] ?? null;
 $spotlightStats = array_slice($stats ?? [], 0, 3);
+$activityHeading = 'Recent Activity';
+$activityDescription = 'Role-specific visibility prepared for future modules.';
+$activityBadge = 'Live when data is available';
+
+if (($dashboardRole ?? '') === 'admin') {
+    $activityHeading = 'Recent System Activity';
+    $activityDescription = 'Operational signals and account-level changes in the administration workspace.';
+    $activityBadge = 'Governance feed';
+} elseif (($dashboardRole ?? '') === 'doctor') {
+    $activityHeading = 'Consultation Overview';
+    $activityDescription = 'Clinician-facing updates tied to schedule readiness and profile completion.';
+    $activityBadge = 'Clinical workspace';
+} elseif (($dashboardRole ?? '') === 'patient') {
+    $activityHeading = 'Notifications';
+    $activityDescription = 'Patient-friendly updates about browsing, availability visibility, and next module readiness.';
+    $activityBadge = 'Patient updates';
+}
 ?>
 
 <section class="dashboard-banner mb-4">
@@ -197,10 +214,10 @@ $spotlightStats = array_slice($stats ?? [], 0, 3);
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h3 class="h5 mb-1">Recent Activity</h3>
-              <p class="text-muted mb-0">Role-specific visibility prepared for future modules.</p>
+              <h3 class="h5 mb-1"><?= \App\Helpers\Helper::escape($activityHeading) ?></h3>
+              <p class="text-muted mb-0"><?= \App\Helpers\Helper::escape($activityDescription) ?></p>
             </div>
-            <span class="badge badge-soft-neutral rounded-pill border">Live when data is available</span>
+            <span class="badge badge-soft-neutral rounded-pill border"><?= \App\Helpers\Helper::escape($activityBadge) ?></span>
           </div>
 
           <div class="activity-list">

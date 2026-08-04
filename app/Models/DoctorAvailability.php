@@ -233,6 +233,28 @@ class DoctorAvailability
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function getDailyScheduleCountsForDoctor(int $doctorId, int $days = 7): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_date,
+                COUNT(*) AS total_slots,
+                SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS available_slots,
+                SUM(CASE WHEN status = 'Booked' THEN 1 ELSE 0 END) AS booked_slots
+            FROM doctor_availability
+            WHERE doctor_id = :doctor_id
+              AND consultation_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)
+            GROUP BY consultation_date
+            ORDER BY consultation_date ASC"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':days', $days - 1, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function hasDuplicateSlot(
         int $doctorId,
         string $consultationDate,

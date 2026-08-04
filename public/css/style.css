@@ -1129,8 +1129,8 @@ textarea.form-control {
 .dashboard-shell {
   display: flex;
   min-height: 100vh;
-  gap: 1.25rem;
-  padding: 1.25rem;
+  gap: 1.35rem;
+  padding: 1.35rem;
 }
 
 .dashboard-sidebar {
@@ -1144,6 +1144,10 @@ textarea.form-control {
   border: 1px solid rgba(var(--soft-cyan-rgb), 0.14);
   box-shadow: 18px 0 40px rgba(var(--dark-navy-rgb), 0.16);
   overflow: hidden;
+}
+
+.dashboard-brand {
+  border-bottom: 1px solid rgba(var(--white-rgb), 0.08);
 }
 
 .sidebar-caption {
@@ -1248,7 +1252,7 @@ textarea.form-control {
 
 .dashboard-main {
   flex: 1;
-  padding: 0.5rem 0.25rem 1.5rem 0;
+  padding: 0.35rem 0.15rem 1.5rem 0;
 }
 
 .dashboard-topbar {
@@ -1260,6 +1264,9 @@ textarea.form-control {
   box-shadow: 0 20px 44px rgba(var(--dark-navy-rgb), 0.08);
   margin-bottom: 1.5rem;
   backdrop-filter: blur(12px);
+  position: sticky;
+  top: 1.35rem;
+  z-index: 10;
 }
 
 .breadcrumb {
@@ -1306,6 +1313,11 @@ textarea.form-control {
   border: 1px solid rgba(var(--medium-gray-rgb), 0.95);
   background: var(--white);
   box-shadow: 0 10px 24px rgba(var(--dark-navy-rgb), 0.06);
+}
+
+.topbar-profile-meta strong,
+.topbar-profile-meta small {
+  line-height: 1.25;
 }
 
 .user-avatar {
@@ -1481,6 +1493,8 @@ textarea.form-control {
   border-radius: 1.75rem;
   border: 1px solid rgba(var(--white-rgb), 0.9);
   box-shadow: 0 20px 48px rgba(var(--dark-navy-rgb), 0.07);
+  background:
+    linear-gradient(145deg, rgba(var(--white-rgb), 0.98), rgba(var(--soft-cyan-rgb), 0.03));
 }
 
 .stats-card {
@@ -1582,6 +1596,46 @@ textarea.form-control {
   font-size: 1.25rem;
 }
 
+.weekly-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.weekly-calendar-day {
+  padding: 1rem 0.9rem;
+  border-radius: 1.2rem;
+  background: rgba(var(--white-rgb), 0.84);
+  border: 1px solid rgba(var(--medical-blue-rgb), 0.08);
+  min-height: 10rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.weekly-calendar-day--active {
+  background: linear-gradient(145deg, rgba(var(--medical-blue-rgb), 0.08), rgba(var(--soft-cyan-rgb), 0.08));
+  box-shadow: 0 16px 34px rgba(var(--dark-navy-rgb), 0.06);
+}
+
+.weekly-calendar-day-name,
+.weekly-calendar-day-meta {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.weekly-calendar-day-number {
+  font-size: 1.5rem;
+  color: var(--dark-navy);
+  line-height: 1;
+}
+
+.weekly-calendar-day-status {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: auto;
+}
+
 .schedule-slot-list {
   display: grid;
   gap: 0.85rem;
@@ -1593,6 +1647,15 @@ textarea.form-control {
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.1rem;
+}
+
+.schedule-slot-card:hover,
+.widget-mini-stat:hover,
+.dashboard-info-panel:hover,
+.dashboard-inline-callout:hover {
+  box-shadow: 0 18px 36px rgba(var(--dark-navy-rgb), 0.05);
+  transform: translateY(-2px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dashboard-emphasis-card {
@@ -1972,6 +2035,10 @@ textarea.form-control {
   .dashboard-spotlight-grid {
     grid-template-columns: 1fr;
   }
+
+  .weekly-calendar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 575.98px) {
@@ -1986,6 +2053,10 @@ textarea.form-control {
   .schedule-slot-card {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .weekly-calendar-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2041,6 +2112,7 @@ textarea.form-control {
 
   .dashboard-topbar {
     padding: 1rem 1.1rem;
+    position: static;
   }
 
   .hero-section-agh {

@@ -62,11 +62,16 @@
           </div>
 
           <div class="row g-3">
-            <div class="col-lg-7">
+            <div class="col-lg-8">
               <div class="dashboard-info-panel h-100">
-                <span class="dashboard-info-label">System Activity</span>
-                <h4 class="h6 mb-2">Operational account health remains stable</h4>
-                <p class="text-muted small mb-4">The current Week 4 environment keeps doctor, patient, and administrator access grouped under one secured governance workspace.</p>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                  <div>
+                    <span class="dashboard-info-label">User Distribution</span>
+                    <h4 class="h6 mb-2">Operational account health remains stable</h4>
+                    <p class="text-muted small mb-0">The current Week 4 environment keeps doctor, patient, and administrator access grouped under one secured governance workspace.</p>
+                  </div>
+                  <span class="badge badge-soft-info rounded-pill px-3 py-2">System Overview</span>
+                </div>
 
                 <div class="dashboard-progress-list">
                   <?php
@@ -97,10 +102,32 @@
                     <div class="dashboard-progress-track"><span class="dashboard-progress-bar dashboard-progress-bar--cyan" style="width: <?= \App\Helpers\Helper::escape((string) $doctorWidth) ?>%"></span></div>
                   </div>
                 </div>
+
+                <div class="row g-3 mt-1">
+                  <div class="col-md-4">
+                    <div class="widget-mini-stat h-100">
+                      <span class="widget-mini-stat-label">Total Users</span>
+                      <strong data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['total_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['total_users'] ?? 0)) ?></strong>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="widget-mini-stat h-100">
+                      <span class="widget-mini-stat-label">Active Accounts</span>
+                      <strong data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['active_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['active_users'] ?? 0)) ?></strong>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="widget-mini-stat h-100">
+                      <span class="widget-mini-stat-label">Pending Consultation Requests</span>
+                      <strong data-counter="0">0</strong>
+                      <span class="admin-summary-meta">Consultation booking opens in Week 5</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="col-lg-5">
+            <div class="col-lg-4">
               <div class="dashboard-info-panel h-100">
                 <span class="dashboard-info-label">Pending Requests</span>
                 <h4 class="h6 mb-2">Workflow readiness snapshot</h4>
@@ -131,8 +158,8 @@
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h3 class="h5 mb-1">Latest Visible Users</h3>
-              <p class="text-muted mb-0">Recent account activity surfaced in a compact operational feed.</p>
+              <h3 class="h5 mb-1">Recently Registered Users</h3>
+              <p class="text-muted mb-0">Newly visible accounts surfaced in a compact registration feed.</p>
             </div>
             <span class="badge badge-soft-info rounded-pill"><?= count($latestUsers ?? []) ?></span>
           </div>

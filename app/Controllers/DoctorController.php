@@ -52,6 +52,8 @@ class DoctorController extends Controller
             'doctorProfile' => $dashboardData['doctor'],
             'todaySummary' => $dashboardData['todaySummary'],
             'upcomingSlots' => $dashboardData['upcomingSlots'],
+            'weeklySchedule' => $dashboardData['weeklySchedule'],
+            'availabilitySummary' => $dashboardData['availabilitySummary'],
             'assetReadiness' => $dashboardData['assetReadiness'],
         ], 'layouts/dashboard');
     }
