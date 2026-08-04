@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
+use App\Services\AdminConsultationService;
 use App\Services\AdminDoctorService;
 use App\Services\AdminPatientService;
 use App\Services\AdminProfileService;
@@ -26,6 +27,7 @@ class AdminController extends Controller
         $summary = $dashboardData['summary'];
         $doctorSummary = AdminDoctorService::getDashboardSummary();
         $patientSummary = AdminPatientService::getDashboardSummary();
+        $consultationDashboard = AdminConsultationService::getDashboardSummary();
 
         $this->render('admin/dashboard', array_merge(
             $this->getAdminViewData($user, [
@@ -49,6 +51,8 @@ class AdminController extends Controller
                 'userSummary' => $summary,
                 'doctorSummary' => $doctorSummary,
                 'patientSummary' => $patientSummary,
+                'consultationSummary' => $consultationDashboard['summary'] ?? [],
+                'recentConsultationRequests' => $consultationDashboard['recentRequests'] ?? [],
                 'latestUsers' => $dashboardData['latestUsers'],
             ]
         ), 'layouts/dashboard');
@@ -518,14 +522,127 @@ class AdminController extends Controller
             'dashboardRoleLabel' => 'Administrator Dashboard',
             'sidebarItems' => [
                 ['path' => '/admin/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/admin/consultation-requests', 'label' => 'Consultation Requests', 'icon' => 'bi-clipboard2-check'],
                 ['path' => '/admin/patients', 'label' => 'Patient Management', 'icon' => 'bi-people-fill'],
                 ['path' => '/admin/doctors', 'label' => 'Doctor Accounts', 'icon' => 'bi-person-badge-fill'],
                 ['path' => '/admin/users', 'label' => 'User Management', 'icon' => 'bi-people-fill'],
                 ['path' => '/admin/profile', 'label' => 'Profile Settings', 'icon' => 'bi-person-gear'],
             ],
-            'sidebarStatusTitle' => 'Week 3 Account Governance',
-            'sidebarStatusDescription' => 'Patient oversight, doctor onboarding, and administrator profile management are now active.',
+            'sidebarStatusTitle' => 'Week 5 Consultation Oversight',
+            'sidebarStatusDescription' => 'Consultation request approvals and appointment governance are now active.',
         ], $overrides);
+    }
+
+    public function consultationRequests(): void
+    {
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $pageData = AdminConsultationService::getManagementPageData($_GET);
+
+        $this->render('admin/consultation_requests/index', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Consultation Requests | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Consultation Requests',
+                'dashboardDescription' => 'Review, filter, and manage patient consultation booking requests securely.',
+            ]),
+            [
+                'filters' => $pageData['filters'] ?? [],
+                'requests' => $pageData['requests'] ?? [],
+                'summary' => $pageData['summary'] ?? [],
+                'pagination' => $pageData['pagination'] ?? [],
+                'statusOptions' => $pageData['statusOptions'] ?? [],
+                'patientOptions' => $pageData['patientOptions'] ?? [],
+                'doctorOptions' => $pageData['doctorOptions'] ?? [],
+                'statusMessage' => Session::getFlash('status'),
+                'csrfToken' => Csrf::generate(),
+            ]
+        ), 'layouts/dashboard');
+    }
+
+    public function showConsultationRequest(string $id): void
+    {
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $requestId = (int) $id;
+        $request = AdminConsultationService::getConsultationDetail($requestId);
+
+        if ($request === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested consultation request could not be found.',
+            ]);
+            Helper::redirect('/admin/consultation-requests');
+            return;
+        }
+
+        $this->render('admin/consultation_requests/show', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Consultation Request Details | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Consultation Request Details',
+                'dashboardDescription' => 'Review patient, doctor, slot details, and approve or reject securely.',
+            ]),
+            [
+                'request' => $request,
+                'statusMessage' => Session::getFlash('status'),
+                'csrfToken' => Csrf::generate(),
+            ]
+        ), 'layouts/dashboard');
+    }
+
+    public function approveConsultationRequest(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/consultation-requests');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $requestId = (int) $id;
+        $result = AdminConsultationService::approveRequest($requestId, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Consultation request approval completed.',
+        ]);
+
+        Helper::redirect('/admin/consultation-requests/' . $requestId);
+    }
+
+    public function rejectConsultationRequest(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/consultation-requests');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $requestId = (int) $id;
+        $result = AdminConsultationService::rejectRequest($requestId, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Consultation request rejection completed.',
+        ]);
+
+        Helper::redirect('/admin/consultation-requests/' . $requestId);
     }
 
     private function handleDoctorStatusUpdate(int $userId, string $status): void

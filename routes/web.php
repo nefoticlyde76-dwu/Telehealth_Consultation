@@ -108,6 +108,22 @@ $router->get('/admin/users/{id}', [AdminController::class, 'showUser'], [
     new RoleMiddleware(['admin']),
 ]);
 
+$router->get('/admin/consultation-requests', [AdminController::class, 'consultationRequests'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/consultation-requests/{id}', [AdminController::class, 'showConsultationRequest'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/consultation-requests/{id}/approve', [AdminController::class, 'approveConsultationRequest'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/consultation-requests/{id}/reject', [AdminController::class, 'rejectConsultationRequest'], [
+    new RoleMiddleware(['admin']),
+]);
+
 $router->get('/admin/patients', [AdminController::class, 'patients'], [
     new RoleMiddleware(['admin']),
 ]);

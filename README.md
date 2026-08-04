@@ -179,6 +179,25 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
   - upcoming appointments
   - consultation history count
 
+### Week 5 Day 2 Features
+
+- Administrator consultation request management at `/admin/consultation-requests`
+  - view all consultation requests
+  - search by patient/doctor name, request id, or chief complaint text
+  - filter by status, patient, doctor, and consultation date
+- Administrator consultation request detail view at `/admin/consultation-requests/{id}`
+  - view patient, doctor, consultation slot, chief complaint, status, and submission timestamp
+- Appointment approval workflow:
+  - approve pending requests (status changes to `Approved`, slot remains reserved)
+  - reject pending requests (status changes to `Rejected`, slot is returned to `Available`)
+  - invalid transitions are blocked (only `Pending` requests can be approved or rejected)
+- Administrator dashboard updates:
+  - pending, approved, rejected consultation request counters
+  - recent consultation requests feed
+- Doctor dashboard updates:
+  - new approved appointments counter
+  - upcoming approved consultations list
+
 ### Profile Enhancement
 
 - Direct profile picture uploads without a cropping step
@@ -251,6 +270,8 @@ mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.
 mysql -u root -p < database/migrations/004_add_doctor_profile_assets.sql
 mysql -u root -p < database/migrations/005_add_profile_photo_fields_for_admin_and_patient.sql
 mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
+mysql -u root -p < database/migrations/007_update_consultation_requests_for_booking.sql
+mysql -u root -p < database/migrations/008_remove_unique_index_from_consultation_requests.sql
 ```
 
 7. Open the application using the configured `APP_URL`.

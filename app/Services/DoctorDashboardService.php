@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Doctor;
+use App\Models\ConsultationRequest;
 use App\Models\DoctorAvailability;
 use App\Models\User;
 
@@ -16,6 +17,9 @@ class DoctorDashboardService
         $todaySummary = DoctorAvailability::getTodaySummaryForDoctor($userId);
         $upcomingSlots = DoctorAvailability::getUpcomingForDoctor($userId, 4);
         $weeklySchedule = DoctorAvailability::getDailyScheduleCountsForDoctor($userId, 7);
+        $recentApprovedAppointments = ConsultationRequest::countApprovedRecentlyForDoctor($userId, 7);
+        $upcomingApprovedCount = ConsultationRequest::countUpcomingApprovedForDoctor($userId);
+        $upcomingApprovedAppointments = ConsultationRequest::findUpcomingApprovedForDoctor($userId, 5);
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
         $hasSignature = !empty($doctor['signature_path'] ?? '');
@@ -37,16 +41,16 @@ class DoctorDashboardService
                     'description' => 'Consultation slots currently marked as booked in the scheduling module.',
                 ],
                 [
-                    'label' => 'Upcoming Consultations',
-                    'value' => (string) ($availabilitySummary['upcoming_consultations'] ?? 0),
-                    'icon' => 'bi-clock-history',
-                    'description' => 'Future booked consultations scheduled from today onward.',
+                    'label' => 'New Approved Appointments',
+                    'value' => (string) $recentApprovedAppointments,
+                    'icon' => 'bi-check2-circle',
+                    'description' => 'Recently approved consultation requests assigned to your clinician schedule.',
                 ],
                 [
-                    'label' => 'Completed Consultations',
-                    'value' => (string) ($availabilitySummary['completed_consultations'] ?? 0),
-                    'icon' => 'bi-clipboard2-pulse',
-                    'description' => 'Booked consultations with dates earlier than today.',
+                    'label' => 'Upcoming Consultations',
+                    'value' => (string) $upcomingApprovedCount,
+                    'icon' => 'bi-clock-history',
+                    'description' => 'Approved consultations scheduled from today onward.',
                 ],
             ],
             'quickActions' => [
@@ -117,6 +121,9 @@ class DoctorDashboardService
             'upcomingSlots' => $upcomingSlots,
             'weeklySchedule' => $weeklySchedule,
             'availabilitySummary' => $availabilitySummary,
+            'upcomingApprovedAppointments' => $upcomingApprovedAppointments,
+            'recentApprovedAppointmentCount' => $recentApprovedAppointments,
+            'upcomingApprovedAppointmentCount' => $upcomingApprovedCount,
             'assetReadiness' => [
                 'has_profile_photo' => $hasProfilePhoto,
                 'has_signature' => $hasSignature,

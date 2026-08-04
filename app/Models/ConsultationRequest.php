@@ -149,13 +149,445 @@ class ConsultationRequest
             "SELECT COUNT(*)
             FROM consultation_requests
             WHERE patient_id = :patient_id
-              AND availability_id = :availability_id"
+              AND availability_id = :availability_id
+              AND status IN ('Pending', 'Assigned', 'Approved')"
         );
         $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
         $stmt->bindValue(':availability_id', $availabilityId, PDO::PARAM_INT);
         $stmt->execute();
 
         return (int) $stmt->fetchColumn() > 0;
+    }
+
+    public static function getAdminStatusSummary(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query(
+            "SELECT
+                COUNT(*) AS total_requests,
+                SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pending_requests,
+                SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) AS approved_requests,
+                SUM(CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_requests
+            FROM consultation_requests"
+        );
+        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        return [
+            'total_requests' => (int) ($row['total_requests'] ?? 0),
+            'pending_requests' => (int) ($row['pending_requests'] ?? 0),
+            'approved_requests' => (int) ($row['approved_requests'] ?? 0),
+            'rejected_requests' => (int) ($row['rejected_requests'] ?? 0),
+        ];
+    }
+
+    public static function findRecentForAdmin(int $limit = 5): array
+    {
+        $limit = max(1, $limit);
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_requests.id,
+                consultation_requests.request_date,
+                consultation_requests.reason,
+                consultation_requests.status,
+                patient_user.full_name AS patient_name,
+                doctor_user.full_name AS doctor_name,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC
+            LIMIT :limit"
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function getPatientOptionsForAdmin(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query(
+            "SELECT users.id, users.full_name
+            FROM users
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'patient'
+            ORDER BY users.full_name ASC"
+        );
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function getDoctorOptionsForAdmin(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query(
+            "SELECT users.id, users.full_name
+            FROM users
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'doctor'
+            ORDER BY users.full_name ASC"
+        );
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function countForAdmin(array $filters = []): int
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT COUNT(*)
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id";
+        $conditions = [];
+        $parameters = [];
+
+        self::appendAdminFilters($filters, $conditions, $parameters);
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $stmt = $db->prepare($sql);
+        self::bindAdminParameters($stmt, $parameters);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function findForAdmin(array $filters = [], int $limit = 10, int $offset = 0): array
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT
+                consultation_requests.id,
+                consultation_requests.request_date,
+                consultation_requests.reason,
+                consultation_requests.status,
+                consultation_requests.patient_id,
+                consultation_requests.doctor_id,
+                patient_user.full_name AS patient_name,
+                doctor_user.full_name AS doctor_name,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id";
+        $conditions = [];
+        $parameters = [];
+
+        self::appendAdminFilters($filters, $conditions, $parameters);
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
+        self::bindAdminParameters($stmt, $parameters);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function findByIdForAdmin(int $requestId): ?array
+    {
+        if ($requestId <= 0) {
+            return null;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_requests.*,
+                patient_user.full_name AS patient_name,
+                doctor_user.full_name AS doctor_name,
+                doctor.specialization,
+                doctor.professional_title AS doctor_title,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time,
+                doctor_availability.status AS availability_status
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
+            INNER JOIN users AS doctor_user ON doctor_user.id = doctor.user_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.id = :id
+            LIMIT 1"
+        );
+        $stmt->bindValue(':id', $requestId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
+    public static function updateStatusForAdmin(int $requestId, string $targetStatus): array
+    {
+        if ($requestId <= 0) {
+            return [
+                'success' => false,
+                'message' => 'The consultation request is invalid.',
+                'type' => 'danger',
+            ];
+        }
+
+        if (!in_array($targetStatus, ['Approved', 'Rejected'], true)) {
+            return [
+                'success' => false,
+                'message' => 'The requested consultation status change is not supported.',
+                'type' => 'danger',
+            ];
+        }
+
+        $db = Database::getInstance();
+
+        try {
+            $db->beginTransaction();
+
+            $requestStmt = $db->prepare(
+                "SELECT id, status, availability_id
+                FROM consultation_requests
+                WHERE id = :id
+                FOR UPDATE"
+            );
+            $requestStmt->bindValue(':id', $requestId, PDO::PARAM_INT);
+            $requestStmt->execute();
+            $requestRow = $requestStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+            if ($requestRow === null) {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'The requested consultation request could not be found.',
+                    'type' => 'warning',
+                ];
+            }
+
+            $currentStatus = (string) ($requestRow['status'] ?? '');
+
+            if ($currentStatus === $targetStatus) {
+                $db->rollBack();
+                return [
+                    'success' => true,
+                    'message' => 'This consultation request is already marked as ' . $targetStatus . '.',
+                    'type' => 'info',
+                ];
+            }
+
+            if ($currentStatus !== 'Pending') {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Only pending consultation requests can be updated at this stage.',
+                    'type' => 'danger',
+                ];
+            }
+
+            $availabilityId = isset($requestRow['availability_id']) ? (int) $requestRow['availability_id'] : 0;
+
+            if ($availabilityId > 0) {
+                $slotStmt = $db->prepare(
+                    "SELECT id, status
+                    FROM doctor_availability
+                    WHERE id = :id
+                    FOR UPDATE"
+                );
+                $slotStmt->bindValue(':id', $availabilityId, PDO::PARAM_INT);
+                $slotStmt->execute();
+                $slotRow = $slotStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+                if ($slotRow === null) {
+                    $db->rollBack();
+                    return [
+                        'success' => false,
+                        'message' => 'The consultation slot associated with this request could not be found.',
+                        'type' => 'danger',
+                    ];
+                }
+
+                $slotStatus = (string) ($slotRow['status'] ?? '');
+
+                if ($targetStatus === 'Approved' && $slotStatus !== 'Booked') {
+                    $updateSlot = $db->prepare("UPDATE doctor_availability SET status = 'Booked' WHERE id = :id");
+                    $updateSlot->bindValue(':id', $availabilityId, PDO::PARAM_INT);
+                    $updateSlot->execute();
+                }
+
+                if ($targetStatus === 'Rejected' && $slotStatus === 'Booked') {
+                    $updateSlot = $db->prepare("UPDATE doctor_availability SET status = 'Available' WHERE id = :id");
+                    $updateSlot->bindValue(':id', $availabilityId, PDO::PARAM_INT);
+                    $updateSlot->execute();
+                }
+            }
+
+            $updateRequest = $db->prepare(
+                "UPDATE consultation_requests
+                SET status = :status
+                WHERE id = :id"
+            );
+            $updateRequest->bindValue(':status', $targetStatus);
+            $updateRequest->bindValue(':id', $requestId, PDO::PARAM_INT);
+            $updateRequest->execute();
+
+            $db->commit();
+
+            return [
+                'success' => true,
+                'message' => 'Consultation request updated to ' . $targetStatus . '.',
+                'type' => 'success',
+            ];
+        } catch (\Throwable $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            error_log('Admin consultation status update failed: ' . $exception->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Consultation request status could not be updated right now.',
+                'type' => 'danger',
+            ];
+        }
+    }
+
+    public static function countApprovedRecentlyForDoctor(int $doctorId, int $days = 7): int
+    {
+        if ($doctorId <= 0) {
+            return 0;
+        }
+
+        $days = max(1, $days);
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT COUNT(*)
+            FROM consultation_requests
+            WHERE doctor_id = :doctor_id
+              AND status = 'Approved'
+              AND updated_at >= DATE_SUB(NOW(), INTERVAL :days DAY)"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':days', $days, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function countUpcomingApprovedForDoctor(int $doctorId): int
+    {
+        if ($doctorId <= 0) {
+            return 0;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT COUNT(*)
+            FROM consultation_requests
+            INNER JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.doctor_id = :doctor_id
+              AND consultation_requests.status = 'Approved'
+              AND doctor_availability.consultation_date >= CURDATE()"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function findUpcomingApprovedForDoctor(int $doctorId, int $limit = 5): array
+    {
+        if ($doctorId <= 0) {
+            return [];
+        }
+
+        $limit = max(1, $limit);
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_requests.id,
+                consultation_requests.request_date,
+                consultation_requests.status,
+                patient_user.full_name AS patient_name,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.doctor_id = :doctor_id
+              AND consultation_requests.status = 'Approved'
+              AND doctor_availability.consultation_date >= CURDATE()
+            ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, consultation_requests.id ASC
+            LIMIT :limit"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private static function appendAdminFilters(array $filters, array &$conditions, array &$parameters): void
+    {
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search !== '') {
+            $conditions[] = '(patient_user.full_name LIKE :search OR doctor_user.full_name LIKE :search OR consultation_requests.reason LIKE :search OR consultation_requests.id = :search_exact)';
+            $parameters[':search'] = '%' . $search . '%';
+            $parameters[':search_exact'] = ctype_digit($search) ? (int) $search : 0;
+        }
+
+        $status = trim((string) ($filters['status'] ?? ''));
+
+        if ($status !== '') {
+            $conditions[] = 'consultation_requests.status = :status';
+            $parameters[':status'] = $status;
+        }
+
+        $patientId = (int) ($filters['patient_id'] ?? 0);
+
+        if ($patientId > 0) {
+            $conditions[] = 'consultation_requests.patient_id = :patient_id';
+            $parameters[':patient_id'] = $patientId;
+        }
+
+        $doctorId = (int) ($filters['doctor_id'] ?? 0);
+
+        if ($doctorId > 0) {
+            $conditions[] = 'consultation_requests.doctor_id = :doctor_id';
+            $parameters[':doctor_id'] = $doctorId;
+        }
+
+        $consultationDate = trim((string) ($filters['consultation_date'] ?? ''));
+
+        if ($consultationDate !== '') {
+            $conditions[] = 'doctor_availability.consultation_date = :consultation_date';
+            $parameters[':consultation_date'] = $consultationDate;
+        }
+    }
+
+    private static function bindAdminParameters(\PDOStatement $stmt, array $parameters): void
+    {
+        foreach ($parameters as $key => $value) {
+            $paramType = PDO::PARAM_STR;
+
+            if (is_int($value)) {
+                $paramType = PDO::PARAM_INT;
+            }
+
+            $stmt->bindValue($key, $value, $paramType);
+        }
     }
 }
 

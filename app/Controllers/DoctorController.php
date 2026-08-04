@@ -55,6 +55,9 @@ class DoctorController extends Controller
             'weeklySchedule' => $dashboardData['weeklySchedule'],
             'availabilitySummary' => $dashboardData['availabilitySummary'],
             'assetReadiness' => $dashboardData['assetReadiness'],
+            'upcomingApprovedAppointments' => $dashboardData['upcomingApprovedAppointments'] ?? [],
+            'recentApprovedAppointmentCount' => $dashboardData['recentApprovedAppointmentCount'] ?? 0,
+            'upcomingApprovedAppointmentCount' => $dashboardData['upcomingApprovedAppointmentCount'] ?? 0,
         ], 'layouts/dashboard');
     }
 

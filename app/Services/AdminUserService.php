@@ -52,6 +52,14 @@ class AdminUserService
                     'action_label' => 'Open Patient Management',
                 ],
                 [
+                    'title' => 'Review Consultation Requests',
+                    'description' => 'Approve or reject booked consultation requests, reserve slots, and monitor consultation statuses securely.',
+                    'icon' => 'bi-clipboard2-check',
+                    'status' => 'Week 5',
+                    'url' => '/admin/consultation-requests',
+                    'action_label' => 'Open Consultation Requests',
+                ],
+                [
                     'title' => 'Open User Management',
                     'description' => 'Review all platform accounts with search, role filters, status filters, and responsive table support.',
                     'icon' => 'bi-diagram-3-fill',

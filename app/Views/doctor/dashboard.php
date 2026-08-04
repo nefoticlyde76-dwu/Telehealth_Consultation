@@ -6,6 +6,9 @@ $profilePhotoPath = $doctorProfile['profile_photo_path'] ?? null;
 $signaturePath = $doctorProfile['signature_path'] ?? null;
 $todaySummary = $todaySummary ?? [];
 $upcomingSlots = $upcomingSlots ?? [];
+$upcomingApprovedAppointments = $upcomingApprovedAppointments ?? [];
+$recentApprovedAppointmentCount = $recentApprovedAppointmentCount ?? 0;
+$upcomingApprovedAppointmentCount = $upcomingApprovedAppointmentCount ?? 0;
 $weeklySchedule = $weeklySchedule ?? [];
 $availabilitySummary = $availabilitySummary ?? [];
 $assetReadiness = $assetReadiness ?? [];
@@ -156,7 +159,7 @@ foreach ($weeklySchedule as $scheduleDay) {
                 </div>
                 <div class="widget-mini-stat">
                   <span class="widget-mini-stat-label">Upcoming Consultations</span>
-                  <strong><?= \App\Helpers\Helper::escape((string) ($availabilitySummary['upcoming_consultations'] ?? 0)) ?></strong>
+                  <strong><?= \App\Helpers\Helper::escape((string) ((int) $upcomingApprovedAppointmentCount)) ?></strong>
                 </div>
                 <div class="widget-mini-stat">
                   <span class="widget-mini-stat-label">Completed Consultations</span>
@@ -172,15 +175,34 @@ foreach ($weeklySchedule as $scheduleDay) {
             <div class="card-body p-4">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
                 <div>
-                  <h3 class="h5 mb-1">Recent Patients</h3>
-                  <p class="text-muted mb-0">Patient visibility will appear here once booked consultations begin populating patient history.</p>
+                  <h3 class="h5 mb-1">New Approved Appointments</h3>
+                  <p class="text-muted mb-0">Recently approved consultations ready for your upcoming schedule.</p>
                 </div>
-                <span class="badge badge-soft-warning rounded-pill px-3 py-2">Awaiting Week 5</span>
+                <span class="badge badge-soft-info rounded-pill px-3 py-2"><?= \App\Helpers\Helper::escape((string) ((int) $recentApprovedAppointmentCount)) ?> new</span>
               </div>
 
-              <div class="dashboard-inline-callout">
-                <span class="dashboard-info-label">Patient Overview</span>
-                <p class="text-muted small mb-0">There are no booked patient consultation records to display yet. This panel is ready for recent-patient context once booking workflows are approved.</p>
+              <div class="schedule-slot-list">
+                <?php if ($upcomingApprovedAppointments === []): ?>
+                  <div class="schedule-slot-card">
+                    <div>
+                      <strong class="d-block">No approved appointments yet</strong>
+                      <span class="small text-muted">Approved consultation appointments will appear here after administrator approval.</span>
+                    </div>
+                  </div>
+                <?php else: ?>
+                  <?php foreach ($upcomingApprovedAppointments as $appointment): ?>
+                    <div class="schedule-slot-card">
+                      <div>
+                        <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($appointment['patient_name'] ?? 'Patient')) ?></strong>
+                        <span class="small text-muted"><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'D, d M Y', 'Not available')) ?></span>
+                      </div>
+                      <div class="text-end">
+                        <span class="badge badge-soft-success rounded-pill mb-2">Approved</span>
+                        <span class="d-block small text-muted"><?= \App\Helpers\Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> - <?= \App\Helpers\Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></span>
+                      </div>
+                    </div>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </div>
             </div>
           </div>
