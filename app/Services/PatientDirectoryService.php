@@ -40,6 +40,7 @@ class PatientDirectoryService
             $previewSlots = DoctorAvailability::getAvailableDaysAndTimesForDoctor((int) ($doctor['id'] ?? 0));
             $doctor['available_days'] = [];
             $doctor['available_times'] = [];
+            $doctor['booking_slots'] = $previewSlots;
 
             foreach ($previewSlots as $slot) {
                 $dayLabel = Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'D, d M Y', '');

@@ -34,12 +34,16 @@ $buildPageUrl = static function (int $page) use ($filters): string {
             Consultation Slot Viewer
           </span>
           <h2 class="h4 mb-2">View available consultation slots only</h2>
-          <p class="text-muted mb-0">Patients can filter future availability by doctor, specialization, and consultation date. Booking remains reserved for Week 5.</p>
+          <p class="text-muted mb-0">Patients can filter future availability by doctor, specialization, and consultation date. Booking is now available for visible slots.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
           <a href="<?= \App\Helpers\Helper::url('/patient/doctors') ?>" class="btn btn-outline-primary rounded-pill px-4">
             <i class="bi bi-person-badge me-2"></i>
             Browse Doctors
+          </a>
+          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-clipboard2-check me-2"></i>
+            Consultation History
           </a>
           <a href="<?= \App\Helpers\Helper::url('/patient/dashboard') ?>" class="btn btn-outline-primary rounded-pill px-4">
             <i class="bi bi-arrow-left me-2"></i>
@@ -149,12 +153,13 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               <th scope="col">Time</th>
               <th scope="col">Notes</th>
               <th scope="col">Status</th>
+              <th scope="col" class="text-end">Action</th>
             </tr>
           </thead>
           <tbody>
             <?php if ($slots === []): ?>
               <tr>
-                <td colspan="6">
+                <td colspan="7">
                   <div class="admin-table-empty text-center py-5">
                     <div class="empty-state-icon mx-auto mb-3">
                       <i class="bi bi-calendar-x"></i>
@@ -166,6 +171,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               </tr>
             <?php else: ?>
               <?php foreach ($slots as $slot): ?>
+                <?php $slotId = (int) ($slot['id'] ?? 0); ?>
                 <tr>
                   <td>
                     <div class="d-flex align-items-center gap-3">
@@ -197,6 +203,11 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                   </td>
                   <td>
                     <span class="badge badge-soft-success rounded-pill">Available</span>
+                  </td>
+                  <td class="text-end">
+                    <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/book/' . (string) $slotId) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3 <?= $slotId <= 0 ? 'disabled' : '' ?>">
+                      Book
+                    </a>
                   </td>
                 </tr>
               <?php endforeach; ?>

@@ -24,12 +24,16 @@ $buildPageUrl = static function (int $page): string {
             Doctor Directory
           </span>
           <h2 class="h4 mb-2">Browse active doctors with available schedules</h2>
-          <p class="text-muted mb-0">Patients can review clinician details, available consultation days, and time windows before booking opens in Week 5.</p>
+          <p class="text-muted mb-0">Review available consultation days and times, then book a specific consultation slot with a brief chief complaint.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-          <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-primary rounded-pill px-4">
+          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-clipboard2-check me-2"></i>
+            Consultation History
+          </a>
+          <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary rounded-pill px-4">
             <i class="bi bi-calendar2-week me-2"></i>
-            View Available Slots
+            View All Slots
           </a>
           <a href="<?= \App\Helpers\Helper::url('/patient/dashboard') ?>" class="btn btn-outline-primary rounded-pill px-4">
             <i class="bi bi-arrow-left me-2"></i>
@@ -115,6 +119,23 @@ $buildPageUrl = static function (int $page): string {
               <div class="d-flex flex-wrap gap-2">
                 <?php foreach (($doctor['available_times'] ?? []) as $time): ?>
                   <span class="badge badge-soft-neutral rounded-pill border px-3 py-2"><?= \App\Helpers\Helper::escape((string) $time) ?></span>
+                <?php endforeach; ?>
+              </div>
+            </div>
+
+            <div class="patient-directory-meta mt-4">
+              <span class="patient-directory-label">Book Consultation</span>
+              <div class="d-grid gap-2">
+                <?php foreach (($doctor['booking_slots'] ?? []) as $slot): ?>
+                  <?php
+                  $slotId = (int) ($slot['id'] ?? 0);
+                  $slotDay = \App\Helpers\Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'D, d M Y', 'Not available');
+                  $slotTime = substr((string) ($slot['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($slot['end_time'] ?? ''), 0, 5);
+                  ?>
+                  <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/book/' . (string) $slotId) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3 <?= $slotId <= 0 ? 'disabled' : '' ?>">
+                    <i class="bi bi-calendar2-check me-2"></i>
+                    <?= \App\Helpers\Helper::escape($slotDay) ?> · <?= \App\Helpers\Helper::escape($slotTime) ?>
+                  </a>
                 <?php endforeach; ?>
               </div>
             </div>

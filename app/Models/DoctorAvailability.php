@@ -416,6 +416,7 @@ class DoctorAvailability
         $db = Database::getInstance();
         $stmt = $db->prepare(
             "SELECT
+                id,
                 consultation_date,
                 start_time,
                 end_time
@@ -431,6 +432,43 @@ class DoctorAvailability
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    public static function findAvailableSlotForPatients(int $availabilityId): ?array
+    {
+        if ($availabilityId <= 0) {
+            return null;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                doctor_availability.id,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time,
+                doctor_availability.status,
+                doctor.user_id AS doctor_id,
+                doctor.professional_title,
+                doctor.specialization,
+                doctor.profile_photo_path,
+                users.full_name
+            FROM doctor_availability
+            INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE doctor_availability.id = :id
+              AND roles.name = 'doctor'
+              AND users.status = 'active'
+              AND doctor_availability.status = 'Available'
+              AND doctor_availability.consultation_date >= CURDATE()
+            LIMIT 1"
+        );
+        $stmt->bindValue(':id', $availabilityId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
     }
 
     private static function appendFilters(array $filters, array &$conditions, array &$parameters): void
