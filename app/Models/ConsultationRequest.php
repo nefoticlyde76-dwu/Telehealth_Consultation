@@ -150,6 +150,94 @@ class ConsultationRequest
         return $row ?: null;
     }
 
+    public static function findNextApprovedForPatient(int $patientId): ?array
+    {
+        if ($patientId <= 0) {
+            return null;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_requests.id,
+                consultation_requests.status,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time,
+                doctor.professional_title AS doctor_title,
+                doctor.specialization,
+                users.full_name AS doctor_name
+            FROM consultation_requests
+            INNER JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            WHERE consultation_requests.patient_id = :patient_id
+              AND consultation_requests.status = 'Approved'
+              AND doctor_availability.consultation_date >= CURDATE()
+            ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, consultation_requests.id ASC
+            LIMIT 1"
+        );
+        $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
+    public static function getStatusDistributionForPatient(int $patientId): array
+    {
+        if ($patientId <= 0) {
+            return [];
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT status, COUNT(*) AS total
+            FROM consultation_requests
+            WHERE patient_id = :patient_id
+            GROUP BY status"
+        );
+        $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $distribution = [];
+
+        foreach ($rows as $row) {
+            $status = (string) ($row['status'] ?? '');
+
+            if ($status === '') {
+                continue;
+            }
+
+            $distribution[$status] = (int) ($row['total'] ?? 0);
+        }
+
+        return $distribution;
+    }
+
+    public static function findMonthlyRequestCountsForPatient(int $patientId, int $months = 6): array
+    {
+        if ($patientId <= 0) {
+            return [];
+        }
+
+        $months = max(1, $months);
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT DATE_FORMAT(request_date, '%Y-%m-01') AS request_month, COUNT(*) AS total
+            FROM consultation_requests
+            WHERE patient_id = :patient_id
+              AND request_date >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL :months MONTH)
+            GROUP BY request_month
+            ORDER BY request_month ASC"
+        );
+        $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
+        $stmt->bindValue(':months', $months - 1, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function createBooking(int $patientId, int $doctorId, int $availabilityId, string $reason, string $status = 'Pending'): int
     {
         $db = Database::getInstance();
@@ -214,6 +302,47 @@ class ConsultationRequest
             'approved_requests' => (int) ($row['approved_requests'] ?? 0),
             'rejected_requests' => (int) ($row['rejected_requests'] ?? 0),
         ];
+    }
+
+    public static function getStatusDistributionForAdmin(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query(
+            "SELECT status, COUNT(*) AS total
+            FROM consultation_requests
+            GROUP BY status"
+        );
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $distribution = [];
+
+        foreach ($rows as $row) {
+            $status = (string) ($row['status'] ?? '');
+
+            if ($status === '') {
+                continue;
+            }
+
+            $distribution[$status] = (int) ($row['total'] ?? 0);
+        }
+
+        return $distribution;
+    }
+
+    public static function findDailyRequestCountsForAdmin(int $days = 7): array
+    {
+        $days = max(1, $days);
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT DATE(request_date) AS request_day, COUNT(*) AS total
+            FROM consultation_requests
+            WHERE request_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
+            GROUP BY request_day
+            ORDER BY request_day ASC"
+        );
+        $stmt->bindValue(':days', $days - 1, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
     public static function countRecentForAdmin(int $days = 7): int
@@ -633,6 +762,60 @@ class ConsultationRequest
             'upcoming_consultations' => (int) ($row['upcoming_consultations'] ?? 0),
             'completed_consultations' => (int) ($row['completed_consultations'] ?? 0),
         ];
+    }
+
+    public static function getStatusDistributionForDoctor(int $doctorId): array
+    {
+        if ($doctorId <= 0) {
+            return [];
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT status, COUNT(*) AS total
+            FROM consultation_requests
+            WHERE doctor_id = :doctor_id
+            GROUP BY status"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $distribution = [];
+
+        foreach ($rows as $row) {
+            $status = (string) ($row['status'] ?? '');
+
+            if ($status === '') {
+                continue;
+            }
+
+            $distribution[$status] = (int) ($row['total'] ?? 0);
+        }
+
+        return $distribution;
+    }
+
+    public static function findDailyRequestCountsForDoctor(int $doctorId, int $days = 7): array
+    {
+        if ($doctorId <= 0) {
+            return [];
+        }
+
+        $days = max(1, $days);
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT DATE(request_date) AS request_day, COUNT(*) AS total
+            FROM consultation_requests
+            WHERE doctor_id = :doctor_id
+              AND request_date >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
+            GROUP BY request_day
+            ORDER BY request_day ASC"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':days', $days - 1, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
     public static function findForDoctor(int $doctorId, array $filters = [], int $limit = 10, int $offset = 0): array

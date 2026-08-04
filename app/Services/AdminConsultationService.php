@@ -14,6 +14,8 @@ class AdminConsultationService
         $summary = ConsultationRequest::getAdminStatusSummary();
         $recentRequests = ConsultationRequest::findRecentForAdmin(5);
         $recentActivityCount = ConsultationRequest::countRecentForAdmin(7);
+        $weeklyRequests = ConsultationRequest::findDailyRequestCountsForAdmin(7);
+        $statusDistribution = ConsultationRequest::getStatusDistributionForAdmin();
 
         return [
             'summary' => $summary,
@@ -45,6 +47,10 @@ class AdminConsultationService
                 ],
             ],
             'recentActivity' => self::buildRecentActivity($recentRequests),
+            'charts' => [
+                'weekly_requests' => self::buildWeeklyRequestsChart($weeklyRequests),
+                'status_distribution' => self::buildStatusDistributionChart($statusDistribution),
+            ],
         ];
     }
 
@@ -189,5 +195,111 @@ class AdminConsultationService
         }
 
         return $activity;
+    }
+
+    private static function buildWeeklyRequestsChart(array $rows): array
+    {
+        $labels = [];
+        $values = [];
+        $map = [];
+
+        foreach ($rows as $row) {
+            $day = (string) ($row['request_day'] ?? '');
+
+            if ($day !== '') {
+                $map[$day] = (int) ($row['total'] ?? 0);
+            }
+        }
+
+        $today = new \DateTimeImmutable('today');
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = $today->sub(new \DateInterval('P' . $i . 'D'));
+            $key = $date->format('Y-m-d');
+            $labels[] = $date->format('D');
+            $values[] = (int) ($map[$key] ?? 0);
+        }
+
+        return [
+            'type' => 'line',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'label' => 'Weekly Requests',
+                        'data' => $values,
+                        'borderColor' => '#0A6FB6',
+                        'backgroundColor' => 'rgba(10, 111, 182, 0.14)',
+                        'fill' => true,
+                        'tension' => 0.42,
+                        'pointRadius' => 3,
+                        'pointBackgroundColor' => '#0A6FB6',
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'legend' => ['display' => false],
+                    'tooltip' => ['mode' => 'index', 'intersect' => false],
+                ],
+                'scales' => [
+                    'x' => ['grid' => ['display' => false]],
+                    'y' => [
+                        'beginAtZero' => true,
+                        'ticks' => ['precision' => 0],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    private static function buildStatusDistributionChart(array $distribution): array
+    {
+        $labels = [];
+        $values = [];
+        $colors = [
+            'Pending' => 'rgba(245, 158, 11, 0.7)',
+            'Approved' => 'rgba(34, 197, 94, 0.7)',
+            'Rejected' => 'rgba(239, 68, 68, 0.7)',
+            'Cancelled' => 'rgba(239, 68, 68, 0.45)',
+            'Completed' => 'rgba(10, 111, 182, 0.7)',
+        ];
+        $background = [];
+
+        foreach (['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'] as $status) {
+            $labels[] = $status;
+            $values[] = (int) ($distribution[$status] ?? 0);
+            $background[] = $colors[$status] ?? 'rgba(107, 114, 128, 0.6)';
+        }
+
+        return [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'data' => $values,
+                        'backgroundColor' => $background,
+                        'borderWidth' => 0,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'cutout' => '68%',
+                'plugins' => [
+                    'legend' => [
+                        'position' => 'bottom',
+                        'labels' => [
+                            'usePointStyle' => true,
+                            'boxWidth' => 10,
+                        ],
+                    ],
+                ],
+            ],
+        ];
     }
 }

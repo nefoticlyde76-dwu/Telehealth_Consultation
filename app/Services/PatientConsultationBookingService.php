@@ -17,6 +17,23 @@ class PatientConsultationBookingService
         return ConsultationRequest::getDashboardSummaryForPatient($patientId);
     }
 
+    public static function getDashboardInsights(int $patientId): array
+    {
+        $summary = self::getDashboardSummary($patientId);
+        $nextAppointment = ConsultationRequest::findNextApprovedForPatient($patientId);
+        $statusDistribution = ConsultationRequest::getStatusDistributionForPatient($patientId);
+        $monthlyCounts = ConsultationRequest::findMonthlyRequestCountsForPatient($patientId, 6);
+
+        return [
+            'summary' => $summary,
+            'nextAppointment' => $nextAppointment,
+            'charts' => [
+                'status_distribution' => self::buildStatusDistributionChart($statusDistribution),
+                'monthly_requests' => self::buildMonthlyRequestsChart($monthlyCounts),
+            ],
+        ];
+    }
+
     public static function getHistoryPageData(int $patientId, array $query): array
     {
         $page = max(1, (int) ($query['page'] ?? 1));
@@ -57,6 +74,17 @@ class PatientConsultationBookingService
         }
 
         return ConsultationRequest::findLatestForPatient($patientId);
+    }
+
+    public static function getRecentRequests(int $patientId, int $limit = 5): array
+    {
+        if ($patientId <= 0) {
+            return [];
+        }
+
+        $limit = max(1, $limit);
+
+        return ConsultationRequest::findForPatient($patientId, $limit, 0);
     }
 
     public static function getBookingPageData(int $availabilityId, array $input = []): array
@@ -215,6 +243,94 @@ class PatientConsultationBookingService
             'fieldErrors' => [],
             'formData' => $formData,
             'slot' => DoctorAvailability::findAvailableSlotForPatients($availabilityId),
+        ];
+    }
+
+    private static function buildStatusDistributionChart(array $distribution): array
+    {
+        $labels = [];
+        $values = [];
+        $colors = [
+            'Pending' => 'rgba(245, 158, 11, 0.7)',
+            'Approved' => 'rgba(34, 197, 94, 0.7)',
+            'Rejected' => 'rgba(239, 68, 68, 0.7)',
+            'Cancelled' => 'rgba(239, 68, 68, 0.45)',
+            'Completed' => 'rgba(10, 111, 182, 0.7)',
+        ];
+        $background = [];
+
+        foreach (['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'] as $status) {
+            $labels[] = $status;
+            $values[] = (int) ($distribution[$status] ?? 0);
+            $background[] = $colors[$status] ?? 'rgba(107, 114, 128, 0.6)';
+        }
+
+        return [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'data' => $values,
+                        'backgroundColor' => $background,
+                        'borderWidth' => 0,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'cutout' => '68%',
+                'plugins' => [
+                    'legend' => [
+                        'position' => 'bottom',
+                        'labels' => ['usePointStyle' => true, 'boxWidth' => 10],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    private static function buildMonthlyRequestsChart(array $rows): array
+    {
+        $labels = [];
+        $values = [];
+
+        foreach ($rows as $row) {
+            $month = (string) ($row['request_month'] ?? '');
+
+            if ($month === '') {
+                continue;
+            }
+
+            $labels[] = date('M', strtotime($month));
+            $values[] = (int) ($row['total'] ?? 0);
+        }
+
+        return [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'label' => 'Requests',
+                        'data' => $values,
+                        'backgroundColor' => 'rgba(10, 111, 182, 0.45)',
+                        'borderRadius' => 12,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'legend' => ['display' => false],
+                ],
+                'scales' => [
+                    'x' => ['grid' => ['display' => false]],
+                    'y' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]],
+                ],
+            ],
         ];
     }
 }

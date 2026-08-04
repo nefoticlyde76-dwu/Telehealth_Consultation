@@ -37,11 +37,13 @@ class DoctorController extends Controller
             'dashboardRoleLabel' => 'Doctor Dashboard',
             'dashboardTitle' => 'Doctor Dashboard',
             'dashboardDescription' => 'A professional workspace for secure clinician profile and dashboard visibility.',
+            'topbarSearchPlaceholder' => 'Search patients, appointments, or consultations',
+            'showRightbar' => true,
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
-                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
-                ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
+                ['path' => '/doctor/profile', 'label' => 'Profile', 'icon' => 'bi-person-vcard'],
             ],
             'welcomeMessage' => 'Your clinician workspace is ready for secure profile management, dashboard visibility, and future-ready clinical workflows.',
             'focusTitle' => 'Clinician profile readiness',
@@ -60,6 +62,31 @@ class DoctorController extends Controller
             'upcomingApprovedAppointments' => $dashboardData['upcomingApprovedAppointments'] ?? [],
             'recentApprovedAppointmentCount' => $dashboardData['recentApprovedAppointmentCount'] ?? 0,
             'upcomingApprovedAppointmentCount' => $dashboardData['upcomingApprovedAppointmentCount'] ?? 0,
+            'charts' => $dashboardData['charts'] ?? [],
+            'rightbar' => [
+                'upcomingTitle' => 'Upcoming Consultations',
+                'upcomingItems' => array_map(static function (array $appointment): array {
+                    $date = \App\Helpers\Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled');
+                    $time = substr((string) ($appointment['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($appointment['end_time'] ?? ''), 0, 5);
+
+                    return [
+                        'icon' => 'bi-calendar2-check',
+                        'title' => (string) ($appointment['patient_name'] ?? 'Patient'),
+                        'meta' => $date . ' · ' . $time,
+                        'badge' => (string) ($appointment['status'] ?? 'Approved'),
+                    ];
+                }, $dashboardData['upcomingApprovedAppointments'] ?? []),
+                'quickActions' => [
+                    ['label' => 'View Consultations', 'url' => '/doctor/consultations', 'icon' => 'bi-clipboard2-pulse'],
+                    ['label' => 'Create Slot', 'url' => '/doctor/availability/create', 'icon' => 'bi-plus-circle'],
+                    ['label' => 'Manage Availability', 'url' => '/doctor/availability', 'icon' => 'bi-calendar-week'],
+                ],
+                'summaryStats' => [
+                    ['label' => "Today's", 'value' => (string) ((int) ($dashboardData['todaySummary']['total_today_slots'] ?? 0))],
+                    ['label' => 'Approved', 'value' => (string) ((int) ($dashboardData['consultationSummary']['approved_appointments'] ?? 0))],
+                    ['label' => 'Upcoming', 'value' => (string) ((int) ($dashboardData['consultationSummary']['upcoming_consultations'] ?? 0))],
+                ],
+            ],
         ], 'layouts/dashboard');
     }
 

@@ -8,11 +8,13 @@
   <link rel="apple-touch-icon" href="<?= \App\Helpers\Helper::asset('images/LOGOS.png') ?>">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/theme.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/style.css') ?>">
 </head>
 <body class="dashboard-layout dashboard-layout--<?= \App\Helpers\Helper::escape((string) ($dashboardRole ?? 'default')) ?>">
-  <div class="dashboard-shell">
+  <?php $showRightbar = (bool) ($showRightbar ?? false); ?>
+  <div class="dashboard-shell <?= $showRightbar ? 'dashboard-shell--with-rightbar' : '' ?>">
     <?php require __DIR__ . '/../partials/dashboard/sidebar.php'; ?>
 
     <div class="dashboard-main">
@@ -22,9 +24,17 @@
         <?= $content ?>
       </main>
     </div>
+
+    <?php if ($showRightbar): ?>
+      <?php require __DIR__ . '/../partials/dashboard/rightbar.php'; ?>
+    <?php endif; ?>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script src="<?= \App\Helpers\Helper::asset('js/app.js') ?>"></script>
+  <script src="<?= \App\Helpers\Helper::asset('js/dashboard.js') ?>"></script>
+  <?= $pageScripts ?? '' ?>
 </body>
 </html>

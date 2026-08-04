@@ -34,6 +34,8 @@ class AdminController extends Controller
                 'title' => 'Administrator Dashboard | MBPHA TeleHealth Consultation System',
                 'dashboardTitle' => 'Administrator Dashboard',
                 'dashboardDescription' => 'Operational visibility for secure platform administration.',
+                'topbarSearchPlaceholder' => 'Search users, consultations, or doctors',
+                'showRightbar' => true,
             ]),
             [
                 'welcomeMessage' => 'This administrator workspace now supports patient oversight, doctor account provisioning, and administrator profile management.',
@@ -54,6 +56,27 @@ class AdminController extends Controller
                 'consultationSummary' => $consultationDashboard['summary'] ?? [],
                 'recentConsultationRequests' => $consultationDashboard['recentRequests'] ?? [],
                 'latestUsers' => $dashboardData['latestUsers'],
+                'charts' => $consultationDashboard['charts'] ?? [],
+                'rightbar' => [
+                    'upcomingTitle' => 'Recent Activity',
+                    'upcomingItems' => array_map(static function (array $activity): array {
+                        return [
+                            'icon' => 'bi-activity',
+                            'title' => (string) ($activity['title'] ?? ''),
+                            'meta' => (string) ($activity['meta'] ?? ''),
+                        ];
+                    }, $consultationDashboard['recentActivity'] ?? []),
+                    'quickActions' => [
+                        ['label' => 'Consultation Requests', 'url' => '/admin/consultation-requests', 'icon' => 'bi-clipboard2-check'],
+                        ['label' => 'User Management', 'url' => '/admin/users', 'icon' => 'bi-people'],
+                        ['label' => 'Doctor Accounts', 'url' => '/admin/doctors', 'icon' => 'bi-person-badge'],
+                    ],
+                    'summaryStats' => [
+                        ['label' => 'Pending', 'value' => (string) ((int) ($consultationDashboard['summary']['pending_requests'] ?? 0))],
+                        ['label' => 'Approved', 'value' => (string) ((int) ($consultationDashboard['summary']['approved_requests'] ?? 0))],
+                        ['label' => 'Rejected', 'value' => (string) ((int) ($consultationDashboard['summary']['rejected_requests'] ?? 0))],
+                    ],
+                ],
             ]
         ), 'layouts/dashboard');
     }
@@ -522,11 +545,11 @@ class AdminController extends Controller
             'dashboardRoleLabel' => 'Administrator Dashboard',
             'sidebarItems' => [
                 ['path' => '/admin/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/admin/users', 'label' => 'Users', 'icon' => 'bi-people-fill'],
+                ['path' => '/admin/doctors', 'label' => 'Doctors', 'icon' => 'bi-person-badge-fill'],
+                ['path' => '/admin/patients', 'label' => 'Patients', 'icon' => 'bi-people'],
                 ['path' => '/admin/consultation-requests', 'label' => 'Consultation Requests', 'icon' => 'bi-clipboard2-check'],
-                ['path' => '/admin/patients', 'label' => 'Patient Management', 'icon' => 'bi-people-fill'],
-                ['path' => '/admin/doctors', 'label' => 'Doctor Accounts', 'icon' => 'bi-person-badge-fill'],
-                ['path' => '/admin/users', 'label' => 'User Management', 'icon' => 'bi-people-fill'],
-                ['path' => '/admin/profile', 'label' => 'Profile Settings', 'icon' => 'bi-person-gear'],
+                ['path' => '/admin/profile', 'label' => 'Settings', 'icon' => 'bi-gear'],
             ],
             'sidebarStatusTitle' => 'Week 5 Consultation Oversight',
             'sidebarStatusDescription' => 'Consultation request approvals and appointment governance are now active.',

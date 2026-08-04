@@ -1,8 +1,11 @@
-<?php require __DIR__ . '/../partials/dashboard/overview.php'; ?>
-
 <?php
-$consultationSummary = $consultationSummary ?? [];
-$recentConsultationRequests = $recentConsultationRequests ?? [];
+$stats = is_array($stats ?? null) ? $stats : [];
+$consultationSummary = is_array($consultationSummary ?? null) ? $consultationSummary : [];
+$recentConsultationRequests = is_array($recentConsultationRequests ?? null) ? $recentConsultationRequests : [];
+$latestUsers = is_array($latestUsers ?? null) ? $latestUsers : [];
+$charts = is_array($charts ?? null) ? $charts : [];
+$weeklyChart = $charts['weekly_requests'] ?? null;
+$statusChart = $charts['status_distribution'] ?? null;
 $consultationStatusBadgeMap = [
     'Pending' => 'badge-soft-warning',
     'Approved' => 'badge-soft-success',
@@ -12,272 +15,193 @@ $consultationStatusBadgeMap = [
 ];
 ?>
 
-<section class="mt-4">
+<?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
+
+<section class="dashboard-banner mb-4" data-aos="fade-up">
+  <div class="row g-4 align-items-center">
+    <div class="col-lg-8">
+      <span class="section-badge mb-3">
+        <i class="bi bi-shield-lock"></i>
+        Administration
+      </span>
+      <h2 class="h3 mb-3">System overview for MBPHA TeleHealth.</h2>
+      <p class="text-muted mb-0">Monitor consultation workflow activity, manage accounts, and keep platform governance aligned to MBPHA standards.</p>
+      <div class="dashboard-banner-actions">
+        <a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>" class="btn btn-primary rounded-pill px-4">
+          <i class="bi bi-clipboard2-check me-2"></i>
+          Review Requests
+        </a>
+        <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary rounded-pill px-4">
+          <i class="bi bi-people me-2"></i>
+          Manage Users
+        </a>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="dashboard-spotlight-card">
+        <span class="dashboard-spotlight-label">Pending queue</span>
+        <strong class="d-block mb-2"><?= \App\Helpers\Helper::escape((string) ((int) ($consultationSummary['pending_requests'] ?? 0))) ?> requests</strong>
+        <p class="text-muted small mb-0">Ready for approval, rejection, or cancellation actions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mb-4">
+  <div class="row g-4">
+    <?php foreach ($stats as $stat): ?>
+      <?php $statValue = (string) ($stat['value'] ?? '0'); ?>
+      <div class="col-sm-6 col-xl-3" data-aos="fade-up">
+        <div class="stats-card h-100">
+          <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
+            <div>
+              <span class="stats-label"><?= \App\Helpers\Helper::escape((string) ($stat['label'] ?? '')) ?></span>
+              <h3 class="stats-value" <?= is_numeric($statValue) ? 'data-counter="' . \App\Helpers\Helper::escape($statValue) . '"' : '' ?>>
+                <?= \App\Helpers\Helper::escape($statValue) ?>
+              </h3>
+            </div>
+            <span class="stats-icon"><i class="bi <?= \App\Helpers\Helper::escape((string) ($stat['icon'] ?? 'bi-graph-up')) ?>"></i></span>
+          </div>
+          <span class="stats-pill">Governance metrics</span>
+          <p class="text-muted mb-0 small"><?= \App\Helpers\Helper::escape((string) ($stat['description'] ?? '')) ?></p>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</section>
+
+<section class="mb-4">
   <div class="row g-4">
     <div class="col-xl-8">
-      <div class="card border-0 shadow-sm rounded-4 h-100 dashboard-widget-shell">
+      <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell h-100" data-aos="fade-up">
         <div class="card-body p-4">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <div>
-              <span class="section-badge mb-3">
-                <i class="bi bi-shield-lock"></i>
-                Administrative Command Center
-              </span>
-              <h3 class="h5 mb-1">System governance and account oversight</h3>
-              <p class="text-muted mb-0">Monitor account health, balance clinical access, and move directly into the areas that need administrative attention.</p>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-              <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary rounded-pill px-4">
-                <i class="bi bi-diagram-3 me-2"></i>
-                Manage Users
-              </a>
-              <a href="<?= \App\Helpers\Helper::url('/admin/patients') ?>" class="btn btn-outline-primary rounded-pill px-4">
-                <i class="bi bi-people me-2"></i>
-                Manage Patients
-              </a>
-              <a href="<?= \App\Helpers\Helper::url('/admin/profile') ?>" class="btn btn-primary rounded-pill px-4">
-                <i class="bi bi-person-gear me-2"></i>
-                Profile Settings
-              </a>
+              <span class="dashboard-info-label">Consultation Analytics</span>
+              <h3 class="h5 mb-1">Weekly consultation requests</h3>
+              <p class="text-muted mb-0">Request volume across the last seven days.</p>
             </div>
           </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-sm-6 col-lg-3">
-              <div class="admin-summary-card h-100 dashboard-emphasis-card">
-                <span class="admin-summary-label">Patients</span>
-                <strong class="admin-summary-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['patient_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['patient_users'] ?? 0)) ?></strong>
-                <span class="admin-summary-meta">Self-registered accounts currently stored</span>
-              </div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-              <div class="admin-summary-card h-100">
-                <span class="admin-summary-label">Doctors</span>
-                <strong class="admin-summary-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['doctor_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['doctor_users'] ?? 0)) ?></strong>
-                <span class="admin-summary-meta">Clinician profiles visible for future scheduling workflows</span>
-              </div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-              <div class="admin-summary-card h-100">
-                <span class="admin-summary-label">Administrators</span>
-                <strong class="admin-summary-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['admin_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['admin_users'] ?? 0)) ?></strong>
-                <span class="admin-summary-meta">Governance accounts with secure operational access</span>
-              </div>
-            </div>
-            <div class="col-sm-6 col-lg-3">
-              <div class="admin-summary-card h-100">
-                <span class="admin-summary-label">Inactive</span>
-                <strong class="admin-summary-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['inactive_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['inactive_users'] ?? 0)) ?></strong>
-                <span class="admin-summary-meta">Accounts retained but unavailable for login access</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-3">
-            <div class="col-lg-8">
-              <div class="dashboard-info-panel h-100">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                  <div>
-                    <span class="dashboard-info-label">User Distribution</span>
-                    <h4 class="h6 mb-2">Operational account health remains stable</h4>
-                    <p class="text-muted small mb-0">The current Week 4 environment keeps doctor, patient, and administrator access grouped under one secured governance workspace.</p>
-                  </div>
-                  <span class="badge badge-soft-info rounded-pill px-3 py-2">System Overview</span>
-                </div>
-
-                <div class="dashboard-progress-list">
-                  <?php
-                  $totalUsers = max(1, (int) ($userSummary['total_users'] ?? 0));
-                  $activeWidth = (int) round(((int) ($userSummary['active_users'] ?? 0) / $totalUsers) * 100);
-                  $patientWidth = (int) round(((int) ($userSummary['patient_users'] ?? 0) / $totalUsers) * 100);
-                  $doctorWidth = (int) round(((int) ($userSummary['doctor_users'] ?? 0) / $totalUsers) * 100);
-                  ?>
-                  <div class="dashboard-progress-item">
-                    <div class="d-flex justify-content-between gap-3 mb-2">
-                      <span>Active Accounts</span>
-                      <strong><?= \App\Helpers\Helper::escape((string) ($userSummary['active_users'] ?? 0)) ?></strong>
-                    </div>
-                    <div class="dashboard-progress-track"><span class="dashboard-progress-bar" style="width: <?= \App\Helpers\Helper::escape((string) $activeWidth) ?>%"></span></div>
-                  </div>
-                  <div class="dashboard-progress-item">
-                    <div class="d-flex justify-content-between gap-3 mb-2">
-                      <span>Patient Distribution</span>
-                      <strong><?= \App\Helpers\Helper::escape((string) ($userSummary['patient_users'] ?? 0)) ?></strong>
-                    </div>
-                    <div class="dashboard-progress-track"><span class="dashboard-progress-bar dashboard-progress-bar--teal" style="width: <?= \App\Helpers\Helper::escape((string) $patientWidth) ?>%"></span></div>
-                  </div>
-                  <div class="dashboard-progress-item">
-                    <div class="d-flex justify-content-between gap-3 mb-2">
-                      <span>Doctor Distribution</span>
-                      <strong><?= \App\Helpers\Helper::escape((string) ($userSummary['doctor_users'] ?? 0)) ?></strong>
-                    </div>
-                    <div class="dashboard-progress-track"><span class="dashboard-progress-bar dashboard-progress-bar--cyan" style="width: <?= \App\Helpers\Helper::escape((string) $doctorWidth) ?>%"></span></div>
-                  </div>
-                </div>
-
-                <div class="row g-3 mt-1">
-                  <div class="col-md-4">
-                    <div class="widget-mini-stat h-100">
-                      <span class="widget-mini-stat-label">Total Users</span>
-                      <strong data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['total_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['total_users'] ?? 0)) ?></strong>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="widget-mini-stat h-100">
-                      <span class="widget-mini-stat-label">Active Accounts</span>
-                      <strong data-counter="<?= \App\Helpers\Helper::escape((string) ($userSummary['active_users'] ?? 0)) ?>"><?= \App\Helpers\Helper::escape((string) ($userSummary['active_users'] ?? 0)) ?></strong>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="widget-mini-stat h-100">
-                      <span class="widget-mini-stat-label">Pending Consultation Requests</span>
-                      <strong data-counter="<?= \App\Helpers\Helper::escape((string) ((int) ($consultationSummary['pending_requests'] ?? 0))) ?>"><?= \App\Helpers\Helper::escape((string) ((int) ($consultationSummary['pending_requests'] ?? 0))) ?></strong>
-                      <span class="admin-summary-meta">Awaiting administrator approval</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-lg-4">
-              <div class="dashboard-info-panel h-100">
-                <span class="dashboard-info-label">Pending Requests</span>
-                <h4 class="h6 mb-2">Workflow readiness snapshot</h4>
-                <div class="widget-mini-stat-list">
-                  <div class="widget-mini-stat">
-                    <span class="widget-mini-stat-label">Inactive Patients</span>
-                    <strong><?= \App\Helpers\Helper::escape((string) ($patientSummary['inactive_patients'] ?? 0)) ?></strong>
-                  </div>
-                  <div class="widget-mini-stat">
-                    <span class="widget-mini-stat-label">Inactive Doctors</span>
-                    <strong><?= \App\Helpers\Helper::escape((string) ($doctorSummary['inactive_doctors'] ?? 0)) ?></strong>
-                  </div>
-                  <div class="widget-mini-stat">
-                    <span class="widget-mini-stat-label">Active Accounts</span>
-                    <strong><?= \App\Helpers\Helper::escape((string) ($userSummary['active_users'] ?? 0)) ?></strong>
-                  </div>
-                </div>
-                <p class="text-muted small mb-0">Review inactive accounts and recent registrations to decide where governance action is needed next.</p>
-              </div>
-            </div>
+          <div class="dashboard-chart-shell dashboard-chart-shell--lg" data-chart-shell>
+            <canvas height="320" data-chart="<?= $weeklyChart !== null ? \App\Helpers\Helper::escape((string) json_encode($weeklyChart, JSON_UNESCAPED_SLASHES)) : '' ?>"></canvas>
           </div>
         </div>
       </div>
     </div>
 
     <div class="col-xl-4">
-      <div class="row g-4">
-        <div class="col-12">
-          <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell h-100">
-            <div class="card-body p-4">
-              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-                <div>
-                  <h3 class="h5 mb-1">Consultation Requests</h3>
-                  <p class="text-muted mb-0">Approval pipeline visibility and recent request activity.</p>
-                </div>
-                <a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                  View All
-                </a>
-              </div>
-
-              <div class="widget-mini-stat-list mb-4">
-                <div class="widget-mini-stat">
-                  <span class="widget-mini-stat-label">Pending</span>
-                  <strong><?= \App\Helpers\Helper::escape((string) ((int) ($consultationSummary['pending_requests'] ?? 0))) ?></strong>
-                </div>
-                <div class="widget-mini-stat">
-                  <span class="widget-mini-stat-label">Approved</span>
-                  <strong><?= \App\Helpers\Helper::escape((string) ((int) ($consultationSummary['approved_requests'] ?? 0))) ?></strong>
-                </div>
-                <div class="widget-mini-stat">
-                  <span class="widget-mini-stat-label">Rejected</span>
-                  <strong><?= \App\Helpers\Helper::escape((string) ((int) ($consultationSummary['rejected_requests'] ?? 0))) ?></strong>
-                </div>
-              </div>
-
-              <div class="admin-user-preview-list">
-                <?php if ($recentConsultationRequests === []): ?>
-                  <div class="admin-user-preview-item">
-                    <div>
-                      <strong class="d-block">No consultation requests yet</strong>
-                      <span class="small text-muted">Consultation requests will appear once patients begin booking available slots.</span>
-                    </div>
-                  </div>
-                <?php else: ?>
-                  <?php foreach ($recentConsultationRequests as $recentRequest): ?>
-                    <?php
-                    $recentStatus = (string) ($recentRequest['status'] ?? 'Pending');
-                    $badgeClass = $consultationStatusBadgeMap[$recentStatus] ?? 'badge-soft-neutral';
-                    $consultDate = \App\Helpers\Helper::formatDate((string) ($recentRequest['consultation_date'] ?? ''), 'd M Y', 'Not scheduled');
-                    $consultTime = substr((string) ($recentRequest['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($recentRequest['end_time'] ?? ''), 0, 5);
-                    ?>
-                    <a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . (string) ((int) ($recentRequest['id'] ?? 0))) ?>" class="admin-user-preview-item text-decoration-none">
-                      <div>
-                        <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($recentRequest['patient_name'] ?? 'Patient')) ?></strong>
-                        <span class="small text-muted"><?= \App\Helpers\Helper::escape((string) ($recentRequest['doctor_name'] ?? 'Doctor')) ?> · <?= \App\Helpers\Helper::escape((string) $consultDate) ?></span>
-                      </div>
-                      <div class="text-end">
-                        <span class="badge <?= \App\Helpers\Helper::escape($badgeClass) ?> rounded-pill mb-2">
-                          <?= \App\Helpers\Helper::escape($recentStatus) ?>
-                        </span>
-                        <span class="d-block small text-muted"><?= \App\Helpers\Helper::escape((string) $consultTime) ?></span>
-                      </div>
-                    </a>
-                  <?php endforeach; ?>
-                <?php endif; ?>
-              </div>
+      <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell h-100" data-aos="fade-up">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <div>
+              <span class="dashboard-info-label">Status Mix</span>
+              <h3 class="h5 mb-1">Request distribution</h3>
+              <p class="text-muted mb-0">Pending, approved, rejected, cancelled, and completed statuses.</p>
             </div>
           </div>
-        </div>
-
-        <div class="col-12">
-          <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell h-100">
-            <div class="card-body p-4">
-              <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                  <h3 class="h5 mb-1">Recently Registered Users</h3>
-                  <p class="text-muted mb-0">Newly visible accounts surfaced in a compact registration feed.</p>
-                </div>
-                <span class="badge badge-soft-info rounded-pill"><?= count($latestUsers ?? []) ?></span>
-              </div>
-
-              <div class="admin-user-preview-list">
-                <?php if (($latestUsers ?? []) === []): ?>
-                  <div class="admin-user-preview-item">
-                    <div>
-                      <strong class="d-block">No recent users available</strong>
-                      <span class="small text-muted">Recent account activity will appear here as more records are added to the platform.</span>
-                    </div>
-                  </div>
-                <?php else: ?>
-                  <?php foreach (($latestUsers ?? []) as $latestUser): ?>
-                    <div class="admin-user-preview-item">
-                      <div>
-                        <strong class="d-block"><?= \App\Helpers\Helper::escape($latestUser['full_name'] ?? 'User') ?></strong>
-                        <span class="small text-muted"><?= \App\Helpers\Helper::escape($latestUser['email'] ?? '') ?></span>
-                      </div>
-                      <div class="text-end">
-                        <span class="badge <?= ($latestUser['status'] ?? '') === 'active' ? 'badge-soft-success' : 'badge-soft-warning' ?> rounded-pill mb-2">
-                          <?= \App\Helpers\Helper::escape(ucfirst((string) ($latestUser['status'] ?? 'unknown'))) ?>
-                        </span>
-                        <span class="d-block small text-muted"><?= \App\Helpers\Helper::escape(ucfirst((string) ($latestUser['role_name'] ?? 'user'))) ?></span>
-                      </div>
-                    </div>
-                  <?php endforeach; ?>
-                <?php endif; ?>
-              </div>
-
-              <div class="dashboard-inline-callout mt-4">
-                <span class="dashboard-info-label">System Access Mix</span>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                  <span class="badge badge-soft-success rounded-pill px-3 py-2">Patients <?= \App\Helpers\Helper::escape((string) ($patientSummary['active_patients'] ?? 0)) ?></span>
-                  <span class="badge badge-soft-info rounded-pill px-3 py-2">Doctors <?= \App\Helpers\Helper::escape((string) ($doctorSummary['active_doctors'] ?? 0)) ?></span>
-                  <span class="badge badge-soft-neutral rounded-pill border px-3 py-2">Admins <?= \App\Helpers\Helper::escape((string) ($userSummary['admin_users'] ?? 0)) ?></span>
-                </div>
-              </div>
-            </div>
+          <div class="dashboard-chart-shell" data-chart-shell>
+            <canvas height="320" data-chart="<?= $statusChart !== null ? \App\Helpers\Helper::escape((string) json_encode($statusChart, JSON_UNESCAPED_SLASHES)) : '' ?>"></canvas>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="mb-4">
+  <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell" data-aos="fade-up">
+    <div class="card-body p-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+          <span class="dashboard-info-label">Recent Consultation Requests</span>
+          <h3 class="h5 mb-1">Latest workflow submissions</h3>
+          <p class="text-muted mb-0">Review newly submitted consultation requests and move directly into approval actions.</p>
+        </div>
+        <a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>" class="btn btn-outline-primary rounded-pill px-4">View All</a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table admin-user-table align-middle mb-0">
+          <thead>
+            <tr>
+              <th scope="col">Patient</th>
+              <th scope="col">Doctor</th>
+              <th scope="col">Date</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if ($recentConsultationRequests === []): ?>
+              <tr>
+                <td colspan="5">
+                  <div class="admin-table-empty text-center py-5">
+                    <div class="empty-state-icon mx-auto mb-3"><i class="bi bi-clipboard2-x"></i></div>
+                    <h4 class="h5 mb-2">No consultation requests yet</h4>
+                    <p class="text-muted mb-0">Consultation requests will appear here once patients begin booking available slots.</p>
+                  </div>
+                </td>
+              </tr>
+            <?php else: ?>
+              <?php foreach ($recentConsultationRequests as $request): ?>
+                <?php
+                $status = (string) ($request['status'] ?? 'Pending');
+                $badgeClass = $consultationStatusBadgeMap[$status] ?? 'badge-soft-neutral';
+                ?>
+                <tr>
+                  <td><strong><?= \App\Helpers\Helper::escape((string) ($request['patient_name'] ?? 'Patient')) ?></strong></td>
+                  <td><?= \App\Helpers\Helper::escape((string) ($request['doctor_name'] ?? 'Doctor')) ?></td>
+                  <td><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                  <td><span class="badge <?= \App\Helpers\Helper::escape($badgeClass) ?> rounded-pill px-3 py-2"><?= \App\Helpers\Helper::escape($status) ?></span></td>
+                  <td class="text-end">
+                    <a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . (string) ((int) ($request['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">Open</a>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell" data-aos="fade-up">
+    <div class="card-body p-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+          <span class="dashboard-info-label">Latest Users</span>
+          <h3 class="h5 mb-1">Recently registered accounts</h3>
+          <p class="text-muted mb-0">A compact feed of the most recent user registrations.</p>
+        </div>
+        <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary rounded-pill px-4">View Users</a>
+      </div>
+
+      <div class="admin-user-preview-list">
+        <?php if ($latestUsers === []): ?>
+          <div class="admin-user-preview-item">
+            <div>
+              <strong class="d-block">No recent users available</strong>
+              <span class="small text-muted">Recent account activity will appear here as more records are added to the platform.</span>
+            </div>
+          </div>
+        <?php else: ?>
+          <?php foreach ($latestUsers as $latestUser): ?>
+            <div class="admin-user-preview-item">
+              <div>
+                <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($latestUser['full_name'] ?? 'User')) ?></strong>
+                <span class="small text-muted"><?= \App\Helpers\Helper::escape((string) ($latestUser['email'] ?? '')) ?></span>
+              </div>
+              <div class="text-end">
+                <span class="badge <?= ($latestUser['status'] ?? '') === 'active' ? 'badge-soft-success' : 'badge-soft-warning' ?> rounded-pill mb-2">
+                  <?= \App\Helpers\Helper::escape(ucfirst((string) ($latestUser['status'] ?? 'unknown'))) ?>
+                </span>
+                <span class="d-block small text-muted"><?= \App\Helpers\Helper::escape(ucfirst((string) ($latestUser['role_name'] ?? 'user'))) ?></span>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </div>
     </div>
   </div>

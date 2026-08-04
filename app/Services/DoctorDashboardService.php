@@ -21,6 +21,8 @@ class DoctorDashboardService
         $upcomingApprovedCount = ConsultationRequest::countUpcomingApprovedForDoctor($userId);
         $upcomingApprovedAppointments = ConsultationRequest::findUpcomingApprovedForDoctor($userId, 5);
         $consultationSummary = ConsultationRequest::getDoctorStatusSummary($userId);
+        $weeklyRequestCounts = ConsultationRequest::findDailyRequestCountsForDoctor($userId, 7);
+        $statusDistribution = ConsultationRequest::getStatusDistributionForDoctor($userId);
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
         $hasSignature = !empty($doctor['signature_path'] ?? '');
@@ -134,9 +136,169 @@ class DoctorDashboardService
             'recentApprovedAppointmentCount' => $recentApprovedAppointments,
             'upcomingApprovedAppointmentCount' => $upcomingApprovedCount,
             'consultationSummary' => $consultationSummary,
+            'charts' => [
+                'weekly_requests' => self::buildWeeklyRequestsChart($weeklyRequestCounts),
+                'availability' => self::buildAvailabilityChart($weeklySchedule),
+                'status_distribution' => self::buildStatusDistributionChart($statusDistribution),
+            ],
             'assetReadiness' => [
                 'has_profile_photo' => $hasProfilePhoto,
                 'has_signature' => $hasSignature,
+            ],
+        ];
+    }
+
+    private static function buildWeeklyRequestsChart(array $rows): array
+    {
+        $labels = [];
+        $values = [];
+        $map = [];
+
+        foreach ($rows as $row) {
+            $day = (string) ($row['request_day'] ?? '');
+
+            if ($day !== '') {
+                $map[$day] = (int) ($row['total'] ?? 0);
+            }
+        }
+
+        $today = new \DateTimeImmutable('today');
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = $today->sub(new \DateInterval('P' . $i . 'D'));
+            $key = $date->format('Y-m-d');
+            $labels[] = $date->format('D');
+            $values[] = (int) ($map[$key] ?? 0);
+        }
+
+        return [
+            'type' => 'line',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'label' => 'Requests',
+                        'data' => $values,
+                        'borderColor' => '#18A558',
+                        'backgroundColor' => 'rgba(24, 165, 88, 0.14)',
+                        'fill' => true,
+                        'tension' => 0.42,
+                        'pointRadius' => 3,
+                        'pointBackgroundColor' => '#18A558',
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'legend' => ['display' => false],
+                ],
+                'scales' => [
+                    'x' => ['grid' => ['display' => false]],
+                    'y' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]],
+                ],
+            ],
+        ];
+    }
+
+    private static function buildAvailabilityChart(array $rows): array
+    {
+        $labels = [];
+        $available = [];
+        $booked = [];
+
+        foreach ($rows as $row) {
+            $date = (string) ($row['consultation_date'] ?? '');
+
+            if ($date === '') {
+                continue;
+            }
+
+            $labels[] = date('D', strtotime($date));
+            $available[] = (int) ($row['available_slots'] ?? 0);
+            $booked[] = (int) ($row['booked_slots'] ?? 0);
+        }
+
+        return [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'label' => 'Available',
+                        'data' => $available,
+                        'backgroundColor' => 'rgba(64, 196, 255, 0.55)',
+                        'borderRadius' => 10,
+                        'stack' => 'slots',
+                    ],
+                    [
+                        'label' => 'Booked',
+                        'data' => $booked,
+                        'backgroundColor' => 'rgba(10, 111, 182, 0.55)',
+                        'borderRadius' => 10,
+                        'stack' => 'slots',
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'plugins' => [
+                    'legend' => [
+                        'position' => 'bottom',
+                        'labels' => ['usePointStyle' => true, 'boxWidth' => 10],
+                    ],
+                ],
+                'scales' => [
+                    'x' => ['stacked' => true, 'grid' => ['display' => false]],
+                    'y' => ['stacked' => true, 'beginAtZero' => true, 'ticks' => ['precision' => 0]],
+                ],
+            ],
+        ];
+    }
+
+    private static function buildStatusDistributionChart(array $distribution): array
+    {
+        $labels = [];
+        $values = [];
+        $colors = [
+            'Pending' => 'rgba(245, 158, 11, 0.7)',
+            'Approved' => 'rgba(34, 197, 94, 0.7)',
+            'Rejected' => 'rgba(239, 68, 68, 0.7)',
+            'Cancelled' => 'rgba(239, 68, 68, 0.45)',
+            'Completed' => 'rgba(10, 111, 182, 0.7)',
+        ];
+        $background = [];
+
+        foreach (['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'] as $status) {
+            $labels[] = $status;
+            $values[] = (int) ($distribution[$status] ?? 0);
+            $background[] = $colors[$status] ?? 'rgba(107, 114, 128, 0.6)';
+        }
+
+        return [
+            'type' => 'doughnut',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'data' => $values,
+                        'backgroundColor' => $background,
+                        'borderWidth' => 0,
+                    ],
+                ],
+            ],
+            'options' => [
+                'responsive' => true,
+                'maintainAspectRatio' => false,
+                'cutout' => '68%',
+                'plugins' => [
+                    'legend' => [
+                        'position' => 'bottom',
+                        'labels' => ['usePointStyle' => true, 'boxWidth' => 10],
+                    ],
+                ],
             ],
         ];
     }

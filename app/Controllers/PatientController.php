@@ -24,17 +24,27 @@ class PatientController extends Controller
         $browseSummary = PatientDirectoryService::getBrowseSummary();
         $featuredDoctors = PatientDirectoryService::getFeaturedDoctors(3);
         $slotPreview = PatientDirectoryService::getUpcomingSlotPreview(4);
-        $bookingSummary = $user !== null && $user->id !== null
-            ? PatientConsultationBookingService::getDashboardSummary((int) $user->id)
+        $dashboardInsights = $user !== null && $user->id !== null
+            ? PatientConsultationBookingService::getDashboardInsights((int) $user->id)
             : [
-                'pending_requests' => 0,
-                'approved_requests' => 0,
-                'upcoming_appointments' => 0,
-                'consultation_history' => 0,
-                'latest_status' => '',
-                'latest_status_display' => 'No requests yet',
-                'latest_request' => null,
+                'summary' => [
+                    'pending_requests' => 0,
+                    'approved_requests' => 0,
+                    'upcoming_appointments' => 0,
+                    'consultation_history' => 0,
+                    'latest_status' => '',
+                    'latest_status_display' => 'No requests yet',
+                    'latest_request' => null,
+                ],
+                'nextAppointment' => null,
+                'charts' => [],
             ];
+        $bookingSummary = is_array($dashboardInsights['summary'] ?? null) ? $dashboardInsights['summary'] : [];
+        $recentRequests = $user !== null && $user->id !== null
+            ? PatientConsultationBookingService::getRecentRequests((int) $user->id, 5)
+            : [];
+        $nextAppointment = is_array($dashboardInsights['nextAppointment'] ?? null) ? $dashboardInsights['nextAppointment'] : null;
+        $patientCharts = is_array($dashboardInsights['charts'] ?? null) ? $dashboardInsights['charts'] : [];
 
         $this->render('patient/dashboard', [
             'title' => 'Patient Dashboard | MBPHA TeleHealth Consultation System',
@@ -43,12 +53,14 @@ class PatientController extends Controller
             'dashboardRoleLabel' => 'Patient Dashboard',
             'dashboardTitle' => 'Patient Dashboard',
             'dashboardDescription' => 'Your secure home for upcoming digital care interactions.',
+            'topbarSearchPlaceholder' => 'Search doctors, slots, or consultations',
+            'showRightbar' => true,
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
-                ['path' => '/patient/consultation-requests', 'label' => 'Consultation History', 'icon' => 'bi-clipboard2-check'],
-                ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
-                ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
-                ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
+                ['path' => '/patient/doctors', 'label' => 'Doctors', 'icon' => 'bi-person-badge'],
+                ['path' => '/patient/available-slots', 'label' => 'Book Consultation', 'icon' => 'bi-calendar2-week'],
+                ['path' => '/patient/consultation-requests', 'label' => 'My Consultations', 'icon' => 'bi-clipboard2-check'],
+                ['path' => '/patient/profile', 'label' => 'Profile', 'icon' => 'bi-person-circle'],
             ],
             'welcomeMessage' => 'Browse available doctors, select a consultation slot, and submit a secure booking request from one patient workspace.',
             'focusTitle' => 'Book a consultation slot',
@@ -86,6 +98,33 @@ class PatientController extends Controller
             'slotPreview' => $slotPreview,
             'browseSummary' => $browseSummary,
             'bookingSummary' => $bookingSummary,
+            'recentRequests' => $recentRequests,
+            'nextAppointment' => $nextAppointment,
+            'charts' => $patientCharts,
+            'rightbar' => [
+                'upcomingTitle' => 'Upcoming Consultation',
+                'upcomingItems' => $nextAppointment !== null
+                    ? [
+                        [
+                            'icon' => 'bi-calendar2-check',
+                            'title' => (string) ($nextAppointment['doctor_name'] ?? 'Doctor'),
+                            'meta' => \App\Helpers\Helper::formatDate((string) ($nextAppointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')
+                                . (!empty($nextAppointment['start_time']) ? ' · ' . substr((string) ($nextAppointment['start_time'] ?? ''), 0, 5) : ''),
+                            'badge' => (string) ($nextAppointment['status'] ?? 'Approved'),
+                        ],
+                    ]
+                    : [],
+                'quickActions' => [
+                    ['label' => 'Browse Doctors', 'url' => '/patient/doctors', 'icon' => 'bi-person-badge'],
+                    ['label' => 'Book Consultation', 'url' => '/patient/available-slots', 'icon' => 'bi-calendar2-plus'],
+                    ['label' => 'My Consultations', 'url' => '/patient/consultation-requests', 'icon' => 'bi-clipboard2-check'],
+                ],
+                'summaryStats' => [
+                    ['label' => 'Pending', 'value' => (string) ((int) ($bookingSummary['pending_requests'] ?? 0))],
+                    ['label' => 'Upcoming', 'value' => (string) ((int) ($bookingSummary['upcoming_appointments'] ?? 0))],
+                    ['label' => 'History', 'value' => (string) ((int) ($bookingSummary['consultation_history'] ?? 0))],
+                ],
+            ],
         ], 'layouts/dashboard');
     }
 
