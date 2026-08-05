@@ -105,6 +105,7 @@ class AdminController extends Controller
                 'roleOptions' => $pageData['roleOptions'],
                 'statusOptions' => $pageData['statusOptions'],
                 'statusMessage' => Session::getFlash('status'),
+                'csrfToken' => Csrf::generate(),
             ]
         ), 'layouts/dashboard');
     }
@@ -518,6 +519,30 @@ class AdminController extends Controller
                 'managedUser' => $managedUser,
             ]
         ), 'layouts/dashboard');
+    }
+
+    public function deleteUser(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/users');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+
+        if ($user === null || $user->id === null) {
+            return;
+        }
+
+        $userId = (int) $id;
+        $result = AdminUserService::deleteUserAccount($userId, (int) $user->id, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'User account deletion completed.',
+        ]);
+
+        Helper::redirect('/admin/users');
     }
 
     private function requireAdminUser(): ?\App\Models\User

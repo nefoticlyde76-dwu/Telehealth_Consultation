@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Core\Csrf;
+use App\Core\Database;
+use App\Models\AuditLog;
 use App\Models\User;
 
 class AdminUserService
@@ -133,6 +136,104 @@ class AdminUserService
         return User::findManagementDetailById($userId);
     }
 
+    public static function deleteUserAccount(int $targetUserId, int $actorUserId, string $csrfToken): array
+    {
+        if (!Csrf::verify($csrfToken)) {
+            return [
+                'success' => false,
+                'message' => 'Unable to verify the request. Please refresh the page and try again.',
+                'type' => 'danger',
+            ];
+        }
+
+        $targetUser = User::findDeletionContextById($targetUserId);
+
+        if ($targetUser === null) {
+            return [
+                'success' => false,
+                'message' => 'The selected user account could not be found.',
+                'type' => 'warning',
+            ];
+        }
+
+        $actorUser = User::findById($actorUserId);
+
+        if ($actorUser === null) {
+            return [
+                'success' => false,
+                'message' => 'The administrator account performing this action could not be verified.',
+                'type' => 'danger',
+            ];
+        }
+
+        $targetRole = (string) ($targetUser['role_name'] ?? '');
+
+        if ($targetUserId === $actorUserId) {
+            return [
+                'success' => false,
+                'message' => 'Administrators cannot permanently delete their own account.',
+                'type' => 'warning',
+            ];
+        }
+
+        if ($targetRole === 'admin' && User::countAdministrators() <= 1) {
+            return [
+                'success' => false,
+                'message' => 'The final administrator account cannot be deleted.',
+                'type' => 'warning',
+            ];
+        }
+
+        $db = Database::getInstance();
+        $assetPaths = self::collectDeletionAssetPaths($targetUser);
+
+        try {
+            $db->beginTransaction();
+
+            if (!AuditLog::create([
+                'actor_user_id' => $actorUserId,
+                'actor_name' => $actorUser->full_name ?? 'Administrator',
+                'action' => 'user_deleted',
+                'subject_name' => (string) ($targetUser['full_name'] ?? 'Unknown User'),
+                'subject_role' => $targetRole,
+                'description' => sprintf(
+                    '%s permanently deleted %s (%s).',
+                    (string) ($actorUser->full_name ?? 'Administrator'),
+                    (string) ($targetUser['full_name'] ?? 'Unknown User'),
+                    ucfirst($targetRole)
+                ),
+            ])) {
+                throw new \RuntimeException('Unable to write the audit log entry.');
+            }
+
+            if (!User::deleteById($targetUserId)) {
+                throw new \RuntimeException('Unable to delete the user account.');
+            }
+
+            $db->commit();
+        } catch (\Throwable $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            error_log('User account deletion failed: ' . $exception->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'The user account could not be deleted right now. Please try again later.',
+                'type' => 'danger',
+            ];
+        }
+
+        self::deleteStoredAssets($assetPaths);
+
+        return [
+            'success' => true,
+            'message' => ucfirst($targetRole) . ' account for ' . (string) ($targetUser['full_name'] ?? 'the selected user') . ' was permanently deleted.',
+            'type' => 'success',
+        ];
+    }
+
     public static function getRoleOptions(): array
     {
         return ['admin', 'doctor', 'patient'];
@@ -187,5 +288,22 @@ class AdminUserService
         }
 
         return $activity;
+    }
+
+    private static function collectDeletionAssetPaths(array $targetUser): array
+    {
+        return array_values(array_filter([
+            (string) ($targetUser['admin_profile_photo_path'] ?? ''),
+            (string) ($targetUser['doctor_profile_photo_path'] ?? ''),
+            (string) ($targetUser['signature_path'] ?? ''),
+            (string) ($targetUser['patient_profile_photo_path'] ?? ''),
+        ], static fn (string $path): bool => trim($path) !== ''));
+    }
+
+    private static function deleteStoredAssets(array $assetPaths): void
+    {
+        foreach ($assetPaths as $assetPath) {
+            ProfilePhotoService::deleteStoredPath((string) $assetPath);
+        }
     }
 }

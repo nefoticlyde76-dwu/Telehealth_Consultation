@@ -116,6 +116,10 @@ $router->get('/admin/users/{id}', [AdminController::class, 'showUser'], [
     new RoleMiddleware(['admin']),
 ]);
 
+$router->post('/admin/users/{id}/delete', [AdminController::class, 'deleteUser'], [
+    new RoleMiddleware(['admin']),
+]);
+
 $router->get('/admin/consultation-requests', [AdminController::class, 'consultationRequests'], [
     new RoleMiddleware(['admin']),
 ]);

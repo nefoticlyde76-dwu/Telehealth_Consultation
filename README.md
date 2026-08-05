@@ -70,6 +70,9 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - View user details
 - Responsive administrator user table
 - Pagination support for user listing
+- Permanent administrator-managed deletion of patient and doctor user accounts
+- Deletion safeguards to block self-deletion and prevent removal of the final administrator account
+- Audit logging for permanent user account deletions
 - Doctor account management
 - Create doctor account
 - Edit doctor account
@@ -328,6 +331,7 @@ mysql -u root -p < database/migrations/005_add_profile_photo_fields_for_admin_an
 mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
 mysql -u root -p < database/migrations/007_update_consultation_requests_for_booking.sql
 mysql -u root -p < database/migrations/008_remove_unique_index_from_consultation_requests.sql
+mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
 ```
 
 7. Open the application using the configured `APP_URL`.
@@ -343,6 +347,7 @@ mysql -u root -p < database/migrations/008_remove_unique_index_from_consultation
   - Email: `admin@telehealth.local`
   - Password: `admin123`
 - Administrator-only user management is currently available at `/admin/users` after successful administrator login.
+- Administrator-only user management supports permanent deletion of patient and doctor accounts with confirmation, safeguards, and audit logging.
 - Administrator-only doctor account management is currently available at `/admin/doctors` after successful administrator login.
 - Administrator-only patient management is currently available at `/admin/patients` after successful administrator login.
 - Administrator profile management is currently available at `/admin/profile` after successful administrator login.
@@ -377,6 +382,7 @@ mysql -u root -p < database/migrations/008_remove_unique_index_from_consultation
 - Verified administrator login and redirect after correcting the default admin seed password
 - Verified administrator doctor-management flows in code for create, edit, activate, deactivate, and password reset handling with CSRF validation and prepared statements
 - Verified administrator patient-management flows in code for search, edit, activate, and deactivate handling with CSRF validation and prepared statements
+- Verified administrator user-management deletion flow in code for patient and doctor records with CSRF validation, transaction rollback support, and audit logging
 - Verified administrator profile update and password change handling in code with duplicate checks and password strength validation
 - Verified unauthenticated access to `/admin/dashboard` redirects to `/login`
 - Verified administrator login through a live HTTP session and confirmed `200 OK` for `/admin/dashboard`, `/admin/users`, `/admin/doctors`, `/admin/patients`, and `/admin/profile`

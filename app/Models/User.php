@@ -333,6 +333,58 @@ class User
         return $row ?: null;
     }
 
+    public static function findDeletionContextById(int $id): ?array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                users.id,
+                users.full_name,
+                users.email,
+                users.status,
+                roles.name AS role_name,
+                admin.profile_photo_path AS admin_profile_photo_path,
+                doctor.profile_photo_path AS doctor_profile_photo_path,
+                doctor.signature_path,
+                patient.profile_photo_path AS patient_profile_photo_path
+            FROM users
+            INNER JOIN roles ON roles.id = users.role_id
+            LEFT JOIN admin ON admin.user_id = users.id
+            LEFT JOIN doctor ON doctor.user_id = users.id
+            LEFT JOIN patient ON patient.user_id = users.id
+            WHERE users.id = :id
+            LIMIT 1"
+        );
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
+    public static function countAdministrators(): int
+    {
+        $db = Database::getInstance();
+        $stmt = $db->query(
+            "SELECT COUNT(*)
+            FROM users
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'admin'"
+        );
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public static function deleteById(int $id): bool
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare("DELETE FROM users WHERE id = :id");
+
+        return $stmt->execute([
+            ':id' => $id,
+        ]);
+    }
+
     private static function appendManagementFilters(array $filters, array &$conditions, array &$parameters): void
     {
         $search = trim((string) ($filters['search'] ?? ''));

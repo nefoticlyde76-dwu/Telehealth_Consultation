@@ -7,6 +7,7 @@ $users = $users ?? [];
 $roleOptions = $roleOptions ?? [];
 $statusOptions = $statusOptions ?? [];
 $statusMessage = $statusMessage ?? null;
+$csrfToken = $csrfToken ?? '';
 
 $buildPageUrl = static function (int $page) use ($filters): string {
     $query = array_filter([
@@ -167,6 +168,11 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               </tr>
             <?php else: ?>
               <?php foreach ($users as $managedUser): ?>
+                <?php
+                $userId = (int) ($managedUser['id'] ?? 0);
+                $roleName = (string) ($managedUser['role_name'] ?? 'user');
+                $canDeleteUser = in_array($roleName, ['doctor', 'patient'], true);
+                ?>
                 <tr>
                   <td>
                     <div class="d-flex flex-column">
@@ -188,10 +194,60 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     <?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate($managedUser['created_at'] ?? null)) ?>
                   </td>
                   <td class="text-end">
-                    <a href="<?= \App\Helpers\Helper::url('/admin/users/' . (int) ($managedUser['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3" aria-label="View details for <?= \App\Helpers\Helper::escape((string) ($managedUser['full_name'] ?? 'this user')) ?>">
-                      <i class="bi bi-eye me-2"></i>
-                      View Details
-                    </a>
+                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                      <a href="<?= \App\Helpers\Helper::url('/admin/users/' . $userId) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3" aria-label="View details for <?= \App\Helpers\Helper::escape((string) ($managedUser['full_name'] ?? 'this user')) ?>">
+                        <i class="bi bi-eye me-2"></i>
+                        View Details
+                      </a>
+                      <?php if ($canDeleteUser): ?>
+                        <button
+                          type="button"
+                          class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                          data-bs-toggle="modal"
+                          data-bs-target="#deleteUserModal-<?= $userId ?>"
+                          aria-label="Delete <?= \App\Helpers\Helper::escape((string) ($managedUser['full_name'] ?? 'this user')) ?>"
+                        >
+                          <i class="bi bi-trash3 me-2"></i>
+                          Delete User
+                        </button>
+                      <?php endif; ?>
+                    </div>
+
+                    <?php if ($canDeleteUser): ?>
+                      <div class="modal fade" id="deleteUserModal-<?= $userId ?>" tabindex="-1" aria-labelledby="deleteUserModalLabel-<?= $userId ?>" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-header border-0 pb-0">
+                              <div>
+                                <h2 class="modal-title h5 mb-1" id="deleteUserModalLabel-<?= $userId ?>">Permanently Delete User?</h2>
+                                <p class="text-muted mb-0 small">This action is permanent and requires confirmation.</p>
+                              </div>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body pt-3">
+                              <div class="alert alert-danger-subtle border border-danger-subtle rounded-4 mb-3" role="alert">
+                                <strong><?= \App\Helpers\Helper::escape((string) ($managedUser['full_name'] ?? 'This user')) ?></strong>
+                                <span class="d-block mt-2">This action cannot be undone. The selected user account and all associated data will be permanently removed from the system. Are you sure you want to continue?</span>
+                              </div>
+                              <div class="small text-muted">
+                                Role: <strong><?= \App\Helpers\Helper::escape(ucfirst($roleName)) ?></strong><br>
+                                Email: <strong><?= \App\Helpers\Helper::escape((string) ($managedUser['email'] ?? '')) ?></strong>
+                              </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                              <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                              <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/users/' . $userId . '/delete') ?>">
+                                <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+                                <button type="submit" class="btn btn-danger rounded-pill px-4">
+                                  <i class="bi bi-trash3 me-2"></i>
+                                  Permanently Delete
+                                </button>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    <?php endif; ?>
                   </td>
                 </tr>
               <?php endforeach; ?>
