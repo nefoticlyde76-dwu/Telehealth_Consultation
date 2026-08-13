@@ -1,7 +1,6 @@
 <?php
 $dashboardRole = (string) ($dashboardRole ?? '');
 $showRightbar = (bool) ($showRightbar ?? false);
-$topbarSearchPlaceholder = (string) ($topbarSearchPlaceholder ?? 'Search doctors, consultations, or requests');
 $topbarQuickAction = $topbarQuickAction ?? null;
 
 if (!is_array($topbarQuickAction)) {
@@ -19,39 +18,29 @@ if (!is_array($topbarQuickAction)) {
 
 <header class="dashboard-topbar">
   <div class="dashboard-topbar-row">
-    <div class="d-flex align-items-center gap-3 flex-wrap">
-      <button class="btn btn-outline-primary d-lg-none rounded-circle topbar-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardSidebar" aria-controls="dashboardSidebar" aria-label="Open dashboard navigation">
+    <div class="topbar-left">
+      <button class="btn btn-outline-primary d-lg-none topbar-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardSidebar" aria-controls="dashboardSidebar" aria-label="Open dashboard navigation">
         <i class="bi bi-list"></i>
       </button>
 
       <?php if ($showRightbar): ?>
-        <button class="btn btn-outline-primary d-xl-none rounded-circle topbar-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardRightbar" aria-controls="dashboardRightbar" aria-label="Open dashboard overview panel">
+        <button class="btn btn-outline-primary d-xl-none topbar-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardRightbar" aria-controls="dashboardRightbar" aria-label="Open dashboard overview panel">
           <i class="bi bi-layout-sidebar-inset-reverse"></i>
         </button>
       <?php endif; ?>
-
-      <div class="topbar-role-pill d-none d-md-inline-flex">
-        <i class="bi bi-heart-pulse"></i>
-        <span><?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard Workspace') ?></span>
-      </div>
     </div>
 
-    <div class="topbar-search d-none d-lg-flex" role="search" aria-label="Global search">
-      <i class="bi bi-search"></i>
-      <input type="search" class="form-control topbar-search-input" placeholder="<?= \App\Helpers\Helper::escape($topbarSearchPlaceholder) ?>" autocomplete="off">
-    </div>
-
-    <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+    <div class="topbar-right">
       <?php if (is_array($topbarQuickAction)): ?>
-        <a href="<?= \App\Helpers\Helper::url((string) ($topbarQuickAction['url'] ?? '#')) ?>" class="btn btn-primary rounded-pill px-4 topbar-quick-action d-none d-md-inline-flex">
-          <i class="bi <?= \App\Helpers\Helper::escape((string) ($topbarQuickAction['icon'] ?? 'bi-lightning-charge')) ?> me-2"></i>
+        <a href="<?= \App\Helpers\Helper::url((string) ($topbarQuickAction['url'] ?? '#')) ?>" class="btn btn-primary btn-sm topbar-quick-action d-none d-sm-inline-flex">
+          <i class="bi <?= \App\Helpers\Helper::escape((string) ($topbarQuickAction['icon'] ?? 'bi-lightning-charge')) ?>"></i>
           <?= \App\Helpers\Helper::escape((string) ($topbarQuickAction['label'] ?? 'Action')) ?>
         </a>
       <?php endif; ?>
 
-      <div class="topbar-chip d-none d-md-inline-flex" aria-label="Current date and time">
-        <i class="bi bi-clock"></i>
-        <span data-dashboard-datetime="full"><?= \App\Helpers\Helper::escape(date('D, d M Y H:i')) ?></span>
+      <div class="topbar-chip d-none d-lg-inline-flex" aria-label="Current date">
+        <i class="bi bi-calendar3"></i>
+        <span data-dashboard-datetime="date"><?= \App\Helpers\Helper::escape(date('d M Y')) ?></span>
       </div>
 
       <button type="button" class="topbar-icon-btn" aria-label="Notifications">
@@ -109,19 +98,6 @@ if (!is_array($topbarQuickAction)) {
           </li>
         </ul>
       </div>
-    </div>
-  </div>
-
-  <div class="dashboard-topbar-meta">
-    <nav aria-label="breadcrumb" class="dashboard-breadcrumb">
-      <ol class="breadcrumb mb-0">
-        <li class="breadcrumb-item"><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page"><?= \App\Helpers\Helper::escape($dashboardRoleLabel ?? 'Dashboard') ?></li>
-      </ol>
-    </nav>
-    <div>
-      <h1 class="h3 mb-1"><?= \App\Helpers\Helper::escape($dashboardTitle ?? 'Dashboard') ?></h1>
-      <p class="text-muted mb-0"><?= \App\Helpers\Helper::escape($dashboardDescription ?? 'Overview') ?></p>
     </div>
   </div>
 </header>

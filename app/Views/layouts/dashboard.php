@@ -11,8 +11,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/theme.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/style.css') ?>">
+  <?= $pageStyles ?? '' ?>
 </head>
-<body class="dashboard-layout dashboard-layout--<?= \App\Helpers\Helper::escape((string) ($dashboardRole ?? 'default')) ?>">
+<body class="dashboard-layout dashboard-layout--<?= \App\Helpers\Helper::escape((string) ($dashboardRole ?? 'default')) ?>"
+      data-app-timezone="<?= \App\Helpers\Helper::escape(\App\Helpers\Helper::appTimezone()) ?>">
   <?php $showRightbar = (bool) ($showRightbar ?? false); ?>
   <div class="dashboard-shell <?= $showRightbar ? 'dashboard-shell--with-rightbar' : '' ?>">
     <?php require __DIR__ . '/../partials/dashboard/sidebar.php'; ?>

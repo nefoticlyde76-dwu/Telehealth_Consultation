@@ -7,14 +7,9 @@ $pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_it
 $statusOptions = $statusOptions ?? [];
 $csrfToken = $csrfToken ?? '';
 
-$statusBadgeMap = [
-    'Pending' => 'badge-soft-warning',
-    'Approved' => 'badge-soft-success',
-    'Rejected' => 'badge-soft-danger',
-    'Cancelled' => 'badge-soft-danger',
-    'Completed' => 'badge-soft-success',
-];
+require __DIR__ . '/../../partials/shared/status_helper.php';
 
+$totalItems = (int) ($pagination['total_items'] ?? 0);
 $buildPageUrl = static function (int $page) use ($filters): string {
     $query = array_filter([
         'status' => $filters['status'] ?? '',
@@ -31,105 +26,114 @@ $buildPageUrl = static function (int $page) use ($filters): string {
 <section class="mb-4">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-4">
-      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-        <div>
-          <span class="section-badge mb-3">
-            <i class="bi bi-clipboard2-pulse"></i>
-            Doctor Consultations
-          </span>
-          <h2 class="h4 mb-2">Review approved and completed consultations</h2>
-          <p class="text-muted mb-0">Track your upcoming consultations, review chief complaints, and mark consultations as completed when appropriate.</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>" class="btn btn-outline-primary rounded-pill px-4">
-            <i class="bi bi-arrow-left me-2"></i>
-            Dashboard
-          </a>
-          <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-primary rounded-pill px-4">
-            <i class="bi bi-calendar-week me-2"></i>
-            Manage Availability
-          </a>
-        </div>
-      </div>
-
-      <form method="GET" action="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="user-filter-form">
-        <div class="row g-3 align-items-end">
-          <div class="col-md-7">
-            <label for="search" class="form-label">Search consultations</label>
-            <input
-              type="text"
-              class="form-control"
-              id="search"
-              name="search"
-              value="<?= \App\Helpers\Helper::escape((string) ($filters['search'] ?? '')) ?>"
-              placeholder="Search by patient name or chief complaint"
-            >
-          </div>
-          <div class="col-md-3">
-            <label for="status" class="form-label">Status</label>
-            <select class="form-select" id="status" name="status">
-              <option value="">All statuses</option>
-              <?php foreach ($statusOptions as $statusOption): ?>
-                <option value="<?= \App\Helpers\Helper::escape((string) $statusOption) ?>" <?= ($filters['status'] ?? '') === $statusOption ? 'selected' : '' ?>>
-                  <?= \App\Helpers\Helper::escape((string) $statusOption) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="col-md-2 d-grid gap-2">
-            <button type="submit" class="btn btn-primary rounded-pill">Apply</button>
-            <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary rounded-pill">Reset</a>
-          </div>
-        </div>
-      </form>
+  <div class="ux-page-header">
+    <div class="ux-page-header__left">
+      <ol class="ux-breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
+        <li class="active">Consultations</li>
+      </ol>
+      <h2 class="ux-page-header__title">My Consultations</h2>
+      <p class="ux-page-header__subtitle">Track upcoming appointments, review chief complaints, join video rooms, and mark consultations as completed.</p>
+    </div>
+    <div class="ux-page-header__right">
+      <span class="ux-chip ux-badge--dotless">
+        <i class="bi bi-clipboard2-pulse-fill"></i>
+        <span><?= $totalItems ?> consultations visible</span>
+      </span>
+      <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-primary btn-primary-xl">
+        <i class="bi bi-calendar-week me-2"></i>
+        Manage Availability
+      </a>
     </div>
   </div>
-</section>
 
-<section class="mb-4">
-  <div class="row g-4">
+  <div class="ux-card ux-filter">
+    <div class="card-header">
+      <h3 class="h6">
+        <i class="bi bi-funnel-fill ux-filter__header-icon"></i>
+        Filter consultations
+      </h3>
+    </div>
+    <form method="GET" action="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="user-filter-form">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-7">
+          <label for="search" class="form-label">Search consultations</label>
+          <input
+            type="text"
+            class="form-control"
+            id="search"
+            name="search"
+            value="<?= \App\Helpers\Helper::escape((string) ($filters['search'] ?? '')) ?>"
+            placeholder="Search by patient name or chief complaint"
+          >
+        </div>
+        <div class="col-md-3">
+          <label for="status" class="form-label">Status</label>
+          <select class="form-select" id="status" name="status" aria-label="Filter consultations by status">
+            <option value="">All statuses</option>
+            <?php foreach ($statusOptions as $statusOption): ?>
+              <option value="<?= \App\Helpers\Helper::escape((string) $statusOption) ?>" <?= ($filters['status'] ?? '') === $statusOption ? 'selected' : '' ?>>
+                <?= \App\Helpers\Helper::escape((string) $statusOption) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <div class="ux-filter__actions">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-funnel-fill me-1"></i>
+              Apply
+            </button>
+            <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
+              Reset
+            </a>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-3 mb-4">
     <div class="col-sm-4">
-      <div class="admin-summary-card h-100">
-        <span class="admin-summary-label">Approved Appointments</span>
-        <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ((int) ($summary['approved_appointments'] ?? 0))) ?></strong>
-        <span class="admin-summary-meta">Approved consultations across your workflow.</span>
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--navy">
+          <i class="bi bi-calendar2-check-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['approved_appointments'] ?? 0) ?></div>
+          <div class="ux-stat__label">Approved Appointments</div>
+        </div>
       </div>
     </div>
     <div class="col-sm-4">
-      <div class="admin-summary-card h-100">
-        <span class="admin-summary-label">Upcoming Consultations</span>
-        <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ((int) ($summary['upcoming_consultations'] ?? 0))) ?></strong>
-        <span class="admin-summary-meta">Approved appointments scheduled from today onward.</span>
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--cyan">
+          <i class="bi bi-calendar3-event-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['upcoming_consultations'] ?? 0) ?></div>
+          <div class="ux-stat__label">Upcoming</div>
+        </div>
       </div>
     </div>
     <div class="col-sm-4">
-      <div class="admin-summary-card h-100">
-        <span class="admin-summary-label">Completed Consultations</span>
-        <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ((int) ($summary['completed_consultations'] ?? 0))) ?></strong>
-        <span class="admin-summary-meta">Consultations marked complete by the doctor.</span>
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--success">
+          <i class="bi bi-check2-circle"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['completed_consultations'] ?? 0) ?></div>
+          <div class="ux-stat__label">Completed</div>
+        </div>
       </div>
     </div>
   </div>
-</section>
 
-<section>
-  <div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-4">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-        <div>
-          <h3 class="h5 mb-1">Consultation Directory</h3>
-          <p class="text-muted mb-0">Review patient consultations and update the workflow after appointments are completed.</p>
-        </div>
-        <span class="badge badge-soft-info rounded-pill px-3 py-2">
-          Page <?= \App\Helpers\Helper::escape((string) ($pagination['current_page'] ?? 1)) ?> of <?= \App\Helpers\Helper::escape((string) ($pagination['total_pages'] ?? 1)) ?>
-        </span>
-      </div>
-
+  <div class="ux-card">
+    <div class="ux-table-wrapper border-0">
       <div class="table-responsive">
-        <table class="table admin-user-table align-middle mb-0">
-          <caption class="visually-hidden">Doctor consultation listing with patient, schedule, chief complaint, status, and completion action.</caption>
+        <table class="ux-table">
+          <caption class="visually-hidden">Doctor consultation listing with patient, schedule, chief complaint, status, video join, and completion action.</caption>
           <thead>
             <tr>
               <th scope="col">Patient</th>
@@ -143,13 +147,19 @@ $buildPageUrl = static function (int $page) use ($filters): string {
           <tbody>
             <?php if ($consultations === []): ?>
               <tr>
-                <td colspan="6">
-                  <div class="admin-table-empty text-center py-5">
-                    <div class="empty-state-icon mx-auto mb-3">
+                <td colspan="6" class="ux-table__empty-state">
+                  <div class="ux-empty">
+                    <div class="ux-empty__icon">
                       <i class="bi bi-clipboard2-x"></i>
                     </div>
-                    <h4 class="h5 mb-2">No consultations matched the current filters</h4>
-                    <p class="text-muted mb-0">Approved and completed consultations will appear here as the Week 5 workflow progresses.</p>
+                    <h4 class="ux-empty__title">No consultations matched the current filters</h4>
+                    <p class="ux-empty__text">Approved and completed consultations will appear here as the workflow progresses.</p>
+                    <div class="ux-empty__action">
+                      <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Reset Filters
+                      </a>
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -157,15 +167,27 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               <?php foreach ($consultations as $consultation): ?>
                 <?php
                 $status = (string) ($consultation['status'] ?? 'Pending');
-                $badgeClass = $statusBadgeMap[$status] ?? 'badge-soft-neutral';
+                $statusBadge = ux_status_badge_class($status);
                 $dateLabel = \App\Helpers\Helper::formatDate((string) ($consultation['consultation_date'] ?? ''), 'd M Y', 'Not available');
                 $timeLabel = substr((string) ($consultation['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($consultation['end_time'] ?? ''), 0, 5);
                 $canComplete = $status === 'Approved' && (string) ($consultation['consultation_date'] ?? '') !== '' && (string) ($consultation['consultation_date'] ?? '') <= date('Y-m-d');
+
+                $videoJoin = $consultation['videoJoin'] ?? null;
+                $joinUrl    = is_array($videoJoin) ? (string) ($videoJoin['joinUrl'] ?? '') : '';
+                $canJoinNow = is_array($videoJoin) ? (bool) ($videoJoin['canJoin'] ?? false) : false;
+                $joinStatus = is_array($videoJoin) ? (string) ($videoJoin['status'] ?? 'unavailable') : 'unavailable';
+                $joinReason = is_array($videoJoin) ? (string) ($videoJoin['reason'] ?? '') : '';
+                $showJoin   = $joinUrl !== '' && in_array($joinStatus, ['open', 'early', 'ended'], true);
+                $joinLabel  = 'Join Consultation';
+                if ($joinStatus === 'early')   $joinLabel = 'Join Soon';
+                if ($joinStatus === 'ended')   $joinLabel = 'Room Ended';
                 ?>
                 <tr>
                   <td>
-                    <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($consultation['patient_name'] ?? 'Patient')) ?></strong>
-                    <span class="text-muted small"><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($consultation['request_date'] ?? ''), 'd M Y', '')) ?></span>
+                    <div class="d-flex flex-column">
+                      <strong><?= \App\Helpers\Helper::escape((string) ($consultation['patient_name'] ?? 'Patient')) ?></strong>
+                      <span class="text-muted small"><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($consultation['request_date'] ?? ''), 'd M Y', '')) ?></span>
+                    </div>
                   </td>
                   <td><strong><?= \App\Helpers\Helper::escape((string) $dateLabel) ?></strong></td>
                   <td><span class="text-muted small"><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></span></td>
@@ -173,19 +195,51 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     <span class="text-muted small"><?= \App\Helpers\Helper::escape(mb_strimwidth((string) ($consultation['reason'] ?? ''), 0, 70, '...')) ?></span>
                   </td>
                   <td>
-                    <span class="badge <?= \App\Helpers\Helper::escape($badgeClass) ?> rounded-pill px-3 py-2"><?= \App\Helpers\Helper::escape($status) ?></span>
+                    <span class="ux-badge <?= $statusBadge ?>">
+                      <?= \App\Helpers\Helper::escape($status) ?>
+                    </span>
                   </td>
                   <td class="text-end">
-                    <?php if ($canComplete): ?>
-                      <form method="POST" action="<?= \App\Helpers\Helper::url('/doctor/consultations/' . (string) ((int) ($consultation['id'] ?? 0)) . '/complete') ?>">
-                        <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-                        <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                          Mark Completed
-                        </button>
-                      </form>
-                    <?php else: ?>
-                      <span class="text-muted small">No action</span>
-                    <?php endif; ?>
+                    <div class="ux-table__actions">
+                      <?php if ($showJoin): ?>
+                        <?php if ($canJoinNow): ?>
+                          <a href="<?= \App\Helpers\Helper::escape($joinUrl) ?>"
+                             class="btn btn-primary btn-sm"
+                             aria-label="Join video consultation room now">
+                            <i class="bi bi-camera-video-fill me-1"></i>
+                            <?= \App\Helpers\Helper::escape($joinLabel) ?>
+                          </a>
+                        <?php else: ?>
+                          <button type="button"
+                                  class="btn btn-primary btn-sm"
+                                  disabled
+                                  aria-disabled="true"
+                                  <?php if ($joinReason !== ''): ?>
+                                    title="<?= \App\Helpers\Helper::escape($joinReason) ?>"
+                                  <?php endif; ?>>
+                            <i class="bi bi-camera-video me-1"></i>
+                            <?= \App\Helpers\Helper::escape($joinLabel) ?>
+                          </button>
+                          <?php if ($joinReason !== '' && $joinStatus === 'early'): ?>
+                            <small class="text-muted d-block mt-1 text-end">
+                              <i class="bi bi-info-circle me-1"></i>
+                              <?= \App\Helpers\Helper::escape($joinReason) ?>
+                            </small>
+                          <?php endif; ?>
+                        <?php endif; ?>
+                      <?php endif; ?>
+
+                      <?php if ($canComplete): ?>
+                        <form method="POST" action="<?= \App\Helpers\Helper::url('/doctor/consultations/' . (string) ((int) ($consultation['id'] ?? 0)) . '/complete') ?>" class="d-inline">
+                          <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+                          <button type="submit" class="btn btn-outline-primary btn-sm">
+                            Mark Completed
+                          </button>
+                        </form>
+                      <?php elseif (!$showJoin): ?>
+                        <span class="text-muted small">No action</span>
+                      <?php endif; ?>
+                    </div>
                   </td>
                 </tr>
               <?php endforeach; ?>
@@ -193,25 +247,24 @@ $buildPageUrl = static function (int $page) use ($filters): string {
           </tbody>
         </table>
       </div>
-
-      <?php if (($pagination['total_pages'] ?? 1) > 1): ?>
-        <nav class="mt-4" aria-label="Doctor consultations pagination">
-          <ul class="pagination admin-pagination justify-content-end mb-0">
-            <li class="page-item <?= ($pagination['current_page'] ?? 1) <= 1 ? 'disabled' : '' ?>">
-              <a class="page-link" href="<?= ($pagination['current_page'] ?? 1) <= 1 ? '#' : $buildPageUrl((int) ($pagination['current_page'] ?? 1) - 1) ?>">Previous</a>
-            </li>
-            <?php for ($page = 1; $page <= (int) ($pagination['total_pages'] ?? 1); $page++): ?>
-              <li class="page-item <?= $page === (int) ($pagination['current_page'] ?? 1) ? 'active' : '' ?>">
-                <a class="page-link" href="<?= $buildPageUrl($page) ?>"><?= \App\Helpers\Helper::escape((string) $page) ?></a>
-              </li>
-            <?php endfor; ?>
-            <li class="page-item <?= ($pagination['current_page'] ?? 1) >= ($pagination['total_pages'] ?? 1) ? 'disabled' : '' ?>">
-              <a class="page-link" href="<?= ($pagination['current_page'] ?? 1) >= ($pagination['total_pages'] ?? 1) ? '#' : $buildPageUrl((int) ($pagination['current_page'] ?? 1) + 1) ?>">Next</a>
-            </li>
-          </ul>
-        </nav>
-      <?php endif; ?>
     </div>
+
+    <?php if (($pagination['total_pages'] ?? 1) > 1): ?>
+      <div class="card-footer border-0 bg-transparent pt-4 pb-0">
+        <nav class="admin-pagination d-flex justify-content-end align-items-center gap-2 flex-wrap" aria-label="Doctor consultations pagination">
+          <a class="btn btn-outline-primary btn-sm <?= ($pagination['current_page'] ?? 1) <= 1 ? 'disabled' : '' ?>" href="<?= ($pagination['current_page'] ?? 1) <= 1 ? '#' : $buildPageUrl((int) $pagination['current_page'] - 1) ?>">
+            <i class="bi bi-chevron-left me-1"></i>
+            Previous
+          </a>
+          <span class="small text-muted">
+            Page <?= (int) ($pagination['current_page'] ?? 1) ?> of <?= (int) ($pagination['total_pages'] ?? 1) ?>
+          </span>
+          <a class="btn btn-outline-primary btn-sm <?= ($pagination['current_page'] ?? 1) >= ($pagination['total_pages'] ?? 1) ? 'disabled' : '' ?>" href="<?= ($pagination['current_page'] ?? 1) >= ($pagination['total_pages'] ?? 1) ? '#' : $buildPageUrl((int) $pagination['current_page'] + 1) ?>">
+            Next
+            <i class="bi bi-chevron-right ms-1"></i>
+          </a>
+        </nav>
+      </div>
+    <?php endif; ?>
   </div>
 </section>
-

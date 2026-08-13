@@ -6,19 +6,26 @@ $statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
 ?>
 
 <section class="mb-4">
-  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-    <div>
+  <div class="ux-page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-start align-items-lg-center gap-3 mb-0">
+    <div class="ux-page-header__left">
+      <ol class="ux-breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/admin/dashboard') ?>">Dashboard</a></li>
+        <li><a href="<?= \App\Helpers\Helper::url('/admin/users') ?>">Users</a></li>
+        <li class="active"><?= \App\Helpers\Helper::escape($managedUser['full_name'] ?? 'User') ?></li>
+      </ol>
       <span class="section-badge mb-3">
         <i class="bi bi-person-vcard"></i>
         Administrator User Detail Review
       </span>
-      <h2 class="h4 mb-2"><?= \App\Helpers\Helper::escape($managedUser['full_name'] ?? 'User') ?></h2>
-      <p class="text-muted mb-0">Review account identity, role placement, status, and available profile data without modifying records.</p>
+      <h2 class="ux-page-header__title h4 mb-2"><?= \App\Helpers\Helper::escape($managedUser['full_name'] ?? 'User') ?></h2>
+      <p class="ux-page-header__subtitle text-muted mb-0">Review account identity, role placement, status, and available profile data without modifying records.</p>
     </div>
-    <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary rounded-pill px-4">
-      <i class="bi bi-arrow-left me-2"></i>
-      Back to User Management
-    </a>
+    <div class="ux-page-header__right">
+      <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left me-2"></i>
+        Back to User Management
+      </a>
+    </div>
   </div>
 </section>
 
@@ -33,8 +40,8 @@ $statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
               <p class="text-muted mb-0">Core user identity and authentication-related metadata.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
-              <span class="badge badge-soft-neutral rounded-pill border px-3 py-2"><?= \App\Helpers\Helper::escape($roleName) ?></span>
-              <span class="badge <?= ($managedUser['status'] ?? '') === 'active' ? 'badge-soft-success' : 'badge-soft-warning' ?> rounded-pill px-3 py-2"><?= \App\Helpers\Helper::escape($statusName) ?></span>
+              <span class="ux-badge ux-badge--neutral"><?= \App\Helpers\Helper::escape($roleName) ?></span>
+              <span class="ux-badge <?= ($managedUser['status'] ?? '') === 'active' ? 'ux-badge--approved' : 'ux-badge--pending' ?>"><?= \App\Helpers\Helper::escape($statusName) ?></span>
             </div>
           </div>
 

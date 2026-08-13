@@ -6,11 +6,16 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
-use App\Services\DoctorAvailabilityService;
+use App\Models\ConsultationRequest;
 use App\Services\AuthService;
+use App\Services\DoctorAvailabilityService;
 use App\Services\DoctorConsultationService;
 use App\Services\DoctorDashboardService;
 use App\Services\DoctorProfileService;
+use App\Services\VideoConsultationService;
+use DateTimeImmutable;
+use DateTimeZone;
+use RuntimeException;
 
 class DoctorController extends Controller
 {
@@ -434,6 +439,14 @@ class DoctorController extends Controller
 
         $pageData = DoctorConsultationService::getConsultationPageData((int) $user->id, $_GET);
 
+        $consultations = $pageData['consultations'] ?? [];
+        if (is_array($consultations)) {
+            $consultations = array_map(
+                static fn (array $row): array => $row + self::computeDoctorVideoJoinContext($row),
+                $consultations
+            );
+        }
+
         $this->render('doctor/consultations/index', [
             'title' => 'Doctor Consultations | MBPHA TeleHealth Consultation System',
             'user' => $user,
@@ -448,13 +461,102 @@ class DoctorController extends Controller
                 ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
             ],
             'filters' => $pageData['filters'] ?? [],
-            'consultations' => $pageData['consultations'] ?? [],
+            'consultations' => $consultations,
             'summary' => $pageData['summary'] ?? [],
             'pagination' => $pageData['pagination'] ?? [],
             'statusOptions' => $pageData['statusOptions'] ?? [],
             'statusMessage' => Session::getFlash('status'),
             'csrfToken' => Csrf::generate(),
         ], 'layouts/dashboard');
+    }
+
+    /**
+     * Compute the doctor-side "can join now" UX hint for a single consultation
+     * row.  Actual allow/deny is still enforced server-side on room load.
+     *
+     * @return array{videoJoin: array{
+     *     canJoin: bool,
+     *     status: non-empty-string,
+     *     reason: non-empty-string,
+     *     consultationId: int,
+     *     joinUrl: string,
+     * }}
+     */
+    private static function computeDoctorVideoJoinContext(array $row): array
+    {
+        $consultationId = (int) ($row['id'] ?? 0);
+        $status = strtolower(trim((string) ($row['status'] ?? '')));
+        $fallback = [
+            'videoJoin' => [
+                'canJoin' => false,
+                'status'  => 'unavailable',
+                'reason'  => 'Video consultation is not available for this request.',
+                'consultationId' => $consultationId,
+                'joinUrl' => '',
+            ],
+        ];
+
+        if ($status !== 'approved' || $consultationId <= 0) {
+            if ($status === 'rejected') {
+                $fallback['videoJoin']['reason'] = 'This consultation request was rejected by MBPHA administration.';
+            } elseif ($status === 'cancelled') {
+                $fallback['videoJoin']['reason'] = 'This consultation has been cancelled.';
+            } elseif ($status !== 'approved') {
+                $fallback['videoJoin']['reason'] = 'You can join once MBPHA administration approves the consultation.';
+            }
+            return $fallback;
+        }
+
+        $dateStr = trim((string) ($row['consultation_date'] ?? ''));
+        $startStr = trim((string) ($row['start_time'] ?? ''));
+        $endStr   = trim((string) ($row['end_time'] ?? ''));
+        if ($dateStr === '' || $startStr === '' || $endStr === '') {
+            $fallback['videoJoin']['reason'] = 'Consultation schedule is not available.';
+            return $fallback;
+        }
+
+        try {
+            $tz = \App\Services\VideoConsultationService::resolveAppointmentTimezone();
+            $start = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $dateStr . ' ' . $startStr, $tz);
+            $end   = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $dateStr . ' ' . $endStr, $tz);
+            if ($start === false || $end === false) {
+                throw new RuntimeException('parse');
+            }
+            $windowStart = $start->modify(sprintf('-%d seconds', \App\Services\VideoConsultationService::JOIN_WINDOW_BEFORE_START_SECONDS));
+            $windowEnd   = $end;
+            $nowUtc      = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $wsUtc       = $windowStart->setTimezone(new DateTimeZone('UTC'));
+            $weUtc       = $windowEnd->setTimezone(new DateTimeZone('UTC'));
+
+            $hint = [
+                'canJoin' => false,
+                'status'  => 'pending',
+                'reason'  => '',
+                'consultationId' => $consultationId,
+                'joinUrl'        => \App\Helpers\Helper::url('/doctor/consultations/' . $consultationId . '/room'),
+            ];
+
+            if ($nowUtc < $wsUtc) {
+                $hint['status'] = 'early';
+                $hint['reason'] = sprintf(
+                    'Room opens at %s (%s).',
+                    $start->format('g:i A'),
+                    \App\Helpers\Helper::appTimezoneLabel()
+                );
+            } elseif ($nowUtc > $weUtc) {
+                $hint['status'] = 'ended';
+                $hint['reason'] = 'This consultation has ended.';
+            } else {
+                $hint['canJoin'] = true;
+                $hint['status']  = 'open';
+                $hint['reason']  = 'Room is ready.';
+            }
+
+            return ['videoJoin' => $hint];
+        } catch (\Throwable) {
+            $fallback['videoJoin']['reason'] = 'Unable to determine consultation window.';
+            return $fallback;
+        }
     }
 
     public function completeConsultation(string $id): void
@@ -479,5 +581,133 @@ class DoctorController extends Controller
         ]);
 
         Helper::redirect('/doctor/consultations');
+    }
+
+    /**
+     * JSON endpoint — authorize and mint a Daily meeting token for the
+     * currently logged-in doctor to host consultation {id}.
+     *
+     * Security mirrors PatientController::joinConsultation():
+     *   • User id + role come from PHP session only (never from request).
+     *   • The actual doctor_id FK on the consultation is compared to the
+     *     session user id server-side; payload-supplied overrides are not
+     *     possible.
+     *   • Doctor tokens receive Daily is_owner host privileges.
+     *   • Token is minted FRESH per call and NEVER stored in MySQL.
+     *
+     * @week 6 — Video Consultation Integration
+     */
+    public function joinConsultation(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            $this->jsonResponse([
+                'ok'      => false,
+                'code'    => 'unauthenticated',
+                'message' => 'Not authenticated.',
+            ], 401);
+            return;
+        }
+
+        try {
+            $result = VideoConsultationService::authorizeJoinForCurrentUser((int) $id);
+        } catch (\Throwable $e) {
+            error_log(sprintf('[DoctorController::joinConsultation] Unexpected exception for id=%s: %s', var_export($id, true), $e->getMessage()));
+            $this->jsonResponse([
+                'ok'      => false,
+                'code'    => 'server_error',
+                'message' => 'The video consultation could not be started right now.',
+            ], 500);
+            return;
+        }
+
+        if (($result['ok'] ?? false) === true) {
+            $this->jsonResponse([
+                'ok'       => true,
+                'room_url' => (string) ($result['room_url'] ?? ''),
+                'token'    => (string) ($result['token'] ?? ''),
+            ], 200);
+            return;
+        }
+
+        $this->jsonResponse([
+            'ok'      => false,
+            'code'    => (string) ($result['code'] ?? 'error'),
+            'message' => (string) ($result['message'] ?? 'Request could not be fulfilled.'),
+        ], (int) ($result['http_code'] ?? 400));
+    }
+
+    /**
+     * Show the MBPHA video consultation room (UI page) for doctor {id}.
+     *
+     * SECURITY NOTE — mirrors PatientController::showConsultationRoom:
+     *   Page shell only renders metadata (patient name, date, reason, etc.).
+     *   Daily room URL + ephemeral meeting token are NEVER written into the
+     *   HTML by PHP.  Both are fetched AFTER page load via fetch() to the
+     *   existing joinConsultation() JSON endpoint.
+     *
+     * @week 6 — Video Consultation Integration
+     */
+    public function showConsultationRoom(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $request = ConsultationRequest::findByIdForDoctor((int) $id, (int) $user->id);
+        if ($request === null) {
+            Session::flash('status', [
+                'type' => 'danger',
+                'message' => 'Consultation not found.',
+            ]);
+            Helper::redirect('/doctor/consultations');
+            return;
+        }
+
+        $otherPartyName  = (string) ($request['patient_name'] ?? 'Your Patient');
+        $patientPhone    = trim((string) ($request['patient_phone'] ?? ''));
+        $patientGender   = trim((string) ($request['patient_gender'] ?? ''));
+        $otherPartyMeta  = trim(implode(' · ', array_filter([$patientGender, $patientPhone], static fn($v) => $v !== '')));
+
+        $context = [
+            'consultation_id'          => (int) $request['id'],
+            'viewer_role'              => 'doctor',
+            'other_party_name'         => $otherPartyName,
+            'other_party_title'        => 'Patient',
+            'other_party_meta'         => $otherPartyMeta !== '' ? $otherPartyMeta : null,
+            'consultation_date'        => (string) ($request['consultation_date'] ?? ''),
+            'consultation_start_time'  => (string) ($request['start_time'] ?? ''),
+            'consultation_end_time'    => (string) ($request['end_time'] ?? ''),
+            'consultation_reason'      => (string) ($request['reason'] ?? ''),
+            'consultation_status'      => (string) ($request['status'] ?? 'Pending'),
+            'join_token_endpoint'      => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/join-token'),
+            'return_path'              => Helper::url('/doctor/consultations'),
+            'return_path_label'        => 'Back to Consultations',
+        ];
+
+        $this->render('doctor/consultations/room', [
+            'title' => 'Video Consultation | MBPHA TeleHealth Consultation System',
+            'user'  => $user,
+            'dashboardRole'      => 'doctor',
+            'dashboardRoleLabel' => 'Doctor Dashboard',
+            'dashboardTitle'     => 'Video Consultation',
+            'dashboardDescription' => sprintf('Live consultation with %s.', $otherPartyName),
+            'sidebarItems' => [
+                ['path' => '/doctor/dashboard',  'label' => 'Dashboard',          'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations',   'icon' => 'bi-calendar2-check-fill'],
+                ['path' => '/doctor/availability', 'label' => 'Availability',     'icon' => 'bi-calendar-week'],
+                ['path' => '/doctor/profile',      'label' => 'My Profile',       'icon' => 'bi-person-circle'],
+            ],
+            'pageStyles'  => '<link rel="stylesheet" href="' . Helper::asset('css/consultation-room.css') . '">',
+            'pageScripts' => '',
+            'context' => $context,
+            'statusMessage' => Session::getFlash('status'),
+        ], 'layouts/dashboard');
     }
 }

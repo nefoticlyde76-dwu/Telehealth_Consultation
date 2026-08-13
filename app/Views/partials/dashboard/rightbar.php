@@ -5,36 +5,16 @@ $rightbar = $rightbar ?? [];
 $upcomingTitle = (string) ($rightbar['upcomingTitle'] ?? 'Upcoming');
 $upcomingItems = is_array($rightbar['upcomingItems'] ?? null) ? $rightbar['upcomingItems'] : [];
 $quickActions = is_array($rightbar['quickActions'] ?? null) ? $rightbar['quickActions'] : [];
-$summaryStats = is_array($rightbar['summaryStats'] ?? null) ? $rightbar['summaryStats'] : [];
 
-$renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems, $quickActions, $summaryStats): void {
+$renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems, $quickActions): void {
     ?>
     <div class="rightbar-section rightbar-section--calendar">
       <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
         <h2 class="h6 mb-0">Calendar</h2>
         <span class="badge badge-soft-info rounded-pill px-3 py-2" data-dashboard-datetime="date">Today</span>
       </div>
-      <div class="rightbar-calendar" data-mini-calendar></div>
+      <div class="rightbar-calendar" data-mini-calendar style="height:auto;min-height:auto;max-height:none;overflow:visible;"></div>
     </div>
-
-    <?php if ($summaryStats !== []): ?>
-      <div class="rightbar-section">
-        <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-          <h2 class="h6 mb-0">Quick Stats</h2>
-          <span class="text-muted small">Live</span>
-        </div>
-        <div class="rightbar-stat-grid">
-          <?php foreach ($summaryStats as $stat): ?>
-            <div class="rightbar-stat">
-              <span class="rightbar-stat-label"><?= \App\Helpers\Helper::escape((string) ($stat['label'] ?? '')) ?></span>
-              <strong class="rightbar-stat-value" data-counter="<?= \App\Helpers\Helper::escape((string) ($stat['value'] ?? '0')) ?>">
-                <?= \App\Helpers\Helper::escape((string) ($stat['value'] ?? '0')) ?>
-              </strong>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    <?php endif; ?>
 
     <div class="rightbar-section">
       <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
@@ -75,8 +55,8 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
         </div>
         <div class="d-grid gap-2">
           <?php foreach ($quickActions as $action): ?>
-            <a href="<?= \App\Helpers\Helper::url((string) ($action['url'] ?? '#')) ?>" class="btn btn-outline-primary rounded-pill rightbar-action">
-              <i class="bi <?= \App\Helpers\Helper::escape((string) ($action['icon'] ?? 'bi-lightning-charge')) ?> me-2"></i>
+            <a href="<?= \App\Helpers\Helper::url((string) ($action['url'] ?? '#')) ?>" class="btn btn-outline-primary rightbar-action">
+              <i class="bi <?= \App\Helpers\Helper::escape((string) ($action['icon'] ?? 'bi-lightning-charge')) ?>"></i>
               <?= \App\Helpers\Helper::escape((string) ($action['label'] ?? 'Action')) ?>
             </a>
           <?php endforeach; ?>
@@ -103,4 +83,3 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
     <?= $renderRightbarContent() ?>
   </div>
 </div>
-

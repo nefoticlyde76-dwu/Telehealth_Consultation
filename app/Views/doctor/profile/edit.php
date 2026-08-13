@@ -13,21 +13,25 @@ $csrfToken = $csrfToken ?? '';
 <section class="mb-4">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-    <div>
+  <div class="ux-page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-start align-items-lg-center gap-3 mb-0">
+    <div class="ux-page-header__left">
+      <ol class="ux-breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
+        <li class="active">Edit Profile</li>
+      </ol>
       <span class="section-badge mb-3">
         <i class="bi bi-person-gear"></i>
         Doctor Profile Management
       </span>
-      <h2 class="h4 mb-2">Edit your clinician profile</h2>
-      <p class="text-muted mb-0">Update your phone number, specialization, profile photo, signature, and password securely.</p>
+      <h2 class="ux-page-header__title h4 mb-2">Edit your clinician profile</h2>
+      <p class="ux-page-header__subtitle text-muted mb-0">Update your phone number, specialization, profile photo, signature, and password securely.</p>
     </div>
-    <div class="d-flex flex-wrap gap-2">
-      <a href="<?= \App\Helpers\Helper::url('/doctor/profile') ?>" class="btn btn-outline-primary rounded-pill px-4">
+    <div class="ux-page-header__right d-flex flex-wrap gap-2">
+      <a href="<?= \App\Helpers\Helper::url('/doctor/profile') ?>" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-person-vcard me-2"></i>
         View Profile
       </a>
-      <a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>" class="btn btn-outline-primary rounded-pill px-4">
+      <a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-arrow-left me-2"></i>
         Back to Dashboard
       </a>
@@ -57,7 +61,10 @@ $csrfToken = $csrfToken ?? '';
               <h3 class="h5 mb-1">Profile Information</h3>
               <p class="text-muted mb-0">Your updates apply to your linked doctor record and appear across clinician workflows.</p>
             </div>
-            <span class="badge badge-soft-info rounded-pill px-3 py-2">Doctor role only</span>
+            <span class="ux-chip ux-badge--dotless ux-badge--neutral">
+              <i class="bi bi-bag-heart"></i>
+              <span>Doctor role only</span>
+            </span>
           </div>
 
           <div class="row g-3">
@@ -146,7 +153,7 @@ $csrfToken = $csrfToken ?? '';
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary rounded-pill px-4">
+            <button type="submit" class="btn btn-primary btn-sm">
               <i class="bi bi-save me-2"></i>
               Save Profile Updates
             </button>
@@ -224,7 +231,7 @@ $csrfToken = $csrfToken ?? '';
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary rounded-pill px-4">
+            <button type="submit" class="btn btn-primary btn-sm">
               <i class="bi bi-key-fill me-2"></i>
               Change Password
             </button>

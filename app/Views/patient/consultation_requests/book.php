@@ -16,29 +16,34 @@ $doctorSpecialization = (string) ($slot['specialization'] ?? 'General Practice')
 <section class="mb-4">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
+  <div class="ux-page-header d-flex flex-column flex-xl-row justify-content-between align-items-xl-start align-items-xl-center gap-3 mb-4">
+    <div class="ux-page-header__left">
+      <ol class="ux-breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/patient/dashboard') ?>">Dashboard</a></li>
+        <li><a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>">Slots</a></li>
+        <li class="active">Book Consultation</li>
+      </ol>
+      <span class="section-badge mb-3">
+        <i class="bi bi-calendar2-check"></i>
+        Book Consultation
+      </span>
+      <h2 class="ux-page-header__title h4 mb-2">Confirm your selected consultation slot</h2>
+      <p class="ux-page-header__subtitle text-muted mb-0">Review the doctor and slot details, then provide a brief reason for consultation.</p>
+    </div>
+    <div class="ux-page-header__right d-flex flex-wrap gap-2">
+      <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-calendar2-week me-2"></i>
+        Back to Slots
+      </a>
+      <a href="<?= \App\Helpers\Helper::url('/patient/doctors') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-person-badge me-2"></i>
+        Doctor Directory
+      </a>
+    </div>
+  </div>
+
   <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-4">
-      <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
-        <div>
-          <span class="section-badge mb-3">
-            <i class="bi bi-calendar2-check"></i>
-            Book Consultation
-          </span>
-          <h2 class="h4 mb-2">Confirm your selected consultation slot</h2>
-          <p class="text-muted mb-0">Review the doctor and slot details, then provide a brief reason for consultation.</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary rounded-pill px-4">
-            <i class="bi bi-calendar2-week me-2"></i>
-            Back to Slots
-          </a>
-          <a href="<?= \App\Helpers\Helper::url('/patient/doctors') ?>" class="btn btn-outline-primary rounded-pill px-4">
-            <i class="bi bi-person-badge me-2"></i>
-            Doctor Directory
-          </a>
-        </div>
-      </div>
-
       <div class="row g-4 mb-4">
         <div class="col-lg-6">
           <div class="dashboard-inline-callout h-100">
@@ -77,8 +82,8 @@ $doctorSpecialization = (string) ($slot['specialization'] ?? 'General Practice')
         </div>
 
         <div class="d-flex flex-wrap justify-content-end gap-2">
-          <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary rounded-pill px-4">Cancel</a>
-          <button type="submit" class="btn btn-primary rounded-pill px-4">
+          <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">Cancel</a>
+          <button type="submit" class="btn btn-primary btn-sm">
             <i class="bi bi-send me-2"></i>
             Submit Booking Request
           </button>

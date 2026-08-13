@@ -85,6 +85,54 @@ class Helper
         return date($format, $timestamp);
     }
 
+    /**
+     * Return the IANA timezone identifier the application is pinned to.
+     *
+     * This is the value set via date_default_timezone_set() during app
+     * bootstrap (public/index.php), defaulting to Pacific/Port_Moresby
+     * for MBPHA.  Use this value:
+     *   • in views that need to render a timezone label to the user
+     *   • when handing a consistent TZ to frontend scripts so they can
+     *     compute "now" on the same wall-clock the server uses.
+     */
+    public static function appTimezone(): string
+    {
+        $name = date_default_timezone_get();
+        return $name !== '' ? $name : 'Pacific/Port_Moresby';
+    }
+
+    /**
+     * Return a user-friendly label for the application timezone suitable
+     * for rendering next to appointment times.
+     *
+     * We intentionally do NOT echo the raw IANA name to end users because
+     * the project previously surfaced "Europe/Berlin" on machines whose
+     * php.ini set date.timezone to that value.  MBPHA operates in Papua
+     * New Guinea so the label is always expressed in local terms, with a
+     * UTC offset included for clarity.
+     */
+    public static function appTimezoneLabel(): string
+    {
+        $iana = self::appTimezone();
+        if ($iana === '' || strcasecmp($iana, 'Pacific/Port_Moresby') === 0) {
+            return 'PNG Time (UTC+10)';
+        }
+        try {
+            $tz = new \DateTimeZone($iana);
+        } catch (\Throwable) {
+            return 'PNG Time (UTC+10)';
+        }
+        $offsetSeconds = $tz->getOffset(new \DateTimeImmutable('now', new \DateTimeZone('UTC')));
+        $sign = $offsetSeconds >= 0 ? '+' : '-';
+        $abs = abs($offsetSeconds);
+        $hours = intdiv($abs, 3600);
+        $minutes = intdiv($abs % 3600, 60);
+        $offset = $minutes > 0
+            ? sprintf('%s%02d:%02d', $sign, $hours, $minutes)
+            : sprintf('%s%02d', $sign, $hours);
+        return sprintf('Local Time (UTC%s)', $offset);
+    }
+
     public static function initials(?string $name): string
     {
         $name = trim((string) $name);

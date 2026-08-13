@@ -16,7 +16,10 @@ $showPasswordFields = $showPasswordFields ?? false;
             <h3 class="h5 mb-1">Doctor Account Information</h3>
             <p class="text-muted mb-0">Capture the clinician identity, contact details, and professional profile required for secure access.</p>
           </div>
-          <span class="badge badge-soft-info rounded-pill px-3 py-2">Administrator-managed</span>
+          <span class="ux-chip ux-badge--dotless ux-badge--neutral">
+            <i class="bi bi-person-gear"></i>
+            <span>Administrator-managed</span>
+          </span>
         </div>
 
         <div class="row g-3">

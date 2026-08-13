@@ -120,6 +120,46 @@ class ConsultationRequest
         return $row ?: null;
     }
 
+    public static function findByIdForDoctor(int $requestId, int $doctorUserId): ?array
+    {
+        if ($requestId <= 0 || $doctorUserId <= 0) {
+            return null;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_requests.*,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time,
+                doctor_availability.status AS slot_status,
+                doctor.professional_title AS doctor_title,
+                doctor.specialization,
+                patient_user.id AS patient_user_id,
+                patient_user.full_name AS patient_name,
+                patient_user.email AS patient_email,
+                patient.phone AS patient_phone,
+                patient.dob AS patient_dob,
+                patient.gender AS patient_gender
+            FROM consultation_requests
+            INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
+            INNER JOIN users AS doctor_user ON doctor_user.id = doctor.user_id
+            INNER JOIN patient ON patient.user_id = consultation_requests.patient_id
+            INNER JOIN users AS patient_user ON patient_user.id = patient.user_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.id = :id
+              AND consultation_requests.doctor_id = :doctor_id
+            LIMIT 1"
+        );
+        $stmt->bindValue(':id', $requestId, PDO::PARAM_INT);
+        $stmt->bindValue(':doctor_id', $doctorUserId, PDO::PARAM_INT);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row ?: null;
+    }
+
     public static function findLatestForPatient(int $patientId): ?array
     {
         $db = Database::getInstance();
@@ -556,8 +596,24 @@ class ConsultationRequest
 
             $currentStatus = (string) ($requestRow['status'] ?? '');
 
+            $availabilityId = isset($requestRow['availability_id']) ? (int) $requestRow['availability_id'] : 0;
+
+            // Idempotency: if the target status is already set and the linked
+            // Daily room has already been persisted for Approved requests,
+            // return a clean success without allocating a new room or firing
+            // slot state transitions twice.
             if ($currentStatus === $targetStatus) {
-                $db->rollBack();
+                if ($targetStatus === 'Approved' && $availabilityId > 0) {
+                    $existingRoom = ConsultationRoom::findByConsultationRequestId($requestId);
+                    if ($existingRoom === null) {
+                        // Already Approved but somehow missing the room (edge
+                        // case due to partial failure in a previous run).
+                        // Re-create it safely here since the DB status already
+                        // matches what the admin requested.
+                        ConsultationRoom::upsertForApprovedConsultation($requestId);
+                    }
+                }
+                $db->commit();
                 return [
                     'success' => true,
                     'message' => 'This consultation request is already marked as ' . $targetStatus . '.',
@@ -581,8 +637,6 @@ class ConsultationRequest
                     'type' => 'danger',
                 ];
             }
-
-            $availabilityId = isset($requestRow['availability_id']) ? (int) $requestRow['availability_id'] : 0;
 
             if ($availabilityId > 0) {
                 $slotStmt = $db->prepare(
@@ -627,6 +681,55 @@ class ConsultationRequest
             $updateRequest->bindValue(':status', $targetStatus);
             $updateRequest->bindValue(':id', $requestId, PDO::PARAM_INT);
             $updateRequest->execute();
+
+            // ──────────────────────────────────────────────────────────────
+            // Week 6 — Daily video room creation on Admin approval.
+            //
+            // Only executed when:
+            //   • status is Approved (not Rejected / Cancelled).
+            //   • the consultation is attached to a real doctor_availability
+            //     slot (so start/end times exist).
+            //
+            // ConsultationRoom::upsertForApprovedConsultation():
+            //   • short-circuits if the row already exists (idempotent re-approve).
+            //   • computes Daily exp = appointment END + 2 HOURS.
+            //   • calls the Daily REST API via DailyService.
+            //   • throws RuntimeException on any failure → we ROLLBACK the
+            //     Approved status update + Booked slot change atomically so
+            //     the system never ends up with an approved appointment
+            //     without a working video room.
+            //
+            // Rollback also restores the slot status transactionally because
+            // the slot UPDATE earlier in this function is still inside this
+            // same PDO transaction.
+            // ──────────────────────────────────────────────────────────────
+            if ($targetStatus === 'Approved' && $availabilityId > 0) {
+                try {
+                    ConsultationRoom::upsertForApprovedConsultation($requestId);
+                } catch (\Throwable $roomError) {
+                    error_log(
+                        sprintf(
+                            '[ConsultationRequest::updateStatusForAdmin] Daily room creation FAILED for request %d: %s',
+                            $requestId,
+                            $roomError->getMessage()
+                        )
+                    );
+
+                    if ($db->inTransaction()) {
+                        $db->rollBack();
+                    }
+
+                    $safeMessage = $roomError->getMessage() !== ''
+                        ? $roomError->getMessage()
+                        : 'The video consultation room could not be created.';
+
+                    return [
+                        'success' => false,
+                        'message' => 'Consultation could not be approved. ' . $safeMessage . ' No changes were saved.',
+                        'type' => 'danger',
+                    ];
+                }
+            }
 
             $db->commit();
 

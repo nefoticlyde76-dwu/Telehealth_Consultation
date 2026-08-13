@@ -13,19 +13,25 @@ $csrfToken = $csrfToken ?? '';
 <section class="mb-4">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-    <div>
+  <div class="ux-page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-start align-items-lg-center gap-3 mb-0">
+    <div class="ux-page-header__left">
+      <ol class="ux-breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/admin/dashboard') ?>">Dashboard</a></li>
+        <li class="active">Profile</li>
+      </ol>
       <span class="section-badge mb-3">
         <i class="bi bi-person-gear"></i>
         Administrator Profile Management
       </span>
-      <h2 class="h4 mb-2">Maintain administrator profile</h2>
-      <p class="text-muted mb-0">Update your profile information and change your password without affecting other administrative workflows.</p>
+      <h2 class="ux-page-header__title h4 mb-2">Maintain administrator profile</h2>
+      <p class="ux-page-header__subtitle text-muted mb-0">Update your profile information and change your password without affecting other administrative workflows.</p>
     </div>
-    <a href="<?= \App\Helpers\Helper::url('/admin/dashboard') ?>" class="btn btn-outline-primary rounded-pill px-4">
-      <i class="bi bi-arrow-left me-2"></i>
-      Back to Dashboard
-    </a>
+    <div class="ux-page-header__right">
+      <a href="<?= \App\Helpers\Helper::url('/admin/dashboard') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left me-2"></i>
+        Back to Dashboard
+      </a>
+    </div>
   </div>
 </section>
 
@@ -51,7 +57,10 @@ $csrfToken = $csrfToken ?? '';
               <h3 class="h5 mb-1">Profile Information</h3>
               <p class="text-muted mb-0">Keep your administrator identity, email address, and employee details accurate.</p>
             </div>
-            <span class="badge badge-soft-info rounded-pill px-3 py-2">Administrator account</span>
+            <span class="ux-chip ux-badge--dotless ux-badge--neutral">
+              <i class="bi bi-person-badge"></i>
+              <span>Administrator account</span>
+            </span>
           </div>
 
           <div class="row g-3">
@@ -144,7 +153,7 @@ $csrfToken = $csrfToken ?? '';
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary rounded-pill px-4">
+            <button type="submit" class="btn btn-primary btn-sm">
               <i class="bi bi-save me-2"></i>
               Update Profile
             </button>
@@ -222,7 +231,7 @@ $csrfToken = $csrfToken ?? '';
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary rounded-pill px-4">
+            <button type="submit" class="btn btn-primary btn-sm">
               <i class="bi bi-key-fill me-2"></i>
               Change Password
             </button>

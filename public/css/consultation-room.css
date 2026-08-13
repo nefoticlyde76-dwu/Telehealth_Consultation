@@ -1,0 +1,224 @@
+/* ================================================================
+ * Week 6 — TeleHealth consultation room
+ * Styles for the MBPHA Daily.co prebuilt video container page.
+ * Only loaded on consultations/room routes (never global dashboard).
+ * ================================================================ */
+
+:root {
+  --vc-primary: #0a6fb6;
+  --vc-primary-rgb: 10, 111, 182;
+  --vc-teal: #2A9D8F;
+  --vc-teal-rgb: 42, 157, 143;
+  --vc-green: #3CB371;
+  --vc-surface: #ffffff;
+  --vc-border: #E5E7EB;
+  --vc-muted: #6B7280;
+  --vc-radius: 18px;
+  --vc-radius-sm: 12px;
+}
+
+/* ------------------------------
+ *  Room wrapper — guaranteed real height so Daily iframe is usable
+ * ------------------------------ */
+.vc-room-wrapper {
+  width: 100%;
+  background: #0F172A;
+  border-radius: var(--vc-radius);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 24px 54px rgba(15, 76, 129, 0.12);
+  isolation: isolate;
+  border: 1px solid rgba(15, 76, 129, 0.08);
+}
+
+.vc-daily-frame-wrapper {
+  position: relative;
+  width: 100%;
+  background: radial-gradient(circle at top left, rgba(42, 157, 143, 0.24), rgba(15, 76, 129, 0.18) 45%, #0F172A 100%);
+  min-height: 560px;
+  min-height: clamp(540px, 78vh, calc(100vh - 130px));
+  max-height: calc(100vh - 120px);
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+/* Daily injects an <iframe>.  Force frame size to match wrapper. */
+.vc-daily-frame-wrapper > iframe {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 540px;
+  min-height: clamp(540px, 78vh, calc(100vh - 130px)) !important;
+  max-height: calc(100vh - 120px) !important;
+  border: 0 !important;
+  display: block;
+}
+
+/* ------------------------------
+ *  Pre-call / initialization state (never blank screen)
+ * ------------------------------ */
+.vc-precall-state {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: #E5E7EB;
+  gap: 14px;
+}
+
+.vc-precall-state__logo-circle {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: 0 20px 50px rgba(15, 76, 129, 0.35);
+  margin-bottom: 8px;
+}
+.vc-precall-state__logo-circle i {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.vc-precall-state__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #F8FAFC;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.vc-precall-state__message {
+  max-width: 420px;
+  color: #CBD5E1;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* ------------------------------
+ *  Side panels (consultation context + status)
+ * ------------------------------ */
+.vc-side-panel {
+  border: 1px solid var(--vc-border);
+  border-radius: var(--vc-radius);
+  background: var(--vc-surface);
+  box-shadow: 0 18px 40px rgba(15, 76, 129, 0.06);
+  overflow: hidden;
+}
+.vc-side-panel__header {
+  padding: 14px 20px;
+  background: rgba(var(--vc-primary-rgb), 0.06);
+  color: #0F4C81;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid rgba(var(--vc-primary-rgb), 0.08);
+}
+.vc-side-panel__header--primary {
+  background: rgba(var(--vc-primary-rgb), 0.08);
+  color: #0F4C81;
+  border-bottom-color: rgba(var(--vc-primary-rgb), 0.10);
+}
+.vc-side-panel__header--teal {
+  background: rgba(var(--vc-teal-rgb), 0.08);
+  color: #236b63;
+  border-bottom-color: rgba(var(--vc-teal-rgb), 0.10);
+}
+.vc-side-panel__body {
+  padding: 20px;
+}
+
+/* Pre-call checklist */
+.vc-precall-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 16px;
+}
+.vc-precall-list > li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  align-items: flex-start;
+}
+.vc-precall-list > li i {
+  color: var(--vc-green);
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+.vc-precall-list strong {
+  font-size: 0.9rem;
+  color: #1F2937;
+  display: block;
+}
+.vc-precall-list span {
+  display: block;
+  color: var(--vc-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+/* ------------------------------
+ *  Utility badge backgrounds for the room (not global)
+ * ------------------------------ */
+.bg-primary-soft { background: rgba(var(--vc-primary-rgb), 0.10); color: #0a4f82; }
+.bg-teal-soft    { background: rgba(var(--vc-teal-rgb), 0.12);    color: #1e5d56; }
+.bg-info-soft    { background: rgba(14, 165, 233, 0.12);         color: #075985; }
+.text-primary-900 { color: #0a4f82; }
+.text-teal-900    { color: #1e5d56; }
+.text-info-900    { color: #075985; }
+
+/* ------------------------------
+ *  Alert region — keeps same Bootstrap visual feel, ensures visibility
+ * ------------------------------ */
+#vc-alert-region .alert {
+  border-radius: var(--vc-radius-sm);
+  padding: 0.9rem 1rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  border-width: 1px;
+}
+
+/* ------------------------------
+ *  Responsive — mobile reflow
+ * ------------------------------ */
+@media (max-width: 1199.98px) {
+  .vc-daily-frame-wrapper {
+    min-height: 60vh;
+    max-height: 68vh;
+  }
+  .vc-daily-frame-wrapper > iframe {
+    min-height: 60vh !important;
+    max-height: 68vh !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .vc-daily-frame-wrapper {
+    min-height: 58vh;
+    max-height: 62vh;
+  }
+  .vc-daily-frame-wrapper > iframe {
+    min-height: 58vh !important;
+    max-height: 62vh !important;
+  }
+  .vc-precall-state {
+    padding: 32px 16px;
+  }
+}
+
+/* ------------------------------
+ *  Reduced motion — disable fade
+ * ------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

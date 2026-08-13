@@ -2,9 +2,58 @@
 
 $currentPath = \App\Helpers\Helper::currentPath();
 $sidebarItems = $sidebarItems ?? [];
-$sidebarStatusTitle = $sidebarStatusTitle ?? 'Week 5 Consultation Workflow';
-$sidebarStatusDescription = $sidebarStatusDescription ?? 'Booking, approval, status tracking, and clinician completion are active across the platform.';
-$sidebarSprintLabel = $sidebarSprintLabel ?? 'W5';
+
+$hasGroups = false;
+foreach ($sidebarItems as $item) {
+    if (isset($item['group']) && $item['group'] !== '') {
+        $hasGroups = true;
+        break;
+    }
+}
+
+$groupedItems = [];
+$groupOrder = [];
+
+if ($hasGroups) {
+    foreach ($sidebarItems as $item) {
+        $groupName = (string) ($item['group'] ?? 'General');
+        if (!isset($groupedItems[$groupName])) {
+            $groupedItems[$groupName] = [];
+            $groupOrder[] = $groupName;
+        }
+        $groupedItems[$groupName][] = $item;
+    }
+} else {
+    $groupedItems['Navigation'] = $sidebarItems;
+    $groupOrder = ['Navigation'];
+}
+
+$renderSidebarNav = static function (array $groupedItems, array $groupOrder, string $currentPath, bool $forOffcanvas = false): void {
+    foreach ($groupOrder as $groupName):
+        ?>
+        <div class="sidebar-nav-group">
+            <?php if (!$forOffcanvas || true): ?>
+                <p class="sidebar-caption"><?= \App\Helpers\Helper::escape($groupName) ?></p>
+            <?php endif; ?>
+            <nav class="nav flex-column gap-2">
+                <?php foreach ($groupedItems[$groupName] as $item): ?>
+                    <?php
+                    $itemPath = (string) ($item['path'] ?? '#');
+                    $isActive = $currentPath === $itemPath || ($itemPath !== '/' && str_starts_with($currentPath, $itemPath . '/'));
+                    ?>
+                    <a
+                        href="<?= \App\Helpers\Helper::url($itemPath) ?>"
+                        class="sidebar-link <?= $isActive ? 'active' : '' ?>"
+                    >
+                        <span class="sidebar-link-icon"><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
+                        <span><?= \App\Helpers\Helper::escape($item['label'] ?? 'Link') ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </nav>
+        </div>
+    <?php
+    endforeach;
+};
 ?>
 
 <aside class="dashboard-sidebar d-none d-lg-flex flex-column">
@@ -40,40 +89,11 @@ $sidebarSprintLabel = $sidebarSprintLabel ?? 'W5';
   </div>
 
   <div class="px-3 pb-4 flex-grow-1">
-    <p class="sidebar-caption mb-3 px-3">Navigation</p>
-    <nav class="nav flex-column gap-2">
-      <?php foreach ($sidebarItems as $item): ?>
-        <?php
-        $itemPath = (string) ($item['path'] ?? '#');
-        $isActive = $currentPath === $itemPath || ($itemPath !== '/' && str_starts_with($currentPath, $itemPath . '/'));
-        ?>
-        <a
-          href="<?= \App\Helpers\Helper::url($itemPath) ?>"
-          class="sidebar-link <?= $isActive ? 'active' : '' ?>"
-        >
-          <span class="sidebar-link-icon"><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
-          <span><?= \App\Helpers\Helper::escape($item['label'] ?? 'Link') ?></span>
-        </a>
-      <?php endforeach; ?>
-    </nav>
+    <?php $renderSidebarNav($groupedItems, $groupOrder, $currentPath, false); ?>
   </div>
 
-  <div class="px-4 pb-4">
-    <div class="sidebar-support-card">
-      <span class="small text-uppercase text-white-50 d-block mb-2">Platform Status</span>
-      <h2 class="h6 text-white mb-2"><?= \App\Helpers\Helper::escape($sidebarStatusTitle) ?></h2>
-      <p class="text-white-50 small mb-0"><?= \App\Helpers\Helper::escape($sidebarStatusDescription) ?></p>
-      <div class="sidebar-support-metrics">
-        <div class="sidebar-support-stat">
-          <strong><?= \App\Helpers\Helper::escape((string) count($sidebarItems)) ?></strong>
-          <span>active links</span>
-        </div>
-        <div class="sidebar-support-stat">
-          <strong><?= \App\Helpers\Helper::escape($sidebarSprintLabel) ?></strong>
-          <span>current sprint</span>
-        </div>
-      </div>
-    </div>
+  <div class="sidebar-copyright">
+    &copy; MBPHA &middot; TeleHealth
   </div>
 </aside>
 
@@ -105,20 +125,6 @@ $sidebarSprintLabel = $sidebarSprintLabel ?? 'W5';
       </div>
     </div>
 
-    <nav class="nav flex-column gap-2">
-      <?php foreach ($sidebarItems as $item): ?>
-        <?php
-        $itemPath = (string) ($item['path'] ?? '#');
-        $isActive = $currentPath === $itemPath || ($itemPath !== '/' && str_starts_with($currentPath, $itemPath . '/'));
-        ?>
-        <a
-          href="<?= \App\Helpers\Helper::url($itemPath) ?>"
-          class="sidebar-link <?= $isActive ? 'active' : '' ?>"
-        >
-          <span class="sidebar-link-icon"><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
-          <span><?= \App\Helpers\Helper::escape($item['label'] ?? 'Link') ?></span>
-        </a>
-      <?php endforeach; ?>
-    </nav>
+    <?php $renderSidebarNav($groupedItems, $groupOrder, $currentPath, true); ?>
   </div>
 </div>

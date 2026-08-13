@@ -3,15 +3,11 @@
 $request = $request ?? [];
 $csrfToken = $csrfToken ?? '';
 $status = (string) ($request['status'] ?? 'Pending');
-$statusBadgeMap = [
-    'Pending' => 'badge-soft-warning',
-    'Approved' => 'badge-soft-success',
-    'Rejected' => 'badge-soft-danger',
-    'Cancelled' => 'badge-soft-danger',
-    'Completed' => 'badge-soft-success',
-];
-$badgeClass = $statusBadgeMap[$status] ?? 'badge-soft-neutral';
 $requestId = (int) ($request['id'] ?? 0);
+
+require __DIR__ . '/../../partials/shared/status_helper.php';
+
+$badgeClass = ux_status_badge_class($status, 'ux-badge--neutral');
 $dateLabel = \App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'D, d M Y', 'Not available');
 $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($request['end_time'] ?? ''), 0, 5);
 ?>
@@ -19,28 +15,33 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
 <section class="mb-4">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
+  <div class="ux-page-header d-flex flex-column flex-xl-row justify-content-between align-items-xl-start align-items-xl-center gap-3 mb-4">
+    <div class="ux-page-header__left">
+      <ol class="ux-breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/admin/dashboard') ?>">Dashboard</a></li>
+        <li><a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>">Requests</a></li>
+        <li class="active">Request #<?= \App\Helpers\Helper::escape((string) $requestId) ?></li>
+      </ol>
+      <span class="section-badge mb-3">
+        <i class="bi bi-clipboard2-check"></i>
+        Consultation Request Details
+      </span>
+      <h2 class="ux-page-header__title h4 mb-2">Request #<?= \App\Helpers\Helper::escape((string) $requestId) ?></h2>
+      <p class="ux-page-header__subtitle text-muted mb-0">Review full consultation request details and apply an approval decision securely.</p>
+    </div>
+    <div class="ux-page-header__right d-flex flex-wrap gap-2 align-items-center">
+      <a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left me-2"></i>
+        Back to Requests
+      </a>
+      <span class="ux-badge <?= \App\Helpers\Helper::escape($badgeClass) ?> align-self-center">
+        <?= \App\Helpers\Helper::escape($status) ?>
+      </span>
+    </div>
+  </div>
+
   <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-4">
-      <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
-        <div>
-          <span class="section-badge mb-3">
-            <i class="bi bi-clipboard2-check"></i>
-            Consultation Request Details
-          </span>
-          <h2 class="h4 mb-2">Request #<?= \App\Helpers\Helper::escape((string) $requestId) ?></h2>
-          <p class="text-muted mb-0">Review full consultation request details and apply an approval decision securely.</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-          <a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>" class="btn btn-outline-primary rounded-pill px-4">
-            <i class="bi bi-arrow-left me-2"></i>
-            Back to Requests
-          </a>
-          <span class="badge <?= \App\Helpers\Helper::escape($badgeClass) ?> rounded-pill px-3 py-2 align-self-center">
-            <?= \App\Helpers\Helper::escape($status) ?>
-          </span>
-        </div>
-      </div>
-
       <div class="row g-4 mb-4">
         <div class="col-xl-4">
           <div class="admin-summary-card h-100">
@@ -92,14 +93,14 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
           <?php if ($status === 'Pending'): ?>
             <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/reject') ?>">
               <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-              <button type="submit" class="btn btn-outline-danger rounded-pill px-4">
+              <button type="submit" class="btn btn-outline-danger btn-sm">
                 <i class="bi bi-x-circle me-2"></i>
                 Reject Request
               </button>
             </form>
             <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/approve') ?>">
               <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-              <button type="submit" class="btn btn-primary rounded-pill px-4">
+              <button type="submit" class="btn btn-primary btn-sm">
                 <i class="bi bi-check2-circle me-2"></i>
                 Approve Request
               </button>
@@ -107,7 +108,7 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
           <?php endif; ?>
           <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/cancel') ?>">
             <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-            <button type="submit" class="btn btn-outline-secondary rounded-pill px-4">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
               <i class="bi bi-slash-circle me-2"></i>
               Cancel Request
             </button>

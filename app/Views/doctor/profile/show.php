@@ -9,21 +9,25 @@ $statusMessage = $statusMessage ?? null;
 <section class="mb-4">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-    <div>
+  <div class="ux-page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-start align-items-lg-center gap-3 mb-0">
+    <div class="ux-page-header__left">
+      <ol class="ux-breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
+        <li class="active">Profile</li>
+      </ol>
       <span class="section-badge mb-3">
         <i class="bi bi-person-vcard"></i>
         Doctor Profile
       </span>
-      <h2 class="h4 mb-2">View your clinician profile</h2>
-      <p class="text-muted mb-0">Review your identity and uploaded assets as they will appear in future clinical workflows.</p>
+      <h2 class="ux-page-header__title h4 mb-2">View your clinician profile</h2>
+      <p class="ux-page-header__subtitle text-muted mb-0">Review your identity and uploaded assets as they will appear in future clinical workflows.</p>
     </div>
-    <div class="d-flex flex-wrap gap-2">
-      <a href="<?= \App\Helpers\Helper::url('/doctor/profile/edit') ?>" class="btn btn-primary rounded-pill px-4">
+    <div class="ux-page-header__right d-flex flex-wrap gap-2">
+      <a href="<?= \App\Helpers\Helper::url('/doctor/profile/edit') ?>" class="btn btn-primary btn-sm">
         <i class="bi bi-person-gear me-2"></i>
         Edit Profile
       </a>
-      <a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>" class="btn btn-outline-primary rounded-pill px-4">
+      <a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-arrow-left me-2"></i>
         Back to Dashboard
       </a>
@@ -37,7 +41,10 @@ $statusMessage = $statusMessage ?? null;
       <div class="card-body p-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
           <h3 class="h5 mb-0">Profile Photo</h3>
-          <span class="badge badge-soft-info rounded-pill px-3 py-2">Identity</span>
+          <span class="ux-chip ux-badge--dotless ux-badge--neutral">
+            <i class="bi bi-person-photo"></i>
+            <span>Identity</span>
+          </span>
         </div>
 
         <div class="doctor-profile-photo-shell">
@@ -71,7 +78,7 @@ $statusMessage = $statusMessage ?? null;
             <h3 class="h5 mb-1">Profile Details</h3>
             <p class="text-muted mb-0">Your specialization and contact details are displayed in clinician workflows.</p>
           </div>
-          <span class="badge badge-soft-neutral rounded-pill border px-3 py-2"><?= \App\Helpers\Helper::escape(ucfirst((string) ($profile['status'] ?? 'active'))) ?></span>
+          <span class="ux-badge ux-badge--neutral"><?= \App\Helpers\Helper::escape(ucfirst((string) ($profile['status'] ?? 'active'))) ?></span>
         </div>
 
         <div class="user-detail-grid">
@@ -105,7 +112,10 @@ $statusMessage = $statusMessage ?? null;
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
               <h4 class="h6 mb-0">Digital Signature</h4>
-              <span class="badge badge-soft-info rounded-pill px-3 py-2">Future-ready</span>
+              <span class="ux-chip ux-badge--dotless ux-badge--neutral">
+                <i class="bi bi-patch-check"></i>
+                <span>Future-ready</span>
+              </span>
             </div>
 
             <?php if (!empty($signaturePath)): ?>

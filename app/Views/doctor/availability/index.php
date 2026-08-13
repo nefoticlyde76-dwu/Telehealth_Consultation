@@ -8,6 +8,9 @@ $statusOptions = $statusOptions ?? [];
 $statusMessage = $statusMessage ?? null;
 $csrfToken = $csrfToken ?? '';
 
+require __DIR__ . '/../../partials/shared/status_helper.php';
+
+$totalItems = (int) ($pagination['total_items'] ?? 0);
 $buildPageUrl = static function (int $page) use ($filters): string {
     $query = array_filter([
         'search' => $filters['search'] ?? '',
@@ -23,126 +26,139 @@ $buildPageUrl = static function (int $page) use ($filters): string {
 ?>
 
 <section class="mb-4">
+  <div class="ux-page-header">
+    <div class="ux-page-header__left">
+      <ol class="ux-breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
+        <li class="active">Availability</li>
+      </ol>
+      <h2 class="ux-page-header__title">My Availability Schedule</h2>
+      <p class="ux-page-header__subtitle">Manage consultation slots patients can book. Edit future windows and remove or lock booked appointments.</p>
+    </div>
+    <div class="ux-page-header__right">
+      <span class="ux-chip ux-badge--dotless">
+        <i class="bi bi-calendar-week"></i>
+        <span><?= $totalItems ?> slots visible</span>
+      </span>
+      <a href="<?= \App\Helpers\Helper::url('/doctor/availability/create') ?>" class="btn btn-primary btn-primary-xl">
+        <i class="bi bi-calendar-plus me-2"></i>
+        Create Availability
+      </a>
+    </div>
+  </div>
+
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-4">
-      <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-4">
-        <div>
-          <span class="section-badge mb-3">
-            <i class="bi bi-calendar-week"></i>
-            Doctor Availability Scheduling
-          </span>
-          <h2 class="h4 mb-2">Manage consultation slots professionally</h2>
-          <p class="text-muted mb-0">Create, review, edit, and delete your availability without exposing patient booking workflows.</p>
+  <div class="ux-card ux-filter">
+    <div class="card-header">
+      <h3 class="h6">
+        <i class="bi bi-funnel-fill ux-filter__header-icon"></i>
+        Filter slots
+      </h3>
+    </div>
+    <form method="GET" action="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" novalidate>
+      <div class="row g-3 align-items-end">
+        <div class="col-lg-6">
+          <label for="search" class="form-label">Search availability</label>
+          <input
+            type="text"
+            class="form-control"
+            id="search"
+            name="search"
+            value="<?= \App\Helpers\Helper::escape((string) ($filters['search'] ?? '')) ?>"
+            placeholder="Search by date, time, or notes"
+          >
         </div>
-        <div class="d-flex flex-wrap gap-2">
-          <span class="badge badge-soft-neutral rounded-pill border px-3 py-2"><?= \App\Helpers\Helper::escape((string) ($pagination['total_items'] ?? 0)) ?> slots visible</span>
-          <a href="<?= \App\Helpers\Helper::url('/doctor/availability/create') ?>" class="btn btn-primary rounded-pill px-4">
-            <i class="bi bi-calendar-plus me-2"></i>
-            Create Availability
-          </a>
+
+        <div class="col-lg-2">
+          <label for="filter_date" class="form-label">Date</label>
+          <input
+            type="date"
+            class="form-control"
+            id="filter_date"
+            name="filter_date"
+            value="<?= \App\Helpers\Helper::escape((string) ($filters['filter_date'] ?? '')) ?>"
+          >
         </div>
-      </div>
 
-      <form method="GET" action="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="user-filter-form">
-        <div class="row g-3 align-items-end">
-          <div class="col-lg-6">
-            <label for="search" class="form-label">Search availability</label>
-            <input
-              type="text"
-              class="form-control"
-              id="search"
-              name="search"
-              value="<?= \App\Helpers\Helper::escape((string) ($filters['search'] ?? '')) ?>"
-              placeholder="Search by date, time, or notes"
-            >
-          </div>
+        <div class="col-lg-2">
+          <label for="status" class="form-label">Status</label>
+          <select class="form-select" id="status" name="status" aria-label="Filter slots by status">
+            <option value="">All statuses</option>
+            <?php foreach ($statusOptions as $statusOption): ?>
+              <option value="<?= \App\Helpers\Helper::escape($statusOption) ?>" <?= ($filters['status'] ?? '') === $statusOption ? 'selected' : '' ?>>
+                <?= \App\Helpers\Helper::escape($statusOption) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
 
-          <div class="col-md-4 col-lg-2">
-            <label for="filter_date" class="form-label">Filter by date</label>
-            <input
-              type="date"
-              class="form-control"
-              id="filter_date"
-              name="filter_date"
-              value="<?= \App\Helpers\Helper::escape((string) ($filters['filter_date'] ?? '')) ?>"
-            >
-          </div>
-
-          <div class="col-md-4 col-lg-2">
-            <label for="status" class="form-label">Filter by status</label>
-            <select class="form-select" id="status" name="status">
-              <option value="">All statuses</option>
-              <?php foreach ($statusOptions as $statusOption): ?>
-                <option value="<?= \App\Helpers\Helper::escape($statusOption) ?>" <?= ($filters['status'] ?? '') === $statusOption ? 'selected' : '' ?>>
-                  <?= \App\Helpers\Helper::escape($statusOption) ?>
-                </option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-
-          <div class="col-md-4 col-lg-2 d-grid gap-2">
-            <button type="submit" class="btn btn-primary rounded-pill">
-              <i class="bi bi-funnel me-2"></i>
+        <div class="col-lg-2">
+          <div class="ux-filter__actions">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-funnel-fill me-1"></i>
               Apply Filters
             </button>
-            <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-outline-primary rounded-pill">Reset</a>
+            <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-outline-primary btn-sm">
+              Reset
+            </a>
           </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
-</section>
 
-<section class="mb-4">
-  <div class="row g-4">
+  <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-      <div class="admin-summary-card h-100">
-        <span class="admin-summary-label">Total Slots</span>
-        <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($summary['total_slots'] ?? 0)) ?></strong>
-        <span class="admin-summary-meta">All consultation slots currently stored for your account.</span>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="admin-summary-card h-100">
-        <span class="admin-summary-label">Available</span>
-        <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($summary['available_slots'] ?? 0)) ?></strong>
-        <span class="admin-summary-meta">Slots ready for future booking workflows.</span>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="admin-summary-card h-100">
-        <span class="admin-summary-label">Booked</span>
-        <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($summary['booked_slots'] ?? 0)) ?></strong>
-        <span class="admin-summary-meta">Reserved status supported by the existing schema.</span>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="admin-summary-card h-100">
-        <span class="admin-summary-label">Upcoming</span>
-        <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($summary['upcoming_slots'] ?? 0)) ?></strong>
-        <span class="admin-summary-meta">Future-dated availability visible from today onward.</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-4">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-        <div>
-          <h3 class="h5 mb-1">Availability Table</h3>
-          <p class="text-muted mb-0">Responsive slot listing with secure edit and delete actions.</p>
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--navy">
+          <i class="bi bi-calendar3"></i>
         </div>
-        <span class="badge badge-soft-info rounded-pill px-3 py-2">
-          Page <?= \App\Helpers\Helper::escape((string) ($pagination['current_page'] ?? 1)) ?> of <?= \App\Helpers\Helper::escape((string) ($pagination['total_pages'] ?? 1)) ?>
-        </span>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['total_slots'] ?? 0) ?></div>
+          <div class="ux-stat__label">Total Slots</div>
+        </div>
       </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--success">
+          <i class="bi bi-calendar2-check-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['available_slots'] ?? 0) ?></div>
+          <div class="ux-stat__label">Available</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--cyan">
+          <i class="bi bi-calendar2-event-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['booked_slots'] ?? 0) ?></div>
+          <div class="ux-stat__label">Booked</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--purple">
+          <i class="bi bi-calendar-event-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['upcoming_slots'] ?? 0) ?></div>
+          <div class="ux-stat__label">Upcoming</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <div class="ux-card">
+    <div class="ux-table-wrapper border-0">
       <div class="table-responsive">
-        <table class="table admin-user-table align-middle mb-0">
+        <table class="ux-table">
           <caption class="visually-hidden">Doctor availability schedule showing consultation date, start time, end time, notes, status, and management actions.</caption>
           <thead>
             <tr>
@@ -156,23 +172,40 @@ $buildPageUrl = static function (int $page) use ($filters): string {
           <tbody>
             <?php if ($availability === []): ?>
               <tr>
-                <td colspan="5">
-                  <div class="admin-table-empty text-center py-5">
-                    <div class="empty-state-icon mx-auto mb-3">
+                <td colspan="5" class="ux-table__empty-state">
+                  <div class="ux-empty">
+                    <div class="ux-empty__icon">
                       <i class="bi bi-calendar-x"></i>
                     </div>
-                    <h4 class="h5 mb-2">No availability slots matched the current filters</h4>
-                    <p class="text-muted mb-0">Adjust the search or filters, or create a new consultation slot.</p>
+                    <h4 class="ux-empty__title">No availability slots matched the current filters</h4>
+                    <p class="ux-empty__text">Adjust the search or filters, or create a new consultation slot.</p>
+                    <div class="ux-empty__action">
+                      <a href="<?= \App\Helpers\Helper::url('/doctor/availability/create') ?>" class="btn btn-primary btn-sm">
+                        <i class="bi bi-calendar-plus me-1"></i>
+                        Create Slot
+                      </a>
+                    </div>
                   </div>
                 </td>
               </tr>
             <?php else: ?>
               <?php foreach ($availability as $slot): ?>
-                <?php $slotId = (int) ($slot['id'] ?? 0); ?>
+                <?php
+                $slotId = (int) ($slot['id'] ?? 0);
+                $slotStatus = (string) ($slot['status'] ?? 'Available');
+                $isAvailable = $slotStatus === 'Available';
+                $badgeClass = ux_slot_status_badge_class($slotStatus, $isAvailable ? false : true);
+                $iconClass = ux_status_icon_class($slotStatus, $isAvailable ? 'bi-calendar2-check-fill' : 'bi-calendar2-event-fill');
+                $slotDate = (string) ($slot['consultation_date'] ?? '');
+                $editAriaLabel = 'Edit availability slot on ' . ($slotDate !== '' ? \App\Helpers\Helper::formatDate($slotDate, 'd M Y', 'selected date') : 'selected date');
+                $deleteAriaLabel = 'Delete availability slot on ' . ($slotDate !== '' ? \App\Helpers\Helper::formatDate($slotDate, 'd M Y', 'selected date') : 'selected date');
+                ?>
                 <tr>
                   <td>
-                    <strong><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M Y', 'Not available')) ?></strong>
-                    <span class="d-block text-muted small"><?= \App\Helpers\Helper::escape((string) ($slot['consultation_date'] ?? '')) ?></span>
+                    <div class="d-flex flex-column">
+                      <strong><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate($slotDate, 'd M Y', 'Not available')) ?></strong>
+                      <span class="text-muted small"><?= \App\Helpers\Helper::escape($slotDate) ?></span>
+                    </div>
                   </td>
                   <td>
                     <div class="d-flex flex-column">
@@ -184,32 +217,40 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     <span class="text-muted small d-block"><?= \App\Helpers\Helper::escape((string) ($slot['notes'] ?? 'No notes provided')) ?></span>
                   </td>
                   <td>
-                    <?php $isAvailable = ($slot['status'] ?? '') === 'Available'; ?>
-                    <span class="badge <?= $isAvailable ? 'badge-soft-success' : 'badge-soft-warning' ?> rounded-pill">
-                      <?= \App\Helpers\Helper::escape((string) ($slot['status'] ?? 'Available')) ?>
+                    <span class="ux-badge <?= $badgeClass ?>">
+                      <i class="bi <?= $iconClass ?> me-1"></i>
+                      <?= \App\Helpers\Helper::escape($slotStatus) ?>
                     </span>
                   </td>
                   <td class="text-end">
-                    <div class="admin-action-group">
-                      <?php if ($isAvailable): ?>
-                        <a href="<?= \App\Helpers\Helper::url('/doctor/availability/' . $slotId . '/edit') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3" aria-label="Edit availability slot on <?= \App\Helpers\Helper::escape((string) ($slot['consultation_date'] ?? 'selected date')) ?>">
-                          <i class="bi bi-pencil-square me-2"></i>
+                    <div class="ux-table__actions">
+                      <?php if ($isAvailable && $slotId > 0): ?>
+                        <a
+                          href="<?= \App\Helpers\Helper::url('/doctor/availability/' . $slotId . '/edit') ?>"
+                          class="btn btn-outline-primary btn-sm"
+                          aria-label="<?= \App\Helpers\Helper::escape($editAriaLabel) ?>"
+                        >
+                          <i class="bi bi-pencil-square me-1"></i>
                           Edit
                         </a>
                         <form method="POST" action="<?= \App\Helpers\Helper::url('/doctor/availability/' . $slotId . '/delete') ?>" class="d-inline">
-                          <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
-                          <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" aria-label="Delete availability slot on <?= \App\Helpers\Helper::escape((string) ($slot['consultation_date'] ?? 'selected date')) ?>">
-                            <i class="bi bi-trash me-2"></i>
+                          <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+                          <button
+                            type="submit"
+                            class="btn btn-outline-danger btn-sm"
+                            aria-label="<?= \App\Helpers\Helper::escape($deleteAriaLabel) ?>"
+                          >
+                            <i class="bi bi-trash me-1"></i>
                             Delete
                           </button>
                         </form>
                       <?php else: ?>
-                        <span class="btn btn-outline-secondary btn-sm rounded-pill px-3 disabled" aria-disabled="true">
-                          <i class="bi bi-lock-fill me-2"></i>
+                        <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">
+                          <i class="bi bi-lock-fill me-1"></i>
                           Edit
                         </span>
-                        <span class="btn btn-outline-secondary btn-sm rounded-pill px-3 disabled" aria-disabled="true">
-                          <i class="bi bi-lock-fill me-2"></i>
+                        <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">
+                          <i class="bi bi-lock-fill me-1"></i>
                           Delete
                         </span>
                       <?php endif; ?>
@@ -221,26 +262,31 @@ $buildPageUrl = static function (int $page) use ($filters): string {
           </tbody>
         </table>
       </div>
-
-      <?php if (($pagination['total_pages'] ?? 1) > 1): ?>
-        <nav class="mt-4" aria-label="Doctor availability pagination">
-          <ul class="pagination admin-pagination justify-content-end mb-0">
-            <li class="page-item <?= ($pagination['current_page'] ?? 1) <= 1 ? 'disabled' : '' ?>">
-              <a class="page-link" href="<?= ($pagination['current_page'] ?? 1) <= 1 ? '#' : $buildPageUrl((int) $pagination['current_page'] - 1) ?>">Previous</a>
-            </li>
-
-            <?php for ($page = 1; $page <= (int) ($pagination['total_pages'] ?? 1); $page++): ?>
-              <li class="page-item <?= $page === (int) ($pagination['current_page'] ?? 1) ? 'active' : '' ?>">
-                <a class="page-link" href="<?= $buildPageUrl($page) ?>"><?= \App\Helpers\Helper::escape((string) $page) ?></a>
-              </li>
-            <?php endfor; ?>
-
-            <li class="page-item <?= ($pagination['current_page'] ?? 1) >= ($pagination['total_pages'] ?? 1) ? 'disabled' : '' ?>">
-              <a class="page-link" href="<?= ($pagination['current_page'] ?? 1) >= ($pagination['total_pages'] ?? 1) ? '#' : $buildPageUrl((int) $pagination['current_page'] + 1) ?>">Next</a>
-            </li>
-          </ul>
-        </nav>
-      <?php endif; ?>
     </div>
+    <?php if (is_array($pagination) && ($pagination['total_pages'] ?? 0) > 1): ?>
+      <?php
+      $page = (int) ($pagination['current_page'] ?? 1);
+      $totalPages = (int) ($pagination['total_pages'] ?? 1);
+      ?>
+      <div class="card-footer border-0 bg-transparent pt-4 pb-0">
+        <nav class="d-flex justify-content-end align-items-center gap-2 flex-wrap" aria-label="Doctor availability pagination">
+          <?php if ($page > 1): ?>
+            <a href="<?= $buildPageUrl($page - 1) ?>" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-chevron-left me-1"></i>
+              Previous
+            </a>
+          <?php endif; ?>
+          <span class="small text-muted">
+            Page <?= $page ?> of <?= $totalPages ?>
+          </span>
+          <?php if ($page < $totalPages): ?>
+            <a href="<?= $buildPageUrl($page + 1) ?>" class="btn btn-outline-primary btn-sm">
+              Next
+              <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+          <?php endif; ?>
+        </nav>
+      </div>
+    <?php endif; ?>
   </div>
 </section>

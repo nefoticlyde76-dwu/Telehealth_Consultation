@@ -4,13 +4,10 @@ $currentUser = \App\Services\AuthService::getUser();
 $currentRole = \App\Services\AuthService::getUserRole();
 $currentPath = \App\Helpers\Helper::currentPath();
 $publicNavigationItems = [
-    ['label' => 'Home', 'path' => '/#home', 'icon' => 'bi-house-door'],
-    ['label' => 'About', 'path' => '/#about', 'icon' => 'bi-info-circle'],
-    ['label' => 'Services', 'path' => '/#services', 'icon' => 'bi-clipboard2-pulse'],
-    ['label' => 'Features', 'path' => '/#features', 'icon' => 'bi-stars'],
-    ['label' => 'How It Works', 'path' => '/#how-it-works', 'icon' => 'bi-diagram-3'],
-    ['label' => 'FAQ', 'path' => '/#faq', 'icon' => 'bi-question-circle'],
-    ['label' => 'Contact', 'path' => '/#contact', 'icon' => 'bi-envelope'],
+    ['label' => 'Home',          'path' => '/#home',          'icon' => 'bi-house-door'],
+    ['label' => 'About',         'path' => '/#about',         'icon' => 'bi-info-circle'],
+    ['label' => 'How It Works',  'path' => '/#how-it-works',  'icon' => 'bi-diagram-3'],
+    ['label' => 'Contact',       'path' => '/#contact',       'icon' => 'bi-envelope'],
 ];
 $dashboardUrl = $currentRole ? \App\Services\AuthService::getRoleRedirectUrl($currentRole) : '/';
 ?>

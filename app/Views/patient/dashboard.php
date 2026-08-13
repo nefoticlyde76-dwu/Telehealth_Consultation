@@ -1,4 +1,5 @@
 <?php
+$showRightbar = true;
 $stats = is_array($stats ?? null) ? $stats : [];
 $bookingSummary = is_array($bookingSummary ?? null) ? $bookingSummary : [];
 $slotPreview = is_array($slotPreview ?? null) ? $slotPreview : [];
@@ -7,42 +8,262 @@ $charts = is_array($charts ?? null) ? $charts : [];
 $statusChart = $charts['status_distribution'] ?? null;
 $monthlyChart = $charts['monthly_requests'] ?? null;
 $latestRequest = is_array($bookingSummary['latest_request'] ?? null) ? $bookingSummary['latest_request'] : null;
+require_once __DIR__ . '/../partials/shared/status_helper.php';
+
+$totalRequests = (int) ($bookingSummary['total_requests'] ?? ($stats[0]['value'] ?? 0));
+$pendingCount = (int) ($bookingSummary['pending_count'] ?? 0);
+$approvedCount = (int) ($bookingSummary['approved_count'] ?? 0);
+$completedCount = (int) ($bookingSummary['completed_count'] ?? 0);
+if ($pendingCount === 0 && $approvedCount === 0 && $completedCount === 0) {
+    foreach ($stats as $s) {
+        $lbl = strtolower((string) ($s['label'] ?? ''));
+        $val = (int) ($s['value'] ?? 0);
+        if (str_contains($lbl, 'pending')) { $pendingCount = $val; }
+        elseif (str_contains($lbl, 'approved')) { $approvedCount = $val; }
+        elseif (str_contains($lbl, 'completed')) { $completedCount = $val; }
+    }
+}
+$latestStatus = (string) ($latestRequest['status'] ?? '');
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
 
-<section class="dashboard-banner mb-4" data-aos="fade-up">
-  <div class="row g-4 align-items-center">
-    <div class="col-lg-8">
-      <span class="section-badge mb-3">
-        <i class="bi bi-heart-pulse"></i>
-        Patient Workspace
-      </span>
-      <h2 class="h3 mb-3">Good day, <?= \App\Helpers\Helper::escape($user->full_name ?? 'Patient') ?>.</h2>
-      <p class="text-muted mb-0">Book an available consultation slot, track requests, and review appointment updates from one secure patient dashboard.</p>
-      <div class="dashboard-banner-actions">
-        <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-primary rounded-pill px-4">
-          <i class="bi bi-calendar2-plus me-2"></i>
-          Book Consultation
-        </a>
-        <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary rounded-pill px-4">
-          <i class="bi bi-clipboard2-check me-2"></i>
-          My Consultations
-        </a>
+<?php
+$patientFullName = (string) ($user->full_name ?? 'Patient');
+$patientFirstName = trim(explode(' ', $patientFullName, 2)[0] ?? $patientFullName);
+$patientToday = (new DateTimeImmutable())->format('l, d F Y');
+
+$patientStatusText = 'Ready to book a consultation';
+$patientStatusIcon = 'bi-calendar2-heart';
+if ($latestRequest !== null) {
+    if ($latestStatus === 'Approved') {
+        $patientStatusText = 'Your next consultation is approved';
+        $patientStatusIcon = 'bi-calendar2-check';
+    } elseif ($latestStatus === 'Pending') {
+        $patientStatusText = 'Your request is awaiting administrator review';
+        $patientStatusIcon = 'bi-clock';
+    } elseif ($latestStatus === 'Completed') {
+        $patientStatusText = 'Book a follow-up consultation';
+        $patientStatusIcon = 'bi-calendar2-plus';
+    }
+}
+?>
+
+<div class="ux-welcome ux-welcome--patient">
+  <span class="ux-welcome__corner-tick ux-welcome__corner-tick--tr"></span>
+  <span class="ux-welcome__corner-tick ux-welcome__corner-tick--br"></span>
+  <span class="ux-welcome__sweep"></span>
+  <span class="ux-welcome__sweep ux-welcome__sweep--b"></span>
+
+  <div class="ux-welcome__grid">
+    <div>
+      <ol class="ux-welcome__breadcrumb">
+        <li><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
+        <li class="active">Patient Dashboard</li>
+      </ol>
+      <span class="ux-welcome__eyebrow">Your TeleHealth Journey · MBPHA</span>
+      <h1 class="ux-welcome__title">Welcome, <?= \App\Helpers\Helper::escape($patientFirstName) ?> 👋</h1>
+      <p class="ux-welcome__description">Manage your telehealth journey. Book consultations, track request status, and review completed appointments with MBPHA clinicians.</p>
+
+      <div class="ux-welcome__meta-pill-row">
+        <span class="ux-welcome__meta-pill">
+          <i class="bi <?= \App\Helpers\Helper::escape($patientStatusIcon) ?>"></i>
+          <span><?= \App\Helpers\Helper::escape($patientStatusText) ?></span>
+        </span>
+        <span class="ux-welcome__meta-pill">
+          <i class="bi bi-calendar3"></i>
+          <span><?= \App\Helpers\Helper::escape($patientToday) ?></span>
+        </span>
+        <?php if ($latestRequest !== null && $latestStatus === 'Approved'): ?>
+          <span class="ux-welcome__meta-pill">
+            <i class="bi bi-doctor"></i>
+            <span>Next: <?= \App\Helpers\Helper::escape((string) ($latestRequest['doctor_name'] ?? 'Doctor')) ?> · <?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($latestRequest['consultation_date'] ?? ''), 'd M', 'TBD')) ?></span>
+          </span>
+        <?php endif; ?>
+        <span class="ux-welcome__meta-pill">
+          <i class="bi bi-hourglass-split"></i>
+          <span>Pending: <?= \App\Helpers\Helper::escape((string) $pendingCount) ?></span>
+        </span>
+        <span class="ux-welcome__meta-pill">
+          <i class="bi bi-check-circle"></i>
+          <span>Approved: <?= \App\Helpers\Helper::escape((string) $approvedCount) ?></span>
+        </span>
+        <span class="ux-welcome__meta-pill">
+          <i class="bi bi-journal-medical"></i>
+          <span>Completed: <?= \App\Helpers\Helper::escape((string) $completedCount) ?></span>
+        </span>
       </div>
     </div>
-    <div class="col-lg-4">
-      <div class="dashboard-spotlight-card">
-        <span class="dashboard-spotlight-label">Latest Status</span>
-        <strong class="d-block mb-2"><?= \App\Helpers\Helper::escape((string) ($bookingSummary['latest_status_display'] ?? 'No requests yet')) ?></strong>
-        <?php if ($latestRequest !== null): ?>
-          <p class="text-muted small mb-0">
-            <?= \App\Helpers\Helper::escape((string) ($latestRequest['doctor_name'] ?? 'Doctor')) ?>
-            · <?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($latestRequest['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?>
-          </p>
-        <?php else: ?>
-          <p class="text-muted small mb-0">Submit a booking request to begin the Week 5 consultation workflow.</p>
-        <?php endif; ?>
+
+    <div class="ux-welcome__actions">
+      <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn-primary-xl">
+        <i class="bi bi-calendar2-plus me-2"></i>Book Consultation
+      </a>
+      <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="ux-welcome__cta-secondary">
+        <i class="bi bi-journal-text"></i>
+        <span>My History</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<section class="mb-4">
+  <div class="row g-4">
+    <?php
+    $patientKpis = [
+        [
+            'label' => 'Total Requests',
+            'value' => $totalRequests,
+            'description' => 'All consultations submitted',
+            'icon' => 'bi-journal-text',
+            'tone' => 'surface',
+        ],
+        [
+            'label' => 'Pending',
+            'value' => $pendingCount,
+            'description' => 'Awaiting administrator review',
+            'icon' => 'bi-hourglass-split',
+            'tone' => 'amber',
+        ],
+        [
+            'label' => 'Approved',
+            'value' => $approvedCount,
+            'description' => 'Confirmed consultations',
+            'icon' => 'bi-calendar2-check',
+            'tone' => 'mint',
+        ],
+        [
+            'label' => 'Completed',
+            'value' => $completedCount,
+            'description' => 'Finished consultation sessions',
+            'icon' => 'bi-journal-medical',
+            'tone' => 'navy',
+        ],
+    ];
+    $patientKpiToneMap = [
+        'surface' => 'ux-stat__icon--surface',
+        'mint'    => 'ux-stat__icon--mint',
+        'amber'   => 'ux-stat__icon--amber',
+        'navy'    => 'ux-stat__icon--navy',
+    ];
+    ?>
+    <?php foreach ($patientKpis as $kpi): ?>
+      <?php $kpiIconTone = $patientKpiToneMap[$kpi['tone']] ?? 'ux-stat__icon--surface'; ?>
+      <div class="col-sm-6 col-xl-3">
+        <div class="ux-stat h-100">
+          <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
+            <div>
+              <span class="ux-stat__label"><?= \App\Helpers\Helper::escape((string) $kpi['label']) ?></span>
+              <h3 class="ux-stat__value" data-counter="<?= \App\Helpers\Helper::escape((string) $kpi['value']) ?>">
+                <?= \App\Helpers\Helper::escape((string) $kpi['value']) ?>
+              </h3>
+            </div>
+            <span class="ux-stat__icon <?= $kpiIconTone ?>"><i class="bi <?= \App\Helpers\Helper::escape((string) $kpi['icon']) ?>"></i></span>
+          </div>
+          <p class="text-muted mb-0 small"><?= \App\Helpers\Helper::escape((string) $kpi['description']) ?></p>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</section>
+
+<section class="mb-4">
+  <div class="row g-4">
+    <div class="col-12">
+      <div class="ux-card h-100">
+        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h3 class="h5 mb-1">Your Next Consultation</h3>
+            <p class="text-muted mb-0 small">Summary of your next appointment, request status, or suggested next action.</p>
+          </div>
+          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">View All History</a>
+        </div>
+        <div class="ux-card__body">
+
+          <?php if ($latestRequest !== null && $latestStatus === 'Approved'): ?>
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+              <div>
+                <h4 class="h5 mb-1"><?= \App\Helpers\Helper::escape((string) ($latestRequest['doctor_name'] ?? 'Doctor')) ?></h4>
+                <p class="text-muted mb-0"><?= \App\Helpers\Helper::escape((string) ($latestRequest['specialization'] ?? 'General Practice')) ?></p>
+              </div>
+              <span class="ux-badge ux-badge--approved">Approved</span>
+            </div>
+            <div class="row g-4 mb-4">
+              <div class="col-sm-6 col-md-3">
+                <span class="d-block small text-muted mb-1">Date</span>
+                <strong><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($latestRequest['consultation_date'] ?? ''), 'l, d M Y', 'Not scheduled')) ?></strong>
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <span class="d-block small text-muted mb-1">Time</span>
+                <strong><?= \App\Helpers\Helper::escape(substr((string) ($latestRequest['start_time'] ?? ''), 0, 5)) ?> – <?= \App\Helpers\Helper::escape(substr((string) ($latestRequest['end_time'] ?? ''), 0, 5)) ?></strong>
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <span class="d-block small text-muted mb-1">Consultation</span>
+                <strong><?= \App\Helpers\Helper::escape(ucwords((string) ($latestRequest['consultation_type'] ?? 'Standard'))) ?></strong>
+              </div>
+              <div class="col-sm-6 col-md-3">
+                <span class="d-block small text-muted mb-1">Reference</span>
+                <strong class="font-monospace">#TH-<?= \App\Helpers\Helper::escape((string) ((int) ($latestRequest['id'] ?? 0))) ?></strong>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/' . (string) ((int) ($latestRequest['id'] ?? 0))) ?>" class="btn btn-primary btn-sm">
+                <i class="bi bi-arrow-right me-2"></i>View Details
+              </a>
+              <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-calendar2-plus me-2"></i>Book Another
+              </a>
+            </div>
+          <?php elseif ($latestRequest !== null && $latestStatus === 'Pending'): ?>
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+              <div>
+                <h4 class="h5 mb-1"><?= \App\Helpers\Helper::escape((string) ($latestRequest['doctor_name'] ?? 'Doctor')) ?></h4>
+                <p class="text-muted mb-0"><?= \App\Helpers\Helper::escape((string) ($latestRequest['specialization'] ?? 'General Practice')) ?></p>
+              </div>
+              <span class="ux-badge ux-badge--pending">Awaiting Administrator Review</span>
+            </div>
+            <div class="row g-4 mb-4">
+              <div class="col-sm-6 col-md-4">
+                <span class="d-block small text-muted mb-1">Requested Date</span>
+                <strong><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($latestRequest['consultation_date'] ?? ''), 'l, d M Y', 'Not scheduled')) ?></strong>
+              </div>
+              <div class="col-sm-6 col-md-4">
+                <span class="d-block small text-muted mb-1">Preferred Time</span>
+                <strong><?= \App\Helpers\Helper::escape(substr((string) ($latestRequest['start_time'] ?? ''), 0, 5)) ?> – <?= \App\Helpers\Helper::escape(substr((string) ($latestRequest['end_time'] ?? ''), 0, 5)) ?></strong>
+              </div>
+              <div class="col-sm-12 col-md-4">
+                <span class="d-block small text-muted mb-1">Reference</span>
+                <strong class="font-monospace">#TH-<?= \App\Helpers\Helper::escape((string) ((int) ($latestRequest['id'] ?? 0))) ?></strong>
+              </div>
+            </div>
+            <p class="text-muted small mb-4"><i class="bi bi-info-circle me-1"></i>You will receive a status update once the administrator reviews your request.</p>
+            <div class="d-flex flex-wrap gap-2">
+              <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/' . (string) ((int) ($latestRequest['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-eye me-2"></i>Track Request
+              </a>
+              <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-journal-text me-2"></i>All Requests
+              </a>
+            </div>
+          <?php else: ?>
+            <div class="ux-empty py-5 text-center">
+              <div class="ux-empty__icon mx-auto mb-3"><i class="bi bi-calendar2-heart"></i></div>
+              <h4 class="h6 mb-2">No consultation booked</h4>
+              <p class="text-muted mb-4" style="max-width: 480px; margin-left: auto; margin-right: auto;">
+                Book your first appointment with an MBPHA clinician and your upcoming consultation details will appear here.
+              </p>
+              <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-primary btn-sm">
+                  <i class="bi bi-calendar2-plus me-2"></i>Book Consultation
+                </a>
+                <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-journal-text me-2"></i>My History
+                </a>
+              </div>
+            </div>
+          <?php endif; ?>
+
+        </div>
       </div>
     </div>
   </div>
@@ -52,18 +273,18 @@ $latestRequest = is_array($bookingSummary['latest_request'] ?? null) ? $bookingS
   <div class="row g-4">
     <?php foreach ($stats as $stat): ?>
       <?php $statValue = (string) ($stat['value'] ?? '0'); ?>
-      <div class="col-sm-6 col-xl-3" data-aos="fade-up">
-        <div class="stats-card h-100">
+      <?php $iconTone = ($stat['tone'] ?? '') === 'success' ? 'ux-stat__icon--mint' : 'ux-stat__icon--surface'; ?>
+      <div class="col-sm-6 col-xl-3">
+        <div class="ux-stat h-100">
           <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
             <div>
-              <span class="stats-label"><?= \App\Helpers\Helper::escape((string) ($stat['label'] ?? '')) ?></span>
-              <h3 class="stats-value" <?= is_numeric($statValue) ? 'data-counter="' . \App\Helpers\Helper::escape($statValue) . '"' : '' ?>>
+              <span class="ux-stat__label"><?= \App\Helpers\Helper::escape((string) ($stat['label'] ?? '')) ?></span>
+              <h3 class="ux-stat__value" <?= is_numeric($statValue) ? 'data-counter="' . \App\Helpers\Helper::escape($statValue) . '"' : '' ?>>
                 <?= \App\Helpers\Helper::escape($statValue) ?>
               </h3>
             </div>
-            <span class="stats-icon"><i class="bi <?= \App\Helpers\Helper::escape((string) ($stat['icon'] ?? 'bi-graph-up')) ?>"></i></span>
+            <span class="ux-stat__icon <?= $iconTone ?>"><i class="bi <?= \App\Helpers\Helper::escape((string) ($stat['icon'] ?? 'bi-graph-up')) ?>"></i></span>
           </div>
-          <span class="stats-pill">Updated for you</span>
           <p class="text-muted mb-0 small"><?= \App\Helpers\Helper::escape((string) ($stat['description'] ?? '')) ?></p>
         </div>
       </div>
@@ -74,150 +295,97 @@ $latestRequest = is_array($bookingSummary['latest_request'] ?? null) ? $bookingS
 <section class="mb-4">
   <div class="row g-4">
     <div class="col-xl-7">
-      <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell h-100" data-aos="fade-up">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-            <div>
-              <span class="dashboard-info-label">Consultation Analytics</span>
-              <h3 class="h5 mb-1">Status distribution</h3>
-              <p class="text-muted mb-0">A live breakdown of your consultation request statuses.</p>
-            </div>
-            <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-              View History
-            </a>
+      <div class="ux-card h-100">
+        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h3 class="h5 mb-1">Consultation History</h3>
+            <p class="text-muted mb-0 small">Your most recent requests and their status</p>
           </div>
-
-          <div class="dashboard-chart-grid">
-            <div class="dashboard-chart-shell" data-chart-shell>
-              <canvas
-                height="240"
-                data-chart="<?= $statusChart !== null ? \App\Helpers\Helper::escape((string) json_encode($statusChart, JSON_UNESCAPED_SLASHES)) : '' ?>"
-              ></canvas>
+          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">View All</a>
+        </div>
+        <div class="ux-card__body">
+          <?php if ($recentRequests === []): ?>
+            <div class="ux-empty py-5 text-center">
+              <div class="ux-empty__icon mx-auto mb-3"><i class="bi bi-clipboard2-x"></i></div>
+              <h4 class="h6 mb-2">No consultation requests yet.</h4>
+              <p class="text-muted mb-4">Book a consultation slot to start building your consultation history.</p>
+              <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-primary btn-sm">Book Consultation</a>
             </div>
-            <div class="dashboard-chart-shell" data-chart-shell>
-              <canvas
-                height="240"
-                data-chart="<?= $monthlyChart !== null ? \App\Helpers\Helper::escape((string) json_encode($monthlyChart, JSON_UNESCAPED_SLASHES)) : '' ?>"
-              ></canvas>
+          <?php else: ?>
+            <div class="ux-table-wrapper">
+              <table class="ux-table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Doctor</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Time</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($recentRequests as $request): ?>
+                    <?php
+                    $status = (string) ($request['status'] ?? 'Pending');
+                    $badgeClass = ux_status_badge_class($status, 'ux-badge--pending');
+                    $statusIcon = ux_status_icon_class($status, 'bi-dash-circle');
+                    ?>
+                    <tr>
+                      <td>
+                        <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($request['doctor_name'] ?? 'Doctor')) ?></strong>
+                        <span class="text-muted small"><?= \App\Helpers\Helper::escape((string) ($request['specialization'] ?? '')) ?></span>
+                      </td>
+                      <td><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                      <td class="text-muted small"><?= \App\Helpers\Helper::escape(substr((string) ($request['start_time'] ?? ''), 0, 5)) ?> - <?= \App\Helpers\Helper::escape(substr((string) ($request['end_time'] ?? ''), 0, 5)) ?></td>
+                      <td><span class="ux-badge <?= $badgeClass ?>"><i class="bi <?= $statusIcon ?> me-1"></i><?= \App\Helpers\Helper::escape($status) ?></span></td>
+                      <td class="text-end">
+                        <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/' . (string) ((int) ($request['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm">View</a>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
             </div>
-          </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
 
     <div class="col-xl-5">
-      <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell h-100" data-aos="fade-up">
-        <div class="card-body p-4">
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-            <div>
-              <span class="dashboard-info-label">Quick Booking</span>
-              <h3 class="h5 mb-1">Next available slots</h3>
-              <p class="text-muted mb-0">Book directly from the first available consultation windows.</p>
+      <div class="ux-card h-100">
+        <div class="ux-card__header mb-3">
+          <h3 class="h5 mb-1">Next Available Slots</h3>
+          <p class="text-muted mb-0 small">Fastest ways to book care today <span class="text-body">(<?= \App\Helpers\Helper::escape((string) count($slotPreview)) ?> available)</span></p>
+        </div>
+        <div class="ux-card__body">
+          <?php if ($slotPreview === []): ?>
+            <div class="ux-empty py-4 text-center">
+              <div class="ux-empty__icon mx-auto mb-3"><i class="bi bi-calendar-x"></i></div>
+              <h4 class="h6 mb-2">No slots available</h4>
+              <p class="text-muted mb-0">When doctors publish availability, slots will appear here automatically.</p>
             </div>
-            <span class="badge badge-soft-info rounded-pill px-3 py-2"><?= \App\Helpers\Helper::escape((string) count($slotPreview)) ?></span>
-          </div>
-
-          <div class="schedule-slot-list">
-            <?php if ($slotPreview === []): ?>
-              <div class="schedule-slot-card">
-                <div>
-                  <strong class="d-block">No slots available</strong>
-                  <span class="small text-muted">When doctors publish availability, slots will appear here automatically.</span>
+          <?php else: ?>
+            <?php $previewSlots = array_slice($slotPreview, 0, 5); ?>
+            <?php $slotIdx = 0; ?>
+            <?php $slotTotal = count($previewSlots); ?>
+            <?php foreach ($previewSlots as $slot): ?>
+              <?php $slotIdx++; ?>
+              <div class="ux-slot-row">
+                <div class="flex-shrink-0">
+                  <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($slot['full_name'] ?? 'Doctor')) ?></strong>
+                  <span class="small text-muted"><?= \App\Helpers\Helper::escape((string) ($slot['specialization'] ?? 'General Practice')) ?></span>
+                </div>
+                <div class="flex-grow-1 text-center">
+                  <strong class="d-block"><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M', '')) ?></strong>
+                  <span class="small text-muted"><?= \App\Helpers\Helper::escape(substr((string) ($slot['start_time'] ?? ''), 0, 5)) ?></span>
+                </div>
+                <div class="flex-shrink-0">
+                  <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/book/' . (string) ((int) ($slot['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm">Book</a>
                 </div>
               </div>
-            <?php else: ?>
-              <?php foreach ($slotPreview as $slot): ?>
-                <div class="schedule-slot-card">
-                  <div>
-                    <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($slot['full_name'] ?? 'Doctor')) ?></strong>
-                    <span class="small text-muted"><?= \App\Helpers\Helper::escape((string) ($slot['specialization'] ?? 'General Practice')) ?></span>
-                  </div>
-                  <div class="text-end">
-                    <strong class="d-block"><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M', '')) ?></strong>
-                    <span class="small text-muted"><?= \App\Helpers\Helper::escape(substr((string) ($slot['start_time'] ?? ''), 0, 5)) ?></span>
-                    <div class="mt-2">
-                      <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/book/' . (string) ((int) ($slot['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                        Book
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="card border-0 shadow-sm rounded-4 dashboard-widget-shell" data-aos="fade-up">
-    <div class="card-body p-4">
-      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-        <div>
-          <span class="dashboard-info-label">Recent Consultations</span>
-          <h3 class="h5 mb-1">Latest requests</h3>
-          <p class="text-muted mb-0">Review your most recent consultation submissions and their current status.</p>
-        </div>
-        <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary rounded-pill px-4">
-          View All
-        </a>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table admin-user-table align-middle mb-0">
-          <thead>
-            <tr>
-              <th scope="col">Doctor</th>
-              <th scope="col">Date</th>
-              <th scope="col">Time</th>
-              <th scope="col">Status</th>
-              <th scope="col" class="text-end">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if ($recentRequests === []): ?>
-              <tr>
-                <td colspan="5">
-                  <div class="admin-table-empty text-center py-5">
-                    <div class="empty-state-icon mx-auto mb-3">
-                      <i class="bi bi-clipboard2-x"></i>
-                    </div>
-                    <h4 class="h5 mb-2">No consultation requests yet</h4>
-                    <p class="text-muted mb-0">Book a consultation slot to start building your consultation history.</p>
-                  </div>
-                </td>
-              </tr>
-            <?php else: ?>
-              <?php foreach ($recentRequests as $request): ?>
-                <?php
-                $status = (string) ($request['status'] ?? 'Pending');
-                $badgeMap = [
-                    'Pending' => 'badge-soft-warning',
-                    'Approved' => 'badge-soft-success',
-                    'Rejected' => 'badge-soft-danger',
-                    'Cancelled' => 'badge-soft-danger',
-                    'Completed' => 'badge-soft-success',
-                ];
-                $badgeClass = $badgeMap[$status] ?? 'badge-soft-neutral';
-                ?>
-                <tr>
-                  <td>
-                    <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($request['doctor_name'] ?? 'Doctor')) ?></strong>
-                    <span class="text-muted small"><?= \App\Helpers\Helper::escape((string) ($request['specialization'] ?? '')) ?></span>
-                  </td>
-                  <td><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
-                  <td class="text-muted small"><?= \App\Helpers\Helper::escape(substr((string) ($request['start_time'] ?? ''), 0, 5)) ?> - <?= \App\Helpers\Helper::escape(substr((string) ($request['end_time'] ?? ''), 0, 5)) ?></td>
-                  <td><span class="badge <?= \App\Helpers\Helper::escape($badgeClass) ?> rounded-pill px-3 py-2"><?= \App\Helpers\Helper::escape($status) ?></span></td>
-                  <td class="text-end">
-                    <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/' . (string) ((int) ($request['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3">View</a>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
