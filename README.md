@@ -4,7 +4,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ## Current Status
 
-- Current Week: Week 5
+- Current Week: Week 6
 - Architecture: Custom MVC (PHP 8.x)
 - Database: MySQL with PDO prepared statements
 - Frontend: HTML5, CSS3, Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
@@ -22,6 +22,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Dashboard UI: Administrator, doctor, and patient dashboards refined into a unified premium telemedicine workspace experience
 - Profile Pictures: Direct profile picture uploads with live avatar updates are implemented for administrator, doctor, and patient profiles
 - Consultation Workflow: Week 5 consultation request and appointment management workflow implemented across patient, administrator, and doctor dashboards
+- Video Consultation Module: Week 6 end-to-end Daily.co Prebuilt video consultation integration (secure server-side creds, idempotent rooms, join-window, role tokens) implemented for approved appointments
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -257,6 +258,72 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
   - mini calendar rendering
   - date/time auto-refresh
 
+### Week 6 Video Consultation Module
+
+Daily.co Prebuilt WebRTC integration wired to the approved consultation request lifecycle so patients and doctors can join the same real-time telehealth room from their dashboards.
+
+#### Architecture
+
+- Presentation shell: shared room view used for both patient and doctor:
+  - Patient: `/patient/consultations/{id}/room`
+  - Doctor:  `/doctor/consultations/{id}/room`
+- JSON credential endpoints protected by role middleware:
+  - Patient: `GET /patient/consultations/{id}/join-token`
+  - Doctor:  `GET /doctor/consultations/{id}/join-token`
+  - These endpoints return `{ ok, room_url, token }` — no secrets are embedded in HTML
+- Media provider: Daily.co Prebuilt iframe (`@daily-co/daily-js@0.67.0` via jsdelivr CDN, pinned for PNG health-sector network reachability)
+
+#### Server-side services (server-side-only Daily keys)
+
+- [DailyService.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Services/DailyService.php) — REST client for the hosted Daily.co backend
+  - `createRoom($roomName, $startAt, $endAt)` — creates a `privacy: public` room with `enable_prejoin_ui`, `enable_screenshare`, `enable_people_ui`, room-level `exp` / `nbf` bounds matching the appointment window
+  - `createMeetingToken($roomName, $userId, $displayName, $role, $ttlSecs = 1800)` — short-lived JWT bound to the room name; doctor is minted as `is_owner:true`, patient as `is_owner:false`; tokens are never persisted to the database
+  - `deleteRoom($roomName)` — cleanup helper
+  - Credentials are read exclusively from `.env` (`DAILY_API_KEY`, `DAILY_DOMAIN`) via `Environment::get()`. They never leave the PHP tier
+- [ConsultationRoom.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Models/ConsultationRoom.php) — idempotent 1:1 room ↔ consultation_request mapping
+  - `upsertForApprovedConsultation($requestId, $patientId, $doctorId)` — SELECT-first, then INSERT only if missing
+  - DB-level UNIQUE key on `consultation_request_id` acts as a race-condition safety net so repeated Join clicks never create duplicate rooms for the same appointment
+  - Returns the exact same stored `daily_room_name` + `daily_room_url` on every call
+- [VideoConsultationService.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Services/VideoConsultationService.php) — single policy authority for joining
+  - Verifies the caller's role matches the stored patient/doctor on the consultation request
+  - Status guard: only `Approved` (or `Completed` for historical review) consultations are allowed
+  - Join-window enforcement using the application timezone `Pacific/Port_Moresby` — earliest join is `appointment_start − 10 min`, latest join is `appointment_end + 10 min`
+  - Lazy room creation: if the consultation is Approved but the `consultation_rooms` row does not yet exist, it is created on the first join via `upsertForApprovedConsultation`
+  - Outputs the uniform shape `{ ok: true, room_url, token }` used identically by the patient and doctor controllers
+
+#### Patient & Doctor presentation layer
+
+- Shared room view: [patient/consultations/room.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Views/patient/consultations/room.php) (doctor view simply requires the same file)
+  - Appointment summary strip (doctor / patient / date / time / status pill)
+  - Pre-call guidance (media permission tips, HTTPS / secure-context warning, troubleshooting)
+  - Primary CTA "Join Consultation"
+  - `#vc-alert-region` with `aria-live="polite"` for Bootstrap-flavored permission / network / room errors
+  - `#vc-daily-frame-wrapper` container used for Daily Prebuilt
+- Custom stylesheet: [consultation-room.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-room.css) — dark navy frame container, belt-and-suspenders guarantee that the Daily iframe fills its wrapper (CSS `width:100%!important; height:100%!important` with `min-height: clamp(540px, 78vh, calc(100vh − 130px))`). Uses the TeleHealth design tokens `--ux-primary:#0F4C81`, `--ux-secondary:#2A9D8F`, `--ux-accent:#3CB371`
+- Daily.js CDN bootstrap pinned to jsdelivr for network reliability:
+  - `<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@daily-co/daily-js@0.67.0/dist/daily-iframe.min.js" onerror=...>`
+  - Custom `waitForDailyFactory(6000)` 80 ms poller resolves the factory through `window.DailyIframe` / `window.Daily` / `window.DailyJs` and early-aborts on `window.__dailyJsLoadFailed`
+- Runtime logic: [consultation-room.js](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/js/consultation-room.js)
+  - Triple duplicate-prevention guard: `isBootstrapping`, `callFrame !== null`, and `hasJoined` at the top of `bootstrapRoom()` prevent duplicate iframes from double-clicks or network re-delivery
+  - Canonical two-step createFrame → join: `DailyIframe.createFrame(wrapper, { iframeStyle:{width:100%,height:100%,minHeight:540px}, showLeaveButton: true, showFullscreenButton: true, showParticipantsBar: true })` → wire events BEFORE joining → explicit `await callFrame.join({ url, token })`
+  - Event wiring (before join): `loaded`, `joining-meeting`, `joined-meeting`, `left-meeting`, `participant-joined`, `participant-left`, `error`, `camera-error`, `microphone-error`, `network-connection`, `recording-stopped`, `nonfatal-error`, `available-devices-updated`
+  - Actionable permission error pattern matching — camera/mic blocked prompts user to site settings, 404 → room not yet available, "Missing payment method" → Daily dashboard billing provisioning (documented externally, code unchanged)
+  - Leave/destroy lifecycle when the user navigates away via window `beforeunload`
+
+#### Dashboard integration & status helper
+
+- A new reusable status badge helper [status_helper.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Views/partials/shared/status_helper.php) renders standardized pills for Pending/Approved/Rejected/Cancelled/Completed/Active/Expired. Used on dashboards, consultation listings, and the consultation-room summary strip
+- Dashboard cards, "Upcoming Appointments" panels, and consultation request detail pages now surface a teal "Join Consultation" CTA only when the request is `Approved` AND the current Pacific/Port_Moresby time is inside the `start − 10 min … end + 10 min` join window
+- Admin dashboard + booking detail pages reflect the consultation-room status (Active / Room Created) once a room has been created
+
+#### Administration approval transaction
+
+- `ConsultationRequest::updateStatusForAdmin()` wraps the approval chain in a PDO transaction:
+  1. transition status to `Approved`
+  2. keep the doctor_availability slot locked as `Booked`
+  3. create the consultation_rooms row via `upsertForApprovedConsultation` (this in turn makes the signed Daily REST create-room call)
+  - Any failure in step 3 rolls back steps 1 and 2 so no orphaned approved-but-unroomed requests can exist
+
 ### Profile Enhancement
 
 - Direct profile picture uploads without a cropping step
@@ -278,20 +345,38 @@ Telehealth_Consultation_System/
 │   ├── Helpers/
 │   ├── Middleware/
 │   ├── Models/
+│   │   └── ConsultationRoom.php
 │   ├── Services/
+│   │   ├── DailyService.php
+│   │   └── VideoConsultationService.php
 │   └── Views/
 │       ├── admin/
 │       ├── auth/
 │       ├── doctor/
+│       │   └── consultations/room.php
 │       ├── home/
 │       ├── layouts/
 │       ├── partials/
+│       │   └── shared/status_helper.php
 │       └── patient/
+│           └── consultations/room.php
 ├── database/
 │   └── migrations/
+│       ├── 001_initial_schema.sql
+│       ├── 003_add_doctor_account_management_fields.sql
+│       ├── 004_add_doctor_profile_assets.sql
+│       ├── 005_add_profile_photo_fields_for_admin_and_patient.sql
+│       ├── 006_add_notes_to_doctor_availability.sql
+│       ├── 007_update_consultation_requests_for_booking.sql
+│       ├── 008_remove_unique_index_from_consultation_requests.sql
+│       ├── 009_create_audit_logs_table.sql
+│       ├── 010_create_consultation_rooms_table.sql
+│       └── 011_add_phone_to_patient_table.sql
 ├── public/
 │   ├── css/
+│   │   └── consultation-room.css
 │   ├── js/
+│   │   └── consultation-room.js
 │   └── index.php
 ├── routes/
 ├── tmp/
@@ -300,7 +385,10 @@ Telehealth_Consultation_System/
 ├── README.md
 ├── WEEK1_REPORT.md
 ├── WEEK2_REPORT.md
-└── WEEK3_REPORT.md
+├── WEEK3_REPORT.md
+├── WEEK4_REPORT.md
+├── WEEK5_REPORT.md
+└── WEEK6_REPORT.md
 ```
 
 ## Installation
@@ -320,8 +408,14 @@ copy .env.example .env
 
 4. Update `.env` with your local database credentials and application URL.
    - For typical XAMPP local setups, use `DB_HOST=localhost`.
-5. Ensure Apache and MySQL are running in XAMPP.
-6. Import the migration files:
+5. **Configure Daily.co for the Week 6 video module (optional for Weeks 1-5):**
+   - Create an account at `https://dashboard.daily.co/` and create a subdomain
+   - Paste the API key + domain into `.env`:
+     - `DAILY_API_KEY=` (your Daily.co API key, starts with `a7f59…` or similar)
+     - `DAILY_DOMAIN=` (your subdomain, e.g. `mbphatelehealth.daily.co` — protocol and trailing slashes are stripped by `DailyService`)
+   - Note: Daily free tier may require a billing method on file at `dashboard.daily.co → Billing` before real camera/mic SFU sessions will connect. REST API (rooms, tokens) works immediately without a payment method.
+6. Ensure Apache and MySQL are running in XAMPP.
+7. Import the migration files:
 
 ```bash
 mysql -u root -p < database/migrations/001_initial_schema.sql
@@ -332,9 +426,11 @@ mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
 mysql -u root -p < database/migrations/007_update_consultation_requests_for_booking.sql
 mysql -u root -p < database/migrations/008_remove_unique_index_from_consultation_requests.sql
 mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
+mysql -u root -p < database/migrations/010_create_consultation_rooms_table.sql
+mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
 ```
 
-7. Open the application using the configured `APP_URL`.
+8. Open the application using the configured `APP_URL`.
 
 ## Authentication Notes
 
@@ -351,6 +447,10 @@ mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
 - Administrator-only doctor account management is currently available at `/admin/doctors` after successful administrator login.
 - Administrator-only patient management is currently available at `/admin/patients` after successful administrator login.
 - Administrator profile management is currently available at `/admin/profile` after successful administrator login.
+- Week 6 video consultation shell and endpoints are available to authenticated roles only:
+  - Patient: `/patient/consultations/{id}/room`
+  - Doctor:  `/doctor/consultations/{id}/room`
+  - Join-token JSON endpoints return `{ ok, room_url, token }` and are role-protected
 
 ## Security Highlights
 
@@ -364,6 +464,12 @@ mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
 - Request-aware base URL generation with `APP_URL` fallback
 - Clinician profile uploads validated by size and MIME type and stored under `public/uploads/` (gitignored)
 - Profile picture uploads validated by MIME type and size before the database path is updated
+- **Daily.co credentials are server-side only** — `DAILY_API_KEY` and `DAILY_DOMAIN` are read via `Environment::get()` inside [DailyService.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Services/DailyService.php) only. They are never serialized to HTML, JS, JSON endpoints, views, or logs
+- **Consultation-room idempotency**: the `consultation_rooms` UNIQUE key on `consultation_request_id` + `upsertForApprovedConsultation()` SELECT-first policy guarantee exactly one Daily room per approved request, even if the user clicks "Join Consultation" dozens of times or refreshes the page
+- **Join-window enforcement**: video endpoints reject access outside `appointment_start − 10 min` through `appointment_end + 10 min` (timezone pinned to `Pacific/Port_Moresby`), preventing premature or late room access
+- **Role-aware tokens**: meeting tokens are minted fresh per join, never stored, and encode `is_owner:true` only for the doctor assigned to the appointment
+- **Authorization before media**: the patient/doctor role on the signed-in user must match the stored patient/doctor on the consultation request before a join response is issued
+- **Admin-approval transactional consistency**: approval + slot lock + room creation run in one PDO transaction so partially-approved requests cannot exist if Daily.co REST or the DB write fails
 
 ## Design System
 
@@ -371,6 +477,7 @@ mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
 - Core palette is centralized in [theme.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/theme.css)
 - Shared UI refinements are applied through [style.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/style.css)
 - Colours are managed through CSS variables instead of page-level hardcoded values
+- Week 6 consultation-room visual language is defined in [consultation-room.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-room.css) and shares the tokens `--ux-primary:#0F4C81`, `--ux-secondary:#2A9D8F`, `--ux-accent:#3CB371`
 
 ## Testing Summary
 
@@ -428,11 +535,25 @@ mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
   - approved slot remains `Booked`
   - rejected slot returns to `Available`
 - Verified the reusable Week 5 PowerShell test script uses dynamic slots and authenticated page assertions for repeatable local validation
+- Verified the Week 6 video module end to end:
+  - PHP `php -l` lint passes on all 25 touched PHP files (controllers/services/models/views/routes/index)
+  - `DailyService::createRoom()` returns a `FILTER_VALIDATE_URL` Daily room URL; tokens mint successfully for both doctor (owner) and patient (participant) with 30-minute TTL
+  - `ConsultationRoom::upsertForApprovedConsultation()` returns the same stored `daily_room_url` on a second invocation (idempotency — `action: reused`)
+  - `VideoConsultationService::authorizeAndIssueJoinToken()` rejects: wrong user/role, not-yet-Approved status, and access outside the `−10 min … +10 min` join window
+  - Patient `GET /patient/consultations/{id}/join-token` and Doctor `GET /doctor/consultations/{id}/join-token` resolve the **identical** stored `daily_room_url` for the same consultation_request_id (same-room guarantee — byte-match on the URL string)
+  - Presentation shell renders correctly with appointment summary, pre-call guidance, aria-live alert region, and properly-sized frame container
+  - `consultation-room.js` triple guard (`isBootstrapping`, `callFrame !== null`, `hasJoined`) prevents duplicate iframe creation even when the CTA is double-clicked or bootstrapped twice
+  - Daily factory resolution with `waitForDailyFactory(6000)` + jsdelivr CDN (`daily-js@0.67.0`) resolves `DailyIframe.createFrame` correctly; canonical two-step `createFrame()` → wire events → explicit `callFrame.join({ url, token })` initiates the session; `iframeStyle:{width:100%,height:100%,minHeight:540px}` combines with CSS clamp to guarantee consistent frame sizing
+  - External note — real camera/mic SFU sessions require a Daily.co account with a billing method on file at `dashboard.daily.co → Billing`; without it, the native Daily page shows "Missing payment method". REST API (room + token creation) and the iframe join handshake complete without this; live media is the only gated step.
+- `010_create_consultation_rooms_table.sql` and `011_add_phone_to_patient_table.sql` applied to `telehealth_db` with all foreign keys, UNIQUE keys, and indices intact; no orphaned `consultation_rooms` rows; `information_schema.STATISTICS` confirms the UNIQUE key on `consultation_request_id`
 
-## Known Environment Requirement
+## Known Environment Requirements
 
 - Full login and registration submission require an active MySQL service matching the local `.env` configuration.
 - For common XAMPP local environments, `DB_HOST=localhost` is the recommended database host value.
+- Weekly video consultations need `OpenSSL` enabled in PHP for outbound HTTPS calls from `DailyService` to Daily.co REST endpoints. Ensure `extension=openssl` is uncommented in `php.ini` and `cacert.pem` is configured on restricted networks.
+- Daily Prebuilt requires the page to load over a **secure context** (HTTPS or `localhost`) to request camera and microphone permissions. If you access the app via a LAN IP or custom host that is not `localhost`, set `APP_URL=https://…` and terminate TLS locally.
+- Daily.js CDN is pinned to `https://cdn.jsdelivr.net/npm/@daily-co/daily-js@0.67.0/dist/daily-iframe.min.js`. If your network filters this CDN, a browser console `net::ERR_FAILED` appears and `waitForDailyFactory()` will surface a Bootstrap alert with a troubleshooting hint.
 
 ## Roadmap
 
@@ -440,8 +561,8 @@ mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
 - Week 2: Public website and authentication module completed in code
 - Week 3: Administrator management module completed
 - Week 4: Doctor availability management and patient browsing completed
-- Week 5: Admin booking management
-- Week 6: Video consultation
+- Week 5: Admin booking management completed
+- Week 6: Video consultation (Daily.co Prebuilt integration, idempotent rooms, join-window enforcement, role tokens, consultation-room UI, admin approval transaction consistency) — completed
 - Week 7: Consultation records and prescription module
 - Week 8: Consultation history and PDF export
 - Week 9: Testing, security review, bug fixing, and UI refinement
