@@ -5,23 +5,23 @@
  * ================================================================ */
 
 .cr-page {
-  --cr-primary: #0787e8;
-  --cr-primary-dark: #104364;
-  --cr-bg: #f7f9fc;
+  --cr-primary: #0794E3;
+  --cr-primary-dark: #455F68;
+  --cr-bg: #F8F8F8;
   --cr-surface: #ffffff;
-  --cr-surface-blue: #f7fbfe;
-  --cr-text: #183653;
-  --cr-text-secondary: #60758b;
-  --cr-text-muted: #8293a5;
-  --cr-border: #dde6ef;
-  --cr-divider: #e6edf3;
-  --cr-success: #16a36a;
-  --cr-success-text: #10905d;
-  --cr-success-bg: #e8f8f0;
-  --cr-info-bg: #eef7ff;
-  --cr-info-icon: #1688e5;
-  --cr-field-icon: #167fdb;
-  --cr-shadow: 0 1px 3px rgba(15, 52, 78, 0.04);
+  --cr-surface-blue: #F3F6F7;
+  --cr-text: #455F68;
+  --cr-text-secondary: #70838A;
+  --cr-text-muted: #70838A;
+  --cr-border: #E2E6E7;
+  --cr-divider: #E2E6E7;
+  --cr-success: #08B4C6;
+  --cr-success-text: #0A7A85;
+  --cr-success-bg: rgba(8, 180, 198, 0.12);
+  --cr-info-bg: rgba(7, 148, 227, 0.10);
+  --cr-info-icon: #0794E3;
+  --cr-field-icon: #0794E3;
+  --cr-shadow: none;
   --cr-radius: 12px;
   --cr-radius-inner: 10px;
   --cr-radius-btn: 8px;
@@ -278,6 +278,55 @@
 .cr-page .cr-summary__meta {
   margin: 3px 0 0;
   font-size: 11px;
+  line-height: 1.3;
+  color: #8091a2;
+}
+
+.cr-page .user-avatar {
+  --avatar-size: 40px;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  min-width: var(--avatar-size);
+  min-height: var(--avatar-size);
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.cr-page .user-avatar--sm {
+  --avatar-size: 36px;
+}
+
+.cr-page .user-avatar-image {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: cover;
+  object-position: center;
+}
+
+.cr-page .ux-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cr-page .ux-person__name {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #183653;
+}
+
+.cr-page .ux-person__meta {
+  display: block;
+  font-size: 12px;
   line-height: 1.3;
   color: #8091a2;
 }
@@ -572,5 +621,36 @@
     box-shadow: none;
     padding: 0;
     background: transparent;
+  }
+}
+
+.print-document-layout {
+  background: #F8F9FA;
+  min-height: 100vh;
+  padding: 24px 16px 40px;
+}
+
+.print-document-toolbar {
+  max-width: 960px;
+  margin: 0 auto 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.print-document-page {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+@media print {
+  .print-document-layout {
+    background: #fff;
+    padding: 0;
+  }
+
+  .print-document-toolbar {
+    display: none !important;
   }
 }

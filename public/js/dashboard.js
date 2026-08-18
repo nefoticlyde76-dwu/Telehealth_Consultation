@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeDashboardCharts();
   initializeAosAnimations();
   initializeConsultationQueueWorkspace();
+  initializeDesktopSidebarToggle();
 });
 
 /**
@@ -130,55 +131,94 @@ function initializeMiniCalendars() {
   }
 
   calendars.forEach((calendar) => {
+    const section = calendar.closest(".rightbar-section") || calendar.parentElement;
+    const label = section ? section.querySelector("[data-calendar-month-label]") : null;
+    const prev = section ? section.querySelector("[data-calendar-prev]") : null;
+    const next = section ? section.querySelector("[data-calendar-next]") : null;
     const now = getAppNow();
-    const year = now.year;
-    const month = now.month - 1; // 0-11 for Date constructor
-    const today = now.day;
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const prevMonthDays = new Date(year, month, 0).getDate();
-    const headers = ["S", "M", "T", "W", "T", "F", "S"];
+    let year = now.year;
+    let month = now.month - 1;
 
-    calendar.innerHTML = "";
-
-    headers.forEach((label) => {
-      const header = document.createElement("div");
-      header.className = "rightbar-calendar-day is-header";
-      header.textContent = label;
-      calendar.appendChild(header);
-    });
-
-    for (let i = 0; i < firstDay; i += 1) {
-      const day = document.createElement("div");
-      day.className = "rightbar-calendar-day is-muted";
-      day.textContent = (prevMonthDays - firstDay + i + 1).toString();
-      calendar.appendChild(day);
-    }
-
-    for (let dayIndex = 1; dayIndex <= daysInMonth; dayIndex += 1) {
-      const day = document.createElement("div");
-      day.className = "rightbar-calendar-day";
-      day.textContent = dayIndex.toString();
-
-      if (dayIndex === today) {
-        day.classList.add("is-today");
-        day.setAttribute("title", `Today (${now.tz})`);
+    const render = () => {
+      renderMiniCalendarGrid(calendar, year, month, now);
+      if (label) {
+        label.textContent = `${SHORT_MONTHS[month]} ${year}`;
       }
+    };
 
-      calendar.appendChild(day);
+    if (prev) {
+      prev.addEventListener("click", () => {
+        month -= 1;
+        if (month < 0) {
+          month = 11;
+          year -= 1;
+        }
+        render();
+      });
     }
 
-    const cells = 7 * 6;
-    const currentCells = calendar.children.length;
-    const remaining = Math.max(0, cells - currentCells);
-
-    for (let i = 1; i <= remaining; i += 1) {
-      const day = document.createElement("div");
-      day.className = "rightbar-calendar-day is-muted";
-      day.textContent = i.toString();
-      calendar.appendChild(day);
+    if (next) {
+      next.addEventListener("click", () => {
+        month += 1;
+        if (month > 11) {
+          month = 0;
+          year += 1;
+        }
+        render();
+      });
     }
+
+    render();
   });
+}
+
+function renderMiniCalendarGrid(calendar, year, month, now) {
+  const today = now.day;
+  const isCurrentMonth = year === now.year && month === now.month - 1;
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+  const headers = ["S", "M", "T", "W", "T", "F", "S"];
+
+  calendar.innerHTML = "";
+
+  headers.forEach((headerLabel) => {
+    const header = document.createElement("div");
+    header.className = "rightbar-calendar-day is-header";
+    header.textContent = headerLabel;
+    calendar.appendChild(header);
+  });
+
+  for (let i = 0; i < firstDay; i += 1) {
+    const day = document.createElement("div");
+    day.className = "rightbar-calendar-day is-muted";
+    day.textContent = (prevMonthDays - firstDay + i + 1).toString();
+    calendar.appendChild(day);
+  }
+
+  for (let dayIndex = 1; dayIndex <= daysInMonth; dayIndex += 1) {
+    const day = document.createElement("div");
+    day.className = "rightbar-calendar-day";
+    day.textContent = dayIndex.toString();
+
+    if (isCurrentMonth && dayIndex === today) {
+      day.classList.add("is-today");
+      day.setAttribute("title", `Today (${now.tz})`);
+    }
+
+    calendar.appendChild(day);
+  }
+
+  const cells = 7 * 6;
+  const currentCells = calendar.children.length;
+  const remaining = Math.max(0, cells - currentCells);
+
+  for (let i = 1; i <= remaining; i += 1) {
+    const day = document.createElement("div");
+    day.className = "rightbar-calendar-day is-muted";
+    day.textContent = i.toString();
+    calendar.appendChild(day);
+  }
 }
 
 function initializeDashboardCharts() {
@@ -215,12 +255,12 @@ function initializeDashboardCharts() {
         config.options = config.options || {};
         config.options.scales = config.options.scales || {};
         const yScale = config.options.scales.y || {};
-        yScale.grid = Object.assign({ color: "#EEF1F6" }, yScale.grid || {});
-        yScale.ticks = Object.assign({ color: "#9CA3AF", precision: 0 }, yScale.ticks || {});
+        yScale.grid = Object.assign({ color: "#E2E6E7" }, yScale.grid || {});
+        yScale.ticks = Object.assign({ color: "#70838A", precision: 0 }, yScale.ticks || {});
         config.options.scales.y = yScale;
         if (config.options.scales.x) {
           config.options.scales.x.ticks = Object.assign(
-            { color: "#9CA3AF" },
+            { color: "#70838A" },
             config.options.scales.x.ticks || {}
           );
         }
@@ -241,16 +281,7 @@ function initializeDashboardCharts() {
 }
 
 function initializeAosAnimations() {
-  if (typeof window.AOS === "undefined") {
-    return;
-  }
-
-  window.AOS.init({
-    once: true,
-    duration: 650,
-    easing: "ease-out-cubic",
-    offset: 80,
-  });
+  // Staggered list entrance lives in app.js (initializeStaggeredLists).
 }
 
 /**
@@ -332,5 +363,50 @@ function unlockQueueDecisionButtons(buttons) {
     if (button.dataset.originalHtml) {
       button.innerHTML = button.dataset.originalHtml;
     }
+  });
+}
+
+function initializeDesktopSidebarToggle() {
+  const toggles = document.querySelectorAll("[data-desktop-sidebar-toggle]");
+  const shell = document.querySelector(".dashboard-shell");
+  const storageKey = "mbpha-dashboard-sidebar-collapsed";
+
+  if (toggles.length === 0 || !shell) {
+    return;
+  }
+
+  const applyCollapsed = (collapsed) => {
+    shell.classList.toggle("dashboard-shell--sidebar-collapsed", collapsed);
+    toggles.forEach((toggle) => {
+      toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      toggle.setAttribute(
+        "aria-label",
+        collapsed ? "Expand dashboard navigation" : "Collapse dashboard navigation"
+      );
+      if (toggle.hasAttribute("data-sidebar-rail-toggle")) {
+        const icon = toggle.querySelector("i");
+        if (icon) {
+          icon.className = collapsed ? "bi bi-chevron-bar-right" : "bi bi-chevron-bar-left";
+        }
+      }
+    });
+  };
+
+  try {
+    applyCollapsed(window.localStorage.getItem(storageKey) === "1");
+  } catch (error) {
+    applyCollapsed(false);
+  }
+
+  toggles.forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      const collapsed = !shell.classList.contains("dashboard-shell--sidebar-collapsed");
+      applyCollapsed(collapsed);
+      try {
+        window.localStorage.setItem(storageKey, collapsed ? "1" : "0");
+      } catch (error) {
+        // Ignore storage failures in private browsing.
+      }
+    });
   });
 }

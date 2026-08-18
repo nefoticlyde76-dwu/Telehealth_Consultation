@@ -36,25 +36,68 @@ class PatientConsultationBookingService
 
     public static function getHistoryPageData(int $patientId, array $query): array
     {
-        $page = max(1, (int) ($query['page'] ?? 1));
+        unset($query);
         $totalItems = ConsultationRequest::countForPatient($patientId);
-        $totalPages = max(1, (int) ceil($totalItems / self::PER_PAGE));
-
-        if ($page > $totalPages) {
-            $page = $totalPages;
-        }
-
-        $offset = ($page - 1) * self::PER_PAGE;
+        $limit = max($totalItems, 1);
+        $requests = ConsultationRequest::findForPatient($patientId, $limit, 0);
 
         return [
-            'requests' => ConsultationRequest::findForPatient($patientId, self::PER_PAGE, $offset),
+            'requests' => $requests,
+            'groups' => self::groupHistoryRows($requests),
             'summary' => self::getDashboardSummary($patientId),
             'pagination' => [
-                'current_page' => $page,
-                'per_page' => self::PER_PAGE,
+                'current_page' => 1,
+                'per_page' => $limit,
                 'total_items' => $totalItems,
-                'total_pages' => $totalPages,
+                'total_pages' => 1,
             ],
+        ];
+    }
+
+    /**
+     * Split history rows so upcoming/active consultations stay separate from
+     * completed records. Completed rows are newest consultation date first.
+     *
+     * @param list<array<string,mixed>> $requests
+     * @return array{
+     *   active:list<array<string,mixed>>,
+     *   completed:list<array<string,mixed>>,
+     *   closed:list<array<string,mixed>>
+     * }
+     */
+    public static function groupHistoryRows(array $requests): array
+    {
+        $active = [];
+        $completed = [];
+        $closed = [];
+
+        foreach ($requests as $row) {
+            $status = (string) ($row['status'] ?? '');
+            if ($status === 'Completed') {
+                $completed[] = $row;
+            } elseif (in_array($status, ['Rejected', 'Cancelled'], true)) {
+                $closed[] = $row;
+            } else {
+                $active[] = $row;
+            }
+        }
+
+        $sortBySchedule = static function (array $left, array $right, bool $newestFirst): int {
+            $leftKey = (string) ($left['consultation_date'] ?? '') . ' ' . (string) ($left['start_time'] ?? '');
+            $rightKey = (string) ($right['consultation_date'] ?? '') . ' ' . (string) ($right['start_time'] ?? '');
+            $comparison = strcmp($leftKey, $rightKey);
+
+            return $newestFirst ? -$comparison : $comparison;
+        };
+
+        usort($active, static fn (array $left, array $right): int => $sortBySchedule($left, $right, false));
+        usort($completed, static fn (array $left, array $right): int => $sortBySchedule($left, $right, true));
+        usort($closed, static fn (array $left, array $right): int => $sortBySchedule($left, $right, true));
+
+        return [
+            'active' => $active,
+            'completed' => $completed,
+            'closed' => $closed,
         ];
     }
 
@@ -260,11 +303,11 @@ class PatientConsultationBookingService
         $labels = [];
         $values = [];
         $colors = [
-            'Pending' => 'rgba(245, 158, 11, 0.7)',
-            'Approved' => 'rgba(34, 197, 94, 0.7)',
-            'Rejected' => 'rgba(239, 68, 68, 0.7)',
-            'Cancelled' => 'rgba(239, 68, 68, 0.45)',
-            'Completed' => 'rgba(10, 111, 182, 0.7)',
+            'Pending' => '#F59E0B',
+            'Approved' => '#08B4C6',
+            'Rejected' => '#DC3545',
+            'Cancelled' => '#70838A',
+            'Completed' => '#455F68',
         ];
         $background = [];
 
@@ -324,8 +367,8 @@ class PatientConsultationBookingService
                     [
                         'label' => 'Requests',
                         'data' => $values,
-                        'backgroundColor' => 'rgba(10, 111, 182, 0.45)',
-                        'borderRadius' => 12,
+                        'backgroundColor' => '#0794E3',
+                        'borderRadius' => 8,
                     ],
                 ],
             ],

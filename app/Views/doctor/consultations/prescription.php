@@ -25,7 +25,18 @@ $rxEditable = $canCreate;
         <li class="active">Prescription</li>
       </ol>
       <h2 class="ux-page-header__title">Prescription</h2>
-      <p class="ux-page-header__subtitle mb-0">
+      <div class="mt-3">
+        <?php
+        $personName = $patientName;
+        $personPhoto = $request['patient_photo_path'] ?? null;
+        $personMeta = $isIssued
+          ? 'Issued prescription'
+          : 'Create a prescription for this completed consultation';
+        $personSize = 'sm';
+        require __DIR__ . '/../../partials/shared/person_row.php';
+        ?>
+      </div>
+      <p class="ux-page-header__subtitle mb-0 mt-2">
         <?= $isIssued
           ? 'Issued prescription for ' . \App\Helpers\Helper::escape($patientName) . '.'
           : 'Create a prescription for the completed consultation with ' . \App\Helpers\Helper::escape($patientName) . '.' ?>
@@ -36,6 +47,12 @@ $rxEditable = $canCreate;
         <i class="bi bi-clipboard2-pulse me-1"></i>
         Clinical record
       </a>
+      <?php if ($isIssued): ?>
+        <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/download-prescription') ?>" class="btn btn-primary btn-sm">
+          <i class="bi bi-download me-1"></i>
+          Download Prescription
+        </a>
+      <?php endif; ?>
       <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-arrow-left me-1"></i>
         Consultations

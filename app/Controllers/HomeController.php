@@ -13,17 +13,35 @@ class HomeController extends Controller
     {
         $this->render('home/index', [
             'title' => 'Home | MBPHA TeleHealth Consultation System',
-            'csrfToken' => Csrf::generate(),
-            'contactErrors' => Session::getFlash('contact_errors', []),
-            'contactStatus' => Session::getFlash('contact_status'),
-            'contactOldInput' => Session::getFlash('contact_old_input', [
-                'name' => '',
-                'email' => '',
-                'phone' => '',
-                'subject' => '',
-                'message' => '',
-            ]),
+            'bodyClass' => 'public-layout home-landing-layout',
         ]);
+    }
+
+    public function about(): void
+    {
+        $this->render('home/about', [
+            'title' => 'About | MBPHA TeleHealth Consultation System',
+            'bodyClass' => 'public-layout public-page-layout public-page-about',
+        ]);
+    }
+
+    public function howItWorks(): void
+    {
+        $this->render('home/how_it_works', [
+            'title' => 'How It Works | MBPHA TeleHealth Consultation System',
+            'bodyClass' => 'public-layout public-page-layout public-page-how',
+        ]);
+    }
+
+    public function showContact(): void
+    {
+        $this->render('home/contact', array_merge(
+            $this->contactPageData(),
+            [
+                'title' => 'Contact | MBPHA TeleHealth Consultation System',
+                'bodyClass' => 'public-layout public-page-layout public-page-contact',
+            ]
+        ));
     }
 
     public function contact(): void
@@ -34,7 +52,7 @@ class HomeController extends Controller
         if (!empty($errors)) {
             Session::flash('contact_errors', $errors);
             Session::flash('contact_old_input', $formData);
-            Helper::redirect('/#contact');
+            Helper::redirect('/contact');
         }
 
         $logDirectory = dirname(__DIR__, 2) . '/logs';
@@ -60,14 +78,30 @@ class HomeController extends Controller
                 'message' => 'Your inquiry could not be submitted right now. Please use the listed contact details.',
             ]);
             Session::flash('contact_old_input', $formData);
-            Helper::redirect('/#contact');
+            Helper::redirect('/contact');
         }
 
         Session::flash('contact_status', [
             'type' => 'success',
             'message' => 'Your inquiry has been received. Our team will review it through the configured contact channel.',
         ]);
-        Helper::redirect('/#contact');
+        Helper::redirect('/contact');
+    }
+
+    private function contactPageData(): array
+    {
+        return [
+            'csrfToken' => Csrf::generate(),
+            'contactErrors' => Session::getFlash('contact_errors', []),
+            'contactStatus' => Session::getFlash('contact_status'),
+            'contactOldInput' => Session::getFlash('contact_old_input', [
+                'name' => '',
+                'email' => '',
+                'phone' => '',
+                'subject' => '',
+                'message' => '',
+            ]),
+        ];
     }
 
     private function getContactFormData(): array

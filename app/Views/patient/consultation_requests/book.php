@@ -48,10 +48,13 @@ $doctorSpecialization = (string) ($slot['specialization'] ?? 'General Practice')
         <div class="col-lg-6">
           <div class="dashboard-inline-callout h-100">
             <span class="dashboard-info-label">Doctor Information</span>
-            <strong class="d-block mb-1"><?= \App\Helpers\Helper::escape($doctorName) ?></strong>
-            <p class="text-muted small mb-0">
-              <?= \App\Helpers\Helper::escape($doctorTitle) ?> · <?= \App\Helpers\Helper::escape($doctorSpecialization) ?>
-            </p>
+            <?php
+            $personName = $doctorName;
+            $personPhoto = $slot['profile_photo_path'] ?? null;
+            $personMeta = $doctorTitle . ' · ' . $doctorSpecialization;
+            $personSize = 'lg';
+            require __DIR__ . '/../../partials/shared/person_row.php';
+            ?>
           </div>
         </div>
         <div class="col-lg-6">

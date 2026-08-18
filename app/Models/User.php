@@ -231,9 +231,13 @@ class User
                 users.email,
                 users.status,
                 users.created_at,
-                roles.name AS role_name
+                roles.name AS role_name,
+                COALESCE(admin.profile_photo_path, doctor.profile_photo_path, patient.profile_photo_path) AS profile_photo_path
             FROM users
             INNER JOIN roles ON roles.id = users.role_id
+            LEFT JOIN admin ON admin.user_id = users.id
+            LEFT JOIN doctor ON doctor.user_id = users.id
+            LEFT JOIN patient ON patient.user_id = users.id
             ORDER BY users.created_at DESC, users.id DESC
             LIMIT :limit"
         );
@@ -272,9 +276,13 @@ class User
                 users.email,
                 users.status,
                 users.created_at,
-                roles.name AS role_name
+                roles.name AS role_name,
+                COALESCE(admin.profile_photo_path, doctor.profile_photo_path, patient.profile_photo_path) AS profile_photo_path
             FROM users
-            INNER JOIN roles ON roles.id = users.role_id";
+            INNER JOIN roles ON roles.id = users.role_id
+            LEFT JOIN admin ON admin.user_id = users.id
+            LEFT JOIN doctor ON doctor.user_id = users.id
+            LEFT JOIN patient ON patient.user_id = users.id";
         $conditions = [];
         $parameters = [];
 
@@ -307,6 +315,7 @@ class User
                 users.created_at,
                 users.updated_at,
                 roles.name AS role_name,
+                COALESCE(admin.profile_photo_path, doctor.profile_photo_path, patient.profile_photo_path) AS profile_photo_path,
                 admin.employee_id,
                 doctor.phone,
                 doctor.gender AS doctor_gender,

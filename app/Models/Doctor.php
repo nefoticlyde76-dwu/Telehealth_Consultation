@@ -256,7 +256,8 @@ class Doctor
                 doctor.gender,
                 doctor.professional_title,
                 doctor.specialization,
-                doctor.employee_id
+                doctor.employee_id,
+                doctor.profile_photo_path
             FROM doctor
             INNER JOIN users ON users.id = doctor.user_id
             INNER JOIN roles ON roles.id = users.role_id";
@@ -295,7 +296,8 @@ class Doctor
                 doctor.gender,
                 doctor.professional_title,
                 doctor.specialization,
-                doctor.employee_id
+                doctor.employee_id,
+                doctor.profile_photo_path
             FROM doctor
             INNER JOIN users ON users.id = doctor.user_id
             INNER JOIN roles ON roles.id = users.role_id

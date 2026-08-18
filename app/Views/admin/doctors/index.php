@@ -175,11 +175,14 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                 ?>
                 <tr>
                   <td>
-                    <div class="d-flex flex-column">
-                      <strong><?= \App\Helpers\Helper::escape($fullName) ?></strong>
-                      <span class="text-muted small"><?= \App\Helpers\Helper::escape((string) ($doctor['professional_title'] ?? 'Professional title not assigned')) ?></span>
-                      <span class="text-muted small"><?= \App\Helpers\Helper::escape((string) ($doctor['email'] ?? '')) ?></span>
-                    </div>
+                    <?php
+                    $personName = $fullName;
+                    $personPhoto = $doctor['profile_photo_path'] ?? null;
+                    $personMeta = (string) ($doctor['professional_title'] ?? 'Professional title not assigned');
+                    $personSize = 'sm';
+                    require __DIR__ . '/../../partials/shared/person_row.php';
+                    ?>
+                    <span class="text-muted small d-block mt-1"><?= \App\Helpers\Helper::escape((string) ($doctor['email'] ?? '')) ?></span>
                   </td>
                   <td>
                     <div class="d-flex flex-column">

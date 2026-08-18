@@ -46,25 +46,36 @@ expect_true(str_contains($routes, "get('/doctor/consultations/{id}'"), 'Doctor h
 expect_true(str_contains($routes, "get('/doctor/consultations/{id}/room'"), 'Doctor Daily room route remains registered');
 expect_true(str_contains($routes, "get('/patient/consultations/{id}/room'"), 'Patient Daily room route remains registered');
 expect_true(str_contains($routes, "get('/patient/consultation-requests/{id}'"), 'Patient consultation details route remains registered');
+expect_true(str_contains($routes, "get('/patient/consultation-requests/{id}/download-record'"), 'Patient consultation record download route is registered');
+expect_true(str_contains($routes, "get('/patient/consultation-requests/{id}/download-prescription'"), 'Patient prescription download route is registered');
+expect_true(str_contains($routes, "get('/doctor/consultations/{id}/download-record'"), 'Doctor consultation record download route is registered');
+expect_true(str_contains($routes, "get('/doctor/consultations/{id}/download-prescription'"), 'Doctor prescription download route is registered');
 expect_true(str_contains($routes, "post('/doctor/consultations/{id}/join-token'"), 'Doctor Daily join-token route remains registered');
 expect_true(!str_contains($routes, "generate-ai-review"), 'Admin AI review route is not registered');
 expect_true(!str_contains($routes, "/ai-review"), 'Admin AI review fragment route is not registered');
 
-$patientHistory = (string) file_get_contents($root . '/app/Views/patient/consultation_requests/index.php');
+$patientHistory = (string) file_get_contents($root . '/app/Views/patient/consultation_requests/_history_table.php');
 expect_true(str_contains($patientHistory, 'View Record'), 'Patient history uses View Record for completed consultations');
 expect_true(str_contains($patientHistory, 'Join Consultation'), 'Patient history uses Join Consultation for approved sessions');
+expect_true(str_contains($patientHistory, 'Download Consultation Record'), 'Patient history prepares Download Consultation Record');
+expect_true(str_contains($patientHistory, 'Download Prescription'), 'Patient history prepares Download Prescription');
 expect_true(
     !preg_match('/isCompleted[\s\S]{0,400}consultations\/.*\/room/', $patientHistory),
     'Patient completed View Record does not point at the Daily room'
 );
 
-$doctorHistory = (string) file_get_contents($root . '/app/Views/doctor/consultations/index.php');
+$doctorHistory = (string) file_get_contents($root . '/app/Views/doctor/consultations/_history_table.php');
 expect_true(str_contains($doctorHistory, '$consultationRecordUrl'), 'Doctor history has a dedicated record URL');
 expect_true(str_contains($doctorHistory, 'View Record'), 'Doctor history labels completed consultations as View Record');
 expect_true(
     str_contains($doctorHistory, 'escape($consultationRecordUrl)')
     && preg_match('/elseif \(\$isCompleted\):[\s\S]{0,250}consultationRecordUrl/', $doctorHistory) === 1,
     'Doctor View Record uses the historical record URL, not the Daily room'
+);
+expect_true(str_contains($doctorHistory, 'Download Consultation Record'), 'Doctor history prepares Download Consultation Record');
+expect_true(
+    preg_match('/elseif \(\$isCompleted\):[\s\S]{0,800}consultationRoomUrl/', $doctorHistory) !== 1,
+    'Doctor completed View Record does not use the Daily room URL'
 );
 
 $doctorShow = (string) file_get_contents($root . '/app/Views/doctor/consultations/show.php');
@@ -174,10 +185,16 @@ try {
     expect_true(ConsultationRequest::findByIdForPatient($requestId, $patientId + 999999) === null, 'Unknown patient id cannot open the consultation');
     expect_true(PatientClinicalRecordService::getCompletedRecordForPatient($patientId + 999999, $requestId) === null, 'Unknown patient id cannot load the clinical record');
     expect_true(PatientClinicalRecordService::getHistoricalRecordForDoctor($doctorId + 999999, $requestId) === null, 'Unknown doctor id cannot load the historical record');
+    expect_true(is_array(PatientClinicalRecordService::getPrintableDocumentForPatient($patientId, $requestId, 'record')), 'Patient can prepare their own consultation record download');
+    expect_true(is_array(PatientClinicalRecordService::getPrintableDocumentForPatient($patientId, $requestId, 'prescription')), 'Patient can prepare their own prescription download');
+    expect_true(PatientClinicalRecordService::getPrintableDocumentForPatient($patientId + 999999, $requestId, 'record') === null, 'Unknown patient id cannot prepare a record download');
+    expect_true(PatientClinicalRecordService::getPrintableDocumentForDoctor($doctorId + 999999, $requestId, 'prescription') === null, 'Unknown doctor id cannot prepare a prescription download');
 
     if ($otherPatientId > 0) {
         expect_true(ConsultationRequest::findByIdForPatient($requestId, $otherPatientId) === null, 'Patient B cannot open Patient A consultation by changing the ID');
         expect_true(PatientClinicalRecordService::getCompletedRecordForPatient($otherPatientId, $requestId) === null, 'Patient B cannot load Patient A clinical record');
+        expect_true(PatientClinicalRecordService::getPrintableDocumentForPatient($otherPatientId, $requestId, 'record') === null, 'Patient B cannot download Patient A consultation record');
+        expect_true(PatientClinicalRecordService::getPrintableDocumentForPatient($otherPatientId, $requestId, 'prescription') === null, 'Patient B cannot download Patient A prescription');
         expect_true(Prescription::findByRecordForPatient($recordId, $otherPatientId) === [], 'Patient B cannot load Patient A prescription');
     } else {
         echo "SKIP  Second patient account not available for cross-patient ID check\n";
@@ -186,6 +203,8 @@ try {
     if ($otherDoctorId > 0) {
         expect_true(ConsultationRequest::findByIdForDoctor($requestId, $otherDoctorId) === null, 'Doctor B cannot open Doctor A consultation by changing the ID');
         expect_true(PatientClinicalRecordService::getHistoricalRecordForDoctor($otherDoctorId, $requestId) === null, 'Doctor B cannot load Doctor A historical record');
+        expect_true(PatientClinicalRecordService::getPrintableDocumentForDoctor($otherDoctorId, $requestId, 'record') === null, 'Doctor B cannot download Doctor A consultation record');
+        expect_true(PatientClinicalRecordService::getPrintableDocumentForDoctor($otherDoctorId, $requestId, 'prescription') === null, 'Doctor B cannot download Doctor A prescription');
         expect_true(Prescription::findByRecordForDoctor($recordId, $otherDoctorId) === [], 'Doctor B cannot load Doctor A prescription');
     } else {
         echo "SKIP  Second doctor account not available for cross-doctor ID check\n";

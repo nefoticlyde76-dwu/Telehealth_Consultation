@@ -24,7 +24,7 @@ $summaryPartyMeta = trim(implode(' · ', array_filter([
       <div class="cr-header__copy">
         <ol class="cr-breadcrumb">
           <li><a href="<?= \App\Helpers\Helper::url('/patient/dashboard') ?>">Dashboard</a></li>
-          <li><a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>">History</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>">My Consultations</a></li>
           <li class="active"><?= $isCompleted ? 'Consultation Record' : 'Consultation Details' ?></li>
         </ol>
         <h1 class="cr-title"><?= $isCompleted ? 'Consultation Record' : 'Consultation Details' ?></h1>
@@ -38,6 +38,18 @@ $summaryPartyMeta = trim(implode(' · ', array_filter([
         <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="cr-btn">
           Consultations
         </a>
+        <?php if ($isCompleted && is_array($clinicalRecord ?? null) && (string) (($clinicalRecord['record_status'] ?? '')) === \App\Models\ConsultationRecord::STATUS_FINAL): ?>
+          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/' . $requestId . '/download-record') ?>" class="cr-btn">
+            <i class="bi bi-download me-1"></i>
+            Download Consultation Record
+          </a>
+        <?php endif; ?>
+        <?php if ($isCompleted && is_array($prescriptions ?? null) && $prescriptions !== []): ?>
+          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/' . $requestId . '/download-prescription') ?>" class="cr-btn cr-btn--primary">
+            <i class="bi bi-download me-1"></i>
+            Download Prescription
+          </a>
+        <?php endif; ?>
         <?php
           $videoJoin = $videoJoin ?? null;
           if (!$isCompleted && is_array($videoJoin)) {

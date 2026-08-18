@@ -10,8 +10,10 @@
   ],
   "require": {
     "php": ">=8.0",
+    "ext-json": "*",
     "ext-pdo": "*",
-    "ext-json": "*"
+    "ext-gd": "*",
+    "dompdf/dompdf": "^3.1"
   },
   "autoload": {
     "psr-4": {

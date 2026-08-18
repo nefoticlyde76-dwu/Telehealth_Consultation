@@ -32,7 +32,7 @@ $buildPageUrl = static function (int $page): string {
       </span>
       <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-clipboard2-check me-1"></i>
-        Consultation History
+        My Consultations
       </a>
       <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-primary btn-sm">
         <i class="bi bi-calendar2-week me-1"></i>
@@ -103,25 +103,22 @@ $buildPageUrl = static function (int $page): string {
     <div class="row g-4">
       <?php foreach ($doctors as $doctor): ?>
         <div class="col-lg-6 col-xl-4">
-          <article class="ux-card h-100 d-flex flex-column">
+          <article class="ux-card ux-glass-profile h-100 d-flex flex-column">
             <div class="card-header border-0 bg-transparent pb-0 pt-4 px-4">
               <div class="d-flex align-items-start gap-3">
                 <?php
-                $avatarPath = $doctor['profile_photo_path'] ?? null;
-                $fullName = $doctor['full_name'] ?? 'Doctor';
-                $avatarClass = 'user-avatar user-avatar--sm';
-                require __DIR__ . '/../../partials/shared/user_avatar.php';
+                $personName = (string) ($doctor['full_name'] ?? 'Doctor');
+                $personPhoto = $doctor['profile_photo_path'] ?? null;
+                $personMeta = trim((string) ($doctor['professional_title'] ?? 'Medical Practitioner'));
+                $personSize = 'sm';
+                require __DIR__ . '/../../partials/shared/person_row.php';
                 ?>
-                <div class="flex-grow-1">
-                  <span class="ux-badge ux-badge--approved">
-                    <i class="bi bi-check-circle-fill me-1"></i>
-                    Available
-                  </span>
-                  <h3 class="h6 fw-bold mb-1 mt-2"><?= \App\Helpers\Helper::escape((string) ($doctor['full_name'] ?? 'Doctor')) ?></h3>
-                  <p class="mb-1 text-primary fw-semibold small"><?= \App\Helpers\Helper::escape((string) ($doctor['specialization'] ?? 'General Practice')) ?></p>
-                  <p class="text-muted small mb-0"><?= \App\Helpers\Helper::escape((string) ($doctor['professional_title'] ?? 'Medical Practitioner')) ?></p>
-                </div>
               </div>
+              <span class="ux-badge ux-badge--approved mt-2">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Available
+              </span>
+              <p class="mb-1 text-primary fw-semibold small mt-2"><?= \App\Helpers\Helper::escape((string) ($doctor['specialization'] ?? 'General Practice')) ?></p>
             </div>
 
             <div class="card-body flex-grow-1 d-flex flex-column">

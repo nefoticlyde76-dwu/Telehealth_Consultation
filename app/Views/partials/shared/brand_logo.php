@@ -20,9 +20,9 @@ $brandShowWordmark = $brandShowWordmark ?? false;
   </span>
 
   <?php if ($brandShowWordmark): ?>
-    <span class="brand-wordmark">
-      <span class="brand-wordmark__primary">TeleHealth</span>
-      <span class="brand-wordmark__secondary">PNG</span>
+            <span class="brand-wordmark">
+      <span class="brand-wordmark__primary"><?= \App\Helpers\Helper::escape($brandWordmarkPrimary ?? 'TeleHealth PNG') ?></span>
+      <span class="brand-wordmark__secondary"><?= \App\Helpers\Helper::escape($brandWordmarkSecondary ?? 'MBPHA TELEHEALTH') ?></span>
     </span>
   <?php elseif ($brandShowTitle || $brandSubtitle !== '' || $brandRoleLabel !== ''): ?>
     <span class="brand-copy">

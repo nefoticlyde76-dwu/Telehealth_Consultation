@@ -4,6 +4,7 @@ $formData = $formData ?? [];
 $fieldErrors = $fieldErrors ?? [];
 $genderOptions = $genderOptions ?? [];
 $statusOptions = $statusOptions ?? [];
+$patient = $patient ?? [];
 ?>
 
 <div class="row g-4">
@@ -12,6 +13,17 @@ $statusOptions = $statusOptions ?? [];
       <div class="card-body p-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
           <div>
+            <?php if ((int) ($patient['id'] ?? 0) > 0): ?>
+              <div class="mb-3">
+                <?php
+                $personName = (string) ($formData['full_name'] ?? $patient['full_name'] ?? 'Patient');
+                $personPhoto = $patient['profile_photo_path'] ?? null;
+                $personMeta = (string) ($formData['email'] ?? $patient['email'] ?? '');
+                $personSize = 'lg';
+                require __DIR__ . '/../../partials/shared/person_row.php';
+                ?>
+              </div>
+            <?php endif; ?>
             <h3 class="h5 mb-1">Patient Account Information</h3>
             <p class="text-muted mb-0">Maintain patient identity, demographic details, and secure access status without changing consultation workflows.</p>
           </div>

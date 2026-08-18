@@ -43,11 +43,20 @@ $statusMessage = $statusMessage ?? null;
       <div class="card-body p-4">
         <h3 class="h5 mb-3">Selected Doctor</h3>
 
+        <div class="mb-4">
+          <?php
+          $personName = (string) ($doctor['full_name'] ?? 'Doctor');
+          $personPhoto = $doctor['profile_photo_path'] ?? null;
+          $personMeta = trim(implode(' · ', array_filter([
+              (string) ($doctor['professional_title'] ?? ''),
+              (string) ($doctor['specialization'] ?? ''),
+          ], static fn (string $value): bool => $value !== '')));
+          $personSize = 'lg';
+          require __DIR__ . '/../../partials/shared/person_row.php';
+        ?>
+        </div>
+
         <div class="user-detail-grid">
-          <div class="user-detail-item">
-            <span class="user-detail-label">Full Name</span>
-            <strong><?= \App\Helpers\Helper::escape((string) ($doctor['full_name'] ?? 'Not available')) ?></strong>
-          </div>
           <div class="user-detail-item">
             <span class="user-detail-label">Email</span>
             <strong><?= \App\Helpers\Helper::escape((string) ($doctor['email'] ?? 'Not available')) ?></strong>

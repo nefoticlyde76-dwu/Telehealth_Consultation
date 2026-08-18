@@ -50,6 +50,7 @@ class AuthController extends Controller
             'errors' => $errors,
             'oldInput' => $oldInput,
             'statusMessage' => Session::getFlash('status'),
+            'bodyClass' => 'public-layout auth-login-layout',
         ]);
     }
 
@@ -62,6 +63,7 @@ class AuthController extends Controller
             'dob' => '',
             'gender' => '',
             'address' => '',
+            'terms' => false,
         ];
 
         if (AuthService::isAuthenticated()) {
@@ -71,7 +73,9 @@ class AuthController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $formData = $this->getRegistrationFormData();
-            $oldInput = $formData;
+            $oldInput = array_merge($formData, [
+                'terms' => isset($_POST['terms']),
+            ]);
             $errors = $this->validateRegistrationRequest(
                 $formData,
                 (string) ($_POST['password'] ?? ''),
@@ -105,6 +109,7 @@ class AuthController extends Controller
             'csrfToken' => Csrf::generate(),
             'errors' => $errors,
             'oldInput' => $oldInput,
+            'bodyClass' => 'public-layout auth-login-layout auth-register-layout',
         ]);
     }
 

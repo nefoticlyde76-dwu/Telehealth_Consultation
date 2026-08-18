@@ -39,8 +39,13 @@ $workspaceFields = static function () use ($filters, $currentPage): void {
 <article class="ux-card ux-queue-detail">
   <div class="ux-queue-detail__header">
     <div>
-      <h3 class="h5 mb-1"><?= \App\Helpers\Helper::escape((string) ($request['patient_name'] ?? 'Patient')) ?></h3>
-      <p class="text-muted small mb-0">Request #<?= \App\Helpers\Helper::escape((string) $requestId) ?></p>
+      <?php
+      $personName = (string) ($request['patient_name'] ?? 'Patient');
+      $personPhoto = $request['patient_photo_path'] ?? null;
+      $personMeta = 'Request #' . (string) $requestId;
+      $personSize = 'lg';
+      require __DIR__ . '/../../partials/shared/person_row.php';
+      ?>
     </div>
     <span class="ux-badge <?= ux_status_badge_class($status) ?>"><?= \App\Helpers\Helper::escape($status) ?></span>
   </div>
@@ -48,11 +53,27 @@ $workspaceFields = static function () use ($filters, $currentPage): void {
   <dl class="ux-queue-detail__facts">
     <div>
       <dt>Patient</dt>
-      <dd><?= \App\Helpers\Helper::escape((string) ($request['patient_name'] ?? 'Patient')) ?></dd>
+      <dd>
+        <?php
+        $personName = (string) ($request['patient_name'] ?? 'Patient');
+        $personPhoto = $request['patient_photo_path'] ?? null;
+        $personMeta = '';
+        $personSize = 'sm';
+        require __DIR__ . '/../../partials/shared/person_row.php';
+        ?>
+      </dd>
     </div>
     <div>
       <dt>Doctor</dt>
-      <dd><?= \App\Helpers\Helper::escape((string) ($request['doctor_name'] ?? 'Doctor')) ?></dd>
+      <dd>
+        <?php
+        $personName = (string) ($request['doctor_name'] ?? 'Doctor');
+        $personPhoto = $request['doctor_photo_path'] ?? null;
+        $personMeta = '';
+        $personSize = 'sm';
+        require __DIR__ . '/../../partials/shared/person_row.php';
+        ?>
+      </dd>
     </div>
     <div>
       <dt>Specialization</dt>

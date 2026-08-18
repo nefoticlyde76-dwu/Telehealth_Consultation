@@ -68,4 +68,80 @@ class PatientClinicalRecordService
             'prescriptions' => $prescriptions,
         ];
     }
+
+    /**
+     * Authorized printable document for the signed-in patient.
+     * Returns null when the consultation is not theirs, is not completed,
+     * or the requested document does not exist yet.
+     *
+     * @param 'record'|'prescription' $documentType
+     * @return array{
+     *   request:array<string,mixed>,
+     *   record:?array<string,mixed>,
+     *   prescriptions:list<array<string,mixed>>
+     * }|null
+     */
+    public static function getPrintableDocumentForPatient(int $patientId, int $consultationRequestId, string $documentType): ?array
+    {
+        $page = self::getCompletedRecordForPatient($patientId, $consultationRequestId);
+        if (!self::isDownloadableDocument($page, $documentType)) {
+            return null;
+        }
+
+        return $page;
+    }
+
+    /**
+     * Authorized printable document for the assigned doctor.
+     *
+     * @param 'record'|'prescription' $documentType
+     * @return array{
+     *   request:array<string,mixed>,
+     *   record:?array<string,mixed>,
+     *   prescriptions:list<array<string,mixed>>
+     * }|null
+     */
+    public static function getPrintableDocumentForDoctor(int $doctorId, int $consultationRequestId, string $documentType): ?array
+    {
+        $page = self::getHistoricalRecordForDoctor($doctorId, $consultationRequestId);
+        if (!self::isDownloadableDocument($page, $documentType)) {
+            return null;
+        }
+
+        return $page;
+    }
+
+    /**
+     * @param array{
+     *   request:array<string,mixed>,
+     *   record:?array<string,mixed>,
+     *   prescriptions:list<array<string,mixed>>
+     * }|null $page
+     * @param 'record'|'prescription' $documentType
+     */
+    public static function isDownloadableDocument(?array $page, string $documentType): bool
+    {
+        if ($page === null) {
+            return false;
+        }
+
+        $request = $page['request'] ?? [];
+        if ((string) ($request['status'] ?? '') !== 'Completed') {
+            return false;
+        }
+
+        $record = $page['record'] ?? null;
+        $hasFinalRecord = is_array($record)
+            && (string) ($record['record_status'] ?? '') === ConsultationRecord::STATUS_FINAL;
+
+        if ($documentType === 'record') {
+            return $hasFinalRecord;
+        }
+
+        if ($documentType === 'prescription') {
+            return $hasFinalRecord && ($page['prescriptions'] ?? []) !== [];
+        }
+
+        return false;
+    }
 }

@@ -51,10 +51,15 @@ $disabledAttr = $canEdit ? '' : ' disabled';
     </div>
   </div>
   <div class="vc-side-panel__body">
-    <p class="vc-clinical-panel__meta mb-3">
-      <?= \App\Helpers\Helper::escape($patientName) ?>
-      · Consultation #<?= \App\Helpers\Helper::escape((string) $consultationId) ?>
-    </p>
+    <div class="mb-3">
+      <?php
+      $personName = $patientName;
+      $personPhoto = $context['other_party_photo'] ?? null;
+      $personMeta = 'Consultation #' . (string) $consultationId;
+      $personSize = 'sm';
+      require __DIR__ . '/../../partials/shared/person_row.php';
+      ?>
+    </div>
 
     <?php if (!$canEdit): ?>
       <p class="small text-muted mb-3">

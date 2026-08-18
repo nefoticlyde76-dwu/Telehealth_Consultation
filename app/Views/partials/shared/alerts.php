@@ -13,11 +13,11 @@ $statusIcon = $statusIconMap[$statusType] ?? $statusIconMap['info'];
 ?>
 
 <?php if (!empty($errors)): ?>
-  <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4" role="alert">
+  <div class="alert alert-danger mb-4" role="alert">
     <div class="d-flex align-items-start gap-3">
-      <i class="bi bi-shield-exclamation fs-4"></i>
+      <i class="bi bi-exclamation-triangle-fill"></i>
       <div>
-        <h3 class="h6 mb-2">Please review the following issues</h3>
+        <strong class="d-block mb-1">Please review the following issues</strong>
         <ul class="mb-0 ps-3">
           <?php foreach ($errors as $error): ?>
             <li><?= \App\Helpers\Helper::escape($error) ?></li>
@@ -29,9 +29,9 @@ $statusIcon = $statusIconMap[$statusType] ?? $statusIconMap['info'];
 <?php endif; ?>
 
 <?php if (is_array($statusMessage) && !empty($statusMessage['message'])): ?>
-  <div class="alert alert-<?= \App\Helpers\Helper::escape($statusType) ?> border-0 shadow-sm rounded-4 mb-4" role="alert">
+  <div class="alert alert-<?= \App\Helpers\Helper::escape($statusType) ?> mb-4" role="alert">
     <div class="d-flex align-items-center gap-3">
-      <i class="bi <?= \App\Helpers\Helper::escape($statusIcon) ?> fs-4"></i>
+      <i class="bi <?= \App\Helpers\Helper::escape($statusIcon) ?>"></i>
       <div><?= \App\Helpers\Helper::escape($statusMessage['message']) ?></div>
     </div>
   </div>

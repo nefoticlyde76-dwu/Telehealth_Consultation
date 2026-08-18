@@ -9,23 +9,26 @@ $quickActions = is_array($rightbar['quickActions'] ?? null) ? $rightbar['quickAc
 $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems, $quickActions): void {
     ?>
     <div class="rightbar-section rightbar-section--calendar">
-      <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-        <h2 class="h6 mb-0">Calendar</h2>
-        <span class="badge badge-soft-info rounded-pill px-3 py-2" data-dashboard-datetime="date">Today</span>
+      <div class="rightbar-calendar-toolbar">
+        <h2 class="h6 mb-0" data-calendar-month-label>Calendar</h2>
+        <div class="rightbar-calendar-nav">
+          <button type="button" data-calendar-prev aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
+          <button type="button" data-calendar-next aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
+        </div>
       </div>
-      <div class="rightbar-calendar" data-mini-calendar style="height:auto;min-height:auto;max-height:none;overflow:visible;"></div>
+      <div class="rightbar-calendar" data-mini-calendar></div>
     </div>
 
     <div class="rightbar-section">
       <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
         <h2 class="h6 mb-0"><?= \App\Helpers\Helper::escape($upcomingTitle) ?></h2>
-        <span class="text-muted small"><?= \App\Helpers\Helper::escape((string) count($upcomingItems)) ?></span>
+        <span class="rightbar-count"><?= \App\Helpers\Helper::escape((string) count($upcomingItems)) ?></span>
       </div>
 
       <?php if ($upcomingItems === []): ?>
-        <div class="rightbar-empty">
+        <div class="rightbar-empty text-center py-3">
           <div class="rightbar-empty-icon"><i class="bi bi-calendar2-check"></i></div>
-          <p class="text-muted mb-0">No upcoming consultations.</p>
+          <p class="text-muted mb-0 small">No upcoming consultations.</p>
         </div>
       <?php else: ?>
         <div class="rightbar-list">
@@ -54,9 +57,12 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
         </div>
         <div class="d-grid gap-2">
           <?php foreach ($quickActions as $action): ?>
-            <a href="<?= \App\Helpers\Helper::url((string) ($action['url'] ?? '#')) ?>" class="btn btn-outline-primary rightbar-action">
-              <i class="bi <?= \App\Helpers\Helper::escape((string) ($action['icon'] ?? 'bi-lightning-charge')) ?>"></i>
-              <?= \App\Helpers\Helper::escape((string) ($action['label'] ?? 'Action')) ?>
+            <a href="<?= \App\Helpers\Helper::url((string) ($action['url'] ?? '#')) ?>" class="btn rightbar-action">
+              <span class="d-inline-flex align-items-center gap-2">
+                <i class="bi <?= \App\Helpers\Helper::escape((string) ($action['icon'] ?? 'bi-lightning-charge')) ?>"></i>
+                <?= \App\Helpers\Helper::escape((string) ($action['label'] ?? 'Action')) ?>
+              </span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </a>
           <?php endforeach; ?>
         </div>

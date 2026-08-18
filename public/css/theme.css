@@ -6,44 +6,54 @@
      ============================================================ */
   --ds-navy: #455F68;
   --ds-navy-dark: #364A51;
+  --ds-hero: #455F68;
+  --ds-action: #067FBF;
   --ds-accent: #0794E3;
-  --ds-accent-hover: #0678B8;
+  --ds-accent-hover: #067FBF;
   --ds-teal: #08B4C6;
+  --ds-green: #08B4C6;
   --ds-canvas: #F8F8F8;
   --ds-card: #FFFFFF;
   --ds-border: #E2E6E7;
   --ds-border-strong: #C5CDD0;
-  --ds-text: #364A51;
+  --ds-text: #455F68;
   --ds-text-secondary: #70838A;
-  --ds-text-muted: #8A989D;
-  --ds-sidebar-inactive: rgba(255, 255, 255, 0.78);
+  --ds-text-muted: #70838A;
+  --ds-sidebar-inactive: rgba(255, 255, 255, 0.76);
   --ds-sidebar-active: #FFFFFF;
   --ds-success-bg: rgba(8, 180, 198, 0.12);
-  --ds-success-text: #067A86;
+  --ds-success-text: #0A7A85;
   --ds-success-dot: #08B4C6;
-  --ds-warning-bg: rgba(240, 180, 41, 0.16);
-  --ds-warning-text: #8a5a00;
-  --ds-warning-dot: #f0b429;
-  --ds-info-bg: rgba(7, 148, 227, 0.12);
+  --ds-warning-bg: rgba(245, 158, 11, 0.16);
+  --ds-warning-text: #B45309;
+  --ds-warning-dot: #F59E0B;
+  --ds-info-bg: rgba(7, 148, 227, 0.10);
   --ds-info-text: #0794E3;
   --ds-info-dot: #0794E3;
   --ds-danger-bg: rgba(220, 53, 69, 0.10);
-  --ds-danger-text: #dc3545;
-  --ds-danger-dot: #dc3545;
-  --ds-neutral-bg: #F1F3F3;
+  --ds-danger-text: #DC3545;
+  --ds-danger-dot: #DC3545;
+  --ds-neutral-bg: #F3F6F7;
   --ds-neutral-text: #70838A;
   --ds-neutral-dot: #70838A;
   --ds-chart-line: #0794E3;
   --ds-chart-fill: rgba(7, 148, 227, 0.12);
-  --ds-chart-grid: #EEF1F2;
-  --ds-shadow-card: 0 1px 2px rgba(69, 95, 104, 0.06);
-  --ds-shadow-overlay: 0 8px 20px rgba(69, 95, 104, 0.10);
+  --ds-chart-grid: #E2E6E7;
+  --ds-shadow-card: 0 1px 3px rgba(69, 95, 104, 0.06);
+  --ds-shadow-overlay: 0 8px 24px rgba(69, 95, 104, 0.10);
   --ds-radius-sm: 8px;
   --ds-radius-md: 10px;
-  --ds-radius-lg: 14px;
+  --ds-radius-lg: 12px;
+  --ds-radius-xl: 12px;
+  --ds-radius-hero: 12px;
   --ds-radius-pill: 9999px;
-  --ds-sidebar-width: 250px;
-  --ds-topbar-height: 68px;
+  --ds-headline-green: #08B4C6;
+  --ds-page: #F8F8F8;
+  --ds-soft-blue: #F3F6F7;
+  --ds-nav-text: #455F68;
+  --ds-login-border: #C5CDD0;
+  --ds-sidebar-width: 248px;
+  --ds-topbar-height: 64px;
   --ds-space: 4px;
   --ds-font: Inter, "Segoe UI", -apple-system, Roboto, sans-serif;
 
@@ -51,7 +61,7 @@
   --ds-accent-rgb: 7, 148, 227;
   --ds-teal-rgb: 8, 180, 198;
   --ds-success-rgb: 8, 180, 198;
-  --ds-text-rgb: 54, 74, 81;
+  --ds-text-rgb: 69, 95, 104;
 
   /* Backward-compatible aliases used by existing public + dashboard CSS */
   --medical-blue: #0794E3;
@@ -62,14 +72,14 @@
   --light-gray: #F8F8F8;
   --medium-gray: #E2E6E7;
   --dark-gray: #70838A;
-  --navy-black: #364A51;
-  --royal-blue: #0678B8;
+  --navy-black: #455F68;
+  --royal-blue: #0794E3;
   --mint-green: rgba(8, 180, 198, 0.12);
   --pale-blue: rgba(7, 148, 227, 0.12);
   --danger: #dc3545;
-  --warning: #f0b429;
-  --success-dark: #067A86;
-  --success-text: #067A86;
+  --warning: #f59e0b;
+  --success-dark: #0A7A85;
+  --success-text: #0A7A85;
 
   --medical-blue-rgb: 7, 148, 227;
   --emerald-green-rgb: 8, 180, 198;
@@ -78,7 +88,7 @@
   --white-rgb: 255, 255, 255;
   --light-gray-rgb: 248, 248, 248;
   --medium-gray-rgb: 226, 230, 231;
-  --navy-black-rgb: 54, 74, 81;
+  --navy-black-rgb: 69, 95, 104;
 
   --primary: var(--medical-blue);
   --primary-dark: var(--dark-navy);
@@ -202,29 +212,29 @@ a:hover {
 .btn {
   font-weight: 600;
   letter-spacing: 0.01em;
-  border-radius: 999px;
-  padding: 0.82rem 1.4rem;
+  border-radius: 10px;
+  padding: 0.55rem 1.15rem;
   border-width: 1px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .btn:hover,
 .btn:focus-visible {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .btn-primary {
   background-color: var(--primary);
   border-color: var(--primary);
-  box-shadow: var(--shadow-brand);
+  box-shadow: none;
 }
 
 .btn-primary:hover,
 .btn-primary:focus-visible,
 .btn-primary:active {
-  background-color: var(--royal-blue);
-  border-color: var(--royal-blue);
-  box-shadow: 0 18px 34px rgba(var(--medical-blue-rgb), 0.24);
+  background-color: var(--ds-accent-hover);
+  border-color: var(--ds-accent-hover);
+  box-shadow: none;
 }
 
 .btn-success {
@@ -3223,4 +3233,48 @@ button.is-loading::after,
 }
 .ux-card canvas[data-chart] {
   width: 100% !important;
+}
+
+/* ========================================================================
+   ux-stag — staggered list entrance (adapted from CodeFronts, MIT)
+   Sequential slide / scale / fade. Armed only after JS so content stays
+   visible if scripts do not run.
+   ======================================================================== */
+
+.ux-stag-armed > .ux-stag-item {
+  opacity: 0;
+}
+
+.ux-stag-armed > .ux-stag-item.ux-stag--left {
+  transform: translateX(-24px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.ux-stag-armed > .ux-stag-item.ux-stag--scale {
+  transform: translateY(18px) scale(0.96);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ux-stag-armed > .ux-stag-item.ux-stag--right {
+  transform: translateX(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.ux-stag-armed > .ux-stag-item.ux-stag--up {
+  transform: translateY(12px);
+  transition: opacity 0.45s ease, transform 0.45s ease, background 0.15s ease;
+}
+
+.ux-stag-armed > .ux-stag-item.in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ux-stag-armed > .ux-stag-item,
+  .ux-stag-armed > .ux-stag-item.in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }

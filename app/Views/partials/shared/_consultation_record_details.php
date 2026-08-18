@@ -4,10 +4,15 @@ $request = is_array($request ?? null) ? $request : [];
 $clinicalRecord = is_array($clinicalRecord ?? null) ? $clinicalRecord : null;
 $prescriptions = is_array($prescriptions ?? null) ? $prescriptions : [];
 $viewerRole = (string) ($viewerRole ?? 'patient');
+$printType = (string) ($printType ?? '');
 $requestStatus = (string) ($request['status'] ?? 'Pending');
+$requestId = (int) ($request['id'] ?? 0);
 
 $isCompleted = $requestStatus === 'Completed';
 $hasFinalRecord = is_array($clinicalRecord) && (string) ($clinicalRecord['record_status'] ?? '') === \App\Models\ConsultationRecord::STATUS_FINAL;
+$showClinical = $printType !== 'prescription';
+$showPrescriptionBlock = $printType !== 'record';
+
 $completedAt = (string) ($request['completed_at'] ?? ($clinicalRecord['finalized_at'] ?? ''));
 $patientName = trim((string) ($request['patient_name'] ?? ''));
 $patientAddress = trim((string) ($request['patient_address'] ?? ''));
@@ -44,9 +49,11 @@ if ($hasFinalRecord) {
     }
 }
 $clinicalMeta = implode(' · ', array_filter($clinicalMetaParts, static fn (string $part): bool => trim($part) !== ''));
+$screenOnlyClass = $printType === 'record' ? '' : ' cr-print-hide';
 ?>
 
-<section class="cr-card cr-summary cr-print-hide" aria-label="Consultation summary">
+<?php if ($showClinical): ?>
+<section class="cr-card cr-summary<?= $screenOnlyClass ?>" aria-label="Consultation summary">
   <div class="cr-summary__item">
     <span class="cr-icon <?= $requestStatus === 'Completed' ? 'cr-icon--success' : '' ?>" aria-hidden="true">
       <i class="bi <?= $requestStatus === 'Completed' ? 'bi-check-circle' : \App\Helpers\Helper::escape(ux_status_icon_class($requestStatus, 'bi-info-circle')) ?>"></i>
@@ -67,18 +74,23 @@ $clinicalMeta = implode(' · ', array_filter($clinicalMetaParts, static fn (stri
     </div>
   </div>
   <div class="cr-summary__item">
-    <span class="cr-icon" aria-hidden="true"><i class="bi <?= $summaryPartyLabel === 'Patient' ? 'bi-person' : 'bi-person-badge' ?>"></i></span>
     <div>
       <span class="cr-kicker"><?= \App\Helpers\Helper::escape($summaryPartyLabel) ?></span>
-      <p class="cr-summary__value"><?= \App\Helpers\Helper::escape($summaryPartyName) ?></p>
-      <?php if ($summaryPartyMeta !== ''): ?>
-        <p class="cr-summary__meta"><?= \App\Helpers\Helper::escape($summaryPartyMeta) ?></p>
-      <?php endif; ?>
+      <?php
+      $summaryPartyPhoto = $summaryPartyLabel === 'Patient'
+          ? ($request['patient_photo_path'] ?? null)
+          : ($request['doctor_photo_path'] ?? $request['profile_photo_path'] ?? null);
+      $personName = $summaryPartyName;
+      $personPhoto = $summaryPartyPhoto;
+      $personMeta = $summaryPartyMeta;
+      $personSize = 'sm';
+      require __DIR__ . '/person_row.php';
+      ?>
     </div>
   </div>
 </section>
 
-<section class="cr-card cr-reason cr-print-hide">
+<section class="cr-card cr-reason<?= $screenOnlyClass ?>">
   <span class="cr-icon" aria-hidden="true"><i class="bi bi-clipboard-check"></i></span>
   <div>
     <h2 class="cr-reason__label">Reason for visit</h2>
@@ -86,7 +98,7 @@ $clinicalMeta = implode(' · ', array_filter($clinicalMetaParts, static fn (stri
   </div>
 </section>
 
-<div class="cr-main cr-print-hide">
+<div class="cr-main<?= $screenOnlyClass ?>">
   <section class="cr-card cr-panel" id="patient-information">
     <div class="cr-panel__header">
       <div class="cr-panel__title-group">
@@ -191,20 +203,15 @@ $clinicalMeta = implode(' · ', array_filter($clinicalMetaParts, static fn (stri
     <?php endif; ?>
   </section>
 </div>
+<?php endif; ?>
 
-<?php if ($isCompleted): ?>
+<?php if ($isCompleted && $showPrescriptionBlock): ?>
 <section class="cr-card cr-rx" id="prescription">
   <div class="cr-rx__header cr-print-hide">
     <div class="cr-panel__title-group">
       <span class="cr-icon cr-icon--sm" aria-hidden="true"><i class="bi bi-journal-text"></i></span>
       <h2 class="cr-panel__title">Prescription</h2>
     </div>
-    <?php if ($hasPrescription): ?>
-      <div class="cr-header__actions">
-        <a href="#prescription" class="cr-btn">View Prescription</a>
-        <button type="button" class="cr-btn cr-btn--primary" onclick="window.print()">Download Prescription</button>
-      </div>
-    <?php endif; ?>
   </div>
 
   <?php if (!$hasPrescription): ?>

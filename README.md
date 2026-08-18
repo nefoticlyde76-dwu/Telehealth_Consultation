@@ -4,12 +4,12 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ## Current Status
 
-- Current Week: Week 7
+- Current Week: Week 8
 - Architecture: Custom MVC (PHP 8.x)
 - Database: MySQL with PDO prepared statements
 - Frontend: HTML5, CSS3, Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
 - Authentication: Implemented for patient registration, login, logout, session handling, CSRF, and role-based redirects
-- Public Website: Implemented
+- Public Website: Implemented, including dedicated About, How It Works, and Contact pages
 - Dashboards: Initial patient, doctor, and administrator dashboards implemented
 - Administration: Week 3 Day 1 user management foundation implemented for administrators
 - Doctor Accounts: Week 3 Day 2 doctor account management implemented for administrator-controlled clinician onboarding
@@ -24,6 +24,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Consultation Workflow: Week 5 consultation request and appointment management workflow implemented across patient, administrator, and doctor dashboards
 - Video Consultation Module: Week 6 end-to-end Daily.co Prebuilt video consultation integration (secure server-side creds, idempotent rooms, join-window, role tokens) implemented for approved appointments
 - Consultation Records and Prescriptions: Week 7 live clinical documentation, doctor-controlled completion, explicit prescription issuance, and read-only historical record views implemented
+- Consultation History and PDF Export: Week 8 authorized consultation-record and A4 portrait prescription PDF downloads, refined history actions, and supporting public/dashboard UI consistency implemented
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -365,6 +366,50 @@ Clinical documentation and prescriptions are layered onto the existing Approved 
 - `/admin/consultation-requests` queue: review pending request details, then Approve or Reject
 - No automated approval, rejection, or AI review
 
+### Week 8 Consultation History and PDF Export
+
+Authorized, read-only PDF downloads sit on top of the Week 7 finalized record and issued prescription. Generating a PDF does not create or change clinical notes or prescriptions.
+
+#### History actions
+
+- Patient history: `/patient/consultation-requests`
+- Doctor history: `/doctor/consultations`
+- Approved sessions inside the join window keep **Join Consultation**
+- Completed consultations use **View Record** (not the Daily room)
+- **Download Consultation Record** appears only for Completed consultations with a Final record
+- **View Prescription** / **Download Prescription** appear only when a prescription has been issued
+
+#### Consultation-record PDF
+
+- Patient: `GET /patient/consultation-requests/{id}/download-record`
+- Doctor: `GET /doctor/consultations/{id}/download-record`
+- Built by `ConsultationRecordPdfService` from saved `consultation_records` data
+- Includes patient, consultation, and doctor information plus finalized clinical fields
+- A4 portrait, DomPDF, DejaVu Sans; remote URL fetching disabled
+
+#### Prescription PDF
+
+- Patient: `GET /patient/consultation-requests/{id}/download-prescription`
+- Doctor: `GET /doctor/consultations/{id}/download-prescription`
+- Built by `PrescriptionPdfService` from saved `prescriptions` rows
+- Includes patient name and address, issue date, medication lines, doctor information, and the stored doctor signature
+- Paper size is A4 portrait (`setPaper('A4', 'portrait')` and `@page { size: A4 portrait; }`)
+- Signature images are taken only from `uploads/doctors/{doctorId}/...`
+
+#### Authorization
+
+- Role middleware on every download route; controllers re-check the signed-in role
+- Patients download only their own documents; doctors download only assigned consultations
+- Administrators have no PDF download routes
+- Draft records and missing prescriptions cannot be downloaded
+- Cross-user ID guessing fails closed
+
+#### Supporting public pages
+
+- Dedicated `/about`, `/how-it-works`, and `/contact` pages
+- Shared public intro, hero, workflow, and CTA partials
+- Login and registration stylesheets split for the same MBPHA visual language
+
 ### Profile Enhancement
 
 - Direct profile picture uploads without a cropping step
@@ -394,22 +439,32 @@ Telehealth_Consultation_System/
 │   │   ├── VideoConsultationService.php
 │   │   ├── DoctorClinicalDocumentationService.php
 │   │   ├── DoctorPrescriptionService.php
-│   │   └── PatientClinicalRecordService.php
+│   │   ├── PatientClinicalRecordService.php
+│   │   ├── ConsultationRecordPdfService.php
+│   │   └── PrescriptionPdfService.php
 │   └── Views/
 │       ├── admin/
 │       │   └── consultation_requests/
 │       ├── auth/
+│       ├── documents/
+│       │   ├── consultation_record_pdf.php
+│       │   └── prescription_pdf.php
 │       ├── doctor/
 │       │   └── consultations/
 │       │       ├── room.php
 │       │       ├── show.php
-│       │       └── prescription.php
+│       │       ├── prescription.php
+│       │       └── _history_table.php
 │       ├── home/
+│       │   ├── about.php
+│       │   ├── contact.php
+│       │   └── how_it_works.php
 │       ├── layouts/
 │       ├── partials/
 │       │   └── shared/
 │       └── patient/
-│           └── consultations/room.php
+│           ├── consultations/room.php
+│           └── consultation_requests/_history_table.php
 ├── database/
 │   └── migrations/
 │       ├── 001_initial_schema.sql
@@ -430,7 +485,11 @@ Telehealth_Consultation_System/
 │   │   ├── consultation-room.css
 │   │   ├── consultation-record.css
 │   │   ├── prescription.css
-│   │   └── design-system.css
+│   │   ├── design-system.css
+│   │   ├── dashboard-ui.css
+│   │   ├── home.css
+│   │   ├── auth-login.css
+│   │   └── auth-register.css
 │   ├── js/
 │   │   ├── consultation-room.js
 │   │   ├── consultation-clinical-record.js
@@ -448,17 +507,20 @@ Telehealth_Consultation_System/
 ├── WEEK4_REPORT.md
 ├── WEEK5_REPORT.md
 ├── WEEK6_REPORT.md
-└── WEEK7_REPORT.md
+├── WEEK7_REPORT.md
+└── WEEK8_REPORT.md
 ```
 
 ## Installation
 
 1. Clone the repository into your XAMPP `htdocs` directory.
-2. Install Composer dependencies:
+2. Install Composer dependencies (includes DomPDF for Week 8 PDF export):
 
 ```bash
 composer install
 ```
+
+   Enable PHP GD in the XAMPP `php.ini` (`extension=gd`) so consultation-record and prescription PDFs can embed the MBPHA logo and doctor signature. Restart Apache after enabling it.
 
 3. Create a local environment file:
 
@@ -520,6 +582,12 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
   - `GET/POST /doctor/consultations/{id}/prescription`
   - Historical doctor record: `/doctor/consultations/{id}`
   - Patients view completed records at `/patient/consultation-requests/{id}` (read-only)
+- Week 8 PDF download endpoints are role-protected and ownership-checked:
+  - Patient record: `/patient/consultation-requests/{id}/download-record`
+  - Patient prescription: `/patient/consultation-requests/{id}/download-prescription`
+  - Doctor record: `/doctor/consultations/{id}/download-record`
+  - Doctor prescription: `/doctor/consultations/{id}/download-prescription`
+  - Administrators have no PDF download routes
 
 ## Security Highlights
 
@@ -542,6 +610,9 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
 - **Clinical documentation authorization**: only the assigned doctor can save a Draft, complete a consultation, or issue a prescription; patients have no write routes for records or prescriptions
 - **Completion vs prescription separation**: marking a consultation Completed finalizes the clinical record only; a prescription is created only by an explicit doctor save after completion
 - **Historical record vs Daily room**: completed consultations open a read-only record page; the Daily room remains available only for Approved sessions inside the join window
+- **PDF download authorization**: download routes require the matching patient or assigned doctor; Draft records and missing prescriptions cannot be downloaded; cross-user ID guessing fails closed
+- **Read-only PDF generation**: DomPDF builds files from saved rows only — no INSERT or UPDATE — and remote URL fetching is disabled
+- **Signature path confinement**: prescription PDF signatures are loaded only from `uploads/doctors/{consultation doctor id}/`; request-supplied paths are ignored
 
 ## Design System
 
@@ -552,6 +623,8 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
 - Week 6 consultation-room visual language is defined in [consultation-room.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-room.css) and shares the tokens `--ux-primary:#0F4C81`, `--ux-secondary:#2A9D8F`, `--ux-accent:#3CB371`
 - Week 7 consultation-record and prescription screens use [consultation-record.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-record.css) and [prescription.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/prescription.css) with the same MBPHA palette
 - Shared dashboard workspace tokens for the administrator review queue live in [design-system.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/design-system.css)
+- Week 8 public, auth, and dashboard consistency styles live in [home.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/home.css), [auth-login.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/auth-login.css), [auth-register.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/auth-register.css), and [dashboard-ui.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/dashboard-ui.css)
+- Week 8 PDF templates use inline A4 portrait styles and the same MBPHA navy (`#0F4C81`) document header language
 
 ## Testing Summary
 
@@ -623,9 +696,15 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
 - Verified the Week 7 consultation-record and prescription module:
   - `php bin/test_week7_day3.php` — 36 passed (schema, required fields, completion, no auto-prescription, Final lock, access control)
   - `php bin/test_week7_day4.php` — 33 passed (no patient write routes, draft autosave, cross-user ID guessing fails closed, Daily join-token still registered)
-  - `php bin/test_week7_record_view.php` — 48 passed (dedicated record route vs Daily room, View Record vs Join Consultation, completed room redirects, read-only record partial)
+  - `php bin/test_week7_record_view.php` — 64 passed after Week 8 download-route checks (dedicated record route vs Daily room, View Record vs Join Consultation, completed room redirects, read-only record partial)
   - Patient booking still saves as `Pending` for administrator review; administrator Approve/Reject remain manual
   - Daily room routes and `consultation_rooms` data remain intact after clinical documentation work
+- Verified the Week 8 consultation-history and PDF export module:
+  - `php bin/test_week8_day2.php` — 40 passed (consultation-record PDF generation, Final-only export, A4 portrait)
+  - `php bin/test_week8_day3.php` — 58 passed (A4 portrait prescription PDF, medication lines, signature path confinement, no write on generate)
+  - `php bin/test_week8_day4.php` — 98 passed (authorization, draft/final gates, cross-user PDF rejection, history download labels)
+  - Combined Week 7 + Week 8 QA pass: 329 passed, 0 failed
+  - PDF generation does not insert or update `consultation_records` or `prescriptions`
 
 ## Known Environment Requirements
 
@@ -634,6 +713,7 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
 - Weekly video consultations need `OpenSSL` enabled in PHP for outbound HTTPS calls from `DailyService` to Daily.co REST endpoints. Ensure `extension=openssl` is uncommented in `php.ini` and `cacert.pem` is configured on restricted networks.
 - Daily Prebuilt requires the page to load over a **secure context** (HTTPS or `localhost`) to request camera and microphone permissions. If you access the app via a LAN IP or custom host that is not `localhost`, set `APP_URL=https://…` and terminate TLS locally.
 - Daily.js CDN is pinned to `https://cdn.jsdelivr.net/npm/@daily-co/daily-js@0.67.0/dist/daily-iframe.min.js`. If your network filters this CDN, a browser console `net::ERR_FAILED` appears and `waitForDailyFactory()` will surface a Bootstrap alert with a troubleshooting hint.
+- Week 8 PDF logo and signature embedding require PHP GD (`extension=gd` in `php.ini`). Restart Apache after enabling it. Without GD, downloads still succeed but PNG images may be omitted.
 
 ## Roadmap
 
@@ -644,7 +724,7 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
 - Week 5: Admin booking management completed
 - Week 6: Video consultation (Daily.co Prebuilt integration, idempotent rooms, join-window enforcement, role tokens, consultation-room UI, admin approval transaction consistency) — completed
 - Week 7: Consultation records and prescription module — completed
-- Week 8: Consultation history and PDF export
+- Week 8: Consultation history and PDF export — completed
 - Week 9: Testing, security review, bug fixing, and UI refinement
 - Week 10: Deployment, documentation, and final testing
 

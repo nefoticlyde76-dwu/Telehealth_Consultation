@@ -36,8 +36,14 @@ $statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
         <div class="card-body p-4">
           <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
             <div>
-              <h3 class="h5 mb-1">Account Overview</h3>
-              <p class="text-muted mb-0">Name, email, role, and current account status.</p>
+              <?php
+              $personName = (string) ($managedUser['full_name'] ?? 'User');
+              $personPhoto = $managedUser['profile_photo_path'] ?? null;
+              $personMeta = (string) ($managedUser['email'] ?? '');
+              $personSize = 'lg';
+              require __DIR__ . '/../../partials/shared/person_row.php';
+              ?>
+              <p class="text-muted mb-0 mt-3">Name, email, role, and current account status.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
               <span class="ux-badge ux-badge--neutral"><?= \App\Helpers\Helper::escape($roleName) ?></span>

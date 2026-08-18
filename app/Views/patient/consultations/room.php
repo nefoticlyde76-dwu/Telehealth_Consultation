@@ -5,6 +5,7 @@ $consultationId         = (int)    ($context['consultation_id']         ?? 0);
 $viewerRole             = (string) ($context['viewer_role']             ?? 'patient');
 $otherPartyName         = (string) ($context['other_party_name']        ?? 'Other Participant');
 $otherPartyTitle        = (string) ($context['other_party_title']       ?? '');
+$otherPartyPhoto        = $context['other_party_photo'] ?? null;
 $otherPartyMeta         = $context['other_party_meta'] ?? null;
 $consultationDate       = (string) ($context['consultation_date']       ?? '');
 $consultationStart      = (string) ($context['consultation_start_time'] ?? '');
@@ -61,7 +62,14 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
   <div class="ux-page-header d-flex flex-column flex-xl-row justify-content-between align-items-xl-start align-items-xl-center gap-3 mb-0">
     <div class="ux-page-header__left">
       <ol class="ux-breadcrumb">
-        <li><a href="<?= $viewerRole === 'doctor' ? \App\Helpers\Helper::url('/doctor/dashboard') : \App\Helpers\Helper::url('/patient/dashboard') ?>">Dashboard</a></li>
+        <li>
+          <a href="<?= $viewerRole === 'doctor' ? \App\Helpers\Helper::url('/doctor/dashboard') : \App\Helpers\Helper::url('/patient/dashboard') ?>">Dashboard</a>
+        </li>
+        <li>
+          <a href="<?= $viewerRole === 'doctor' ? \App\Helpers\Helper::url('/doctor/consultations') : \App\Helpers\Helper::url('/patient/consultation-requests') ?>">
+            <?= $viewerRole === 'doctor' ? 'Consultations' : 'My Consultations' ?>
+          </a>
+        </li>
         <li class="active">Consultation Room</li>
       </ol>
     </div>
@@ -75,8 +83,18 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
             <i class="bi bi-camera-video-fill"></i>
             Live Consultation Room
           </span>
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <h1 class="ux-page-header__title h4 mb-0">Consultation with <?= \App\Helpers\Helper::escape($otherPartyName) ?></h1>
+          <h1 class="visually-hidden">Consultation with <?= \App\Helpers\Helper::escape($otherPartyName) ?></h1>
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <?php
+            $personName = $otherPartyName;
+            $personPhoto = $otherPartyPhoto;
+            $personMeta = trim(implode(' · ', array_filter([
+                $otherPartyTitle,
+                is_string($otherPartyMeta) ? $otherPartyMeta : '',
+            ], static fn (string $value): bool => $value !== '')));
+            $personSize = 'lg';
+            require __DIR__ . '/../../partials/shared/person_row.php';
+            ?>
             <span class="ux-badge ux-badge--neutral">
               <?= \App\Helpers\Helper::escape($viewerLabel) ?>
             </span>
@@ -148,17 +166,16 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
               Consultation details
             </div>
             <div class="vc-side-panel__body">
+              <div class="mb-3">
+                <?php
+                $personName = $otherPartyName;
+                $personPhoto = $otherPartyPhoto;
+                $personMeta = $otherPartyTitle;
+                $personSize = 'sm';
+                require __DIR__ . '/../../partials/shared/person_row.php';
+                ?>
+              </div>
               <dl class="row g-2 mb-3 align-items-center">
-                <dt class="col-5 small text-muted mb-0"><?= \App\Helpers\Helper::escape($otherPartyHeading) ?></dt>
-                <dd class="col-7 mb-0 fw-semibold">
-                  <?= \App\Helpers\Helper::escape($otherPartyName) ?>
-                </dd>
-
-                <?php if ($otherPartyTitle !== ''): ?>
-                  <dt class="col-5 small text-muted mb-0">Title / role</dt>
-                  <dd class="col-7 mb-0"><?= \App\Helpers\Helper::escape($otherPartyTitle) ?></dd>
-                <?php endif; ?>
-
                 <?php if (is_string($otherPartyMeta) && $otherPartyMeta !== ''): ?>
                   <dt class="col-5 small text-muted mb-0">Additional</dt>
                   <dd class="col-7 mb-0 small"><?= \App\Helpers\Helper::escape($otherPartyMeta) ?></dd>

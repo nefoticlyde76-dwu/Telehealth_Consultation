@@ -8,7 +8,9 @@ use App\Core\Session;
 use App\Helpers\Helper;
 use App\Models\ConsultationRequest;
 use App\Services\AuthService;
+use App\Services\ConsultationRecordPdfService;
 use App\Services\PatientClinicalRecordService;
+use App\Services\PrescriptionPdfService;
 use App\Services\PatientConsultationBookingService;
 use App\Services\PatientDirectoryService;
 use App\Services\PatientProfileService;
@@ -152,7 +154,7 @@ class PatientController extends Controller
             'user' => $user,
             'dashboardRole' => 'patient',
             'dashboardRoleLabel' => 'Patient Dashboard',
-            'dashboardTitle' => 'Doctor Directory',
+            'dashboardTitle' => 'Doctors',
             'dashboardDescription' => 'Browse available doctors and book a consultation slot with a brief chief complaint.',
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
@@ -345,6 +347,8 @@ class PatientController extends Controller
                 },
                 $requests
             );
+        } else {
+            $requests = [];
         }
 
         $this->render('patient/consultation_requests/index', [
@@ -352,7 +356,7 @@ class PatientController extends Controller
             'user' => $user,
             'dashboardRole' => 'patient',
             'dashboardRoleLabel' => 'Patient Dashboard',
-            'dashboardTitle' => 'Consultation History',
+            'dashboardTitle' => 'My Consultations',
             'dashboardDescription' => 'View your bookings, completed consultations, clinical records, and prescriptions.',
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
@@ -362,6 +366,7 @@ class PatientController extends Controller
                 ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
             ],
             'requests' => $requests,
+            'historyGroups' => PatientConsultationBookingService::groupHistoryRows($requests),
             'summary' => $pageData['summary'] ?? [],
             'pagination' => $pageData['pagination'] ?? [],
             'statusMessage' => Session::getFlash('status'),
@@ -702,6 +707,7 @@ class PatientController extends Controller
             'viewer_role'              => 'patient',
             'other_party_name'         => $otherPartyName,
             'other_party_title'        => $otherPartyTitle,
+            'other_party_photo'        => $request['doctor_photo_path'] ?? null,
             'other_party_meta'         => $specialization !== '' ? $specialization : null,
             'consultation_date'        => (string) ($request['consultation_date'] ?? ''),
             'consultation_start_time'  => (string) ($request['start_time'] ?? ''),
@@ -733,5 +739,99 @@ class PatientController extends Controller
             'context' => $context,
             'statusMessage' => Session::getFlash('status'),
         ], 'layouts/dashboard');
+    }
+
+    public function downloadConsultationRecord(string $id): void
+    {
+        $this->streamConsultationRecordPdf($id);
+    }
+
+    public function downloadPrescription(string $id): void
+    {
+        $this->streamPrescriptionPdf($id);
+    }
+
+    /**
+     * Stream a finalized consultation-record PDF for the signed-in patient.
+     */
+    private function streamConsultationRecordPdf(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $requestId = (int) $id;
+        $owned = PatientConsultationBookingService::getRequestDetail((int) $user->id, $requestId);
+        if ($owned === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested consultation record could not be found.',
+            ]);
+            Helper::redirect('/patient/consultation-requests');
+            return;
+        }
+
+        $page = PatientClinicalRecordService::getPrintableDocumentForPatient((int) $user->id, $requestId, 'record');
+        $built = is_array($page) ? ConsultationRecordPdfService::buildFromAuthorizedPage($page) : null;
+        if ($built === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The consultation record is not available to download yet.',
+            ]);
+            Helper::redirect('/patient/consultation-requests/' . $requestId);
+            return;
+        }
+
+        ConsultationRecordPdfService::stream($built);
+    }
+
+    /**
+     * Stream an issued prescription PDF for the signed-in patient.
+     * Read-only: authorization uses the patient's own consultation, then
+     * the stored prescription rows. No prescription is created or updated.
+     */
+    private function streamPrescriptionPdf(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $requestId = (int) $id;
+        $owned = PatientConsultationBookingService::getRequestDetail((int) $user->id, $requestId);
+        if ($owned === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested prescription could not be found.',
+            ]);
+            Helper::redirect('/patient/consultation-requests');
+            return;
+        }
+
+        $page = PatientClinicalRecordService::getPrintableDocumentForPatient((int) $user->id, $requestId, 'prescription');
+        $built = is_array($page) ? PrescriptionPdfService::buildFromAuthorizedPage($page) : null;
+        if ($built === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'No prescription is available to download for this consultation.',
+            ]);
+            Helper::redirect('/patient/consultation-requests/' . $requestId);
+            return;
+        }
+
+        PrescriptionPdfService::stream($built);
     }
 }

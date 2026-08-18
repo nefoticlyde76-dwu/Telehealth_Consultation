@@ -8,6 +8,7 @@ use App\Core\Session;
 use App\Helpers\Helper;
 use App\Models\ConsultationRequest;
 use App\Services\AuthService;
+use App\Services\ConsultationRecordPdfService;
 use App\Services\DoctorAvailabilityService;
 use App\Services\DoctorClinicalDocumentationService;
 use App\Services\DoctorConsultationService;
@@ -15,6 +16,7 @@ use App\Services\DoctorDashboardService;
 use App\Services\DoctorPrescriptionService;
 use App\Services\DoctorProfileService;
 use App\Services\PatientClinicalRecordService;
+use App\Services\PrescriptionPdfService;
 use App\Services\VideoConsultationService;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -257,7 +259,7 @@ class DoctorController extends Controller
             'user' => $user,
             'dashboardRole' => 'doctor',
             'dashboardRoleLabel' => 'Doctor Dashboard',
-            'dashboardTitle' => 'Availability Scheduling',
+            'dashboardTitle' => 'Availability',
             'dashboardDescription' => 'Create, review, update, and remove consultation availability slots securely.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
@@ -442,12 +444,19 @@ class DoctorController extends Controller
 
         $pageData = DoctorConsultationService::getConsultationPageData((int) $user->id, $_GET);
 
+        $attachJoin = static fn (array $row): array => $row + self::computeDoctorVideoJoinContext($row);
+
         $consultations = $pageData['consultations'] ?? [];
         if (is_array($consultations)) {
-            $consultations = array_map(
-                static fn (array $row): array => $row + self::computeDoctorVideoJoinContext($row),
-                $consultations
-            );
+            $consultations = array_map($attachJoin, $consultations);
+        } else {
+            $consultations = [];
+        }
+
+        $groups = is_array($pageData['groups'] ?? null) ? $pageData['groups'] : [];
+        foreach (['active', 'completed', 'closed'] as $groupKey) {
+            $groupRows = $groups[$groupKey] ?? [];
+            $groups[$groupKey] = is_array($groupRows) ? array_map($attachJoin, $groupRows) : [];
         }
 
         $this->render('doctor/consultations/index', [
@@ -465,6 +474,8 @@ class DoctorController extends Controller
             ],
             'filters' => $pageData['filters'] ?? [],
             'consultations' => $consultations,
+            'grouped' => (bool) ($pageData['grouped'] ?? false),
+            'historyGroups' => $groups,
             'summary' => $pageData['summary'] ?? [],
             'pagination' => $pageData['pagination'] ?? [],
             'statusOptions' => $pageData['statusOptions'] ?? [],
@@ -720,6 +731,7 @@ class DoctorController extends Controller
             'viewer_role'              => 'doctor',
             'other_party_name'         => $otherPartyName,
             'other_party_title'        => 'Patient',
+            'other_party_photo'        => $request['patient_photo_path'] ?? null,
             'other_party_meta'         => $otherPartyMeta !== '' ? $otherPartyMeta : null,
             'consultation_date'        => (string) ($request['consultation_date'] ?? ''),
             'consultation_start_time'  => (string) ($request['start_time'] ?? ''),
@@ -960,5 +972,99 @@ class DoctorController extends Controller
         ]);
 
         Helper::redirect('/doctor/consultations/' . (int) $id . '/prescription');
+    }
+
+    public function downloadConsultationRecord(string $id): void
+    {
+        $this->streamConsultationRecordPdf($id);
+    }
+
+    public function downloadPrescription(string $id): void
+    {
+        $this->streamPrescriptionPdf($id);
+    }
+
+    /**
+     * Stream a finalized consultation-record PDF for the assigned doctor.
+     */
+    private function streamConsultationRecordPdf(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $requestId = (int) $id;
+        $owned = ConsultationRequest::findByIdForDoctor($requestId, (int) $user->id);
+        if ($owned === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested consultation record could not be found.',
+            ]);
+            Helper::redirect('/doctor/consultations');
+            return;
+        }
+
+        $page = PatientClinicalRecordService::getPrintableDocumentForDoctor((int) $user->id, $requestId, 'record');
+        $built = is_array($page) ? ConsultationRecordPdfService::buildFromAuthorizedPage($page) : null;
+        if ($built === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The consultation record is not available to download yet.',
+            ]);
+            Helper::redirect('/doctor/consultations/' . $requestId);
+            return;
+        }
+
+        ConsultationRecordPdfService::stream($built);
+    }
+
+    /**
+     * Stream an issued prescription PDF for the assigned doctor.
+     * Read-only: authorization uses the doctor's own consultation, then
+     * the stored prescription rows. No prescription is created or updated.
+     */
+    private function streamPrescriptionPdf(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $requestId = (int) $id;
+        $owned = ConsultationRequest::findByIdForDoctor($requestId, (int) $user->id);
+        if ($owned === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested prescription could not be found.',
+            ]);
+            Helper::redirect('/doctor/consultations');
+            return;
+        }
+
+        $page = PatientClinicalRecordService::getPrintableDocumentForDoctor((int) $user->id, $requestId, 'prescription');
+        $built = is_array($page) ? PrescriptionPdfService::buildFromAuthorizedPage($page) : null;
+        if ($built === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'No prescription is available to download for this consultation.',
+            ]);
+            Helper::redirect('/doctor/consultations/' . $requestId . '/prescription');
+            return;
+        }
+
+        PrescriptionPdfService::stream($built);
     }
 }

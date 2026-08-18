@@ -95,7 +95,7 @@ class AdminController extends Controller
         $this->render('admin/users/index', array_merge(
             $this->getAdminViewData($user, [
                 'title' => 'User Management | MBPHA TeleHealth Consultation System',
-                'dashboardTitle' => 'User Management',
+                'dashboardTitle' => 'Users',
                 'dashboardDescription' => 'Review, search, and filter registered platform accounts securely.',
             ]),
             [
@@ -124,7 +124,7 @@ class AdminController extends Controller
         $this->render('admin/doctors/index', array_merge(
             $this->getAdminViewData($user, [
                 'title' => 'Doctor Account Management | MBPHA TeleHealth Consultation System',
-                'dashboardTitle' => 'Doctor Account Management',
+                'dashboardTitle' => 'Doctors',
                 'dashboardDescription' => 'Create and manage secure clinician accounts for the platform.',
             ]),
             [
@@ -152,7 +152,7 @@ class AdminController extends Controller
         $this->render('admin/patients/index', array_merge(
             $this->getAdminViewData($user, [
                 'title' => 'Patient Management | MBPHA TeleHealth Consultation System',
-                'dashboardTitle' => 'Patient Management',
+                'dashboardTitle' => 'Patients',
                 'dashboardDescription' => 'Review, search, update, and manage secure patient accounts.',
             ]),
             [

@@ -204,7 +204,7 @@ foreach ($roleList as $opt) {
                 $userId = (int) ($user['id'] ?? 0);
                 $userName = trim((string) ($user['full_name'] ?? $user['name'] ?? 'Unknown'));
                 $userEmail = trim((string) ($user['email'] ?? ''));
-                $userRole = trim((string) ($user['role'] ?? ''));
+                $userRole = trim((string) ($user['role'] ?? $user['role_name'] ?? ''));
                 $userStatus = (string) ($user['status'] ?? 'inactive');
                 $userCreated = trim((string) ($user['created_at'] ?? ''));
                 $viewAriaLabel = 'View ' . ($userName ?: 'this user') . ' account';
@@ -214,13 +214,13 @@ foreach ($roleList as $opt) {
                 <tr>
                   <td>
                     <div class="d-flex align-items-center gap-3">
-                      <div class="ux-stat__icon ux-stat__icon--surface flex-shrink-0">
-                        <i class="bi bi-person-fill"></i>
-                      </div>
-                      <div>
-                        <strong class="d-block"><?= \App\Helpers\Helper::escape($userName ?: 'Unnamed user') ?></strong>
-                        <span class="small text-muted d-block"><?= \App\Helpers\Helper::escape($userEmail) ?></span>
-                      </div>
+                      <?php
+                      $personName = $userName ?: 'Unnamed user';
+                      $personPhoto = $user['profile_photo_path'] ?? null;
+                      $personMeta = $userEmail;
+                      $personSize = 'sm';
+                      require __DIR__ . '/../../partials/shared/person_row.php';
+                      ?>
                     </div>
                   </td>
                   <td>

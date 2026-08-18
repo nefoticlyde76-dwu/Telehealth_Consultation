@@ -1,5 +1,4 @@
 <?php
-$showRightbar = true;
 $stats = is_array($stats ?? null) ? $stats : [];
 $charts = is_array($charts ?? null) ? $charts : [];
 $weeklyChart = $charts['weekly_requests'] ?? null;
@@ -35,26 +34,22 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
 <div class="ux-welcome ux-welcome--doctor">
   <div class="ux-welcome__grid">
     <div>
-      <ol class="ux-welcome__breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
-        <li class="active">Doctor Dashboard</li>
-      </ol>
-      <span class="ux-welcome__eyebrow">MBPHA TeleHealth</span>
+      <span class="ux-welcome__eyebrow">Welcome back, Doctor</span>
       <h1 class="ux-welcome__title">Doctor Dashboard</h1>
       <p class="ux-welcome__description">Review today's appointments, keep your availability current, and join consultations when they are due.</p>
 
       <div class="ux-welcome__meta-pill-row">
         <span class="ux-welcome__meta-pill">
           <i class="bi bi-calendar2-week"></i>
-          <span><?= \App\Helpers\Helper::escape($doctorToday) ?></span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-clipboard2-pulse"></i>
           <span><?= \App\Helpers\Helper::escape((string) $bookedToday) ?> booked · <?= \App\Helpers\Helper::escape((string) $openToday) ?> open</span>
         </span>
         <span class="ux-welcome__meta-pill">
-          <i class="bi bi-activity"></i>
+          <i class="bi bi-clipboard2-pulse"></i>
           <span><?= \App\Helpers\Helper::escape($shiftStatus) ?></span>
+        </span>
+        <span class="ux-welcome__meta-pill">
+          <i class="bi bi-clock"></i>
+          <span><?= \App\Helpers\Helper::escape($doctorCurrentTime) ?></span>
         </span>
       </div>
     </div>
@@ -118,11 +113,11 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
               <table class="ux-table align-middle mb-0">
                 <thead>
                   <tr>
-                    <th scope="col">Patient</th>
-                    <th scope="col">Date</th>
                     <th scope="col">Time</th>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Type</th>
                     <th scope="col">Status</th>
-                    <th scope="col" class="text-end">Action</th>
+                    <th scope="col" class="text-end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -135,16 +130,23 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
                   ?>
                   <?php foreach ($displayAppointments as $appointment): ?>
                     <?php
-                    $dateLabel = \App\Helpers\Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled');
                     $timeLabel = substr((string) ($appointment['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($appointment['end_time'] ?? ''), 0, 5);
                     ?>
                     <tr>
-                      <td><strong><?= \App\Helpers\Helper::escape((string) ($appointment['patient_name'] ?? 'Patient')) ?></strong></td>
-                      <td><?= \App\Helpers\Helper::escape((string) $dateLabel) ?></td>
                       <td class="text-muted small"><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></td>
+                      <td>
+                        <?php
+                        $personName = (string) ($appointment['patient_name'] ?? 'Patient');
+                        $personPhoto = $appointment['patient_photo_path'] ?? null;
+                        $personMeta = '';
+                        $personSize = 'sm';
+                        require __DIR__ . '/../partials/shared/person_row.php';
+                        ?>
+                      </td>
+                      <td>Video</td>
                       <td><span class="ux-badge ux-badge--approved"><i class="bi bi-check-circle-fill me-1"></i>Approved</span></td>
                       <td class="text-end">
-                        <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">View</a>
+                        <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . (string) ((int) ($appointment['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm">View</a>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -234,12 +236,20 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
                 $timeLabel = substr((string) ($appointment['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($appointment['end_time'] ?? ''), 0, 5);
                 ?>
                 <tr>
-                  <td><strong><?= \App\Helpers\Helper::escape((string) ($appointment['patient_name'] ?? 'Patient')) ?></strong></td>
+                  <td>
+                    <?php
+                    $personName = (string) ($appointment['patient_name'] ?? 'Patient');
+                    $personPhoto = $appointment['patient_photo_path'] ?? null;
+                    $personMeta = '';
+                    $personSize = 'sm';
+                    require __DIR__ . '/../partials/shared/person_row.php';
+                    ?>
+                  </td>
                   <td><?= \App\Helpers\Helper::escape((string) $dateLabel) ?></td>
                   <td class="text-muted small"><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></td>
                   <td><span class="ux-badge ux-badge--approved"><i class="bi bi-check-circle-fill me-1"></i>Approved</span></td>
                   <td class="text-end">
-                    <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">View</a>
+                    <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . (string) ((int) ($appointment['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm">View</a>
                   </td>
                 </tr>
               <?php endforeach; ?>

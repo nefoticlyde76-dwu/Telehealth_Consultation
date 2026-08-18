@@ -192,18 +192,13 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                 ?>
                 <tr>
                   <td>
-                    <div class="d-flex align-items-center gap-3">
-                      <?php
-                      $avatarPath = $slot['profile_photo_path'] ?? null;
-                      $fullName = $slot['full_name'] ?? 'Doctor';
-                      $avatarClass = 'user-avatar user-avatar--xs';
-                      require __DIR__ . '/../../partials/shared/user_avatar.php';
-                      ?>
-                      <div>
-                        <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($slot['full_name'] ?? 'Doctor')) ?></strong>
-                        <span class="text-muted small"><?= \App\Helpers\Helper::escape((string) ($slot['professional_title'] ?? 'Medical Practitioner')) ?></span>
-                      </div>
-                    </div>
+                    <?php
+                    $personName = (string) ($slot['full_name'] ?? 'Doctor');
+                    $personPhoto = $slot['profile_photo_path'] ?? null;
+                    $personMeta = (string) ($slot['professional_title'] ?? 'Medical Practitioner');
+                    $personSize = 'sm';
+                    require __DIR__ . '/../../partials/shared/person_row.php';
+                    ?>
                   </td>
                   <td>
                     <span class="ux-badge ux-badge--neutral">

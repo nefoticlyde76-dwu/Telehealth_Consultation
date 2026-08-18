@@ -173,12 +173,23 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
                  href="<?= $buildQueueUrl(['selected' => $requestId, 'page' => (int) ($pagination['current_page'] ?? 1)]) ?>"
                  <?= $isActive ? 'aria-current="true"' : '' ?>>
                 <div class="d-flex justify-content-between gap-2 align-items-start">
-                  <strong class="ux-queue__name"><?= \App\Helpers\Helper::escape((string) ($request['patient_name'] ?? 'Patient')) ?></strong>
+                  <?php
+                  $personName = (string) ($request['patient_name'] ?? 'Patient');
+                  $personPhoto = $request['patient_photo_path'] ?? null;
+                  $personMeta = '';
+                  $personSize = 'sm';
+                  require __DIR__ . '/../../partials/shared/person_row.php';
+                  ?>
                   <span class="ux-badge <?= ux_status_badge_class($status) ?>"><?= \App\Helpers\Helper::escape($status) ?></span>
                 </div>
-                <div class="ux-queue__meta">
-                  <?= \App\Helpers\Helper::escape((string) ($request['doctor_name'] ?? 'Doctor')) ?>
-                  · <?= \App\Helpers\Helper::escape((string) ($request['specialization'] ?? 'General')) ?>
+                <div class="ux-queue__meta d-flex align-items-center gap-2">
+                  <?php
+                  $personName = (string) ($request['doctor_name'] ?? 'Doctor');
+                  $personPhoto = $request['doctor_photo_path'] ?? null;
+                  $personMeta = (string) ($request['specialization'] ?? 'General');
+                  $personSize = 'xs';
+                  require __DIR__ . '/../../partials/shared/person_row.php';
+                  ?>
                 </div>
                 <div class="ux-queue__meta">
                   <?= \App\Helpers\Helper::escape($dateLabel) ?>

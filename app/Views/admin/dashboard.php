@@ -1,5 +1,4 @@
 <?php
-$showRightbar = true;
 $stats = is_array($stats ?? null) ? $stats : [];
 $consultationSummary = is_array($consultationSummary ?? null) ? $consultationSummary : [];
 $recentConsultationRequests = is_array($recentConsultationRequests ?? null) ? $recentConsultationRequests : [];
@@ -34,11 +33,7 @@ $adminToday = (new DateTimeImmutable())->format('l, d F Y');
 <div class="ux-welcome ux-welcome--admin">
   <div class="ux-welcome__grid">
     <div>
-      <ol class="ux-welcome__breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
-        <li class="active">Administrator Dashboard</li>
-      </ol>
-      <span class="ux-welcome__eyebrow">MBPHA TeleHealth</span>
+      <span class="ux-welcome__eyebrow">Welcome back, Administrator</span>
       <h1 class="ux-welcome__title">Administrator Dashboard</h1>
       <p class="ux-welcome__description">Review pending consultation requests, manage user accounts, and keep the service running.</p>
 
@@ -139,8 +134,24 @@ $adminToday = (new DateTimeImmutable())->format('l, d F Y');
                     $statusIcon = $statusIcons[$status] ?? 'bi-dash-circle';
                     ?>
                     <tr>
-                      <td><strong><?= \App\Helpers\Helper::escape((string) ($request['patient_name'] ?? 'Patient')) ?></strong></td>
-                      <td><?= \App\Helpers\Helper::escape((string) ($request['doctor_name'] ?? 'Doctor')) ?></td>
+                      <td>
+                        <?php
+                        $personName = (string) ($request['patient_name'] ?? 'Patient');
+                        $personPhoto = $request['patient_photo_path'] ?? null;
+                        $personMeta = '';
+                        $personSize = 'sm';
+                        require __DIR__ . '/../partials/shared/person_row.php';
+                        ?>
+                      </td>
+                      <td>
+                        <?php
+                        $personName = (string) ($request['doctor_name'] ?? 'Doctor');
+                        $personPhoto = $request['doctor_photo_path'] ?? null;
+                        $personMeta = '';
+                        $personSize = 'sm';
+                        require __DIR__ . '/../partials/shared/person_row.php';
+                        ?>
+                      </td>
                       <td><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
                       <td><span class="ux-badge <?= $badgeClass ?>"><i class="bi <?= $statusIcon ?> me-1"></i><?= \App\Helpers\Helper::escape($status) ?></span></td>
                       <td class="text-end">
@@ -205,11 +216,14 @@ $adminToday = (new DateTimeImmutable())->format('l, d F Y');
             <?php else: ?>
               <?php foreach ($latestUsers as $latestUser): ?>
                 <?php $isActive = ($latestUser['status'] ?? '') === 'active'; ?>
-                <div class="ux-list__item d-flex justify-content-between align-items-center">
-                  <div>
-                    <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($latestUser['full_name'] ?? 'User')) ?></strong>
-                    <span class="small text-muted"><?= \App\Helpers\Helper::escape((string) ($latestUser['email'] ?? '')) ?></span>
-                  </div>
+                <div class="ux-list__item d-flex justify-content-between align-items-center gap-3">
+                  <?php
+                  $personName = (string) ($latestUser['full_name'] ?? 'User');
+                  $personPhoto = $latestUser['profile_photo_path'] ?? null;
+                  $personMeta = (string) ($latestUser['email'] ?? '');
+                  $personSize = 'sm';
+                  require __DIR__ . '/../partials/shared/person_row.php';
+                  ?>
                   <div class="text-end">
                     <span class="ux-badge <?= $isActive ? 'ux-badge--approved' : 'ux-badge--pending' ?> mb-2">
                       <i class="bi <?= $isActive ? 'bi-check-circle-fill' : 'bi-clock' ?> me-1"></i>

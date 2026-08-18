@@ -1,0 +1,260 @@
+<?php
+
+namespace App\Services;
+
+use App\Helpers\Helper;
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
+class PrescriptionPdfService
+{
+    /**
+     * Build a downloadable A4 portrait PDF from an already-authorized
+     * prescription page. Returns null when no issued prescription exists.
+     * This method does not insert or update prescription rows.
+     *
+     * @param array{
+     *   request:array<string,mixed>,
+     *   record:?array<string,mixed>,
+     *   prescriptions:list<array<string,mixed>>
+     * } $page
+     * @return array{binary:string,filename:string}|null
+     */
+    public static function buildFromAuthorizedPage(array $page): ?array
+    {
+        if (!PatientClinicalRecordService::isDownloadableDocument($page, 'prescription')) {
+            return null;
+        }
+
+        if (!self::prescriptionMatchesConsultation($page)) {
+            return null;
+        }
+
+        $html = self::renderDocumentHtml($page);
+        $publicRoot = realpath(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public');
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isRemoteEnabled', false);
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isFontSubsettingEnabled', true);
+        $options->set('dpi', 96);
+        if (is_string($publicRoot) && $publicRoot !== '') {
+            $options->setChroot($publicRoot);
+        }
+
+        $dompdf = new Dompdf($options);
+        if (is_string($publicRoot) && $publicRoot !== '') {
+            $dompdf->setBasePath($publicRoot);
+        }
+
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        self::paintFooter($dompdf);
+
+        return [
+            'binary' => (string) $dompdf->output(),
+            'filename' => self::filename($page),
+        ];
+    }
+
+    /**
+     * HTML document used by DomPDF. Public so tests can assert labels
+     * without parsing compressed PDF streams.
+     *
+     * @param array{
+     *   request:array<string,mixed>,
+     *   record:?array<string,mixed>,
+     *   prescriptions?:list<array<string,mixed>>
+     * } $page
+     */
+    public static function renderDocumentHtml(array $page): string
+    {
+        $request = is_array($page['request'] ?? null) ? $page['request'] : [];
+        $prescriptions = is_array($page['prescriptions'] ?? null) ? $page['prescriptions'] : [];
+        $logoSrc = self::logoSrc();
+        $signatureSrc = self::signatureSrc($page);
+
+        ob_start();
+        require dirname(__DIR__) . '/Views/documents/prescription_pdf.php';
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * Resolve the prescribing doctor's stored signature for PDF embedding.
+     * The path is taken from the authorized doctor profile joined to the
+     * consultation. Query/body values are never read.
+     *
+     * @param array{
+     *   request?:array<string,mixed>,
+     *   prescriptions?:list<array<string,mixed>>
+     * } $page
+     */
+    public static function signatureSrc(array $page): string
+    {
+        $request = is_array($page['request'] ?? null) ? $page['request'] : [];
+        $doctorId = (int) ($request['doctor_id'] ?? 0);
+        if ($doctorId <= 0 || !self::prescriptionMatchesConsultation($page)) {
+            return '';
+        }
+
+        $relative = str_replace('\\', '/', trim((string) ($request['doctor_signature_path'] ?? '')));
+        $expectedPrefix = 'uploads/doctors/' . $doctorId . '/';
+        if ($relative === ''
+            || str_contains($relative, '..')
+            || str_contains($relative, ':')
+            || !str_starts_with($relative, $expectedPrefix)
+        ) {
+            return '';
+        }
+
+        $publicRoot = realpath(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public');
+        if (!is_string($publicRoot) || $publicRoot === '') {
+            return '';
+        }
+
+        $absolute = realpath($publicRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
+        if ($absolute === false || !is_file($absolute) || !str_starts_with($absolute, $publicRoot . DIRECTORY_SEPARATOR)) {
+            return '';
+        }
+
+        $size = filesize($absolute);
+        if ($size === false || $size <= 0 || $size > 2000000) {
+            return '';
+        }
+
+        $extension = strtolower((string) pathinfo($absolute, PATHINFO_EXTENSION));
+        if ($extension === 'png' && !extension_loaded('gd')) {
+            return '';
+        }
+
+        return $relative;
+    }
+
+    /**
+     * @param array{binary:string,filename:string} $built
+     */
+    public static function stream(array $built): void
+    {
+        $filename = self::safeDownloadName((string) ($built['filename'] ?? 'MBPHA-Prescription.pdf'));
+        $binary = (string) ($built['binary'] ?? '');
+
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($binary));
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store, no-cache, must-revalidate');
+        header('Pragma: public');
+        echo $binary;
+        exit;
+    }
+
+    /**
+     * @param array{
+     *   request?:array<string,mixed>,
+     *   prescriptions?:list<array<string,mixed>>
+     * } $page
+     */
+    public static function prescriptionMatchesConsultation(array $page): bool
+    {
+        $request = is_array($page['request'] ?? null) ? $page['request'] : [];
+        $prescriptions = is_array($page['prescriptions'] ?? null) ? $page['prescriptions'] : [];
+        $doctorId = (int) ($request['doctor_id'] ?? 0);
+        $patientId = (int) ($request['patient_id'] ?? 0);
+
+        if ($doctorId <= 0 || $patientId <= 0 || $prescriptions === []) {
+            return false;
+        }
+
+        foreach ($prescriptions as $line) {
+            if (!is_array($line)) {
+                return false;
+            }
+            if ((int) ($line['doctor_id'] ?? 0) !== $doctorId) {
+                return false;
+            }
+            if ((int) ($line['patient_id'] ?? 0) !== $patientId) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function paintFooter(Dompdf $dompdf): void
+    {
+        $canvas = $dompdf->getCanvas();
+        $font = $dompdf->getFontMetrics()->getFont('DejaVu Sans');
+        $width = $canvas->get_width();
+        $height = $canvas->get_height();
+        $y = $height - 24;
+        $color = [0.42, 0.45, 0.48];
+
+        $canvas->page_text(48, $y, 'MBPHA TeleHealth  ·  Confidential prescription', $font, 8, $color);
+        $canvas->page_text($width - 118, $y, 'Page {PAGE_NUM} of {PAGE_COUNT}', $font, 8, $color);
+    }
+
+    /**
+     * @param array{
+     *   request?:array<string,mixed>,
+     *   prescriptions?:list<array<string,mixed>>
+     * } $page
+     */
+    public static function filename(array $page): string
+    {
+        $request = is_array($page['request'] ?? null) ? $page['request'] : [];
+        $prescriptions = is_array($page['prescriptions'] ?? null) ? $page['prescriptions'] : [];
+        $issued = '';
+        if ($prescriptions !== [] && is_array($prescriptions[0])) {
+            $issued = (string) ($prescriptions[0]['issued_date'] ?? '');
+        }
+
+        $namePart = self::filenamePart((string) ($request['patient_name'] ?? ''));
+        $datePart = Helper::formatDate($issued !== '' ? $issued : (string) ($request['consultation_date'] ?? ''), 'd-M-Y', date('d-M-Y'));
+        $base = $namePart !== ''
+            ? 'MBPHA-Prescription-' . $namePart . '-' . $datePart
+            : 'MBPHA-Prescription-' . $datePart;
+
+        return $base . '.pdf';
+    }
+
+    private static function filenamePart(string $value): string
+    {
+        $slug = preg_replace('/[^A-Za-z0-9]+/', '-', trim($value)) ?? '';
+        return trim($slug, '-');
+    }
+
+    private static function safeDownloadName(string $filename): string
+    {
+        $filename = str_replace(['"', "\r", "\n", '/', '\\'], '', $filename);
+        if ($filename === '' || !str_ends_with(strtolower($filename), '.pdf')) {
+            return 'MBPHA-Prescription.pdf';
+        }
+
+        return $filename;
+    }
+
+    private static function logoSrc(): string
+    {
+        $path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'LOGOS.png';
+        if (!is_file($path)) {
+            return '';
+        }
+
+        $size = filesize($path);
+        if ($size === false || $size > 400000) {
+            return '';
+        }
+
+        if (!extension_loaded('gd')) {
+            return '';
+        }
+
+        return 'images/LOGOS.png';
+    }
+}

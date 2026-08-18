@@ -307,12 +307,12 @@ class AdminConsultationService
                     [
                         'label' => 'Weekly Requests',
                         'data' => $values,
-                        'borderColor' => '#0A6FB6',
-                        'backgroundColor' => 'rgba(10, 111, 182, 0.14)',
+                        'borderColor' => '#0794E3',
+                        'backgroundColor' => 'rgba(7, 148, 227, 0.12)',
                         'fill' => true,
-                        'tension' => 0.42,
+                        'tension' => 0.25,
                         'pointRadius' => 3,
-                        'pointBackgroundColor' => '#0A6FB6',
+                        'pointBackgroundColor' => '#0794E3',
                     ],
                 ],
             ],
@@ -339,11 +339,11 @@ class AdminConsultationService
         $labels = [];
         $values = [];
         $colors = [
-            'Pending' => 'rgba(245, 158, 11, 0.7)',
-            'Approved' => 'rgba(34, 197, 94, 0.7)',
-            'Rejected' => 'rgba(239, 68, 68, 0.7)',
-            'Cancelled' => 'rgba(239, 68, 68, 0.45)',
-            'Completed' => 'rgba(10, 111, 182, 0.7)',
+            'Pending' => '#F59E0B',
+            'Approved' => '#08B4C6',
+            'Rejected' => '#DC3545',
+            'Cancelled' => '#70838A',
+            'Completed' => '#455F68',
         ];
         $background = [];
 

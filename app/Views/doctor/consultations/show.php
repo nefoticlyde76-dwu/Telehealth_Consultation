@@ -13,7 +13,7 @@ $roomUrl = \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/ro
 $prescriptionUrl = \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/prescription');
 $summaryPartyLabel = 'Patient';
 $summaryPartyName = (string) ($request['patient_name'] ?? 'Patient');
-$summaryPartyMeta = (string) ($request['specialization'] ?? 'General Practice');
+$summaryPartyMeta = trim((string) ($request['patient_gender'] ?? ''));
 ?>
 
 <div class="cr-page">
@@ -24,7 +24,7 @@ $summaryPartyMeta = (string) ($request['specialization'] ?? 'General Practice');
       <div class="cr-header__copy">
         <ol class="cr-breadcrumb">
           <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
-          <li><a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>">Appointments</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>">Consultations</a></li>
           <li class="active"><?= $isCompleted ? 'Consultation Record' : 'Consultation Details' ?></li>
         </ol>
         <h1 class="cr-title"><?= $isCompleted ? 'Consultation Record' : 'Consultation Details' ?></h1>
@@ -38,9 +38,21 @@ $summaryPartyMeta = (string) ($request['specialization'] ?? 'General Practice');
         <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="cr-btn">
           Consultations
         </a>
+        <?php if ($isCompleted && is_array($clinicalRecord ?? null) && (string) (($clinicalRecord['record_status'] ?? '')) === \App\Models\ConsultationRecord::STATUS_FINAL): ?>
+          <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/download-record') ?>" class="cr-btn">
+            <i class="bi bi-download me-1"></i>
+            Download Consultation Record
+          </a>
+        <?php endif; ?>
         <?php if ($isCompleted): ?>
           <a href="<?= \App\Helpers\Helper::escape($prescriptionUrl) ?>" class="cr-btn">
             <?= $hasPrescription ? 'View Prescription' : 'Create Prescription' ?>
+          </a>
+        <?php endif; ?>
+        <?php if ($isCompleted && $hasPrescription): ?>
+          <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/download-prescription') ?>" class="cr-btn cr-btn--primary">
+            <i class="bi bi-download me-1"></i>
+            Download Prescription
           </a>
         <?php endif; ?>
         <?php

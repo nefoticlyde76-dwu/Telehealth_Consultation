@@ -1,5 +1,4 @@
 <?php
-$showRightbar = true;
 $stats = is_array($stats ?? null) ? $stats : [];
 $bookingSummary = is_array($bookingSummary ?? null) ? $bookingSummary : [];
 $slotPreview = is_array($slotPreview ?? null) ? $slotPreview : [];
@@ -52,12 +51,8 @@ if ($latestRequest !== null) {
 <div class="ux-welcome ux-welcome--patient">
   <div class="ux-welcome__grid">
     <div>
-      <ol class="ux-welcome__breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
-        <li class="active">Patient Dashboard</li>
-      </ol>
-      <span class="ux-welcome__eyebrow">MBPHA TeleHealth</span>
-      <h1 class="ux-welcome__title">Hello, <?= \App\Helpers\Helper::escape($patientFirstName) ?></h1>
+      <span class="ux-welcome__eyebrow">Welcome back, <?= \App\Helpers\Helper::escape($patientFirstName) ?></span>
+      <h1 class="ux-welcome__title">Patient Dashboard</h1>
       <p class="ux-welcome__description">Book a consultation, check request status, and join your appointment when it is approved.</p>
 
       <div class="ux-welcome__meta-pill-row">
@@ -80,7 +75,7 @@ if ($latestRequest !== null) {
       </a>
       <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="ux-welcome__cta-secondary">
         <i class="bi bi-journal-text"></i>
-        <span>My Appointments</span>
+        <span>My Consultations</span>
       </a>
     </div>
   </div>
@@ -155,16 +150,19 @@ if ($latestRequest !== null) {
             <h3 class="h5 mb-1">Your Next Consultation</h3>
             <p class="text-muted mb-0 small">Summary of your next appointment, request status, or suggested next action.</p>
           </div>
-          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">View Appointments</a>
+          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">View Consultations</a>
         </div>
         <div class="ux-card__body">
 
           <?php if ($latestRequest !== null && $latestStatus === 'Approved'): ?>
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-              <div>
-                <h4 class="h5 mb-1"><?= \App\Helpers\Helper::escape((string) ($latestRequest['doctor_name'] ?? 'Doctor')) ?></h4>
-                <p class="text-muted mb-0"><?= \App\Helpers\Helper::escape((string) ($latestRequest['specialization'] ?? 'General Practice')) ?></p>
-              </div>
+              <?php
+              $personName = (string) ($latestRequest['doctor_name'] ?? 'Doctor');
+              $personPhoto = $latestRequest['doctor_photo_path'] ?? null;
+              $personMeta = (string) ($latestRequest['specialization'] ?? 'General Practice');
+              $personSize = 'lg';
+              require __DIR__ . '/../partials/shared/person_row.php';
+              ?>
               <span class="ux-badge ux-badge--approved">Approved</span>
             </div>
             <div class="row g-4 mb-4">
@@ -195,10 +193,13 @@ if ($latestRequest !== null) {
             </div>
           <?php elseif ($latestRequest !== null && $latestStatus === 'Pending'): ?>
             <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-              <div>
-                <h4 class="h5 mb-1"><?= \App\Helpers\Helper::escape((string) ($latestRequest['doctor_name'] ?? 'Doctor')) ?></h4>
-                <p class="text-muted mb-0"><?= \App\Helpers\Helper::escape((string) ($latestRequest['specialization'] ?? 'General Practice')) ?></p>
-              </div>
+              <?php
+              $personName = (string) ($latestRequest['doctor_name'] ?? 'Doctor');
+              $personPhoto = $latestRequest['doctor_photo_path'] ?? null;
+              $personMeta = (string) ($latestRequest['specialization'] ?? 'General Practice');
+              $personSize = 'lg';
+              require __DIR__ . '/../partials/shared/person_row.php';
+              ?>
               <span class="ux-badge ux-badge--pending">Awaiting Administrator Review</span>
             </div>
             <div class="row g-4 mb-4">
@@ -236,7 +237,7 @@ if ($latestRequest !== null) {
                   <i class="bi bi-calendar2-plus me-2"></i>Book Consultation
                 </a>
                 <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
-                  <i class="bi bi-journal-text me-2"></i>My Appointments
+                  <i class="bi bi-journal-text me-2"></i>My Consultations
                 </a>
               </div>
             </div>
@@ -288,8 +289,13 @@ if ($latestRequest !== null) {
                     ?>
                     <tr>
                       <td>
-                        <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($request['doctor_name'] ?? 'Doctor')) ?></strong>
-                        <span class="text-muted small"><?= \App\Helpers\Helper::escape((string) ($request['specialization'] ?? '')) ?></span>
+                        <?php
+                        $personName = (string) ($request['doctor_name'] ?? 'Doctor');
+                        $personPhoto = $request['doctor_photo_path'] ?? null;
+                        $personMeta = (string) ($request['specialization'] ?? '');
+                        $personSize = 'sm';
+                        require __DIR__ . '/../partials/shared/person_row.php';
+                        ?>
                       </td>
                       <td><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
                       <td class="text-muted small"><?= \App\Helpers\Helper::escape(substr((string) ($request['start_time'] ?? ''), 0, 5)) ?> - <?= \App\Helpers\Helper::escape(substr((string) ($request['end_time'] ?? ''), 0, 5)) ?></td>
@@ -327,10 +333,13 @@ if ($latestRequest !== null) {
             <?php foreach ($previewSlots as $slot): ?>
               <?php $slotIdx++; ?>
               <div class="ux-slot-row">
-                <div class="flex-shrink-0">
-                  <strong class="d-block"><?= \App\Helpers\Helper::escape((string) ($slot['full_name'] ?? 'Doctor')) ?></strong>
-                  <span class="small text-muted"><?= \App\Helpers\Helper::escape((string) ($slot['specialization'] ?? 'General Practice')) ?></span>
-                </div>
+                <?php
+                $personName = (string) ($slot['full_name'] ?? 'Doctor');
+                $personPhoto = $slot['profile_photo_path'] ?? null;
+                $personMeta = (string) ($slot['specialization'] ?? 'General Practice');
+                $personSize = 'sm';
+                require __DIR__ . '/../partials/shared/person_row.php';
+                ?>
                 <div class="flex-grow-1 text-center">
                   <strong class="d-block"><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M', '')) ?></strong>
                   <span class="small text-muted"><?= \App\Helpers\Helper::escape(substr((string) ($slot['start_time'] ?? ''), 0, 5)) ?></span>
@@ -346,3 +355,36 @@ if ($latestRequest !== null) {
     </div>
   </div>
 </section>
+
+<?php if ($statusChart !== null || $monthlyChart !== null): ?>
+<section class="mb-4">
+  <div class="row g-4">
+    <?php if ($monthlyChart !== null): ?>
+    <div class="col-xl-7">
+      <div class="ux-card h-100">
+        <div class="ux-card__header mb-3">
+          <h3 class="h5 mb-1">Monthly Consultation Requests</h3>
+          <p class="text-muted mb-0 small">Your booking volume over recent months</p>
+        </div>
+        <div class="ux-card__body">
+          <canvas height="280" data-chart="<?= \App\Helpers\Helper::escape((string) json_encode($monthlyChart, JSON_UNESCAPED_SLASHES)) ?>"></canvas>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
+    <?php if ($statusChart !== null): ?>
+    <div class="col-xl-5">
+      <div class="ux-card h-100">
+        <div class="ux-card__header mb-3">
+          <h3 class="h5 mb-1">Request Status Mix</h3>
+          <p class="text-muted mb-0 small">Distribution of your consultation request statuses</p>
+        </div>
+        <div class="ux-card__body">
+          <canvas height="280" data-chart="<?= \App\Helpers\Helper::escape((string) json_encode($statusChart, JSON_UNESCAPED_SLASHES)) ?>"></canvas>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>

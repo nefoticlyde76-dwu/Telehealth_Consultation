@@ -19,7 +19,7 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
     <div class="ux-page-header__left">
       <ol class="ux-breadcrumb">
         <li><a href="<?= \App\Helpers\Helper::url('/admin/dashboard') ?>">Dashboard</a></li>
-        <li><a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>">Requests</a></li>
+        <li><a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>">Consultation Requests</a></li>
         <li class="active">Request #<?= \App\Helpers\Helper::escape((string) $requestId) ?></li>
       </ol>
       <span class="section-badge mb-3">
@@ -46,15 +46,25 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
         <div class="col-xl-4">
           <div class="admin-summary-card h-100">
             <span class="admin-summary-label">Patient</span>
-            <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($request['patient_name'] ?? 'Patient')) ?></strong>
-            <span class="admin-summary-meta">Patient ID #<?= \App\Helpers\Helper::escape((string) ((int) ($request['patient_id'] ?? 0))) ?></span>
+            <?php
+            $personName = (string) ($request['patient_name'] ?? 'Patient');
+            $personPhoto = $request['patient_photo_path'] ?? null;
+            $personMeta = 'Patient ID #' . (string) ((int) ($request['patient_id'] ?? 0));
+            $personSize = 'lg';
+            require __DIR__ . '/../../partials/shared/person_row.php';
+            ?>
           </div>
         </div>
         <div class="col-xl-4">
           <div class="admin-summary-card h-100">
             <span class="admin-summary-label">Doctor</span>
-            <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) ($request['doctor_name'] ?? 'Doctor')) ?></strong>
-            <span class="admin-summary-meta"><?= \App\Helpers\Helper::escape((string) ($request['doctor_title'] ?? 'Medical Practitioner')) ?> · <?= \App\Helpers\Helper::escape((string) ($request['specialization'] ?? 'General Practice')) ?></span>
+            <?php
+            $personName = (string) ($request['doctor_name'] ?? 'Doctor');
+            $personPhoto = $request['doctor_photo_path'] ?? null;
+            $personMeta = trim((string) ($request['doctor_title'] ?? 'Medical Practitioner') . ' · ' . (string) ($request['specialization'] ?? 'General Practice'));
+            $personSize = 'lg';
+            require __DIR__ . '/../../partials/shared/person_row.php';
+            ?>
           </div>
         </div>
         <div class="col-xl-4">

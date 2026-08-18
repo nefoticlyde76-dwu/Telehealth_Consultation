@@ -20,10 +20,10 @@
       <div class="col-sm-6 col-lg-2">
         <h3 class="footer-title">Navigate</h3>
         <ul class="list-unstyled footer-links mb-0">
-          <li><a href="<?= \App\Helpers\Helper::url('/#home') ?>">Home</a></li>
-          <li><a href="<?= \App\Helpers\Helper::url('/#about') ?>">About</a></li>
-          <li><a href="<?= \App\Helpers\Helper::url('/#how-it-works') ?>">How It Works</a></li>
-          <li><a href="<?= \App\Helpers\Helper::url('/#contact') ?>">Contact</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/about') ?>">About</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/how-it-works') ?>">How It Works</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/contact') ?>">Contact</a></li>
         </ul>
       </div>
 
@@ -32,8 +32,8 @@
         <ul class="list-unstyled footer-links mb-0">
           <li><a href="<?= \App\Helpers\Helper::url('/register') ?>">Patient Registration</a></li>
           <li><a href="<?= \App\Helpers\Helper::url('/login') ?>">Secure Login</a></li>
-          <li><a href="<?= \App\Helpers\Helper::url('/#services') ?>">What we provide</a></li>
-          <li><a href="<?= \App\Helpers\Helper::url('/#cta') ?>">Ready to begin</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/how-it-works') ?>">How the service works</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/contact') ?>">Send an inquiry</a></li>
         </ul>
       </div>
 
@@ -53,7 +53,7 @@
       <div class="d-flex align-items-center gap-3 text-white-50 small">
         <span>Milne Bay Provincial Health Authority</span>
         <span class="dot-separator"></span>
-        <span>Three-tier MVC architecture</span>
+        <span>Secure telehealth consultations</span>
       </div>
     </div>
   </div>

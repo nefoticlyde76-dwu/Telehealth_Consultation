@@ -8,6 +8,9 @@ use App\Controllers\PatientController;
 use App\Middleware\RoleMiddleware;
 
 $router->get('/', [HomeController::class, 'index']);
+$router->get('/about', [HomeController::class, 'about']);
+$router->get('/how-it-works', [HomeController::class, 'howItWorks']);
+$router->get('/contact', [HomeController::class, 'showContact']);
 $router->post('/contact', [HomeController::class, 'contact']);
 
 $router->get('/login', [AuthController::class, 'login']);
@@ -45,6 +48,14 @@ $router->get('/patient/consultation-requests', [PatientController::class, 'consu
 ]);
 
 $router->get('/patient/consultation-requests/{id}', [PatientController::class, 'showConsultationRequest'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/consultation-requests/{id}/download-record', [PatientController::class, 'downloadConsultationRecord'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/consultation-requests/{id}/download-prescription', [PatientController::class, 'downloadPrescription'], [
     new RoleMiddleware(['patient']),
 ]);
 
@@ -97,6 +108,14 @@ $router->get('/doctor/consultations/{id}/room', [DoctorController::class, 'showC
 ]);
 
 $router->get('/doctor/consultations/{id}', [DoctorController::class, 'showConsultationDetails'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->get('/doctor/consultations/{id}/download-record', [DoctorController::class, 'downloadConsultationRecord'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->get('/doctor/consultations/{id}/download-prescription', [DoctorController::class, 'downloadPrescription'], [
     new RoleMiddleware(['doctor']),
 ]);
 

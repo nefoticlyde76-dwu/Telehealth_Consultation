@@ -76,6 +76,7 @@ class ConsultationRequest
                 doctor.user_id AS doctor_id,
                 doctor.professional_title AS doctor_title,
                 doctor.specialization,
+                doctor.profile_photo_path AS doctor_photo_path,
                 users.full_name AS doctor_name,
                 EXISTS(
                     SELECT 1
@@ -121,7 +122,7 @@ class ConsultationRequest
                 doctor.specialization,
                 doctor.signature_path AS doctor_signature_path,
                 doctor.clinic_address AS doctor_clinic_address,
-                doctor.profile_photo_path,
+                doctor.profile_photo_path AS doctor_photo_path,
                 users.full_name AS doctor_name,
                 patient.address AS patient_address,
                 patient.dob AS patient_dob,
@@ -170,7 +171,9 @@ class ConsultationRequest
                 patient.phone AS patient_phone,
                 patient.dob AS patient_dob,
                 patient.gender AS patient_gender,
-                patient.address AS patient_address
+                patient.address AS patient_address,
+                patient.profile_photo_path AS patient_photo_path,
+                doctor.profile_photo_path AS doctor_photo_path
             FROM consultation_requests
             INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
             INNER JOIN users AS doctor_user ON doctor_user.id = doctor.user_id
@@ -203,6 +206,7 @@ class ConsultationRequest
                 doctor_availability.end_time,
                 doctor.professional_title AS doctor_title,
                 doctor.specialization,
+                doctor.profile_photo_path AS doctor_photo_path,
                 users.full_name AS doctor_name
             FROM consultation_requests
             INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
@@ -235,6 +239,7 @@ class ConsultationRequest
                 doctor_availability.end_time,
                 doctor.professional_title AS doctor_title,
                 doctor.specialization,
+                doctor.profile_photo_path AS doctor_photo_path,
                 users.full_name AS doctor_name
             FROM consultation_requests
             INNER JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
@@ -465,10 +470,14 @@ class ConsultationRequest
                 doctor_user.full_name AS doctor_name,
                 doctor_availability.consultation_date,
                 doctor_availability.start_time,
-                doctor_availability.end_time
+                doctor_availability.end_time,
+                patient.profile_photo_path AS patient_photo_path,
+                doctor.profile_photo_path AS doctor_photo_path
             FROM consultation_requests
             INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
             INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
+            LEFT JOIN patient ON patient.user_id = consultation_requests.patient_id
+            LEFT JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
             LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
             ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC
             LIMIT :limit"
@@ -540,6 +549,8 @@ class ConsultationRequest
                 patient_user.full_name AS patient_name,
                 doctor_user.full_name AS doctor_name,
                 doctor.specialization,
+                doctor.profile_photo_path AS doctor_photo_path,
+                patient.profile_photo_path AS patient_photo_path,
                 doctor_availability.consultation_date,
                 doctor_availability.start_time,
                 doctor_availability.end_time
@@ -621,6 +632,7 @@ class ConsultationRequest
             INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
             INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
             INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
+            LEFT JOIN patient ON patient.user_id = consultation_requests.patient_id
             LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id";
     }
 
@@ -648,6 +660,8 @@ class ConsultationRequest
                 doctor_user.full_name AS doctor_name,
                 doctor.specialization,
                 doctor.professional_title AS doctor_title,
+                doctor.profile_photo_path AS doctor_photo_path,
+                patient.profile_photo_path AS patient_photo_path,
                 doctor_availability.consultation_date,
                 doctor_availability.start_time,
                 doctor_availability.end_time,
@@ -656,6 +670,7 @@ class ConsultationRequest
             INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
             INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
             INNER JOIN users AS doctor_user ON doctor_user.id = doctor.user_id
+            LEFT JOIN patient ON patient.user_id = consultation_requests.patient_id
             LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
             WHERE consultation_requests.id = :id
             LIMIT 1"
@@ -934,11 +949,13 @@ class ConsultationRequest
                 consultation_requests.request_date,
                 consultation_requests.status,
                 patient_user.full_name AS patient_name,
+                patient.profile_photo_path AS patient_photo_path,
                 doctor_availability.consultation_date,
                 doctor_availability.start_time,
                 doctor_availability.end_time
             FROM consultation_requests
             INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            LEFT JOIN patient ON patient.user_id = consultation_requests.patient_id
             INNER JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
             WHERE consultation_requests.doctor_id = :doctor_id
               AND consultation_requests.status = 'Approved'
@@ -1059,6 +1076,7 @@ class ConsultationRequest
                 consultation_requests.status,
                 consultation_requests.completed_at,
                 patient_user.full_name AS patient_name,
+                patient.profile_photo_path AS patient_photo_path,
                 doctor_availability.consultation_date,
                 doctor_availability.start_time,
                 doctor_availability.end_time,
@@ -1079,6 +1097,7 @@ class ConsultationRequest
                 ) AS has_prescription
             FROM consultation_requests
             INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            LEFT JOIN patient ON patient.user_id = consultation_requests.patient_id
             LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
             WHERE consultation_requests.doctor_id = :doctor_id";
         $parameters = [':doctor_id' => $doctorId];
@@ -1097,7 +1116,12 @@ class ConsultationRequest
             $parameters[':search'] = '%' . $search . '%';
         }
 
-        $sql .= ' ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, consultation_requests.id DESC LIMIT :limit OFFSET :offset';
+        $order = strtoupper(trim((string) ($filters['order'] ?? 'ASC')));
+        if ($order !== 'DESC') {
+            $order = 'ASC';
+        }
+
+        $sql .= " ORDER BY doctor_availability.consultation_date {$order}, doctor_availability.start_time {$order}, consultation_requests.id DESC LIMIT :limit OFFSET :offset";
 
         $stmt = $db->prepare($sql);
         foreach ($parameters as $key => $value) {
