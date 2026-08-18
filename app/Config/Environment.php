@@ -14,13 +14,24 @@ class Environment
 
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($lines as $line) {
-            if (str_starts_with(trim($line), '#')) {
+            $trimmed = trim($line);
+            if ($trimmed === '') {
+                continue;
+            }
+            if (str_starts_with($trimmed, '#') || str_starts_with($trimmed, ';')) {
+                continue;
+            }
+            if (!str_contains($trimmed, '=')) {
                 continue;
             }
 
-            [$name, $value] = explode('=', $line, 2);
+            [$name, $value] = explode('=', $trimmed, 2);
             $name = trim($name);
             $value = trim($value);
+
+            if ($name === '') {
+                continue;
+            }
 
             if (!array_key_exists($name, $_SERVER) && !array_key_exists($name, $_ENV)) {
                 putenv(sprintf('%s=%s', $name, $value));

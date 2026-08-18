@@ -15,10 +15,10 @@ $statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
       </ol>
       <span class="section-badge mb-3">
         <i class="bi bi-person-vcard"></i>
-        Administrator User Detail Review
+        User account
       </span>
       <h2 class="ux-page-header__title h4 mb-2"><?= \App\Helpers\Helper::escape($managedUser['full_name'] ?? 'User') ?></h2>
-      <p class="ux-page-header__subtitle text-muted mb-0">Review account identity, role placement, status, and available profile data without modifying records.</p>
+      <p class="ux-page-header__subtitle text-muted mb-0">Review this account’s identity, role, status, and profile details.</p>
     </div>
     <div class="ux-page-header__right">
       <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary btn-sm">
@@ -37,7 +37,7 @@ $statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
           <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
             <div>
               <h3 class="h5 mb-1">Account Overview</h3>
-              <p class="text-muted mb-0">Core user identity and authentication-related metadata.</p>
+              <p class="text-muted mb-0">Name, email, role, and current account status.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
               <span class="ux-badge ux-badge--neutral"><?= \App\Helpers\Helper::escape($roleName) ?></span>
@@ -78,27 +78,27 @@ $statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
     <div class="col-lg-4">
       <div class="card border-0 shadow-sm rounded-4 h-100">
         <div class="card-body p-4">
-          <h3 class="h5 mb-3">Administrative Review Notes</h3>
+          <h3 class="h5 mb-3">Account notes</h3>
           <div class="activity-list">
             <div class="activity-item">
               <span class="activity-dot"></span>
               <div>
-                <strong class="d-block">Read-only inspection</strong>
-                <p class="text-muted small mb-0">Today’s foundation supports oversight and user detail visibility only. No account creation or mutation is included.</p>
+                <strong class="d-block">Status and role</strong>
+                <p class="text-muted small mb-0">Use this page to confirm identity, role, and whether the account is active.</p>
               </div>
             </div>
             <div class="activity-item">
               <span class="activity-dot"></span>
               <div>
-                <strong class="d-block">Role-aware visibility</strong>
-                <p class="text-muted small mb-0">The detail view adapts to administrator, doctor, and patient role data that already exists in the database.</p>
+                <strong class="d-block">Patient and doctor records</strong>
+                <p class="text-muted small mb-0">Patient details and doctor accounts are managed from their dedicated administration pages.</p>
               </div>
             </div>
             <div class="activity-item">
               <span class="activity-dot"></span>
               <div>
-                <strong class="d-block">Secure admin-only access</strong>
-                <p class="text-muted small mb-0">The route remains protected by existing administrator role checks and the authenticated dashboard shell.</p>
+                <strong class="d-block">Access control</strong>
+                <p class="text-muted small mb-0">Only signed-in administrators can view this record.</p>
               </div>
             </div>
           </div>
@@ -156,23 +156,23 @@ $statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
         </div>
 
         <div class="col-lg-6">
-          <h3 class="h5 mb-3">Foundation Scope</h3>
+          <h3 class="h5 mb-3">What you can do next</h3>
           <div class="admin-foundation-list">
             <div class="admin-foundation-item">
               <i class="bi bi-check2-circle"></i>
-              <span>All users can be viewed through the administrator listing.</span>
+              <span>Search and filter accounts from the Users list.</span>
             </div>
             <div class="admin-foundation-item">
               <i class="bi bi-check2-circle"></i>
-              <span>Search and filter support helps administrators narrow platform accounts safely.</span>
+              <span>Create and update doctor accounts from Doctors.</span>
             </div>
             <div class="admin-foundation-item">
               <i class="bi bi-check2-circle"></i>
-              <span>Detailed inspection is available for role and status review.</span>
+              <span>Review patient records and account status from Patients.</span>
             </div>
             <div class="admin-foundation-item">
               <i class="bi bi-info-circle"></i>
-              <span>Patient management, doctor account management, and administrator profile maintenance are now handled through their dedicated Week 3 administration screens.</span>
+              <span>Permanent deletion of patient and doctor accounts is available from the Users list, with safeguards against removing your own or the last administrator account.</span>
             </div>
           </div>
         </div>

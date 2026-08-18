@@ -48,7 +48,7 @@ $router->get('/patient/consultation-requests/{id}', [PatientController::class, '
     new RoleMiddleware(['patient']),
 ]);
 
-$router->get('/patient/consultations/{id}/join-token', [PatientController::class, 'joinConsultation'], [
+$router->post('/patient/consultations/{id}/join-token', [PatientController::class, 'joinConsultation'], [
     new RoleMiddleware(['patient']),
 ]);
 
@@ -76,11 +76,27 @@ $router->post('/doctor/consultations/{id}/complete', [DoctorController::class, '
     new RoleMiddleware(['doctor']),
 ]);
 
-$router->get('/doctor/consultations/{id}/join-token', [DoctorController::class, 'joinConsultation'], [
+$router->get('/doctor/consultations/{id}/prescription', [DoctorController::class, 'showPrescription'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/consultations/{id}/prescription', [DoctorController::class, 'savePrescription'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/consultations/{id}/join-token', [DoctorController::class, 'joinConsultation'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/consultations/{id}/clinical-record', [DoctorController::class, 'saveClinicalRecordDraft'], [
     new RoleMiddleware(['doctor']),
 ]);
 
 $router->get('/doctor/consultations/{id}/room', [DoctorController::class, 'showConsultationRoom'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->get('/doctor/consultations/{id}', [DoctorController::class, 'showConsultationDetails'], [
     new RoleMiddleware(['doctor']),
 ]);
 

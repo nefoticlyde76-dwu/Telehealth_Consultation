@@ -5,14 +5,14 @@
     <div class="auth-shell row g-0 overflow-hidden">
       <div class="col-lg-5 order-2 order-lg-1">
         <?php
-        $authVisualBadge = 'Patient Registration';
-        $authVisualTitle = 'Create a trusted patient account for MBPHA TeleHealth.';
-        $authVisualCopy = 'Start with a secure registration experience shaped by the identity of Alotau General Hospital and the MBPHA digital care vision.';
-        $authVisualQuote = 'Professional onboarding, strong validation, and healthcare-ready access in one unified experience.';
+        $authVisualBadge = 'Patient registration';
+        $authVisualTitle = 'Create a patient account.';
+        $authVisualCopy = 'Register to book teleconsultations with MBPHA clinicians.';
+        $authVisualQuote = 'Registration is for patients. Doctors and administrators are issued accounts by MBPHA.';
         $authVisualPoints = [
-            'Validated patient onboarding with strong password requirements.',
-            'Healthcare-first interface designed for trust and clarity.',
-            'Future-ready access to bookings, consultations, and care workflows.',
+            'Use a valid email address you can access.',
+            'Choose a strong password of at least 8 characters.',
+            'You can sign in and book a consultation as soon as registration is complete.',
         ];
         require __DIR__ . '/../partials/shared/auth_visual_panel.php';
         ?>
@@ -23,14 +23,8 @@
           <div class="auth-form-card card border-0 h-100 reveal-on-scroll reveal-slide-up">
             <div class="card-body p-4 p-lg-5">
             <div class="mb-4">
-              <p class="text-primary fw-semibold mb-2">Create account</p>
-              <h2 class="h3 mb-1">Patient registration form</h2>
-              <p class="text-muted mb-0">Complete the required information below to access the patient dashboard.</p>
-            </div>
-
-            <div class="auth-form-meta mb-4">
-              <span class="auth-meta-chip"><i class="bi bi-patch-check"></i> Strong validation standards</span>
-              <span class="auth-meta-chip"><i class="bi bi-person-plus"></i> Patient-focused onboarding</span>
+              <h2 class="h3 mb-1">Patient registration</h2>
+              <p class="text-muted mb-0">Complete the required fields to create your account.</p>
             </div>
 
             <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
@@ -65,7 +59,7 @@
               </div>
 
               <div class="col-md-6">
-                <label for="registerDob" class="form-label">Date of Birth</label>
+                <label for="registerDob" class="form-label">Date of birth <span class="text-muted fw-normal">(optional)</span></label>
                 <input
                   type="date"
                   class="form-control form-control-lg"
@@ -76,7 +70,7 @@
               </div>
 
               <div class="col-md-6">
-                <label for="registerGender" class="form-label">Gender</label>
+                <label for="registerGender" class="form-label">Gender <span class="text-muted fw-normal">(optional)</span></label>
                 <select class="form-select form-select-lg" id="registerGender" name="gender">
                   <option value="">Select gender</option>
                   <option value="male" <?= ($oldInput['gender'] ?? '') === 'male' ? 'selected' : '' ?>>Male</option>
@@ -124,16 +118,16 @@
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" value="1" id="acceptTerms" name="terms" required>
                   <label class="form-check-label" for="acceptTerms">
-                    I agree to the platform terms and acknowledge the privacy and security requirements.
+                    I understand that my information will be used to provide telehealth services through MBPHA.
                   </label>
-                  <div class="invalid-feedback">You must accept the terms to continue.</div>
+                  <div class="invalid-feedback">Please confirm you understand how your information will be used.</div>
                 </div>
               </div>
 
               <div class="col-12 d-grid gap-3 mt-2">
-                <button type="submit" class="btn btn-success btn-lg rounded-pill">Create Patient Account</button>
-                <a href="<?= \App\Helpers\Helper::url('/login') ?>" class="btn btn-outline-primary rounded-pill">
-                  Already have an account? Login
+                <button type="submit" class="btn btn-primary btn-lg">Create patient account</button>
+                <a href="<?= \App\Helpers\Helper::url('/login') ?>" class="btn btn-outline-primary btn-lg">
+                  Already have an account? Sign in
                 </a>
               </div>
             </form>

@@ -25,7 +25,7 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
       <?php if ($upcomingItems === []): ?>
         <div class="rightbar-empty">
           <div class="rightbar-empty-icon"><i class="bi bi-calendar2-check"></i></div>
-          <p class="text-muted mb-0">No upcoming activity is available yet.</p>
+          <p class="text-muted mb-0">No upcoming consultations.</p>
         </div>
       <?php else: ?>
         <div class="rightbar-list">
@@ -51,7 +51,6 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
       <div class="rightbar-section">
         <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
           <h2 class="h6 mb-0">Quick Actions</h2>
-          <span class="text-muted small">Shortcuts</span>
         </div>
         <div class="d-grid gap-2">
           <?php foreach ($quickActions as $action): ?>
@@ -75,7 +74,7 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
   <div class="offcanvas-header border-bottom">
     <div>
       <h2 class="h5 mb-0" id="dashboardRightbarLabel">Overview</h2>
-      <p class="text-muted small mb-0"><?= \App\Helpers\Helper::escape(ucfirst($dashboardRole) !== '' ? ucfirst($dashboardRole) : 'Dashboard') ?> quick panel</p>
+      <p class="text-muted small mb-0">Calendar and next steps</p>
     </div>
     <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>

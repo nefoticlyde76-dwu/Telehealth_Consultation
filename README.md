@@ -4,7 +4,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ## Current Status
 
-- Current Week: Week 6
+- Current Week: Week 7
 - Architecture: Custom MVC (PHP 8.x)
 - Database: MySQL with PDO prepared statements
 - Frontend: HTML5, CSS3, Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
@@ -23,6 +23,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Profile Pictures: Direct profile picture uploads with live avatar updates are implemented for administrator, doctor, and patient profiles
 - Consultation Workflow: Week 5 consultation request and appointment management workflow implemented across patient, administrator, and doctor dashboards
 - Video Consultation Module: Week 6 end-to-end Daily.co Prebuilt video consultation integration (secure server-side creds, idempotent rooms, join-window, role tokens) implemented for approved appointments
+- Consultation Records and Prescriptions: Week 7 live clinical documentation, doctor-controlled completion, explicit prescription issuance, and read-only historical record views implemented
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -267,16 +268,16 @@ Daily.co Prebuilt WebRTC integration wired to the approved consultation request 
 - Presentation shell: shared room view used for both patient and doctor:
   - Patient: `/patient/consultations/{id}/room`
   - Doctor:  `/doctor/consultations/{id}/room`
-- JSON credential endpoints protected by role middleware:
-  - Patient: `GET /patient/consultations/{id}/join-token`
-  - Doctor:  `GET /doctor/consultations/{id}/join-token`
+- JSON credential endpoints protected by role middleware and CSRF:
+  - Patient: `POST /patient/consultations/{id}/join-token`
+  - Doctor:  `POST /doctor/consultations/{id}/join-token`
   - These endpoints return `{ ok, room_url, token }` — no secrets are embedded in HTML
 - Media provider: Daily.co Prebuilt iframe (`@daily-co/daily-js@0.67.0` via jsdelivr CDN, pinned for PNG health-sector network reachability)
 
 #### Server-side services (server-side-only Daily keys)
 
 - [DailyService.php](file:///c:/xampp/htdocs/Telehealth_Consultation_System/app/Services/DailyService.php) — REST client for the hosted Daily.co backend
-  - `createRoom($roomName, $startAt, $endAt)` — creates a `privacy: public` room with `enable_prejoin_ui`, `enable_screenshare`, `enable_people_ui`, room-level `exp` / `nbf` bounds matching the appointment window
+  - `createRoom($roomName, $startAt, $endAt)` — creates a `privacy: private` room with `enable_prejoin_ui`, `enable_screenshare`, `enable_people_ui`, room-level `exp` / `nbf` bounds matching the appointment window
   - `createMeetingToken($roomName, $userId, $displayName, $role, $ttlSecs = 1800)` — short-lived JWT bound to the room name; doctor is minted as `is_owner:true`, patient as `is_owner:false`; tokens are never persisted to the database
   - `deleteRoom($roomName)` — cleanup helper
   - Credentials are read exclusively from `.env` (`DAILY_API_KEY`, `DAILY_DOMAIN`) via `Environment::get()`. They never leave the PHP tier
@@ -324,6 +325,46 @@ Daily.co Prebuilt WebRTC integration wired to the approved consultation request 
   3. create the consultation_rooms row via `upsertForApprovedConsultation` (this in turn makes the signed Daily REST create-room call)
   - Any failure in step 3 rolls back steps 1 and 2 so no orphaned approved-but-unroomed requests can exist
 
+### Week 7 Consultation Records and Prescriptions
+
+Clinical documentation and prescriptions are layered onto the existing Approved Daily consultation. The administrator still approves or rejects bookings manually. Completing a consultation does not create a prescription automatically.
+
+#### Live clinical documentation (Draft)
+
+- Assigned doctor documents beside the Daily room at `/doctor/consultations/{id}/room`
+- Opening an Approved consultation creates a Draft record if none exists; existing notes are not overwritten
+- Autosave / Save persist Draft fields only (`POST /doctor/consultations/{id}/clinical-record`)
+- Saving a draft does not complete the consultation and does not issue a prescription
+- Required fields before completion: chief complaint, history/symptoms, clinical findings, diagnosis, treatment plan
+
+#### Completion (doctor only)
+
+- `POST /doctor/consultations/{id}/complete` requires CSRF and an explicit confirmation checkbox
+- Sets `consultation_requests.status = Completed`, stores `completed_at`, and marks the clinical record `Final` with `finalized_at`
+- A Final record cannot be edited
+- Patients have no complete or clinical-record write routes
+
+#### Prescription (explicit, after completion)
+
+- `GET/POST /doctor/consultations/{id}/prescription`
+- Allowed only when the consultation is Completed, the record is Final, and the doctor signature is on file
+- Medication lines: name, dosage, frequency, duration, quantity
+- Empty or incomplete prescriptions are rejected; a second prescription for the same consultation is blocked
+- Patient name, address, doctor name, and signature are loaded from existing profile rows
+
+#### Historical record views
+
+- Doctor historical record: `/doctor/consultations/{id}` (not the Daily room)
+- Patient completed details: `/patient/consultation-requests/{id}`
+- Shared read-only partial `_consultation_record_details.php` (no textareas)
+- History lists: Approved → Join Consultation; Completed → View Record
+- Completed Daily room visits redirect to the record page
+
+#### Administrator review workspace
+
+- `/admin/consultation-requests` queue: review pending request details, then Approve or Reject
+- No automated approval, rejection, or AI review
+
 ### Profile Enhancement
 
 - Direct profile picture uploads without a cropping step
@@ -345,19 +386,28 @@ Telehealth_Consultation_System/
 │   ├── Helpers/
 │   ├── Middleware/
 │   ├── Models/
-│   │   └── ConsultationRoom.php
+│   │   ├── ConsultationRoom.php
+│   │   ├── ConsultationRecord.php
+│   │   └── Prescription.php
 │   ├── Services/
 │   │   ├── DailyService.php
-│   │   └── VideoConsultationService.php
+│   │   ├── VideoConsultationService.php
+│   │   ├── DoctorClinicalDocumentationService.php
+│   │   ├── DoctorPrescriptionService.php
+│   │   └── PatientClinicalRecordService.php
 │   └── Views/
 │       ├── admin/
+│       │   └── consultation_requests/
 │       ├── auth/
 │       ├── doctor/
-│       │   └── consultations/room.php
+│       │   └── consultations/
+│       │       ├── room.php
+│       │       ├── show.php
+│       │       └── prescription.php
 │       ├── home/
 │       ├── layouts/
 │       ├── partials/
-│       │   └── shared/status_helper.php
+│       │   └── shared/
 │       └── patient/
 │           └── consultations/room.php
 ├── database/
@@ -371,14 +421,23 @@ Telehealth_Consultation_System/
 │       ├── 008_remove_unique_index_from_consultation_requests.sql
 │       ├── 009_create_audit_logs_table.sql
 │       ├── 010_create_consultation_rooms_table.sql
-│       └── 011_add_phone_to_patient_table.sql
+│       ├── 011_add_phone_to_patient_table.sql
+│       ├── 015_alter_consultation_records_live_draft.sql
+│       ├── 016_consultation_completion_and_prescription_quantity.sql
+│       └── 017_drop_consultation_ai_reviews_table.sql
 ├── public/
 │   ├── css/
-│   │   └── consultation-room.css
+│   │   ├── consultation-room.css
+│   │   ├── consultation-record.css
+│   │   ├── prescription.css
+│   │   └── design-system.css
 │   ├── js/
-│   │   └── consultation-room.js
+│   │   ├── consultation-room.js
+│   │   ├── consultation-clinical-record.js
+│   │   └── consultation-prescription.js
 │   └── index.php
 ├── routes/
+├── bin/
 ├── tmp/
 ├── .env.example
 ├── .gitignore
@@ -388,7 +447,8 @@ Telehealth_Consultation_System/
 ├── WEEK3_REPORT.md
 ├── WEEK4_REPORT.md
 ├── WEEK5_REPORT.md
-└── WEEK6_REPORT.md
+├── WEEK6_REPORT.md
+└── WEEK7_REPORT.md
 ```
 
 ## Installation
@@ -428,6 +488,9 @@ mysql -u root -p < database/migrations/008_remove_unique_index_from_consultation
 mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
 mysql -u root -p < database/migrations/010_create_consultation_rooms_table.sql
 mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
+mysql -u root -p < database/migrations/015_alter_consultation_records_live_draft.sql
+mysql -u root -p < database/migrations/016_consultation_completion_and_prescription_quantity.sql
+mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sql
 ```
 
 8. Open the application using the configured `APP_URL`.
@@ -451,6 +514,12 @@ mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
   - Patient: `/patient/consultations/{id}/room`
   - Doctor:  `/doctor/consultations/{id}/room`
   - Join-token JSON endpoints return `{ ok, room_url, token }` and are role-protected
+- Week 7 clinical documentation and prescription endpoints are doctor-only:
+  - `POST /doctor/consultations/{id}/clinical-record`
+  - `POST /doctor/consultations/{id}/complete`
+  - `GET/POST /doctor/consultations/{id}/prescription`
+  - Historical doctor record: `/doctor/consultations/{id}`
+  - Patients view completed records at `/patient/consultation-requests/{id}` (read-only)
 
 ## Security Highlights
 
@@ -470,6 +539,9 @@ mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
 - **Role-aware tokens**: meeting tokens are minted fresh per join, never stored, and encode `is_owner:true` only for the doctor assigned to the appointment
 - **Authorization before media**: the patient/doctor role on the signed-in user must match the stored patient/doctor on the consultation request before a join response is issued
 - **Admin-approval transactional consistency**: approval + slot lock + room creation run in one PDO transaction so partially-approved requests cannot exist if Daily.co REST or the DB write fails
+- **Clinical documentation authorization**: only the assigned doctor can save a Draft, complete a consultation, or issue a prescription; patients have no write routes for records or prescriptions
+- **Completion vs prescription separation**: marking a consultation Completed finalizes the clinical record only; a prescription is created only by an explicit doctor save after completion
+- **Historical record vs Daily room**: completed consultations open a read-only record page; the Daily room remains available only for Approved sessions inside the join window
 
 ## Design System
 
@@ -478,6 +550,8 @@ mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
 - Shared UI refinements are applied through [style.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/style.css)
 - Colours are managed through CSS variables instead of page-level hardcoded values
 - Week 6 consultation-room visual language is defined in [consultation-room.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-room.css) and shares the tokens `--ux-primary:#0F4C81`, `--ux-secondary:#2A9D8F`, `--ux-accent:#3CB371`
+- Week 7 consultation-record and prescription screens use [consultation-record.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-record.css) and [prescription.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/prescription.css) with the same MBPHA palette
+- Shared dashboard workspace tokens for the administrator review queue live in [design-system.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/design-system.css)
 
 ## Testing Summary
 
@@ -540,12 +614,18 @@ mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
   - `DailyService::createRoom()` returns a `FILTER_VALIDATE_URL` Daily room URL; tokens mint successfully for both doctor (owner) and patient (participant) with 30-minute TTL
   - `ConsultationRoom::upsertForApprovedConsultation()` returns the same stored `daily_room_url` on a second invocation (idempotency — `action: reused`)
   - `VideoConsultationService::authorizeAndIssueJoinToken()` rejects: wrong user/role, not-yet-Approved status, and access outside the `−10 min … +10 min` join window
-  - Patient `GET /patient/consultations/{id}/join-token` and Doctor `GET /doctor/consultations/{id}/join-token` resolve the **identical** stored `daily_room_url` for the same consultation_request_id (same-room guarantee — byte-match on the URL string)
+  - Patient `POST /patient/consultations/{id}/join-token` and Doctor `POST /doctor/consultations/{id}/join-token` resolve the **identical** stored `daily_room_url` for the same consultation_request_id (same-room guarantee — byte-match on the URL string)
   - Presentation shell renders correctly with appointment summary, pre-call guidance, aria-live alert region, and properly-sized frame container
   - `consultation-room.js` triple guard (`isBootstrapping`, `callFrame !== null`, `hasJoined`) prevents duplicate iframe creation even when the CTA is double-clicked or bootstrapped twice
   - Daily factory resolution with `waitForDailyFactory(6000)` + jsdelivr CDN (`daily-js@0.67.0`) resolves `DailyIframe.createFrame` correctly; canonical two-step `createFrame()` → wire events → explicit `callFrame.join({ url, token })` initiates the session; `iframeStyle:{width:100%,height:100%,minHeight:540px}` combines with CSS clamp to guarantee consistent frame sizing
   - External note — real camera/mic SFU sessions require a Daily.co account with a billing method on file at `dashboard.daily.co → Billing`; without it, the native Daily page shows "Missing payment method". REST API (room + token creation) and the iframe join handshake complete without this; live media is the only gated step.
 - `010_create_consultation_rooms_table.sql` and `011_add_phone_to_patient_table.sql` applied to `telehealth_db` with all foreign keys, UNIQUE keys, and indices intact; no orphaned `consultation_rooms` rows; `information_schema.STATISTICS` confirms the UNIQUE key on `consultation_request_id`
+- Verified the Week 7 consultation-record and prescription module:
+  - `php bin/test_week7_day3.php` — 36 passed (schema, required fields, completion, no auto-prescription, Final lock, access control)
+  - `php bin/test_week7_day4.php` — 33 passed (no patient write routes, draft autosave, cross-user ID guessing fails closed, Daily join-token still registered)
+  - `php bin/test_week7_record_view.php` — 48 passed (dedicated record route vs Daily room, View Record vs Join Consultation, completed room redirects, read-only record partial)
+  - Patient booking still saves as `Pending` for administrator review; administrator Approve/Reject remain manual
+  - Daily room routes and `consultation_rooms` data remain intact after clinical documentation work
 
 ## Known Environment Requirements
 
@@ -563,7 +643,7 @@ mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
 - Week 4: Doctor availability management and patient browsing completed
 - Week 5: Admin booking management completed
 - Week 6: Video consultation (Daily.co Prebuilt integration, idempotent rooms, join-window enforcement, role tokens, consultation-room UI, admin approval transaction consistency) — completed
-- Week 7: Consultation records and prescription module
+- Week 7: Consultation records and prescription module — completed
 - Week 8: Consultation history and PDF export
 - Week 9: Testing, security review, bug fixing, and UI refinement
 - Week 10: Deployment, documentation, and final testing

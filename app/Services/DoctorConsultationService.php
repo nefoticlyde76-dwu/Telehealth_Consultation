@@ -46,7 +46,11 @@ class DoctorConsultationService
             ];
         }
 
-        return ConsultationRequest::markCompletedForDoctor($requestId, $doctorId);
+        return [
+            'success' => false,
+            'message' => 'Complete the consultation from the consultation room after reviewing the clinical record.',
+            'type' => 'warning',
+        ];
     }
 
     public static function getStatusOptions(): array

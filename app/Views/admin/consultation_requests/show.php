@@ -40,7 +40,7 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm rounded-4">
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
     <div class="card-body p-4">
       <div class="row g-4 mb-4">
         <div class="col-xl-4">

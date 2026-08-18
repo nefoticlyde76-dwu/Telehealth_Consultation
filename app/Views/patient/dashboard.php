@@ -50,48 +50,27 @@ if ($latestRequest !== null) {
 ?>
 
 <div class="ux-welcome ux-welcome--patient">
-  <span class="ux-welcome__corner-tick ux-welcome__corner-tick--tr"></span>
-  <span class="ux-welcome__corner-tick ux-welcome__corner-tick--br"></span>
-  <span class="ux-welcome__sweep"></span>
-  <span class="ux-welcome__sweep ux-welcome__sweep--b"></span>
-
   <div class="ux-welcome__grid">
     <div>
       <ol class="ux-welcome__breadcrumb">
         <li><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
         <li class="active">Patient Dashboard</li>
       </ol>
-      <span class="ux-welcome__eyebrow">Your TeleHealth Journey · MBPHA</span>
-      <h1 class="ux-welcome__title">Welcome, <?= \App\Helpers\Helper::escape($patientFirstName) ?> 👋</h1>
-      <p class="ux-welcome__description">Manage your telehealth journey. Book consultations, track request status, and review completed appointments with MBPHA clinicians.</p>
+      <span class="ux-welcome__eyebrow">MBPHA TeleHealth</span>
+      <h1 class="ux-welcome__title">Hello, <?= \App\Helpers\Helper::escape($patientFirstName) ?></h1>
+      <p class="ux-welcome__description">Book a consultation, check request status, and join your appointment when it is approved.</p>
 
       <div class="ux-welcome__meta-pill-row">
         <span class="ux-welcome__meta-pill">
           <i class="bi <?= \App\Helpers\Helper::escape($patientStatusIcon) ?>"></i>
           <span><?= \App\Helpers\Helper::escape($patientStatusText) ?></span>
         </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-calendar3"></i>
-          <span><?= \App\Helpers\Helper::escape($patientToday) ?></span>
-        </span>
         <?php if ($latestRequest !== null && $latestStatus === 'Approved'): ?>
           <span class="ux-welcome__meta-pill">
-            <i class="bi bi-doctor"></i>
+            <i class="bi bi-person-badge"></i>
             <span>Next: <?= \App\Helpers\Helper::escape((string) ($latestRequest['doctor_name'] ?? 'Doctor')) ?> · <?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($latestRequest['consultation_date'] ?? ''), 'd M', 'TBD')) ?></span>
           </span>
         <?php endif; ?>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-hourglass-split"></i>
-          <span>Pending: <?= \App\Helpers\Helper::escape((string) $pendingCount) ?></span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-check-circle"></i>
-          <span>Approved: <?= \App\Helpers\Helper::escape((string) $approvedCount) ?></span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-journal-medical"></i>
-          <span>Completed: <?= \App\Helpers\Helper::escape((string) $completedCount) ?></span>
-        </span>
       </div>
     </div>
 
@@ -101,7 +80,7 @@ if ($latestRequest !== null) {
       </a>
       <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="ux-welcome__cta-secondary">
         <i class="bi bi-journal-text"></i>
-        <span>My History</span>
+        <span>My Appointments</span>
       </a>
     </div>
   </div>
@@ -176,7 +155,7 @@ if ($latestRequest !== null) {
             <h3 class="h5 mb-1">Your Next Consultation</h3>
             <p class="text-muted mb-0 small">Summary of your next appointment, request status, or suggested next action.</p>
           </div>
-          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">View All History</a>
+          <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">View Appointments</a>
         </div>
         <div class="ux-card__body">
 
@@ -257,7 +236,7 @@ if ($latestRequest !== null) {
                   <i class="bi bi-calendar2-plus me-2"></i>Book Consultation
                 </a>
                 <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
-                  <i class="bi bi-journal-text me-2"></i>My History
+                  <i class="bi bi-journal-text me-2"></i>My Appointments
                 </a>
               </div>
             </div>
@@ -266,29 +245,6 @@ if ($latestRequest !== null) {
         </div>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="mb-4">
-  <div class="row g-4">
-    <?php foreach ($stats as $stat): ?>
-      <?php $statValue = (string) ($stat['value'] ?? '0'); ?>
-      <?php $iconTone = ($stat['tone'] ?? '') === 'success' ? 'ux-stat__icon--mint' : 'ux-stat__icon--surface'; ?>
-      <div class="col-sm-6 col-xl-3">
-        <div class="ux-stat h-100">
-          <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
-            <div>
-              <span class="ux-stat__label"><?= \App\Helpers\Helper::escape((string) ($stat['label'] ?? '')) ?></span>
-              <h3 class="ux-stat__value" <?= is_numeric($statValue) ? 'data-counter="' . \App\Helpers\Helper::escape($statValue) . '"' : '' ?>>
-                <?= \App\Helpers\Helper::escape($statValue) ?>
-              </h3>
-            </div>
-            <span class="ux-stat__icon <?= $iconTone ?>"><i class="bi <?= \App\Helpers\Helper::escape((string) ($stat['icon'] ?? 'bi-graph-up')) ?>"></i></span>
-          </div>
-          <p class="text-muted mb-0 small"><?= \App\Helpers\Helper::escape((string) ($stat['description'] ?? '')) ?></p>
-        </div>
-      </div>
-    <?php endforeach; ?>
   </div>
 </section>
 
@@ -339,7 +295,7 @@ if ($latestRequest !== null) {
                       <td class="text-muted small"><?= \App\Helpers\Helper::escape(substr((string) ($request['start_time'] ?? ''), 0, 5)) ?> - <?= \App\Helpers\Helper::escape(substr((string) ($request['end_time'] ?? ''), 0, 5)) ?></td>
                       <td><span class="ux-badge <?= $badgeClass ?>"><i class="bi <?= $statusIcon ?> me-1"></i><?= \App\Helpers\Helper::escape($status) ?></span></td>
                       <td class="text-end">
-                        <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/' . (string) ((int) ($request['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm">View</a>
+                        <a href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/' . (string) ((int) ($request['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm"><?= $status === 'Completed' ? 'View Record' : 'View' ?></a>
                       </td>
                     </tr>
                   <?php endforeach; ?>

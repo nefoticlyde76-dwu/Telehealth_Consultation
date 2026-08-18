@@ -29,6 +29,7 @@
 
   const CONSULTATION_ID = (SCRIPT.dataset.consultationRoom || '').trim();
   const JOIN_ENDPOINT   = (SCRIPT.dataset.joinEndpoint || '').trim();
+  const CSRF_TOKEN      = (SCRIPT.dataset.csrfToken || '').trim();
   const VIEWER_ROLE     = (SCRIPT.dataset.viewerRole || 'patient').trim();
 
   if (!JOIN_ENDPOINT || !CONSULTATION_ID) {
@@ -388,12 +389,14 @@
     let response;
     try {
       response = await fetch(JOIN_ENDPOINT, {
-        method: 'GET',
+        method: 'POST',
         credentials: 'same-origin',
         headers: {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
+        body: '_token=' + encodeURIComponent(CSRF_TOKEN),
       });
     } catch (networkErr) {
       showAlert(
@@ -456,8 +459,17 @@
         showAlert(
           ALERT_REGION,
           'danger',
-          'Not authenticated.',
+          'Sign in required',
           message + ' Please sign in and try again.'
+        );
+        break;
+      case 419:
+        setPrecallMessage('This page is out of date. Refresh and try joining again.');
+        showAlert(
+          ALERT_REGION,
+          'warning',
+          'Session security check failed',
+          message
         );
         break;
       case 404:

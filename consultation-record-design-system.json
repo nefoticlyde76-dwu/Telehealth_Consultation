@@ -1,0 +1,599 @@
+{
+    "pageDesignSystem": {
+      "page": "Consultation Record",
+      "scope": "CONSULTATION_RECORD_PAGE_ONLY",
+      "purpose": "Defines the visual design, layout, hierarchy, components, spacing, typography, colors, and interaction rules for the completed consultation record page. Do not apply these specifications globally to other TeleHealth pages.",
+  
+      "reference": {
+        "designSource": "Provided Consultation Record reference screenshot",
+        "style": "Modern clinical SaaS dashboard",
+        "visualGoals": [
+          "Professional",
+          "Clean",
+          "Trustworthy",
+          "Clinical",
+          "Easy to scan",
+          "Information-dense but not crowded"
+        ]
+      },
+  
+      "pageShell": {
+        "background": "#F7F9FC",
+        "contentMaxWidth": "1280px",
+        "contentPadding": {
+          "desktop": "28px 26px 40px",
+          "tablet": "22px 20px 32px",
+          "mobile": "16px 14px 28px"
+        }
+      },
+  
+      "pageHeader": {
+        "breadcrumb": {
+          "display": true,
+          "fontSize": "11px",
+          "fontWeight": 400,
+          "color": "#708397",
+          "activeColor": "#183653",
+          "separatorColor": "#AAB6C2",
+          "gap": "8px",
+          "marginBottom": "10px"
+        },
+  
+        "title": {
+          "text": "Consultation Record",
+          "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "fontSize": "24px",
+          "lineHeight": "32px",
+          "fontWeight": 600,
+          "letterSpacing": "-0.02em",
+          "color": "#183653",
+          "marginBottom": "4px"
+        },
+  
+        "description": {
+          "text": "Completed historical record. Clinical notes and prescriptions are read-only.",
+          "fontSize": "12px",
+          "lineHeight": "18px",
+          "fontWeight": 400,
+          "color": "#718397"
+        },
+  
+        "actions": {
+          "layout": "horizontal",
+          "gap": "10px",
+          "buttons": [
+            {
+              "label": "Consultations",
+              "type": "secondary",
+              "height": "38px",
+              "padding": "0 14px",
+              "borderRadius": "8px"
+            },
+            {
+              "label": "Create Prescription",
+              "type": "secondary",
+              "height": "38px",
+              "padding": "0 14px",
+              "borderRadius": "8px"
+            }
+          ]
+        },
+  
+        "marginBottom": "20px"
+      },
+  
+      "summarySection": {
+        "type": "horizontalSummaryCard",
+        "height": "104px",
+        "background": "#FFFFFF",
+        "border": "1px solid #DDE6EF",
+        "borderRadius": "12px",
+        "shadow": "0 1px 3px rgba(15,52,78,0.04)",
+        "padding": "20px 28px",
+        "marginBottom": "20px",
+  
+        "layout": {
+          "columns": 3,
+          "gap": "0",
+          "verticalAlignment": "center"
+        },
+  
+        "items": [
+          {
+            "id": "status",
+            "label": "STATUS",
+            "labelFontSize": "10px",
+            "labelColor": "#7B8C9D",
+            "icon": {
+              "type": "check-circle",
+              "size": "20px",
+              "color": "#16A36A",
+              "background": "#E8F8F0",
+              "containerSize": "34px",
+              "radius": "9px"
+            },
+            "value": {
+              "text": "Completed",
+              "fontSize": "11px",
+              "fontWeight": 600,
+              "color": "#10905D",
+              "background": "#E8F8F0",
+              "padding": "6px 11px",
+              "borderRadius": "999px"
+            }
+          },
+  
+          {
+            "id": "consultationDate",
+            "label": "CONSULTATION DATE",
+            "icon": {
+              "type": "calendar",
+              "size": "20px",
+              "color": "#1688E5",
+              "background": "#EEF7FF",
+              "containerSize": "34px",
+              "radius": "9px"
+            },
+            "date": {
+              "text": "18 Aug 2026",
+              "fontSize": "18px",
+              "fontWeight": 600,
+              "color": "#183653"
+            },
+            "time": {
+              "text": "13:31 - 14:50",
+              "fontSize": "11px",
+              "color": "#8091A2"
+            }
+          },
+  
+          {
+            "id": "patient",
+            "label": "PATIENT",
+            "icon": {
+              "type": "user",
+              "size": "20px",
+              "color": "#1688E5",
+              "background": "#EEF7FF",
+              "containerSize": "34px",
+              "radius": "9px"
+            },
+            "name": {
+              "text": "Mikey",
+              "fontSize": "18px",
+              "fontWeight": 600,
+              "color": "#183653"
+            },
+            "department": {
+              "text": "General Medicine",
+              "fontSize": "11px",
+              "color": "#8091A2"
+            }
+          }
+        ],
+  
+        "separator": {
+          "width": "1px",
+          "height": "60%",
+          "color": "#E3EAF0"
+        }
+      },
+  
+      "reasonForVisit": {
+        "type": "informationCard",
+        "background": "#FFFFFF",
+        "border": "1px solid #DDE6EF",
+        "borderRadius": "12px",
+        "shadow": "0 1px 3px rgba(15,52,78,0.04)",
+        "padding": "16px 20px",
+        "minHeight": "88px",
+        "marginBottom": "20px",
+  
+        "icon": {
+          "type": "clipboard-check",
+          "size": "19px",
+          "color": "#1688E5",
+          "background": "#EEF7FF",
+          "containerSize": "34px",
+          "radius": "9px"
+        },
+  
+        "label": {
+          "text": "Reason for visit",
+          "fontSize": "12px",
+          "fontWeight": 600,
+          "color": "#28455E"
+        },
+  
+        "value": {
+          "text": "Tummy ache and excessive diarrhea",
+          "fontSize": "12px",
+          "fontWeight": 400,
+          "color": "#536B81",
+          "marginTop": "7px"
+        }
+      },
+  
+      "mainRecordArea": {
+        "layout": "two-column",
+        "gridTemplateColumns": "42% 58%",
+        "gap": "18px",
+        "marginBottom": "20px",
+  
+        "responsive": {
+          "desktop": "two-column",
+          "tablet": "two-column when space permits",
+          "mobile": "single-column"
+        }
+      },
+  
+      "patientInformationCard": {
+        "type": "card",
+        "background": "#FFFFFF",
+        "border": "1px solid #DDE6EF",
+        "borderRadius": "12px",
+        "shadow": "0 1px 3px rgba(15,52,78,0.04)",
+        "padding": "18px",
+  
+        "header": {
+          "icon": {
+            "type": "user",
+            "size": "18px",
+            "color": "#1688E5",
+            "background": "#EEF7FF",
+            "containerSize": "29px",
+            "radius": "8px"
+          },
+          "title": {
+            "text": "Patient information",
+            "fontSize": "13px",
+            "fontWeight": 600,
+            "color": "#183653"
+          },
+          "gap": "9px",
+          "paddingBottom": "14px",
+          "borderBottom": "1px solid #E6EDF3"
+        },
+  
+        "body": {
+          "marginTop": "12px",
+          "background": "#F7FBFE",
+          "border": "1px solid #D6E8F5",
+          "borderRadius": "10px",
+          "padding": "6px 14px"
+        },
+  
+        "fields": [
+          {
+            "label": "FULL NAME",
+            "value": "Mikey",
+            "icon": "user"
+          },
+          {
+            "label": "DATE OF BIRTH",
+            "value": "09 Jan 2000",
+            "icon": "calendar"
+          },
+          {
+            "label": "GENDER",
+            "value": "Male",
+            "icon": "user-round"
+          },
+          {
+            "label": "ADDRESS",
+            "value": "Top Town",
+            "icon": "map-pin"
+          }
+        ],
+  
+        "fieldRow": {
+          "minHeight": "57px",
+          "display": "flex",
+          "alignItems": "center",
+          "gap": "11px",
+          "borderBottom": "1px solid #E1ECF4"
+        },
+  
+        "lastFieldRow": {
+          "borderBottom": "none"
+        },
+  
+        "fieldLabel": {
+          "fontSize": "10px",
+          "fontWeight": 500,
+          "color": "#8395A6",
+          "marginBottom": "2px",
+          "textTransform": "uppercase"
+        },
+  
+        "fieldValue": {
+          "fontSize": "13px",
+          "lineHeight": "18px",
+          "fontWeight": 600,
+          "color": "#183653"
+        },
+  
+        "fieldIcon": {
+          "size": "19px",
+          "color": "#167FDB"
+        }
+      },
+  
+      "clinicalConsultationRecordCard": {
+        "type": "card",
+        "background": "#FFFFFF",
+        "border": "1px solid #DDE6EF",
+        "borderRadius": "12px",
+        "shadow": "0 1px 3px rgba(15,52,78,0.04)",
+        "padding": "18px",
+  
+        "header": {
+          "display": "flex",
+          "alignItems": "center",
+          "justifyContent": "space-between",
+  
+          "titleGroup": {
+            "display": "flex",
+            "alignItems": "center",
+            "gap": "9px"
+          },
+  
+          "icon": {
+            "type": "clipboard-list",
+            "size": "18px",
+            "color": "#1688E5",
+            "background": "#EEF7FF",
+            "containerSize": "29px",
+            "radius": "8px"
+          },
+  
+          "title": {
+            "text": "Clinical consultation record",
+            "fontSize": "13px",
+            "fontWeight": 600,
+            "color": "#183653"
+          },
+  
+          "status": {
+            "text": "Completed",
+            "fontSize": "10px",
+            "fontWeight": 600,
+            "color": "#10905D",
+            "background": "#E8F8F0",
+            "padding": "6px 11px",
+            "borderRadius": "999px"
+          }
+        },
+  
+        "meta": {
+          "text": "Finalized by Clyde Nefoti · 18 Aug 2026 · Completed 18 Aug 2026 14:23",
+          "fontSize": "10px",
+          "color": "#7B8D9E",
+          "marginTop": "4px"
+        },
+  
+        "divider": {
+          "marginTop": "12px",
+          "color": "#E6EDF3"
+        },
+  
+        "clinicalFields": [
+          {
+            "id": "chiefComplaint",
+            "label": "Chief complaint",
+            "value": "Tummy ache and excessive diarrhea",
+            "icon": "circle-alert",
+            "iconColor": "#F29A21"
+          },
+          {
+            "id": "clinicalFindings",
+            "label": "Clinical findings",
+            "value": "Fever\nneeds to wash",
+            "icon": "thermometer",
+            "iconColor": "#E45D5D"
+          },
+          {
+            "id": "diagnosis",
+            "label": "Diagnosis / assessment",
+            "value": "liver failure",
+            "icon": "clipboard-check",
+            "iconColor": "#8A5BE7"
+          },
+          {
+            "id": "treatment",
+            "label": "Treatment / advice",
+            "value": "20 pound of panadol",
+            "icon": "pill",
+            "iconColor": "#27A675"
+          },
+          {
+            "id": "notes",
+            "label": "Additional clinical notes",
+            "value": "no need for hospital visit",
+            "icon": "file-text",
+            "iconColor": "#1689E8"
+          }
+        ],
+  
+        "clinicalRow": {
+          "display": "grid",
+          "gridTemplateColumns": "22px 1fr",
+          "gap": "10px",
+          "padding": "10px 0",
+          "borderBottom": "1px solid #EDF1F4"
+        },
+  
+        "clinicalRowLast": {
+          "borderBottom": "none"
+        },
+  
+        "clinicalLabel": {
+          "fontSize": "10px",
+          "fontWeight": 500,
+          "color": "#778A9D",
+          "marginBottom": "2px"
+        },
+  
+        "clinicalValue": {
+          "fontSize": "11px",
+          "fontWeight": 500,
+          "lineHeight": "17px",
+          "color": "#40596F",
+          "whiteSpace": "pre-line"
+        },
+  
+        "clinicalIcon": {
+          "size": "17px",
+          "strokeWidth": "1.8"
+        }
+      },
+  
+      "prescriptionSection": {
+        "type": "card",
+        "background": "#FFFFFF",
+        "border": "1px solid #DDE6EF",
+        "borderRadius": "12px",
+        "shadow": "0 1px 3px rgba(15,52,78,0.04)",
+        "padding": "18px",
+  
+        "header": {
+          "icon": {
+            "type": "notebook-tabs",
+            "size": "18px",
+            "color": "#1688E5",
+            "background": "#EEF7FF",
+            "containerSize": "29px",
+            "radius": "8px"
+          },
+          "title": {
+            "text": "Prescription",
+            "fontSize": "13px",
+            "fontWeight": 600,
+            "color": "#183653"
+          }
+        },
+  
+        "emptyState": {
+          "marginTop": "12px",
+          "minHeight": "51px",
+          "background": "#F4F9FE",
+          "border": "1px solid #D8E8F5",
+          "borderRadius": "9px",
+          "padding": "0 14px",
+          "display": "flex",
+          "alignItems": "center",
+          "gap": "9px",
+  
+          "icon": {
+            "type": "info",
+            "size": "16px",
+            "color": "#1688E5"
+          },
+  
+          "text": {
+            "value": "No prescription has been issued for this consultation.",
+            "fontSize": "11px",
+            "fontWeight": 400,
+            "color": "#2782CE"
+          }
+        }
+      },
+  
+      "visualTokens": {
+        "colors": {
+          "primary": "#0787E8",
+          "primaryDark": "#104364",
+          "pageBackground": "#F7F9FC",
+          "surface": "#FFFFFF",
+          "surfaceBlue": "#F7FBFE",
+          "textPrimary": "#183653",
+          "textSecondary": "#60758B",
+          "textMuted": "#8293A5",
+          "border": "#DDE6EF",
+          "divider": "#E6EDF3",
+          "success": "#16A36A",
+          "successBackground": "#E8F8F0",
+          "infoBackground": "#EEF7FF"
+        },
+  
+        "typography": {
+          "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+          "pageTitle": "24px / 32px / 600",
+          "sectionTitle": "13px / 20px / 600",
+          "body": "12px / 18px / 400",
+          "small": "11px / 17px / 400",
+          "label": "10px / 14px / 500"
+        },
+  
+        "radius": {
+          "card": "12px",
+          "innerCard": "10px",
+          "button": "8px",
+          "iconContainer": "8px",
+          "statusPill": "999px"
+        },
+  
+        "spacing": {
+          "pageSection": "20px",
+          "columnGap": "18px",
+          "cardPadding": "18px",
+          "innerGap": "12px",
+          "fieldGap": "10px"
+        },
+  
+        "shadow": {
+          "card": "0 1px 3px rgba(15,52,78,0.04)"
+        }
+      },
+  
+      "responsiveBehavior": {
+        "desktop": {
+          "mainRecordArea": "42% / 58%",
+          "summarySection": "3 columns",
+          "prescription": "full width"
+        },
+  
+        "tablet": {
+          "mainRecordArea": "2 columns when sufficient width",
+          "summarySection": "3 columns if space permits",
+          "reduceContentPadding": true
+        },
+  
+        "mobile": {
+          "mainRecordArea": "1 column",
+          "summarySection": "1 column",
+          "stackHeaderActions": true,
+          "fullWidthCards": true,
+          "reduceCardPadding": "14px"
+        }
+      },
+  
+      "implementationRules": {
+        "scopeRestriction": "These styles apply ONLY to the Consultation Record page.",
+        "reuseExistingGlobalShell": true,
+        "doNotModifyGlobalSidebar": true,
+        "doNotModifyGlobalTopbar": true,
+        "doNotModifyOtherPages": true,
+  
+        "rules": [
+          "Do not introduce page-specific colors outside the defined color tokens.",
+          "Do not introduce gradients.",
+          "Do not use heavy shadows.",
+          "Do not use excessive pill-shaped elements.",
+          "Do not create oversized typography.",
+          "Do not create large empty areas inside clinical cards.",
+          "Keep patient information and clinical consultation information visually distinct.",
+          "Keep the completed status immediately visible.",
+          "Clinical information should be scannable row-by-row.",
+          "Use consistent outline icons.",
+          "Preserve read-only visual treatment for completed historical data.",
+          "Maintain strong alignment between cards.",
+          "Do not redesign unrelated TeleHealth pages when implementing this specification."
+        ]
+      },
+  
+      "cursorPrompt": {
+        "instruction": "Use this JSON as the ONLY design reference when modifying the Consultation Record page. Recreate the page using the exact visual hierarchy, spacing, typography, colors, card structure, clinical information grouping, and responsive behavior defined here. Do not apply this design system globally. Do not modify the application's existing sidebar, top navigation, authentication UI, dashboard, appointments page, availability page, profile page, or settings page. Only improve the Consultation Record page."
+      }
+    }
+  }

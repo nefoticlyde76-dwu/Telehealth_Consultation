@@ -7,7 +7,7 @@ use App\Models\ConsultationRequest;
 
 class AdminConsultationService
 {
-    public const PER_PAGE = 10;
+    public const PER_PAGE = 20;
 
     public static function getDashboardSummary(): array
     {
@@ -56,21 +56,46 @@ class AdminConsultationService
 
     public static function getManagementPageData(array $query): array
     {
-        $page = max(1, (int) ($query['page'] ?? 1));
         $filters = self::normalizeFilters($query);
-        $totalItems = ConsultationRequest::countForAdmin($filters);
-        $totalPages = max(1, (int) ceil($totalItems / self::PER_PAGE));
+        $queueIds = ConsultationRequest::findQueueIdsForAdmin($filters);
+        $totalItems = count($queueIds);
+        $totalPages = max(1, (int) ceil(max($totalItems, 1) / self::PER_PAGE));
+        $selectedId = (int) ($query['selected'] ?? 0);
+        $page = max(1, (int) ($query['page'] ?? 1));
+        $position = 0;
 
-        if ($page > $totalPages) {
-            $page = $totalPages;
+        $queueIndex = $selectedId > 0 ? array_search($selectedId, $queueIds, true) : false;
+        if ($queueIndex !== false) {
+            $page = (int) ceil(($queueIndex + 1) / self::PER_PAGE);
+            $position = $queueIndex + 1;
+        } else {
+            if ($page > $totalPages) {
+                $page = $totalPages;
+            }
+            if ($selectedId <= 0 && $queueIds !== []) {
+                $pageOffset = ($page - 1) * self::PER_PAGE;
+                $selectedId = (int) ($queueIds[$pageOffset] ?? $queueIds[0]);
+                $queueIndex = array_search($selectedId, $queueIds, true);
+                if ($queueIndex !== false) {
+                    $page = (int) ceil(($queueIndex + 1) / self::PER_PAGE);
+                    $position = $queueIndex + 1;
+                }
+            }
         }
 
         $offset = ($page - 1) * self::PER_PAGE;
+        $requests = ConsultationRequest::findForAdmin($filters, self::PER_PAGE, $offset);
+        $selectedRequest = $selectedId > 0
+            ? ConsultationRequest::findByIdForAdmin($selectedId)
+            : null;
 
         return [
             'filters' => $filters,
-            'requests' => ConsultationRequest::findForAdmin($filters, self::PER_PAGE, $offset),
-            'summary' => ConsultationRequest::getAdminStatusSummary(),
+            'requests' => $requests,
+            'selectedId' => $selectedId,
+            'selectedRequest' => $selectedRequest,
+            'queuePosition' => $position,
+            'summary' => self::getWorkspaceSummary(),
             'pagination' => [
                 'current_page' => $page,
                 'per_page' => self::PER_PAGE,
@@ -78,9 +103,61 @@ class AdminConsultationService
                 'total_pages' => $totalPages,
             ],
             'statusOptions' => self::getStatusOptions(),
-            'patientOptions' => ConsultationRequest::getPatientOptionsForAdmin(),
             'doctorOptions' => ConsultationRequest::getDoctorOptionsForAdmin(),
         ];
+    }
+
+    public static function getWorkspaceSummary(): array
+    {
+        $summary = ConsultationRequest::getAdminStatusSummary();
+        $summary['today_requests'] = ConsultationRequest::countTodayPendingForAdmin();
+
+        return $summary;
+    }
+
+    /**
+     * @param list<int> $orderedIds
+     */
+    public static function nextQueueRequestId(array $orderedIds, int $currentId): ?int
+    {
+        $orderedIds = array_values(array_map('intval', $orderedIds));
+        $index = array_search($currentId, $orderedIds, true);
+        if ($index === false) {
+            return $orderedIds[0] ?? null;
+        }
+
+        $next = $orderedIds[$index + 1] ?? null;
+
+        return $next !== null && $next > 0 ? $next : null;
+    }
+
+    public static function workspacePath(array $filters, ?int $selectedId = null, int $page = 1): string
+    {
+        $query = array_filter([
+            'search' => (string) ($filters['search'] ?? ''),
+            'status' => (string) ($filters['status'] ?? ''),
+            'doctor_id' => (int) ($filters['doctor_id'] ?? 0) > 0 ? (int) $filters['doctor_id'] : '',
+            'consultation_date' => (string) ($filters['consultation_date'] ?? ''),
+            'page' => $page > 1 ? $page : '',
+            'selected' => $selectedId !== null && $selectedId > 0 ? $selectedId : '',
+        ], static fn ($value) => $value !== '' && $value !== 0);
+
+        $queryString = http_build_query($query);
+        if (!array_key_exists('status', $query)) {
+            $query['status'] = (string) ($filters['status'] ?? 'Pending');
+            $queryString = http_build_query($query);
+        }
+
+        return '/admin/consultation-requests' . ($queryString !== '' ? '?' . $queryString : '');
+    }
+
+    public static function pageForQueueIndex(int $positionFromOne): int
+    {
+        if ($positionFromOne <= 0) {
+            return 1;
+        }
+
+        return (int) ceil($positionFromOne / self::PER_PAGE);
     }
 
     public static function getConsultationDetail(int $requestId): ?array
@@ -139,7 +216,7 @@ class AdminConsultationService
         ];
     }
 
-    private static function normalizeFilters(array $query): array
+    public static function normalizeFilters(array $query): array
     {
         $search = trim((string) ($query['search'] ?? ''));
         $status = trim((string) ($query['status'] ?? ''));
@@ -147,7 +224,9 @@ class AdminConsultationService
         $doctorId = (int) ($query['doctor_id'] ?? 0);
         $consultationDate = trim((string) ($query['consultation_date'] ?? ''));
 
-        if (!in_array($status, self::getStatusOptions(), true)) {
+        if (!array_key_exists('status', $query)) {
+            $status = 'Pending';
+        } elseif (!in_array($status, self::getStatusOptions(), true)) {
             $status = '';
         }
 
@@ -179,7 +258,7 @@ class AdminConsultationService
                 [
                     'title' => 'No consultation workflow activity yet',
                     'description' => 'Consultation requests will appear here once patients begin booking available appointments.',
-                    'meta' => 'Week 5 workflow ready',
+                    'meta' => 'Consultation requests',
                 ],
             ];
         }

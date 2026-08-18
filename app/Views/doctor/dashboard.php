@@ -26,27 +26,22 @@ $doctorToday = $nowDt->format('l, d F Y');
 $doctorCurrentTime = $nowDt->format('g:i A');
 $bookedToday = (int) ($todaySummary['booked_today_slots'] ?? 0);
 $openToday = (int) ($todaySummary['available_today_slots'] ?? 0);
-$shiftStatus = 'On Shift';
-if ($bookedToday > 0 && $openToday === 0) { $shiftStatus = 'Full Today'; }
-elseif ($bookedToday === 0 && $openToday > 0) { $shiftStatus = 'Accepting Bookings'; }
-elseif ($bookedToday === 0 && $openToday === 0) { $shiftStatus = 'No Availability Today'; }
+$shiftStatus = 'Availability not set for today';
+if ($bookedToday > 0 && $openToday === 0) { $shiftStatus = 'No open slots remaining today'; }
+elseif ($bookedToday === 0 && $openToday > 0) { $shiftStatus = 'Open slots available today'; }
+elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations scheduled today'; }
 ?>
 
 <div class="ux-welcome ux-welcome--doctor">
-  <span class="ux-welcome__corner-tick ux-welcome__corner-tick--tr"></span>
-  <span class="ux-welcome__corner-tick ux-welcome__corner-tick--br"></span>
-  <span class="ux-welcome__sweep"></span>
-  <span class="ux-welcome__sweep ux-welcome__sweep--b"></span>
-
   <div class="ux-welcome__grid">
     <div>
       <ol class="ux-welcome__breadcrumb">
         <li><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
         <li class="active">Doctor Dashboard</li>
       </ol>
-      <span class="ux-welcome__eyebrow">Clinical Workspace · Today's Schedule</span>
+      <span class="ux-welcome__eyebrow">MBPHA TeleHealth</span>
       <h1 class="ux-welcome__title">Doctor Dashboard</h1>
-      <p class="ux-welcome__description">Your clinical workspace. Prepare for today's appointments, maintain your schedule, and review incoming consultation requests.</p>
+      <p class="ux-welcome__description">Review today's appointments, keep your availability current, and join consultations when they are due.</p>
 
       <div class="ux-welcome__meta-pill-row">
         <span class="ux-welcome__meta-pill">
@@ -54,16 +49,8 @@ elseif ($bookedToday === 0 && $openToday === 0) { $shiftStatus = 'No Availabilit
           <span><?= \App\Helpers\Helper::escape($doctorToday) ?></span>
         </span>
         <span class="ux-welcome__meta-pill">
-          <i class="bi bi-clock"></i>
-          <span><?= \App\Helpers\Helper::escape($doctorCurrentTime) ?></span>
-        </span>
-        <span class="ux-welcome__meta-pill">
           <i class="bi bi-clipboard2-pulse"></i>
-          <span><?= \App\Helpers\Helper::escape((string) $bookedToday) ?> booked today · <?= \App\Helpers\Helper::escape((string) $openToday) ?> open slot<?= $openToday === 1 ? '' : 's' ?></span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-person-check"></i>
-          <span><?= \App\Helpers\Helper::escape((string) $doctorStats['Approved']) ?> upcoming approved</span>
+          <span><?= \App\Helpers\Helper::escape((string) $bookedToday) ?> booked · <?= \App\Helpers\Helper::escape((string) $openToday) ?> open</span>
         </span>
         <span class="ux-welcome__meta-pill">
           <i class="bi bi-activity"></i>
@@ -123,7 +110,7 @@ elseif ($bookedToday === 0 && $openToday === 0) { $shiftStatus = 'No Availabilit
             <div class="ux-empty py-5 text-center">
               <div class="ux-empty__icon mx-auto mb-3"><i class="bi bi-calendar2-x"></i></div>
               <h4 class="h6 mb-2">No approved appointments scheduled today.</h4>
-              <p class="text-muted mb-4">Enjoy a clear schedule, or manage availability to add new capacity.</p>
+              <p class="text-muted mb-4">No consultations are scheduled for this view. Add availability if patients should be able to book you.</p>
               <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-primary btn-sm">Create Availability Slot</a>
             </div>
           <?php else: ?>

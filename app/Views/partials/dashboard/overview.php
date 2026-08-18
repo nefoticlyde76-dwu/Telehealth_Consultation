@@ -5,21 +5,21 @@ $primaryAction = $quickActions[0] ?? null;
 $secondaryAction = $quickActions[1] ?? null;
 $spotlightStats = array_slice($stats ?? [], 0, 3);
 $activityHeading = 'Recent Activity';
-$activityDescription = 'Role-specific visibility prepared for future modules.';
-$activityBadge = 'Live when data is available';
+$activityDescription = 'Updates related to this account.';
+$activityBadge = 'Current';
 
 if (($dashboardRole ?? '') === 'admin') {
     $activityHeading = 'Recent System Activity';
-    $activityDescription = 'Operational signals and account-level changes in the administration workspace.';
-    $activityBadge = 'Governance feed';
+    $activityDescription = 'Account and consultation changes that need administrative attention.';
+    $activityBadge = 'Operations';
 } elseif (($dashboardRole ?? '') === 'doctor') {
     $activityHeading = 'Consultation Overview';
-    $activityDescription = 'Clinician-facing updates tied to schedule readiness and profile completion.';
-    $activityBadge = 'Clinical workspace';
+    $activityDescription = 'Schedule readiness and assigned consultations.';
+    $activityBadge = 'Clinic';
 } elseif (($dashboardRole ?? '') === 'patient') {
-    $activityHeading = 'Notifications';
-    $activityDescription = 'Patient-friendly updates about browsing, availability visibility, and next module readiness.';
-    $activityBadge = 'Patient updates';
+    $activityHeading = 'Your consultations';
+    $activityDescription = 'Booking status and next appointment details.';
+    $activityBadge = 'Appointments';
 }
 ?>
 
@@ -40,7 +40,7 @@ if (($dashboardRole ?? '') === 'admin') {
           </span>
           <h2 class="h3 mb-3">Welcome back, <?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?>.</h2>
           <p class="text-muted mb-0">
-            <?= \App\Helpers\Helper::escape($welcomeMessage ?? 'Your role-specific workspace is ready.') ?>
+            <?= \App\Helpers\Helper::escape($welcomeMessage ?? 'Continue from your dashboard.') ?>
           </p>
         </div>
       </div>
@@ -65,8 +65,8 @@ if (($dashboardRole ?? '') === 'admin') {
         <div class="dashboard-spotlight-header">
           <div>
             <span class="dashboard-spotlight-label">Current Focus</span>
-            <strong class="d-block mb-2"><?= \App\Helpers\Helper::escape($focusTitle ?? 'Platform readiness') ?></strong>
-            <p class="mb-0 text-muted small"><?= \App\Helpers\Helper::escape($focusDescription ?? 'Additional data will appear as more modules become active.') ?></p>
+            <strong class="d-block mb-2"><?= \App\Helpers\Helper::escape($focusTitle ?? 'Next steps') ?></strong>
+            <p class="mb-0 text-muted small"><?= \App\Helpers\Helper::escape($focusDescription ?? 'Use the actions on this page to continue.') ?></p>
           </div>
           <span class="badge badge-soft-success rounded-pill">Live Workspace</span>
         </div>
@@ -102,7 +102,7 @@ if (($dashboardRole ?? '') === 'admin') {
               <i class="bi <?= \App\Helpers\Helper::escape($stat['icon'] ?? 'bi-graph-up') ?>"></i>
             </span>
           </div>
-          <span class="stats-pill">Updated for this workspace</span>
+          <span class="stats-pill">Current</span>
           <p class="text-muted mb-0 small"><?= \App\Helpers\Helper::escape($stat['description'] ?? '') ?></p>
         </div>
       </div>
@@ -116,8 +116,8 @@ if (($dashboardRole ?? '') === 'admin') {
       <div class="card-body p-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
           <div>
-            <h3 class="h5 mb-1">Administrator Governance Snapshot</h3>
-            <p class="text-muted mb-0">Week 3 administration controls for patient oversight, clinician onboarding, and secure account maintenance.</p>
+            <h3 class="h5 mb-1">Accounts overview</h3>
+            <p class="text-muted mb-0">Doctor and patient accounts currently registered in the service.</p>
           </div>
           <div class="d-flex flex-wrap gap-2">
             <a href="<?= \App\Helpers\Helper::url('/admin/patients') ?>" class="btn btn-outline-primary rounded-pill px-4">

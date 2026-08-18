@@ -82,7 +82,7 @@ class DailyService
 
         $payload = [
             'name'       => $roomName,
-            'privacy'    => 'public',
+            'privacy'    => 'private',
             'properties' => [
                 'max_participants'      => self::DEFAULT_MAX_PARTICIPANTS,
                 'enable_chat'           => false,

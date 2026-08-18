@@ -7,6 +7,7 @@ $brandLink = $brandLink ?? \App\Helpers\Helper::url('/');
 $brandAlt = $brandAlt ?? 'MBPHA TeleHealth logo';
 $brandImageClass = $brandImageClass ?? '';
 $brandShowTitle = $brandShowTitle ?? false;
+$brandShowWordmark = $brandShowWordmark ?? false;
 ?>
 
 <a href="<?= \App\Helpers\Helper::escape($brandLink) ?>" class="brand-lockup brand-lockup-<?= \App\Helpers\Helper::escape($brandVariant) ?> text-decoration-none d-inline-flex align-items-center gap-3">
@@ -18,7 +19,12 @@ $brandShowTitle = $brandShowTitle ?? false;
     >
   </span>
 
-  <?php if ($brandShowTitle || $brandSubtitle !== '' || $brandRoleLabel !== ''): ?>
+  <?php if ($brandShowWordmark): ?>
+    <span class="brand-wordmark">
+      <span class="brand-wordmark__primary">TeleHealth</span>
+      <span class="brand-wordmark__secondary">PNG</span>
+    </span>
+  <?php elseif ($brandShowTitle || $brandSubtitle !== '' || $brandRoleLabel !== ''): ?>
     <span class="brand-copy">
       <?php if ($brandShowTitle): ?>
         <span class="brand-title d-block">MBPHA TeleHealth</span>

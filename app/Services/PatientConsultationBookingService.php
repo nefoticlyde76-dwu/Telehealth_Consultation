@@ -187,6 +187,15 @@ class PatientConsultationBookingService
                 );
             }
 
+            if (ConsultationRequest::hasActiveRequestForAvailability($availabilityId)) {
+                return self::failTransaction(
+                    $db,
+                    'This consultation slot is already reserved. Please choose another time.',
+                    $availabilityId,
+                    $formData
+                );
+            }
+
             $doctorId = (int) ($slotRow['doctor_id'] ?? 0);
 
             if ($doctorId <= 0) {

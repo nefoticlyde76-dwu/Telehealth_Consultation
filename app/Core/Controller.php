@@ -27,9 +27,29 @@ class Controller
     }
 
     /**
+     * Verify a CSRF token on JSON endpoints. Returns false after emitting
+     * a 419 response when the token is missing or invalid.
+     */
+    protected function requireJsonCsrf(): bool
+    {
+        $token = (string) ($_POST['_token'] ?? '');
+        if (Csrf::verify($token)) {
+            return true;
+        }
+
+        $this->jsonResponse([
+            'ok'      => false,
+            'code'    => 'invalid_csrf',
+            'message' => 'Security token expired or is invalid. Please refresh the page and try again.',
+        ], 419);
+
+        return false;
+    }
+
+    /**
      * Emit a JSON response with an explicit HTTP status code.
      *
-     * Used by Week 6 video consultation join-token endpoints (and any
+     * Used by video consultation join-token endpoints (and any
      * future API-style routes) instead of mixing echo statements inside
      * controller methods directly.
      *

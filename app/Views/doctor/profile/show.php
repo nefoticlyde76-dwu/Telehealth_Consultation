@@ -127,7 +127,7 @@ $statusMessage = $statusMessage ?? null;
               </div>
             <?php endif; ?>
 
-            <p class="text-muted small mb-0 mt-3">Your signature will be used in future consultation records and prescription workflows once those modules are activated.</p>
+        <p class="text-muted small mb-0 mt-3">Your signature is attached automatically when you issue a prescription. Another doctor's signature cannot be used.</p>
           </div>
         </div>
       </div>

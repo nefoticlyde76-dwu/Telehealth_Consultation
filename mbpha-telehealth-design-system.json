@@ -1,0 +1,251 @@
+{
+  "$schema": "design-system-profile-v1",
+  "name": "MBPHA TeleHealth Dashboard Design System",
+  "description": "Extracted visual/structural design language from a healthcare admin dashboard UI, for use as AI context to replicate consistent screens. Content values (names, dates, records) are intentionally excluded — this profile describes STYLE and STRUCTURE only.",
+
+  "designStyle": {
+    "category": "Enterprise healthcare admin dashboard / SaaS console",
+    "mood": ["clean", "clinical-trustworthy", "professional", "data-dense but organized", "corporate-friendly"],
+    "visualPrinciples": [
+      "High information density achieved through card-based modular grouping rather than dense tables alone",
+      "Strong left-hand persistent navigation (dark) contrasted against a light content canvas",
+      "Consistent card metaphor: every functional block (stats, lists, calendar, charts, forms) is a white rounded rectangle with a subtle border/shadow",
+      "Color is used functionally (status, category) far more than decoratively",
+      "Generous whitespace between cards but fairly compact whitespace within cards to maximize scannable data",
+      "Rounded corners throughout (soft-geometric, not sharp, not fully pill except badges/buttons)",
+      "Minimal iconography, line-style icons, used as small functional markers not decoration",
+      "Flat design with very subtle elevation (soft shadows), no skeuomorphism, no gradients except optional hero banner image"
+    ]
+  },
+
+  "colorPalette": {
+    "brand": {
+      "primaryNavy": "#0F2544",
+      "primaryNavyDark": "#0B1B33",
+      "accentBlue": "#2563EB",
+      "accentBlueHover": "#1D4ED8",
+      "logoTeal": "#0EA5A0"
+    },
+    "neutrals": {
+      "canvasBackground": "#F4F6F9",
+      "cardBackground": "#FFFFFF",
+      "borderSubtle": "#E5E9F0",
+      "borderStrong": "#D1D9E6",
+      "textPrimary": "#111827",
+      "textSecondary": "#6B7280",
+      "textMuted": "#9CA3AF",
+      "sidebarTextInactive": "#B9C4D6",
+      "sidebarTextActive": "#FFFFFF"
+    },
+    "status": {
+      "success": { "bg": "#DCFCE7", "text": "#16A34A", "dot": "#22C55E" },
+      "warning": { "bg": "#FEF3C7", "text": "#D97706", "dot": "#F59E0B" },
+      "info": { "bg": "#DBEAFE", "text": "#2563EB", "dot": "#3B82F6" },
+      "danger": { "bg": "#FEE2E2", "text": "#DC2626", "dot": "#EF4444" },
+      "neutralPill": { "bg": "#F1F5F9", "text": "#64748B", "dot": "#94A3B8" }
+    },
+    "dataViz": {
+      "donutSlices": ["#22C55E", "#3B82F6", "#F59E0B", "#94A3B8"],
+      "lineChartStroke": "#3B82F6",
+      "lineChartFill": "rgba(37,99,235,0.08)",
+      "gridLines": "#EEF1F6"
+    },
+    "usageRules": [
+      "Navy (#0F2544) reserved for sidebar/nav chrome only — never used as a content background",
+      "Accent blue reserved for primary actions, active nav states, links, and 'info/video' status chips",
+      "Green = confirmed/available/success; Amber = pending/warning; Red = cancelled/blocked/expired; Gray = neutral/inactive",
+      "Status color always paired: light tint background + saturated text, never solid-fill unless it's a dot/icon"
+    ]
+  },
+
+  "typography": {
+    "fontFamily": "System sans-serif (e.g. Inter, 'Segoe UI', -apple-system, Roboto)",
+    "scale": {
+      "pageTitle": { "size": "24-28px", "weight": 700, "color": "textPrimary" },
+      "pageSubtitle": { "size": "13-14px", "weight": 400, "color": "textSecondary" },
+      "cardTitle": { "size": "15-16px", "weight": 600, "color": "textPrimary" },
+      "statValue": { "size": "26-30px", "weight": 700, "color": "textPrimary" },
+      "statLabel": { "size": "12-13px", "weight": 500, "color": "textSecondary" },
+      "bodyText": { "size": "13-14px", "weight": 400, "color": "textPrimary" },
+      "tableHeader": { "size": "11-12px", "weight": 600, "color": "textSecondary", "transform": "none or uppercase-light" },
+      "tableCell": { "size": "13px", "weight": 400, "color": "textPrimary" },
+      "navItem": { "size": "13-14px", "weight": 500 },
+      "badge": { "size": "11-12px", "weight": 600 },
+      "caption": { "size": "11-12px", "weight": 400, "color": "textMuted" }
+    },
+    "principles": [
+      "Clear 3-tier hierarchy: page title > card title > body/table text",
+      "Numbers (stats, prices, counts) are visually heavier (bold) than their labels",
+      "No decorative fonts; readability and density prioritized"
+    ]
+  },
+
+  "layout": {
+    "gridStructure": "12-column responsive grid inside a fixed-sidebar shell",
+    "shell": {
+      "sidebar": {
+        "position": "fixed-left",
+        "width": "240-260px",
+        "background": "primaryNavy",
+        "sections": ["logo/brand block", "primary nav group (Dashboard, Availability, Appointments, Requests, Records, Prescriptions, Patients)", "secondary nav group under 'ACCOUNT' label (Profile, Settings, Logout)", "user identity footer card (avatar, name, role, online status)"],
+        "activeStateStyle": "solid accentBlue rounded rectangle behind item, white text, left content indent",
+        "inactiveStateStyle": "transparent bg, muted light-blue-gray text, icon+label horizontal"
+      },
+      "topbar": {
+        "height": "64-72px",
+        "background": "cardBackground",
+        "contents": ["hamburger/collapse icon", "global search input (pill/rounded, icon-left)", "current date/time text", "notification bell with count badge", "user avatar + name + role dropdown"]
+      },
+      "contentCanvas": {
+        "background": "canvasBackground",
+        "padding": "20-24px",
+        "columnGap": "16-20px",
+        "rowGap": "16-20px"
+      }
+    },
+    "commonPageComposition": [
+      "1. Greeting/header hero banner (optional) — gradient or photo card with welcome text",
+      "2. Row of 4 KPI stat cards (icon, big number, label, link)",
+      "3. Two-column split: primary list/table card (wider) + secondary list card (narrower)",
+      "4. Secondary row: chart/graph card + summary/breakdown card (e.g. donut)",
+      "5. Full-width or grid of management cards (tables) for record-type pages",
+      "6. Detail/profile pages use a left-nav-tab + right-content two-pane layout inside the card"
+    ]
+  },
+
+  "componentPatterns": {
+    "card": {
+      "background": "#FFFFFF",
+      "borderRadius": "12-16px",
+      "border": "1px solid borderSubtle",
+      "shadow": "0 1px 2px rgba(16,24,40,0.04), 0 1px 3px rgba(16,24,40,0.06)",
+      "padding": "16-20px",
+      "header": "title (left) + optional action link/button (right), separated by bottom border or spacing before body"
+    },
+    "statCard": {
+      "layout": "icon chip (top-left, tinted colored square/circle) + label + large bold value + optional trailing chevron link",
+      "variants": "one accent color per card (blue, green, purple/indigo, amber) used only for the icon chip"
+    },
+    "table": {
+      "style": "borderless rows separated by thin divider lines, no zebra striping",
+      "headerRow": "muted gray uppercase-light text, no background fill",
+      "cellPadding": "10-14px vertical, 12-16px horizontal",
+      "avatarColumn": "small circular avatar + name stacked or inline with meta text below",
+      "statusColumn": "pill/chip badge, rounded-full, tinted background",
+      "actionsColumn": "icon buttons (view/edit/delete) right-aligned, ghost style"
+    },
+    "badgePill": {
+      "shape": "fully rounded (pill)",
+      "padding": "2-4px vertical, 8-10px horizontal",
+      "fontWeight": 600,
+      "fontSize": "11-12px",
+      "colorRule": "tinted bg matching status semantic + matching darker text color, no border"
+    },
+    "button": {
+      "primary": { "bg": "accentBlue", "text": "#FFFFFF", "radius": "8-10px", "padding": "8-10px 16px", "weight": 600 },
+      "secondary": { "bg": "transparent/white", "border": "1px solid borderStrong", "text": "textPrimary", "radius": "8-10px" },
+      "iconButton": { "shape": "circular or 8px rounded square", "bg": "#F1F5F9 or transparent", "size": "32-36px" },
+      "danger": { "bg": "#DC2626 or tinted red", "text": "#FFFFFF or #DC2626" }
+    },
+    "quickActionButton": {
+      "layout": "icon (top or left) + label, in a light-bordered rounded rectangle, grid of 2-4 within a card",
+      "hoverAffordance": "subtle bg tint or border color change"
+    },
+    "calendar": {
+      "layout": "month grid, 7-column, header with month/year + prev/next chevrons",
+      "dayCell": "square/rounded-square, number centered",
+      "states": {
+        "selected": "solid accentBlue fill, white text",
+        "today": "outline or bold text",
+        "hasEvent": "small colored dot beneath number",
+        "muted": "adjacent-month days shown at reduced opacity"
+      },
+      "legend": "row of colored dot + label chips beneath grid (e.g. Available/Booked/Expired/Blocked)"
+    },
+    "scheduleGrid": {
+      "layout": "day-of-week columns x time-slot rows, each cell a small rounded status chip (Available/Booked/Expired) color-coded",
+      "purpose": "availability/slot visualization distinct from the month calendar"
+    },
+    "donutChart": {
+      "style": "multi-segment ring chart, thick stroke, rounded segment caps optional",
+      "centerLabel": "big total number + small caption stacked, centered inside ring",
+      "legend": "right-aligned or below, dot + label + value/percentage"
+    },
+    "lineAreaChart": {
+      "style": "smooth curved single-line chart with soft gradient fill beneath, light dot markers on hover/points, faint horizontal gridlines, axis labels in muted gray",
+      "controls": "top-right dropdown/segmented control for date-range filter (e.g. 'Last 7 Days')"
+    },
+    "formInputs": {
+      "textInput": { "radius": "8-10px", "border": "1px solid borderStrong", "padding": "8-10px 12px", "labelPosition": "above, small semi-bold gray label" },
+      "select": "same container style as text input with chevron icon right",
+      "toggleTabs": "segmented pill control for switching sub-sections (e.g. Personal Info / Professional Info / Documents)"
+    },
+    "profileHeaderBlock": {
+      "layout": "circular avatar (left) + name/ID/meta stacked (center) + key-value summary chips (right)",
+      "usage": "used atop patient/doctor detail pages"
+    },
+    "settingsPanel": {
+      "layout": "left vertical tab list (icon+label, active = tinted rounded rect) + right form panel with grouped fields and a primary Save button bottom-right"
+    },
+    "videoCallInterface": {
+      "layout": "large primary video tile filling most of the card, small self-view thumbnail inset (bottom or corner), side panel with participant/patient info card, bottom-centered floating control bar",
+      "controlBar": "dark rounded pill/bar containing circular icon buttons (mute, video, share, chat, more) + a distinct red 'end call' pill button",
+      "statusIndicator": "small colored dot + text top-left of video tile (e.g. connection quality)"
+    },
+    "notificationBell": {
+      "style": "icon button with small red count badge, top-right corner overlap"
+    },
+    "sidebarUserFooter": {
+      "layout": "avatar + name + role/title stacked, small colored online-status dot, sits pinned at sidebar bottom"
+    }
+  },
+
+  "iconography": {
+    "style": "outline/line icons, 18-22px, consistent stroke width",
+    "usage": "paired with nav labels, stat card chips, table actions, top feature badges (Secure/Comprehensive/Patient-Centered/Real-time/Professional)"
+  },
+
+  "spacingAndRadius": {
+    "baseUnit": "4px",
+    "commonGaps": ["8px", "12px", "16px", "20px", "24px"],
+    "borderRadiusScale": {
+      "small": "6-8px (inputs, small chips)",
+      "medium": "10-12px (buttons, table cells)",
+      "large": "12-16px (cards)",
+      "pill": "9999px (badges, avatars, status dots)"
+    }
+  },
+
+  "elevationAndDepth": {
+    "principle": "Elevation communicated primarily through borders + very soft shadows, not heavy drop shadows",
+    "levels": [
+      "level0-flat: sidebar/topbar (border only, no shadow)",
+      "level1-card: subtle 1-3px soft shadow + hairline border",
+      "level2-modal/dropdown/popover: slightly stronger shadow, same border style"
+    ]
+  },
+
+  "responsiveNotes": [
+    "Multi-card dashboard collapses from 4-column KPI row to 2-column then 1-column on smaller viewports",
+    "Sidebar collapses to icon-only or off-canvas with hamburger toggle on mobile/tablet",
+    "Tables convert to stacked card-per-row pattern on narrow screens",
+    "Two-pane detail views (nav tabs + content) stack vertically on mobile"
+  ],
+
+  "brandingElements": {
+    "logo": "circular badge icon (medical/shield motif) + two-tone wordmark: bold navy primary word + teal secondary word beneath",
+    "topFeatureStrip": "row of 4-5 minimal icon+label trust badges (e.g. Secure, Comprehensive, Patient-Centered, Real-time, Professional) used on hero/landing-style headers"
+  },
+
+  "aiReplicationGuidance": {
+    "instructions": [
+      "When generating new screens, always start from the fixed sidebar + topbar shell defined in layout.shell before laying out page content.",
+      "Every distinct data grouping must be wrapped in the 'card' component pattern — never place raw tables or stats directly on the canvas background.",
+      "Use the color palette strictly by role: navy for chrome, blue for primary actions/active states, status colors only for semantic meaning (never decorative).",
+      "Default to rounded-corner, low-shadow, high-whitespace styling consistent with 'designStyle.visualPrinciples'.",
+      "Reuse componentPatterns as a library: prefer composing existing patterns (statCard, table, badgePill, quickActionButton, donutChart, lineAreaChart) over inventing new visual idioms.",
+      "Keep typography hierarchy consistent per typography.scale across all new pages for visual continuity.",
+      "This file intentionally omits example data (names, dates, numbers) — populate with the target application's real domain data at generation time."
+    ]
+  }
+}

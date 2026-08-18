@@ -33,7 +33,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
         <li class="active">Consultations</li>
       </ol>
       <h2 class="ux-page-header__title">My Consultations</h2>
-      <p class="ux-page-header__subtitle">Track upcoming appointments, review chief complaints, join video rooms, and mark consultations as completed.</p>
+      <p class="ux-page-header__subtitle">Track upcoming appointments, review chief complaints, join video rooms, and complete consultations after documenting clinical notes.</p>
     </div>
     <div class="ux-page-header__right">
       <span class="ux-chip ux-badge--dotless">
@@ -141,19 +141,20 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               <th scope="col">Time</th>
               <th scope="col">Chief Complaint</th>
               <th scope="col">Status</th>
+              <th scope="col">Prescription</th>
               <th scope="col" class="text-end">Action</th>
             </tr>
           </thead>
           <tbody>
             <?php if ($consultations === []): ?>
               <tr>
-                <td colspan="6" class="ux-table__empty-state">
+                <td colspan="7" class="ux-table__empty-state">
                   <div class="ux-empty">
                     <div class="ux-empty__icon">
                       <i class="bi bi-clipboard2-x"></i>
                     </div>
                     <h4 class="ux-empty__title">No consultations matched the current filters</h4>
-                    <p class="ux-empty__text">Approved and completed consultations will appear here as the workflow progresses.</p>
+                    <p class="ux-empty__text">Approved and completed consultations will appear here.</p>
                     <div class="ux-empty__action">
                       <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-arrow-clockwise me-1"></i>
@@ -170,7 +171,13 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                 $statusBadge = ux_status_badge_class($status);
                 $dateLabel = \App\Helpers\Helper::formatDate((string) ($consultation['consultation_date'] ?? ''), 'd M Y', 'Not available');
                 $timeLabel = substr((string) ($consultation['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($consultation['end_time'] ?? ''), 0, 5);
-                $canComplete = $status === 'Approved' && (string) ($consultation['consultation_date'] ?? '') !== '' && (string) ($consultation['consultation_date'] ?? '') <= date('Y-m-d');
+                $canComplete = $status === 'Approved';
+                $isCompleted = $status === 'Completed';
+                $hasPrescription = (int) ($consultation['has_prescription'] ?? 0) === 1;
+                $consultationId = (int) ($consultation['id'] ?? 0);
+                $consultationRoomUrl = \App\Helpers\Helper::url('/doctor/consultations/' . (string) $consultationId . '/room');
+                $consultationRecordUrl = \App\Helpers\Helper::url('/doctor/consultations/' . (string) $consultationId);
+                $prescriptionUrl = \App\Helpers\Helper::url('/doctor/consultations/' . (string) $consultationId . '/prescription');
 
                 $videoJoin = $consultation['videoJoin'] ?? null;
                 $joinUrl    = is_array($videoJoin) ? (string) ($videoJoin['joinUrl'] ?? '') : '';
@@ -198,6 +205,15 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     <span class="ux-badge <?= $statusBadge ?>">
                       <?= \App\Helpers\Helper::escape($status) ?>
                     </span>
+                  </td>
+                  <td>
+                    <?php if ($hasPrescription): ?>
+                      <span class="ux-badge ux-badge--approved">Issued</span>
+                    <?php elseif ($isCompleted): ?>
+                      <span class="text-muted small">Not issued</span>
+                    <?php else: ?>
+                      <span class="text-muted small">—</span>
+                    <?php endif; ?>
                   </td>
                   <td class="text-end">
                     <div class="ux-table__actions">
@@ -230,12 +246,19 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                       <?php endif; ?>
 
                       <?php if ($canComplete): ?>
-                        <form method="POST" action="<?= \App\Helpers\Helper::url('/doctor/consultations/' . (string) ((int) ($consultation['id'] ?? 0)) . '/complete') ?>" class="d-inline">
-                          <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-                          <button type="submit" class="btn btn-outline-primary btn-sm">
-                            Mark Completed
-                          </button>
-                        </form>
+                        <a href="<?= \App\Helpers\Helper::escape($consultationRoomUrl) ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="bi bi-clipboard2-pulse me-1"></i>
+                          Review &amp; complete
+                        </a>
+                      <?php elseif ($isCompleted): ?>
+                        <a href="<?= \App\Helpers\Helper::escape($consultationRecordUrl) ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="bi bi-clipboard2-pulse me-1"></i>
+                          View Record
+                        </a>
+                        <a href="<?= \App\Helpers\Helper::escape($prescriptionUrl) ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="bi bi-capsule me-1"></i>
+                          <?= $hasPrescription ? 'View prescription' : 'Create prescription' ?>
+                        </a>
                       <?php elseif (!$showJoin): ?>
                         <span class="text-muted small">No action</span>
                       <?php endif; ?>

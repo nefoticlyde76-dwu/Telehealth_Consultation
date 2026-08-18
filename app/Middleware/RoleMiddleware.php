@@ -27,6 +27,16 @@ class RoleMiddleware implements Middleware
             Helper::redirect('/login');
         }
 
+        $user = AuthService::getUser();
+        if ($user === null || strtolower(trim((string) ($user->status ?? ''))) !== 'active') {
+            AuthService::logout();
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'This account is no longer active. Please contact MBPHA TeleHealth administration if you need access restored.',
+            ]);
+            Helper::redirect('/login');
+        }
+
         if (!in_array($userRole, $this->allowedRoles, true)) {
             Session::flash('status', [
                 'type' => 'warning',

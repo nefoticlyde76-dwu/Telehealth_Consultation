@@ -20,8 +20,10 @@ class Session
             session_save_path($sessionPath);
 
             session_name($config['session']['name']);
+            $lifetime = (int) ($config['session']['lifetime'] ?? 7200);
+            ini_set('session.gc_maxlifetime', (string) $lifetime);
             session_set_cookie_params([
-                'lifetime' => $config['session']['lifetime'],
+                'lifetime' => $lifetime,
                 'path' => '/',
                 'domain' => '',
                 'secure' => $isSecure,

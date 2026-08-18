@@ -9,9 +9,12 @@ use App\Helpers\Helper;
 use App\Models\ConsultationRequest;
 use App\Services\AuthService;
 use App\Services\DoctorAvailabilityService;
+use App\Services\DoctorClinicalDocumentationService;
 use App\Services\DoctorConsultationService;
 use App\Services\DoctorDashboardService;
+use App\Services\DoctorPrescriptionService;
 use App\Services\DoctorProfileService;
+use App\Services\PatientClinicalRecordService;
 use App\Services\VideoConsultationService;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -41,7 +44,7 @@ class DoctorController extends Controller
             'dashboardRole' => 'doctor',
             'dashboardRoleLabel' => 'Doctor Dashboard',
             'dashboardTitle' => 'Doctor Dashboard',
-            'dashboardDescription' => 'A professional workspace for secure clinician profile and dashboard visibility.',
+            'dashboardDescription' => 'Your consultations, availability, and profile.',
             'topbarSearchPlaceholder' => 'Search patients, appointments, or consultations',
             'showRightbar' => true,
             'sidebarItems' => [
@@ -50,7 +53,7 @@ class DoctorController extends Controller
                 ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/profile', 'label' => 'Profile', 'icon' => 'bi-person-vcard'],
             ],
-            'welcomeMessage' => 'Your clinician workspace is ready for secure profile management, dashboard visibility, and future-ready clinical workflows.',
+            'welcomeMessage' => 'Keep your profile, availability, and consultations up to date.',
             'focusTitle' => 'Clinician profile readiness',
             'focusDescription' => 'Keep your phone number, specialization, profile photo, and signature up to date for future consultation records.',
             'statusMessage' => Session::getFlash('status'),
@@ -453,7 +456,7 @@ class DoctorController extends Controller
             'dashboardRole' => 'doctor',
             'dashboardRoleLabel' => 'Doctor Dashboard',
             'dashboardTitle' => 'Consultations',
-            'dashboardDescription' => 'Review approved, upcoming, and completed consultations from your clinician workspace.',
+            'dashboardDescription' => 'Review upcoming, approved, and completed consultations.',
             'sidebarItems' => [
                 ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
                 ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
@@ -561,6 +564,11 @@ class DoctorController extends Controller
 
     public function completeConsultation(string $id): void
     {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/doctor/consultations/' . (int) $id . '/room');
+            return;
+        }
+
         if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
             Helper::redirect('/login');
             return;
@@ -573,14 +581,25 @@ class DoctorController extends Controller
             return;
         }
 
-        $result = DoctorConsultationService::completeConsultation((int) $user->id, (int) $id, (string) ($_POST['_token'] ?? ''));
+        $result = DoctorClinicalDocumentationService::completeConsultation(
+            (int) $user->id,
+            (int) $id,
+            (string) ($_POST['_token'] ?? ''),
+            $_POST,
+            ((string) ($_POST['confirm'] ?? '')) === '1'
+        );
 
         Session::flash('status', [
             'type' => $result['type'] ?? (($result['success'] ?? false) ? 'success' : 'danger'),
             'message' => $result['message'] ?? 'Consultation status update completed.',
         ]);
 
-        Helper::redirect('/doctor/consultations');
+        if (($result['success'] ?? false) === true) {
+            Helper::redirect('/doctor/consultations/' . (int) $id . '/prescription');
+            return;
+        }
+
+        Helper::redirect('/doctor/consultations/' . (int) $id . '/room');
     }
 
     /**
@@ -603,8 +622,12 @@ class DoctorController extends Controller
             $this->jsonResponse([
                 'ok'      => false,
                 'code'    => 'unauthenticated',
-                'message' => 'Not authenticated.',
+                'message' => 'Please sign in to join this consultation.',
             ], 401);
+            return;
+        }
+
+        if (!$this->requireJsonCsrf()) {
             return;
         }
 
@@ -670,10 +693,27 @@ class DoctorController extends Controller
             return;
         }
 
+        $requestStatus = (string) ($request['status'] ?? '');
+        if ($requestStatus !== 'Approved') {
+            if ($requestStatus === 'Completed') {
+                Helper::redirect('/doctor/consultations/' . (int) $request['id']);
+                return;
+            }
+
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The video consultation room is only available for approved consultations.',
+            ]);
+            Helper::redirect('/doctor/consultations');
+            return;
+        }
+
         $otherPartyName  = (string) ($request['patient_name'] ?? 'Your Patient');
         $patientPhone    = trim((string) ($request['patient_phone'] ?? ''));
         $patientGender   = trim((string) ($request['patient_gender'] ?? ''));
         $otherPartyMeta  = trim(implode(' · ', array_filter([$patientGender, $patientPhone], static fn($v) => $v !== '')));
+        $clinicalRecord  = DoctorClinicalDocumentationService::ensureDraftForRoom($request, (int) $user->id);
+        $canEditClinical = (string) ($request['status'] ?? '') === 'Approved';
 
         $context = [
             'consultation_id'          => (int) $request['id'],
@@ -687,6 +727,12 @@ class DoctorController extends Controller
             'consultation_reason'      => (string) ($request['reason'] ?? ''),
             'consultation_status'      => (string) ($request['status'] ?? 'Pending'),
             'join_token_endpoint'      => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/join-token'),
+            'clinical_save_endpoint'   => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/clinical-record'),
+            'complete_endpoint'        => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/complete'),
+            'prescription_path'        => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/prescription'),
+            'clinical_record'          => $clinicalRecord,
+            'clinical_can_edit'        => $canEditClinical,
+            'csrf_token'               => Csrf::generate(),
             'return_path'              => Helper::url('/doctor/consultations'),
             'return_path_label'        => 'Back to Consultations',
         ];
@@ -709,5 +755,210 @@ class DoctorController extends Controller
             'context' => $context,
             'statusMessage' => Session::getFlash('status'),
         ], 'layouts/dashboard');
+    }
+
+    /**
+     * JSON endpoint — save a Draft clinical record while the assigned
+     * doctor is in (or preparing) the live consultation room.
+     *
+     * Ownership, patient id, and doctor id are taken from the session and
+     * the consultation_requests row. Client-supplied identity fields are
+     * ignored. The record remains Draft; this action does not complete
+     * the consultation or create a prescription.
+     */
+    public function saveClinicalRecordDraft(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            $this->jsonResponse([
+                'ok' => false,
+                'code' => 'method_not_allowed',
+                'message' => 'This action must be submitted as a POST request.',
+            ], 405);
+            return;
+        }
+
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            $this->jsonResponse([
+                'ok' => false,
+                'code' => 'unauthenticated',
+                'message' => 'Please sign in as the assigned doctor to save clinical notes.',
+            ], 401);
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            $this->jsonResponse([
+                'ok' => false,
+                'code' => 'unauthenticated',
+                'message' => 'Please sign in as the assigned doctor to save clinical notes.',
+            ], 401);
+            return;
+        }
+
+        if (!$this->requireJsonCsrf()) {
+            return;
+        }
+
+        $result = DoctorClinicalDocumentationService::saveDraft(
+            (int) $user->id,
+            (int) $id,
+            (string) ($_POST['_token'] ?? ''),
+            $_POST
+        );
+
+        $payload = [
+            'ok' => (bool) ($result['ok'] ?? false),
+            'code' => (string) ($result['code'] ?? 'error'),
+            'message' => (string) ($result['message'] ?? 'The clinical draft could not be saved.'),
+            'record_status' => 'Draft',
+            'csrf_token' => Csrf::generate(),
+        ];
+
+        if (($result['ok'] ?? false) === true && is_array($result['record'] ?? null)) {
+            $record = $result['record'];
+            $payload['record_id'] = (int) ($record['id'] ?? 0);
+            $payload['saved_at'] = (string) ($record['updated_at'] ?? '');
+            $payload['record_status'] = (string) ($record['record_status'] ?? 'Draft');
+        }
+
+        $this->jsonResponse($payload, (int) ($result['http_code'] ?? 400));
+    }
+
+    public function showConsultationDetails(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $page = PatientClinicalRecordService::getHistoricalRecordForDoctor((int) $user->id, (int) $id);
+        if ($page === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested consultation record could not be found.',
+            ]);
+            Helper::redirect('/doctor/consultations');
+            return;
+        }
+
+        $request = $page['request'];
+        $patientName = (string) ($request['patient_name'] ?? 'Patient');
+        $isCompleted = (string) ($request['status'] ?? '') === 'Completed';
+        $videoJoin = self::computeDoctorVideoJoinContext($request)['videoJoin'] ?? null;
+
+        $this->render('doctor/consultations/show', [
+            'title' => ($isCompleted ? 'Consultation Record' : 'Consultation Details') . ' | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'doctor',
+            'dashboardRoleLabel' => 'Doctor Dashboard',
+            'dashboardTitle' => $isCompleted ? 'Consultation Record' : 'Consultation Details',
+            'dashboardDescription' => $isCompleted
+                ? sprintf('Completed clinical record for %s.', $patientName)
+                : sprintf('Consultation details for %s.', $patientName),
+            'sidebarItems' => [
+                ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
+                ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
+            ],
+            'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/consultation-record.css') . '"><link rel="stylesheet" href="' . Helper::asset('css/prescription.css') . '">',
+            'request' => $request,
+            'clinicalRecord' => $page['record'] ?? null,
+            'prescriptions' => $page['prescriptions'] ?? [],
+            'videoJoin' => is_array($videoJoin) ? $videoJoin : null,
+            'viewerRole' => 'doctor',
+            'statusMessage' => Session::getFlash('status'),
+        ], 'layouts/dashboard');
+    }
+
+    public function showPrescription(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $page = DoctorPrescriptionService::getPrescriptionPageForDoctor((int) $user->id, (int) $id);
+        if ($page === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'Consultation not found.',
+            ]);
+            Helper::redirect('/doctor/consultations');
+            return;
+        }
+
+        $patientName = (string) ($page['request']['patient_name'] ?? 'Patient');
+        $this->render('doctor/consultations/prescription', [
+            'title' => 'Prescription | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'doctor',
+            'dashboardRoleLabel' => 'Doctor Dashboard',
+            'dashboardTitle' => 'Prescription',
+            'dashboardDescription' => sprintf('Prescription for %s.', $patientName),
+            'sidebarItems' => [
+                ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-calendar2-check-fill'],
+                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
+                ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
+            ],
+            'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/prescription.css') . '">',
+            'request' => $page['request'],
+            'record' => $page['record'],
+            'prescriptions' => $page['prescriptions'],
+            'canCreate' => $page['can_create'],
+            'hasSignature' => (bool) ($page['has_signature'] ?? false),
+            'csrfToken' => Csrf::generate(),
+            'pageScripts' => ((bool) ($page['can_create'] ?? false))
+                ? '<script src="' . Helper::asset('js/consultation-prescription.js') . '" defer></script>'
+                : '',
+            'statusMessage' => Session::getFlash('status'),
+        ], 'layouts/dashboard');
+    }
+
+    public function savePrescription(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/doctor/consultations/' . (int) $id . '/prescription');
+            return;
+        }
+
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $result = DoctorPrescriptionService::createPrescription(
+            (int) $user->id,
+            (int) $id,
+            (string) ($_POST['_token'] ?? ''),
+            $_POST
+        );
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? (($result['success'] ?? false) ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Prescription request completed.',
+        ]);
+
+        Helper::redirect('/doctor/consultations/' . (int) $id . '/prescription');
     }
 }

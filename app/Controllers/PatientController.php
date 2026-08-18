@@ -8,6 +8,7 @@ use App\Core\Session;
 use App\Helpers\Helper;
 use App\Models\ConsultationRequest;
 use App\Services\AuthService;
+use App\Services\PatientClinicalRecordService;
 use App\Services\PatientConsultationBookingService;
 use App\Services\PatientDirectoryService;
 use App\Services\PatientProfileService;
@@ -67,9 +68,9 @@ class PatientController extends Controller
                 ['path' => '/patient/consultation-requests', 'label' => 'My Consultations', 'icon' => 'bi-clipboard2-check'],
                 ['path' => '/patient/profile', 'label' => 'Profile', 'icon' => 'bi-person-circle'],
             ],
-            'welcomeMessage' => 'Browse available doctors, select a consultation slot, and submit a secure booking request from one patient workspace.',
+            'welcomeMessage' => 'Browse doctors, choose an available slot, and submit a consultation request.',
             'focusTitle' => 'Book a consultation slot',
-            'focusDescription' => 'Week 5 introduces patient consultation booking with slot selection and a brief chief complaint submission.',
+            'focusDescription' => 'Choose a doctor, pick an available slot, and describe the reason for the visit.',
             'statusMessage' => Session::getFlash('status'),
             'stats' => [
                 ['label' => 'Pending Requests', 'value' => (string) ($bookingSummary['pending_requests'] ?? 0), 'icon' => 'bi-hourglass-split', 'description' => 'Consultation booking requests waiting for review.'],
@@ -78,21 +79,18 @@ class PatientController extends Controller
                 ['label' => 'Latest Consultation Status', 'value' => (string) ($bookingSummary['latest_status_display'] ?? 'No requests yet'), 'icon' => 'bi-activity', 'description' => 'The most recent consultation workflow status currently visible on your account.'],
             ],
             'quickActions' => [
-                ['title' => 'Browse Doctors', 'description' => 'Review clinician photos, titles, specializations, and the next available consultation slots.', 'icon' => 'bi-person-badge', 'status' => 'Booking live', 'url' => '/patient/doctors', 'action_label' => 'Open Directory'],
-                ['title' => 'View Available Slots', 'description' => 'See all available consultation slots and book directly from the slot viewer.', 'icon' => 'bi-calendar2-week', 'status' => 'Booking live', 'url' => '/patient/available-slots', 'action_label' => 'Browse Slots'],
-                ['title' => 'Consultation History', 'description' => 'View submitted consultation requests and track their current status updates.', 'icon' => 'bi-clipboard2-check', 'status' => 'Week 5', 'url' => '/patient/consultation-requests', 'action_label' => 'View Requests'],
-                ['title' => 'View My Profile', 'description' => 'Review your patient account identity and profile photo in one place.', 'icon' => 'bi-person-circle', 'status' => 'Available now', 'url' => '/patient/profile', 'action_label' => 'Open Profile'],
-                ['title' => 'Change Profile Picture', 'description' => 'Upload a profile photo that updates your dashboard avatar after saving.', 'icon' => 'bi-camera', 'status' => 'Available now', 'url' => '/patient/profile/edit', 'action_label' => 'Edit Photo'],
+                ['title' => 'Browse Doctors', 'description' => 'Review doctor photos, titles, specializations, and the next available consultation slots.', 'icon' => 'bi-person-badge', 'status' => 'Available', 'url' => '/patient/doctors', 'action_label' => 'Open Directory'],
+                ['title' => 'View Available Slots', 'description' => 'See all available consultation slots and book from the slot list.', 'icon' => 'bi-calendar2-week', 'status' => 'Available', 'url' => '/patient/available-slots', 'action_label' => 'Browse Slots'],
+                ['title' => 'Consultation History', 'description' => 'View submitted consultation requests and track their current status.', 'icon' => 'bi-clipboard2-check', 'status' => 'Available', 'url' => '/patient/consultation-requests', 'action_label' => 'View Requests'],
+                ['title' => 'View My Profile', 'description' => 'Review your account details and profile photo.', 'icon' => 'bi-person-circle', 'status' => 'Available', 'url' => '/patient/profile', 'action_label' => 'Open Profile'],
+                ['title' => 'Change Profile Picture', 'description' => 'Upload a profile photo that appears on your dashboard after saving.', 'icon' => 'bi-camera', 'status' => 'Available', 'url' => '/patient/profile/edit', 'action_label' => 'Edit Photo'],
             ],
             'recentActivity' => [
-                ['title' => 'Dashboard access confirmed', 'description' => 'Your authenticated patient dashboard remains role protected and session aware.', 'meta' => 'Current session'],
                 [
                     'title' => 'Latest consultation status',
-                    'description' => 'Your most recent consultation request is currently ' . (string) ($bookingSummary['latest_status_display'] ?? 'No requests yet') . '.',
+                    'description' => 'Your most recent consultation request is currently ' . (string) ($bookingSummary['latest_status_display'] ?? 'none') . '.',
                     'meta' => !empty($bookingSummary['latest_request']['consultation_date']) ? 'Scheduled ' . \App\Helpers\Helper::formatDate((string) $bookingSummary['latest_request']['consultation_date'], 'd M Y', 'Not scheduled') : 'No consultation scheduled yet',
                 ],
-                ['title' => 'Doctor directory enabled', 'description' => 'Patients can browse clinicians with future available consultation schedules.', 'meta' => 'Week 4 completion'],
-                ['title' => 'Consultation workflow active', 'description' => 'Patients can now book, review history, and track consultation request status updates.', 'meta' => 'Week 5 refinement'],
             ],
             'emptyState' => [
                 'icon' => 'bi-search',
@@ -338,6 +336,16 @@ class PatientController extends Controller
         }
 
         $pageData = PatientConsultationBookingService::getHistoryPageData((int) $user->id, $_GET);
+        $requests = $pageData['requests'] ?? [];
+        if (is_array($requests)) {
+            $requests = array_map(
+                static function (array $row): array {
+                    $row['videoJoin'] = self::computePatientVideoJoinContext($row);
+                    return $row;
+                },
+                $requests
+            );
+        }
 
         $this->render('patient/consultation_requests/index', [
             'title' => 'Consultation History | MBPHA TeleHealth Consultation System',
@@ -345,7 +353,7 @@ class PatientController extends Controller
             'dashboardRole' => 'patient',
             'dashboardRoleLabel' => 'Patient Dashboard',
             'dashboardTitle' => 'Consultation History',
-            'dashboardDescription' => 'View submitted consultation requests, appointment details, and request statuses.',
+            'dashboardDescription' => 'View your bookings, completed consultations, clinical records, and prescriptions.',
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
                 ['path' => '/patient/consultation-requests', 'label' => 'Consultation History', 'icon' => 'bi-clipboard2-check'],
@@ -353,7 +361,7 @@ class PatientController extends Controller
                 ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
                 ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
             ],
-            'requests' => $pageData['requests'] ?? [],
+            'requests' => $requests,
             'summary' => $pageData['summary'] ?? [],
             'pagination' => $pageData['pagination'] ?? [],
             'statusMessage' => Session::getFlash('status'),
@@ -387,14 +395,17 @@ class PatientController extends Controller
         }
 
         $videoJoin = self::computePatientVideoJoinContext($request);
+        $clinical = PatientClinicalRecordService::getCompletedRecordForPatient((int) $user->id, $requestId);
 
         $this->render('patient/consultation_requests/show', [
-            'title' => 'Consultation Details | MBPHA TeleHealth Consultation System',
+            'title' => (((string) ($request['status'] ?? '')) === 'Completed' ? 'Consultation Record' : 'Consultation Details') . ' | MBPHA TeleHealth Consultation System',
             'user' => $user,
             'dashboardRole' => 'patient',
             'dashboardRoleLabel' => 'Patient Dashboard',
-            'dashboardTitle' => 'Consultation Details',
-            'dashboardDescription' => 'Review consultation booking details, doctor information, and request status.',
+            'dashboardTitle' => ((string) ($request['status'] ?? '')) === 'Completed' ? 'Consultation Record' : 'Consultation Details',
+            'dashboardDescription' => ((string) ($request['status'] ?? '')) === 'Completed'
+                ? 'Review this completed historical consultation record and any issued prescription.'
+                : 'Review this consultation and join the video room when the scheduled session is open.',
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
                 ['path' => '/patient/consultation-requests', 'label' => 'Consultation History', 'icon' => 'bi-clipboard2-check'],
@@ -404,6 +415,9 @@ class PatientController extends Controller
             ],
             'request' => $request,
             'videoJoin' => $videoJoin,
+            'clinicalRecord' => is_array($clinical) ? ($clinical['record'] ?? null) : null,
+            'prescriptions' => is_array($clinical) ? ($clinical['prescriptions'] ?? []) : [],
+            'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/consultation-record.css') . '"><link rel="stylesheet" href="' . Helper::asset('css/prescription.css') . '">',
             'statusMessage' => Session::getFlash('status'),
         ], 'layouts/dashboard');
     }
@@ -592,8 +606,12 @@ class PatientController extends Controller
             $this->jsonResponse([
                 'ok'      => false,
                 'code'    => 'unauthenticated',
-                'message' => 'Not authenticated.',
+                'message' => 'Please sign in to join this consultation.',
             ], 401);
+            return;
+        }
+
+        if (!$this->requireJsonCsrf()) {
             return;
         }
 
@@ -660,6 +678,21 @@ class PatientController extends Controller
             return;
         }
 
+        $requestStatus = (string) ($request['status'] ?? '');
+        if ($requestStatus !== 'Approved') {
+            if ($requestStatus === 'Completed') {
+                Helper::redirect('/patient/consultation-requests/' . (int) $request['id']);
+                return;
+            }
+
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The video consultation room is only available for approved consultations.',
+            ]);
+            Helper::redirect('/patient/consultation-requests');
+            return;
+        }
+
         $otherPartyName = (string) ($request['doctor_name'] ?? 'Your Doctor');
         $otherPartyTitle = (string) ($request['doctor_title'] ?? 'Medical Practitioner');
         $specialization = trim((string) ($request['specialization'] ?? ''));
@@ -676,6 +709,7 @@ class PatientController extends Controller
             'consultation_reason'      => (string) ($request['reason'] ?? ''),
             'consultation_status'      => (string) ($request['status'] ?? 'Pending'),
             'join_token_endpoint'      => Helper::url('/patient/consultations/' . (int) $request['id'] . '/join-token'),
+            'csrf_token'               => Csrf::generate(),
             'return_path'              => Helper::url('/patient/consultation-requests/' . (int) $request['id']),
             'return_path_label'        => 'Back to Consultation Details',
         ];

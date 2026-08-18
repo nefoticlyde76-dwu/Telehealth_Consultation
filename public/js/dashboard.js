@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeMiniCalendars();
   initializeDashboardCharts();
   initializeAosAnimations();
+  initializeConsultationQueueWorkspace();
 });
 
 /**
@@ -208,6 +209,24 @@ function initializeDashboardCharts() {
       return;
     }
 
+    if (config && typeof config === "object") {
+      const chartType = String(config.type || "").toLowerCase();
+      if (chartType === "line" || chartType === "bar") {
+        config.options = config.options || {};
+        config.options.scales = config.options.scales || {};
+        const yScale = config.options.scales.y || {};
+        yScale.grid = Object.assign({ color: "#EEF1F6" }, yScale.grid || {});
+        yScale.ticks = Object.assign({ color: "#9CA3AF", precision: 0 }, yScale.ticks || {});
+        config.options.scales.y = yScale;
+        if (config.options.scales.x) {
+          config.options.scales.x.ticks = Object.assign(
+            { color: "#9CA3AF" },
+            config.options.scales.x.ticks || {}
+          );
+        }
+      }
+    }
+
     const shell = canvas.closest("[data-chart-shell]");
 
     window.requestAnimationFrame(() => {
@@ -231,5 +250,87 @@ function initializeAosAnimations() {
     duration: 650,
     easing: "ease-out-cubic",
     offset: 80,
+  });
+}
+
+/**
+ * Duplicate-submit protection for Approve / Reject / Approve & Next /
+ * Reject & Next on the administrator consultation review workspace.
+ *
+ * This is a UX guard only. Approval and rejection still POST to the
+ * existing backend actions; business logic is not duplicated here.
+ */
+function initializeConsultationQueueWorkspace() {
+  const workspace = document.querySelector("[data-consultation-queue-workspace]");
+  if (!(workspace instanceof HTMLElement)) {
+    return;
+  }
+
+  const forms = workspace.querySelectorAll("form[data-queue-decision]");
+  const buttons = [];
+  let submitting = false;
+
+  forms.forEach((form) => {
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+
+    const button = form.querySelector('button[type="submit"]');
+    if (button instanceof HTMLButtonElement) {
+      if (!button.dataset.originalHtml) {
+        button.dataset.originalHtml = button.innerHTML;
+      }
+      buttons.push(button);
+    }
+
+    form.addEventListener("submit", (event) => {
+      if (submitting) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        return;
+      }
+
+      submitting = true;
+      lockQueueDecisionButtons(buttons, form);
+    });
+  });
+
+  window.addEventListener("pageshow", () => {
+    submitting = false;
+    unlockQueueDecisionButtons(buttons);
+  });
+
+  if (window.matchMedia("(max-width: 991.98px)").matches) {
+    const detail = workspace.querySelector(".ux-review-workspace__detail .ux-queue-detail");
+    if (detail instanceof HTMLElement) {
+      detail.scrollIntoView({ block: "start", behavior: "auto" });
+    }
+  }
+}
+
+function lockQueueDecisionButtons(buttons, activeForm) {
+  const action = ((activeForm instanceof HTMLFormElement ? activeForm.getAttribute("action") : "") || "").toLowerCase();
+  const isReject = action.includes("/reject");
+  const loadingLabel = isReject ? "Rejecting…" : "Approving…";
+
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.setAttribute("aria-disabled", "true");
+    button.classList.add("is-loading");
+    if (activeForm instanceof HTMLFormElement && button.form === activeForm) {
+      const icon = isReject ? "bi-x-circle" : "bi-check2-circle";
+      button.innerHTML = '<i class="bi ' + icon + ' me-1"></i>' + loadingLabel;
+    }
+  });
+}
+
+function unlockQueueDecisionButtons(buttons) {
+  buttons.forEach((button) => {
+    button.disabled = false;
+    button.removeAttribute("aria-disabled");
+    button.classList.remove("is-loading");
+    if (button.dataset.originalHtml) {
+      button.innerHTML = button.dataset.originalHtml;
+    }
   });
 }

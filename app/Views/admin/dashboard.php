@@ -32,37 +32,20 @@ $adminToday = (new DateTimeImmutable())->format('l, d F Y');
 ?>
 
 <div class="ux-welcome ux-welcome--admin">
-  <span class="ux-welcome__corner-tick ux-welcome__corner-tick--tr"></span>
-  <span class="ux-welcome__corner-tick ux-welcome__corner-tick--br"></span>
-  <span class="ux-welcome__sweep"></span>
-  <span class="ux-welcome__sweep ux-welcome__sweep--b"></span>
-
   <div class="ux-welcome__grid">
     <div>
       <ol class="ux-welcome__breadcrumb">
         <li><a href="<?= \App\Helpers\Helper::url('/') ?>">Home</a></li>
         <li class="active">Administrator Dashboard</li>
       </ol>
-      <span class="ux-welcome__eyebrow">Operational Control · MBPHA TeleHealth</span>
+      <span class="ux-welcome__eyebrow">MBPHA TeleHealth</span>
       <h1 class="ux-welcome__title">Administrator Dashboard</h1>
-      <p class="ux-welcome__description">Operational oversight for the MBPHA TeleHealth platform. Review pending consultations, manage accounts, and maintain clinical governance.</p>
+      <p class="ux-welcome__description">Review pending consultation requests, manage user accounts, and keep the service running.</p>
 
       <div class="ux-welcome__meta-pill-row">
         <span class="ux-welcome__meta-pill">
           <i class="bi bi-hourglass-split"></i>
           <span><?= \App\Helpers\Helper::escape((string) $adminPending) ?> pending request<?= $adminPending === 1 ? '' : 's' ?></span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-calendar2-check"></i>
-          <span><?= \App\Helpers\Helper::escape((string) $adminApproved) ?> approved appointment<?= $adminApproved === 1 ? '' : 's' ?></span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-calendar2-x"></i>
-          <span><?= \App\Helpers\Helper::escape((string) $adminRejected) ?> rejected</span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-activity"></i>
-          <span><?= \App\Helpers\Helper::escape((string) $adminRecent) ?> recent activit<?= $adminRecent === 1 ? 'y' : 'ies' ?></span>
         </span>
         <span class="ux-welcome__meta-pill">
           <i class="bi bi-calendar3"></i>

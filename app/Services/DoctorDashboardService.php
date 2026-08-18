@@ -59,17 +59,17 @@ class DoctorDashboardService
             'quickActions' => [
                 [
                     'title' => 'View Consultations',
-                    'description' => 'Review upcoming, approved, and completed consultations in one clinician view.',
+                    'description' => 'Review upcoming, approved, and completed consultations.',
                     'icon' => 'bi-clipboard2-pulse',
-                    'status' => 'Week 5',
+                    'status' => 'Active',
                     'url' => '/doctor/consultations',
                     'action_label' => 'Open Consultations',
                 ],
                 [
                     'title' => 'View My Profile',
-                    'description' => 'Review your clinician identity, specialization, and uploaded assets.',
+                    'description' => 'Review your name, specialization, profile photo, and signature.',
                     'icon' => 'bi-person-vcard',
-                    'status' => 'Available now',
+                    'status' => 'Available',
                     'url' => '/doctor/profile',
                     'action_label' => 'Open Profile',
                 ],
@@ -77,56 +77,49 @@ class DoctorDashboardService
                     'title' => 'Edit Profile Settings',
                     'description' => 'Update phone number, specialization, profile photo, signature, and password.',
                     'icon' => 'bi-person-gear',
-                    'status' => 'Available now',
+                    'status' => 'Available',
                     'url' => '/doctor/profile/edit',
                     'action_label' => 'Edit Profile',
                 ],
                 [
                     'title' => 'Manage Availability',
-                    'description' => 'Create, review, update, and delete consultation slots from your clinician workspace.',
+                    'description' => 'Create, review, update, and delete consultation slots.',
                     'icon' => 'bi-calendar-week',
-                    'status' => 'Available now',
+                    'status' => 'Available',
                     'url' => '/doctor/availability',
                     'action_label' => 'Open Availability',
                 ],
                 [
-                    'title' => 'Secure Session Controls',
-                    'description' => 'Use the top navigation to manage session logout securely.',
-                    'icon' => 'bi-shield-lock',
-                    'status' => 'Active',
-                ],
-                [
-                    'title' => 'Upload Clinical Assets',
-                    'description' => 'Keep your profile photo and digital signature current for future consultation documentation.',
+                    'title' => 'Profile photo and signature',
+                    'description' => $hasProfilePhoto && $hasSignature
+                        ? 'Your profile photo and signature are on file.'
+                        : 'Add a profile photo and signature for consultation documentation.',
                     'icon' => $hasProfilePhoto && $hasSignature ? 'bi-check2-circle' : 'bi-cloud-arrow-up',
-                    'status' => $hasProfilePhoto && $hasSignature ? 'Up to date' : 'Action recommended',
+                    'status' => $hasProfilePhoto && $hasSignature ? 'Up to date' : 'Action needed',
                     'url' => '/doctor/profile/edit',
-                    'action_label' => 'Update Assets',
+                    'action_label' => 'Update Profile',
                 ],
             ],
             'recentActivity' => [
                 [
-                    'title' => 'Doctor session authenticated',
-                    'description' => 'Role protection and dashboard rendering are functioning for doctor users.',
-                    'meta' => 'Current session',
+                    'title' => $recentApprovedAppointments > 0 ? 'New approved consultations' : 'No new approvals',
+                    'description' => $recentApprovedAppointments > 0
+                        ? 'Approved consultations are listed on your dashboard and consultations page.'
+                        : 'Newly approved consultations will appear here when assigned to you.',
+                    'meta' => $recentApprovedAppointments . ' new approval' . ($recentApprovedAppointments === 1 ? '' : 's'),
                 ],
                 [
-                    'title' => 'Approved appointments visible',
-                    'description' => 'Approved consultations now flow through to your clinician dashboard and consultation workspace.',
-                    'meta' => $recentApprovedAppointments . ' new approvals',
-                ],
-                [
-                    'title' => $hasProfilePhoto && $hasSignature ? 'Clinical identity assets complete' : 'Clinical identity assets need review',
+                    'title' => $hasProfilePhoto && $hasSignature ? 'Profile documents complete' : 'Profile documents incomplete',
                     'description' => $hasProfilePhoto && $hasSignature
-                        ? 'Your profile photo and signature are ready for future clinical documentation workflows.'
-                        : 'Complete your profile photo and signature to keep your clinician workspace fully prepared.',
-                    'meta' => $hasProfilePhoto && $hasSignature ? 'Profile readiness confirmed' : 'Profile update recommended',
+                        ? 'Your profile photo and signature are ready for clinical documentation.'
+                        : 'Add your profile photo and signature from Edit Profile.',
+                    'meta' => $hasProfilePhoto && $hasSignature ? 'Complete' : 'Action needed',
                 ],
             ],
             'emptyState' => [
                 'icon' => 'bi-clipboard2-pulse',
-                'title' => 'No clinical activity to show yet',
-                'description' => 'Your availability calendar is now active, and future consultation workflows will build on these scheduled slots.',
+                'title' => 'No consultations to show yet',
+                'description' => 'Create availability slots so patients can request appointments with you.',
             ],
             'todaySummary' => $todaySummary,
             'upcomingSlots' => $upcomingSlots,

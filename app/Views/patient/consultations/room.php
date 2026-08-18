@@ -12,6 +12,7 @@ $consultationEnd        = (string) ($context['consultation_end_time']   ?? '');
 $consultationReason     = (string) ($context['consultation_reason']     ?? '');
 $consultationStatus     = (string) ($context['consultation_status']     ?? '');
 $joinTokenEndpoint      = (string) ($context['join_token_endpoint']     ?? '');
+$joinCsrfToken          = (string) ($context['csrf_token']              ?? '');
 $returnPath             = (string) ($context['return_path']             ?? '');
 $returnPathLabel        = (string) ($context['return_path_label']       ?? 'Back');
 
@@ -19,7 +20,11 @@ $viewerLabel       = $viewerRole === 'doctor' ? 'Clinician view' : 'Patient view
 $viewerBadgeClass  = $viewerRole === 'doctor' ? 'bg-primary-soft text-primary-900' : 'bg-teal-soft text-teal-900';
 $otherPartyHeading = $viewerRole === 'doctor' ? 'Patient' : 'Clinician';
 $iconClass         = $viewerRole === 'doctor' ? 'bi-person-heart' : 'bi-stethoscope';
+$isDoctorViewer    = $viewerRole === 'doctor';
+$videoColClass     = $isDoctorViewer ? 'col-xl-7 order-1' : 'col-xl-8 order-2 order-xl-1';
+$sideColClass      = $isDoctorViewer ? 'col-xl-5 order-2' : 'col-xl-4 order-1 order-xl-2';
 $roomScriptAsset   = \App\Helpers\Helper::asset('js/consultation-room.js');
+$clinicalScriptAsset = \App\Helpers\Helper::asset('js/consultation-clinical-record.js');
 
 $formattedDate = \App\Helpers\Helper::formatDate($consultationDate, 'l, j F Y', '');
 $formattedTime = '';
@@ -101,9 +106,9 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
     </div>
 
     <div class="card-body p-4">
-      <div class="row g-4">
+      <div class="row g-4<?= $isDoctorViewer ? ' vc-room-layout--clinician' : '' ?>">
         <!-- ── Primary Daily Prebuilt container ─────────────────── -->
-        <div class="col-xl-8 order-2 order-xl-1">
+        <div class="<?= $videoColClass ?>">
           <div class="vc-room-wrapper">
             <div
               id="vc-daily-frame-wrapper"
@@ -132,8 +137,11 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
           </div>
         </div>
 
-        <!-- ── Consultation context panel ────────────────────── -->
-        <div class="col-xl-4 order-1 order-xl-2">
+        <!-- ── Side column: patient details, or doctor clinical notes ── -->
+        <div class="<?= $sideColClass ?>">
+          <?php if ($isDoctorViewer): ?>
+            <?php require __DIR__ . '/../../doctor/consultations/_clinical_documentation.php'; ?>
+          <?php else: ?>
           <div class="vc-side-panel mb-4">
             <div class="vc-side-panel__header">
               <i class="bi bi-info-circle-fill me-2"></i>
@@ -184,6 +192,7 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
               </div>
             </div>
           </div>
+          <?php endif; ?>
 
           <!-- ── Pre-call checklist (visible while no frame mounted) -->
           <div class="vc-side-panel" id="vc-precall-checklist">
@@ -264,14 +273,21 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
 $roomScriptAssetEsc   = \App\Helpers\Helper::escape($roomScriptAsset);
 $consultationIdEsc    = \App\Helpers\Helper::escape((string) $consultationId);
 $joinTokenEndpointEsc = \App\Helpers\Helper::escape($joinTokenEndpoint);
+$joinCsrfTokenEsc     = \App\Helpers\Helper::escape($joinCsrfToken);
 $viewerRoleEsc        = \App\Helpers\Helper::escape($viewerRole);
+$clinicalScriptEsc    = \App\Helpers\Helper::escape($clinicalScriptAsset);
 $pageScript = <<<PAGE_SCRIPT
 <script id="vc-room-wiring"
         data-consultation-room="{$consultationIdEsc}"
         data-join-endpoint="{$joinTokenEndpointEsc}"
+        data-csrf-token="{$joinCsrfTokenEsc}"
         data-viewer-role="{$viewerRoleEsc}"
         src="{$roomScriptAssetEsc}"
         defer></script>
 PAGE_SCRIPT;
 echo $pageScript;
+
+if ($isDoctorViewer) {
+    echo '<script src="' . $clinicalScriptEsc . '" defer></script>';
+}
 ?>

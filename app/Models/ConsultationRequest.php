@@ -53,6 +53,7 @@ class ConsultationRequest
             'approved_requests' => (int) ($row['approved_requests'] ?? 0),
             'upcoming_appointments' => (int) $upcomingStmt->fetchColumn(),
             'consultation_history' => (int) ($row['total_requests'] ?? 0),
+            'completed_requests' => (int) ($row['completed_requests'] ?? 0),
             'latest_status' => $latestStatus,
             'latest_status_display' => $latestStatus !== '' ? $latestStatus : 'No requests yet',
             'latest_request' => $latestRequest,
@@ -68,13 +69,29 @@ class ConsultationRequest
                 consultation_requests.request_date,
                 consultation_requests.reason,
                 consultation_requests.status,
+                consultation_requests.completed_at,
                 doctor_availability.consultation_date,
                 doctor_availability.start_time,
                 doctor_availability.end_time,
                 doctor.user_id AS doctor_id,
                 doctor.professional_title AS doctor_title,
                 doctor.specialization,
-                users.full_name AS doctor_name
+                users.full_name AS doctor_name,
+                EXISTS(
+                    SELECT 1
+                      FROM consultation_records
+                     WHERE consultation_records.consultation_request_id = consultation_requests.id
+                       AND consultation_records.patient_id = consultation_requests.patient_id
+                       AND consultation_records.record_status = 'Final'
+                ) AS has_final_record,
+                EXISTS(
+                    SELECT 1
+                      FROM prescriptions
+                     INNER JOIN consultation_records
+                        ON consultation_records.id = prescriptions.consultation_record_id
+                     WHERE consultation_records.consultation_request_id = consultation_requests.id
+                       AND prescriptions.patient_id = consultation_requests.patient_id
+                ) AS has_prescription
             FROM consultation_requests
             INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
             INNER JOIN users ON users.id = doctor.user_id
@@ -102,11 +119,19 @@ class ConsultationRequest
                 doctor_availability.end_time,
                 doctor.professional_title AS doctor_title,
                 doctor.specialization,
+                doctor.signature_path AS doctor_signature_path,
+                doctor.clinic_address AS doctor_clinic_address,
                 doctor.profile_photo_path,
-                users.full_name AS doctor_name
+                users.full_name AS doctor_name,
+                patient.address AS patient_address,
+                patient.dob AS patient_dob,
+                patient.gender AS patient_gender,
+                patient_user.full_name AS patient_name
             FROM consultation_requests
             INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
             INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN patient ON patient.user_id = consultation_requests.patient_id
+            INNER JOIN users AS patient_user ON patient_user.id = patient.user_id
             LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
             WHERE consultation_requests.id = :id
               AND consultation_requests.patient_id = :patient_id
@@ -136,12 +161,16 @@ class ConsultationRequest
                 doctor_availability.status AS slot_status,
                 doctor.professional_title AS doctor_title,
                 doctor.specialization,
+                doctor.signature_path AS doctor_signature_path,
+                doctor.clinic_address AS doctor_clinic_address,
+                doctor_user.full_name AS doctor_name,
                 patient_user.id AS patient_user_id,
                 patient_user.full_name AS patient_name,
                 patient_user.email AS patient_email,
                 patient.phone AS patient_phone,
                 patient.dob AS patient_dob,
-                patient.gender AS patient_gender
+                patient.gender AS patient_gender,
+                patient.address AS patient_address
             FROM consultation_requests
             INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
             INNER JOIN users AS doctor_user ON doctor_user.id = doctor.user_id
@@ -323,6 +352,28 @@ class ConsultationRequest
         return (int) $stmt->fetchColumn() > 0;
     }
 
+    public static function hasActiveRequestForAvailability(int $availabilityId, ?int $exceptRequestId = null): bool
+    {
+        $db = Database::getInstance();
+        $sql = "SELECT COUNT(*)
+            FROM consultation_requests
+            WHERE availability_id = :availability_id
+              AND status IN ('Pending', 'Approved')";
+
+        if ($exceptRequestId !== null && $exceptRequestId > 0) {
+            $sql .= ' AND id <> :except_id';
+        }
+
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':availability_id', $availabilityId, PDO::PARAM_INT);
+        if ($exceptRequestId !== null && $exceptRequestId > 0) {
+            $stmt->bindValue(':except_id', $exceptRequestId, PDO::PARAM_INT);
+        }
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public static function getAdminStatusSummary(): array
     {
         $db = Database::getInstance();
@@ -459,11 +510,7 @@ class ConsultationRequest
     public static function countForAdmin(array $filters = []): int
     {
         $db = Database::getInstance();
-        $sql = "SELECT COUNT(*)
-            FROM consultation_requests
-            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
-            INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
-            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id";
+        $sql = 'SELECT COUNT(*) ' . self::adminQueueFromSql();
         $conditions = [];
         $parameters = [];
 
@@ -483,7 +530,7 @@ class ConsultationRequest
     public static function findForAdmin(array $filters = [], int $limit = 10, int $offset = 0): array
     {
         $db = Database::getInstance();
-        $sql = "SELECT
+        $sql = 'SELECT
                 consultation_requests.id,
                 consultation_requests.request_date,
                 consultation_requests.reason,
@@ -492,13 +539,11 @@ class ConsultationRequest
                 consultation_requests.doctor_id,
                 patient_user.full_name AS patient_name,
                 doctor_user.full_name AS doctor_name,
+                doctor.specialization,
                 doctor_availability.consultation_date,
                 doctor_availability.start_time,
                 doctor_availability.end_time
-            FROM consultation_requests
-            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
-            INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
-            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id";
+            ' . self::adminQueueFromSql();
         $conditions = [];
         $parameters = [];
 
@@ -508,7 +553,7 @@ class ConsultationRequest
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $sql .= ' ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC LIMIT :limit OFFSET :offset';
+        $sql .= self::adminQueueOrderSql() . ' LIMIT :limit OFFSET :offset';
 
         $stmt = $db->prepare($sql);
         self::bindAdminParameters($stmt, $parameters);
@@ -517,6 +562,76 @@ class ConsultationRequest
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    /**
+     * Ordered request IDs for the current admin queue filters (no pagination).
+     *
+     * @return list<int>
+     */
+    public static function findQueueIdsForAdmin(array $filters = []): array
+    {
+        $db = Database::getInstance();
+        $sql = 'SELECT consultation_requests.id ' . self::adminQueueFromSql();
+        $conditions = [];
+        $parameters = [];
+
+        self::appendAdminFilters($filters, $conditions, $parameters);
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= self::adminQueueOrderSql();
+
+        $stmt = $db->prepare($sql);
+        self::bindAdminParameters($stmt, $parameters);
+        $stmt->execute();
+
+        $ids = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN, 0) ?: [] as $id) {
+            $id = (int) $id;
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
+    }
+
+    public static function countTodayPendingForAdmin(): int
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT COUNT(*)
+               FROM consultation_requests
+               LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+              WHERE consultation_requests.status = 'Pending'
+                AND doctor_availability.consultation_date = :today"
+        );
+        $stmt->bindValue(':today', (new \DateTimeImmutable('today'))->format('Y-m-d'));
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    private static function adminQueueFromSql(): string
+    {
+        return "FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
+            INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id";
+    }
+
+    private static function adminQueueOrderSql(): string
+    {
+        return " ORDER BY
+            CASE WHEN doctor_availability.consultation_date IS NULL THEN 1 ELSE 0 END ASC,
+            doctor_availability.consultation_date ASC,
+            doctor_availability.start_time ASC,
+            consultation_requests.request_date ASC,
+            consultation_requests.id ASC";
     }
 
     public static function findByIdForAdmin(int $requestId): ?array
@@ -659,6 +774,15 @@ class ConsultationRequest
                 }
 
                 $slotStatus = (string) ($slotRow['status'] ?? '');
+
+                if ($targetStatus === 'Approved' && ConsultationRequest::hasActiveRequestForAvailability($availabilityId, $requestId)) {
+                    $db->rollBack();
+                    return [
+                        'success' => false,
+                        'message' => 'This consultation slot is already assigned to another request. Choose a different request or free the slot first.',
+                        'type' => 'warning',
+                    ];
+                }
 
                 if ($targetStatus === 'Approved' && $slotStatus !== 'Booked') {
                     $updateSlot = $db->prepare("UPDATE doctor_availability SET status = 'Booked' WHERE id = :id");
@@ -933,10 +1057,26 @@ class ConsultationRequest
                 consultation_requests.request_date,
                 consultation_requests.reason,
                 consultation_requests.status,
+                consultation_requests.completed_at,
                 patient_user.full_name AS patient_name,
                 doctor_availability.consultation_date,
                 doctor_availability.start_time,
-                doctor_availability.end_time
+                doctor_availability.end_time,
+                EXISTS(
+                    SELECT 1
+                      FROM consultation_records
+                     WHERE consultation_records.consultation_request_id = consultation_requests.id
+                       AND consultation_records.doctor_id = consultation_requests.doctor_id
+                       AND consultation_records.record_status = 'Final'
+                ) AS has_final_record,
+                EXISTS(
+                    SELECT 1
+                      FROM prescriptions
+                     INNER JOIN consultation_records
+                        ON consultation_records.id = prescriptions.consultation_record_id
+                     WHERE consultation_records.consultation_request_id = consultation_requests.id
+                       AND prescriptions.doctor_id = consultation_requests.doctor_id
+                ) AS has_prescription
             FROM consultation_requests
             INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
             LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
@@ -1082,10 +1222,14 @@ class ConsultationRequest
 
             $updateStmt = $db->prepare(
                 "UPDATE consultation_requests
-                SET status = 'Completed'
-                WHERE id = :id"
+                SET status = 'Completed',
+                    completed_at = COALESCE(completed_at, NOW())
+                WHERE id = :id
+                  AND doctor_id = :doctor_id
+                  AND status = 'Approved'"
             );
             $updateStmt->bindValue(':id', $requestId, PDO::PARAM_INT);
+            $updateStmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
             $updateStmt->execute();
 
             $db->commit();
@@ -1115,8 +1259,11 @@ class ConsultationRequest
         $search = trim((string) ($filters['search'] ?? ''));
 
         if ($search !== '') {
-            $conditions[] = '(patient_user.full_name LIKE :search OR doctor_user.full_name LIKE :search OR consultation_requests.reason LIKE :search OR consultation_requests.id = :search_exact)';
-            $parameters[':search'] = '%' . $search . '%';
+            $conditions[] = '(patient_user.full_name LIKE :search_patient OR doctor_user.full_name LIKE :search_doctor OR consultation_requests.reason LIKE :search_reason OR consultation_requests.id = :search_exact)';
+            $like = '%' . $search . '%';
+            $parameters[':search_patient'] = $like;
+            $parameters[':search_doctor'] = $like;
+            $parameters[':search_reason'] = $like;
             $parameters[':search_exact'] = ctype_digit($search) ? (int) $search : 0;
         }
 

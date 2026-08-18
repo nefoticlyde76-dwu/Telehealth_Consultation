@@ -5,10 +5,7 @@ html {
 }
 
 body {
-  background:
-    radial-gradient(circle at top left, rgba(var(--emerald-green-rgb), 0.08), transparent 22%),
-    radial-gradient(circle at top right, rgba(var(--medical-blue-rgb), 0.08), transparent 22%),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
   line-height: 1.6;
 }
@@ -452,12 +449,12 @@ textarea.form-control {
 
 .hero-section-agh {
   overflow: hidden;
-  background:
-    linear-gradient(120deg, rgba(var(--dark-navy-rgb), 0.72), rgba(var(--medical-blue-rgb), 0.6)),
-    url("../images/AGH.png");
+  background-color: var(--ds-navy);
+  background-image: url("../images/AGH.png");
   background-position: center center;
   background-repeat: no-repeat;
   background-size: cover;
+  background-blend-mode: multiply;
   min-height: clamp(30rem, 63vh, 40rem);
   padding-top: 5.25rem;
   padding-bottom: 3.75rem;
@@ -467,9 +464,7 @@ textarea.form-control {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at top right, rgba(var(--soft-cyan-rgb), 0.14), transparent 26%),
-    linear-gradient(180deg, rgba(var(--navy-black-rgb), 0.06), rgba(var(--dark-navy-rgb), 0.24));
+  background: rgba(69, 95, 104, 0.38);
   pointer-events: none;
 }
 
@@ -912,21 +907,19 @@ textarea.form-control {
 .auth-visual-panel {
   position: relative;
   min-height: 100%;
-  background:
-    linear-gradient(160deg, rgba(var(--dark-navy-rgb), 0.82), rgba(var(--medical-blue-rgb), 0.64)),
-    url("../images/AGH.png");
+  background-color: var(--ds-navy);
+  background-image: url("../images/AGH.png");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
+  background-blend-mode: multiply;
 }
 
 .auth-visual-panel::before {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(var(--medical-blue-rgb), 0.18), rgba(var(--navy-black-rgb), 0.12)),
-    radial-gradient(circle at top left, rgba(var(--soft-cyan-rgb), 0.18), transparent 30%);
+  background: rgba(69, 95, 104, 0.28);
 }
 
 .auth-visual-content {
@@ -1039,20 +1032,14 @@ textarea.form-control {
   position: relative;
   overflow: hidden;
   padding: 2.5rem;
-  border-radius: 2rem;
-  background:
-    radial-gradient(circle at top right, rgba(var(--soft-cyan-rgb), 0.16), transparent 24%),
-    linear-gradient(135deg, rgba(var(--dark-navy-rgb), 0.96), rgba(var(--medical-blue-rgb), 0.9));
-  border: 1px solid rgba(var(--soft-cyan-rgb), 0.14);
-  box-shadow: 0 26px 56px rgba(var(--dark-navy-rgb), 0.18);
+  border-radius: 12px;
+  background: var(--ds-navy);
+  border: 1px solid var(--ds-navy-dark);
+  box-shadow: none;
 }
 
 .public-cta-banner::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(var(--white-rgb), 0.04), transparent 40%);
-  pointer-events: none;
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1436,7 +1423,7 @@ textarea.form-control {
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--white);
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: var(--ds-navy);
 }
 
 .dashboard-content {
@@ -1682,12 +1669,10 @@ textarea.form-control {
 }
 
 .dashboard-banner {
-  background:
-    radial-gradient(circle at top right, rgba(var(--soft-cyan-rgb), 0.18), transparent 24%),
-    linear-gradient(135deg, rgba(var(--medical-blue-rgb), 0.12), rgba(var(--white-rgb), 0.95));
-  border: 1px solid rgba(var(--white-rgb), 0.92);
-  border-radius: 2rem;
-  box-shadow: 0 24px 52px rgba(var(--dark-navy-rgb), 0.08);
+  background: var(--ds-card);
+  border: 1px solid var(--ds-border);
+  border-radius: 12px;
+  box-shadow: var(--ds-shadow-card);
 }
 
 .dashboard-banner-intro {
@@ -1859,15 +1844,15 @@ textarea.form-control {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  background: var(--ds-accent);
 }
 
 .dashboard-progress-bar--teal {
-  background: linear-gradient(90deg, var(--secondary), var(--accent));
+  background: var(--ds-teal);
 }
 
 .dashboard-progress-bar--cyan {
-  background: linear-gradient(90deg, var(--soft-cyan), var(--primary));
+  background: var(--ds-teal);
 }
 
 .widget-mini-stat-list {

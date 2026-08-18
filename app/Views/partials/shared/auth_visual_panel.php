@@ -3,7 +3,7 @@
 $authVisualBadge = $authVisualBadge ?? 'MBPHA TeleHealth';
 $authVisualTitle = $authVisualTitle ?? 'Secure healthcare access for Milne Bay Province.';
 $authVisualCopy = $authVisualCopy ?? 'Professional digital care begins with a trusted, accessible, and secure entry point.';
-$authVisualQuote = $authVisualQuote ?? 'Serving patients, clinicians, and administrators through a premium healthcare platform.';
+$authVisualQuote = $authVisualQuote ?? 'Serving patients, clinicians, and administrators across Milne Bay Province.';
 $authVisualPoints = $authVisualPoints ?? [];
 ?>
 

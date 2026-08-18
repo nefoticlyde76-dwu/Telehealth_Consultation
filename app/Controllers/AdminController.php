@@ -6,6 +6,7 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
+use App\Models\ConsultationRequest;
 use App\Services\AdminConsultationService;
 use App\Services\AdminDoctorService;
 use App\Services\AdminPatientService;
@@ -38,17 +39,17 @@ class AdminController extends Controller
                 'showRightbar' => true,
             ]),
             [
-                'welcomeMessage' => 'This administrator workspace now supports patient oversight, doctor account provisioning, and administrator profile management.',
-                'focusTitle' => 'Account governance controls',
-                'focusDescription' => 'Administrators can now manage patient accounts, doctor onboarding, password controls, and profile maintenance from one coordinated workspace.',
+                'welcomeMessage' => 'Review consultation requests, manage doctor and patient accounts, and keep the service operating.',
+                'focusTitle' => 'What needs attention',
+                'focusDescription' => 'Start with pending consultation requests, then review doctor and patient accounts as needed.',
                 'stats' => $consultationDashboard['stats'] ?? $dashboardData['stats'],
                 'quickActions' => $dashboardData['quickActions'],
                 'recentActivity' => $consultationDashboard['recentActivity'] ?? $dashboardData['recentActivity'],
                 'statusMessage' => Session::getFlash('status'),
                 'emptyState' => [
                     'icon' => 'bi-people',
-                    'title' => 'Administrative governance tools are now available',
-                    'description' => 'Use the patient management, doctor account, user management, and profile pages to apply role-aware governance securely.',
+                    'title' => 'Administration tools are ready',
+                    'description' => 'Use Users, Doctors, Patients, and Consultation Requests to manage the service.',
                 ],
                 'userSummary' => $summary,
                 'doctorSummary' => $doctorSummary,
@@ -567,7 +568,7 @@ class AdminController extends Controller
         return array_merge([
             'user' => $user,
             'dashboardRole' => 'admin',
-            'dashboardRoleLabel' => 'Administrator Dashboard',
+            'dashboardRoleLabel' => 'Administrator',
             'sidebarItems' => [
                 ['path' => '/admin/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
                 ['path' => '/admin/users', 'label' => 'Users', 'icon' => 'bi-people-fill'],
@@ -576,8 +577,8 @@ class AdminController extends Controller
                 ['path' => '/admin/consultation-requests', 'label' => 'Consultation Requests', 'icon' => 'bi-clipboard2-check'],
                 ['path' => '/admin/profile', 'label' => 'Settings', 'icon' => 'bi-gear'],
             ],
-            'sidebarStatusTitle' => 'Week 5 Consultation Oversight',
-            'sidebarStatusDescription' => 'Consultation request approvals and appointment governance are now active.',
+            'sidebarStatusTitle' => 'Consultation oversight',
+            'sidebarStatusDescription' => 'Approve, reject, or cancel consultation booking requests.',
         ], $overrides);
     }
 
@@ -590,20 +591,24 @@ class AdminController extends Controller
         }
 
         $pageData = AdminConsultationService::getManagementPageData($_GET);
+        $selectedRequest = $pageData['selectedRequest'] ?? null;
+        $selectedId = (int) ($pageData['selectedId'] ?? 0);
 
         $this->render('admin/consultation_requests/index', array_merge(
             $this->getAdminViewData($user, [
                 'title' => 'Consultation Requests | MBPHA TeleHealth Consultation System',
                 'dashboardTitle' => 'Consultation Requests',
-                'dashboardDescription' => 'Review, filter, and manage patient consultation booking requests securely.',
+                'dashboardDescription' => 'Review pending consultation requests and decide in order.',
             ]),
             [
                 'filters' => $pageData['filters'] ?? [],
                 'requests' => $pageData['requests'] ?? [],
+                'selectedId' => $selectedId,
+                'selectedRequest' => $selectedRequest,
+                'queuePosition' => (int) ($pageData['queuePosition'] ?? 0),
                 'summary' => $pageData['summary'] ?? [],
                 'pagination' => $pageData['pagination'] ?? [],
                 'statusOptions' => $pageData['statusOptions'] ?? [],
-                'patientOptions' => $pageData['patientOptions'] ?? [],
                 'doctorOptions' => $pageData['doctorOptions'] ?? [],
                 'statusMessage' => Session::getFlash('status'),
                 'csrfToken' => Csrf::generate(),
@@ -638,9 +643,9 @@ class AdminController extends Controller
                 'dashboardDescription' => 'Review patient, doctor, slot details, and approve or reject securely.',
             ]),
             [
-                'request' => $request,
-                'statusMessage' => Session::getFlash('status'),
-                'csrfToken' => Csrf::generate(),
+                'request'           => $request,
+                'statusMessage'     => Session::getFlash('status'),
+                'csrfToken'         => Csrf::generate(),
             ]
         ), 'layouts/dashboard');
     }
@@ -659,6 +664,11 @@ class AdminController extends Controller
         }
 
         $requestId = (int) $id;
+        $workspace = ((string) ($_POST['workspace'] ?? '')) === '1';
+        $advance = ((string) ($_POST['advance'] ?? '')) === '1';
+        $filters = $workspace ? AdminConsultationService::normalizeFilters($_POST) : [];
+        $queueIds = $workspace ? ConsultationRequest::findQueueIdsForAdmin($filters) : [];
+
         $result = AdminConsultationService::approveRequest($requestId, (string) ($_POST['_token'] ?? ''));
 
         Session::flash('status', [
@@ -666,7 +676,7 @@ class AdminController extends Controller
             'message' => $result['message'] ?? 'Consultation request approval completed.',
         ]);
 
-        Helper::redirect('/admin/consultation-requests/' . $requestId);
+        $this->redirectAfterConsultationDecision($requestId, $result, $workspace, $advance, $filters, $queueIds);
     }
 
     public function rejectConsultationRequest(string $id): void
@@ -683,6 +693,11 @@ class AdminController extends Controller
         }
 
         $requestId = (int) $id;
+        $workspace = ((string) ($_POST['workspace'] ?? '')) === '1';
+        $advance = ((string) ($_POST['advance'] ?? '')) === '1';
+        $filters = $workspace ? AdminConsultationService::normalizeFilters($_POST) : [];
+        $queueIds = $workspace ? ConsultationRequest::findQueueIdsForAdmin($filters) : [];
+
         $result = AdminConsultationService::rejectRequest($requestId, (string) ($_POST['_token'] ?? ''));
 
         Session::flash('status', [
@@ -690,7 +705,7 @@ class AdminController extends Controller
             'message' => $result['message'] ?? 'Consultation request rejection completed.',
         ]);
 
-        Helper::redirect('/admin/consultation-requests/' . $requestId);
+        $this->redirectAfterConsultationDecision($requestId, $result, $workspace, $advance, $filters, $queueIds);
     }
 
     public function cancelConsultationRequest(string $id): void
@@ -715,6 +730,41 @@ class AdminController extends Controller
         ]);
 
         Helper::redirect('/admin/consultation-requests/' . $requestId);
+    }
+
+    /**
+     * After approve/reject, stay on the request detail page unless the
+     * decision was made from the review workspace.
+     *
+     * @param array{success?:bool,type?:string,message?:string} $result
+     * @param array<string, mixed> $filters
+     * @param list<int> $queueIds
+     */
+    private function redirectAfterConsultationDecision(
+        int $requestId,
+        array $result,
+        bool $workspace,
+        bool $advance,
+        array $filters,
+        array $queueIds
+    ): void {
+        if (!$workspace) {
+            Helper::redirect('/admin/consultation-requests/' . $requestId);
+            return;
+        }
+
+        $selectedId = $requestId;
+        $page = max(1, (int) ($_POST['page'] ?? 1));
+        if (($result['success'] ?? false) === true && $advance) {
+            $selectedId = (int) (AdminConsultationService::nextQueueRequestId($queueIds, $requestId) ?? 0);
+            $page = 1;
+        }
+
+        Helper::redirect(AdminConsultationService::workspacePath(
+            $filters,
+            $selectedId > 0 ? $selectedId : null,
+            $page
+        ));
     }
 
     private function handleDoctorStatusUpdate(int $userId, string $status): void
