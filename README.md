@@ -2,6 +2,8 @@
 
 Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provincial Health Authority (MBPHA), developed as a final year Bachelor of Information Systems capstone project.
 
+> **Deployment test note (harmless):** This line exists only to verify that a GitHub `master` push triggers DeployHQ automatic deployment. It does not change application behaviour.
+
 ## Current Status
 
 - Current Week: Week 8
