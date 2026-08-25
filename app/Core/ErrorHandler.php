@@ -8,6 +8,18 @@ class ErrorHandler
 {
     public static function register(): void
     {
+        $debug = self::isDebug();
+
+        ini_set('display_errors', $debug ? '1' : '0');
+        ini_set('display_startup_errors', $debug ? '1' : '0');
+        ini_set('log_errors', '1');
+        error_reporting(E_ALL);
+
+        $logFile = self::logFilePath();
+        if ($logFile !== null) {
+            ini_set('error_log', $logFile);
+        }
+
         set_error_handler([self::class, 'handleError']);
         set_exception_handler([self::class, 'handleException']);
         register_shutdown_function([self::class, 'handleShutdown']);
@@ -24,15 +36,19 @@ class ErrorHandler
 
     public static function handleException(\Throwable $exception): void
     {
-        $config = AppConfig::getConfig();
-
-        if ($config['debug']) {
+        if (self::isDebug()) {
             echo '<h1>Uncaught Exception</h1>';
             echo '<p>' . htmlspecialchars($exception->getMessage()) . '</p>';
             echo '<pre>' . htmlspecialchars($exception->getTraceAsString()) . '</pre>';
         } else {
             http_response_code(500);
-            echo '<h1>500 Internal Server Error</h1>';
+            if (!headers_sent()) {
+                header('Content-Type: text/html; charset=utf-8');
+            }
+            echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Unable to load page</title></head><body style="font-family: system-ui, sans-serif; background:' . \App\Helpers\Palette::LIGHT_GRAY . '; color:' . \App\Helpers\Palette::DARK_NAVY . '; padding:48px 24px;">';
+            echo '<h1 style="font-size:1.25rem;">Unable to load this page</h1>';
+            echo '<p>Please refresh the page or try again. If the problem continues, contact MBPHA TeleHealth administration.</p>';
+            echo '</body></html>';
         }
 
         self::logError($exception);
@@ -46,9 +62,33 @@ class ErrorHandler
         }
     }
 
+    private static function isDebug(): bool
+    {
+        try {
+            return !empty(AppConfig::getConfig()['debug']);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private static function logFilePath(): ?string
+    {
+        $logDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'logs';
+        if (!is_dir($logDir) && !@mkdir($logDir, 0775, true) && !is_dir($logDir)) {
+            return null;
+        }
+
+        return $logDir . DIRECTORY_SEPARATOR . 'error.log';
+    }
+
     private static function logError(\Throwable $exception): void
     {
-        $logPath = __DIR__ . '/../../logs/error.log';
+        $logPath = self::logFilePath();
+        if ($logPath === null) {
+            error_log($exception->getMessage());
+            return;
+        }
+
         $message = sprintf(
             "[%s] %s: %s in %s:%d\nStack trace:\n%s\n",
             date('Y-m-d H:i:s'),

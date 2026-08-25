@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Helpers\ListFilter;
+use App\Helpers\Palette;
+use App\Helpers\Status;
 use App\Models\ConsultationRequest;
 use App\Models\DoctorAvailability;
 
@@ -36,21 +39,65 @@ class PatientConsultationBookingService
 
     public static function getHistoryPageData(int $patientId, array $query): array
     {
-        unset($query);
-        $totalItems = ConsultationRequest::countForPatient($patientId);
-        $limit = max($totalItems, 1);
-        $requests = ConsultationRequest::findForPatient($patientId, $limit, 0);
+        $filters = self::normalizeFilters($query);
+        $perPage = (int) ($filters['per_page'] ?? self::PER_PAGE);
+        $page = max(1, (int) ($query['page'] ?? 1));
+        $grouped = self::shouldGroup($filters);
+
+        if (!$grouped) {
+            $totalItems = ConsultationRequest::countForPatient($patientId, $filters);
+            $pagination = ListFilter::paginate($page, $totalItems, $perPage);
+            $offset = ($pagination['current_page'] - 1) * $perPage;
+            $requests = ConsultationRequest::findForPatient($patientId, $perPage, $offset, $filters);
+
+            return [
+                'filters' => $filters,
+                'requests' => $requests,
+                'groups' => self::groupHistoryRows($requests),
+                'grouped' => false,
+                'filterActive' => ListFilter::isActive($filters, ['sort' => '', 'per_page' => self::PER_PAGE]),
+                'summary' => self::getDashboardSummary($patientId),
+                'pagination' => $pagination,
+                'statusOptions' => self::getStatusOptions(),
+                'dateOptions' => self::getDateOptions(),
+                'sortOptions' => self::getSortOptions(),
+                'documentOptions' => self::getDocumentOptions(),
+            ];
+        }
+
+        $groupFilters = [
+            'search' => (string) ($filters['search'] ?? ''),
+            'documents' => (string) ($filters['documents'] ?? ''),
+        ];
+        $pending = ConsultationRequest::findForPatient($patientId, 20, 0, $groupFilters + ['status' => 'Pending', 'sort' => 'upcoming']);
+        $approved = ConsultationRequest::findForPatient($patientId, 50, 0, $groupFilters + ['status' => 'Approved', 'sort' => 'upcoming']);
+        $rejected = ConsultationRequest::findForPatient($patientId, 20, 0, $groupFilters + ['status' => 'Rejected', 'sort' => 'newest']);
+        $cancelled = ConsultationRequest::findForPatient($patientId, 20, 0, $groupFilters + ['status' => 'Cancelled', 'sort' => 'newest']);
+
+        $completedFilters = $groupFilters + ['status' => 'Completed', 'sort' => 'newest'];
+        $completedTotal = ConsultationRequest::countForPatient($patientId, $completedFilters);
+        $pagination = ListFilter::paginate($page, $completedTotal, $perPage);
+        $offset = ($pagination['current_page'] - 1) * $perPage;
+        $completed = ConsultationRequest::findForPatient($patientId, $perPage, $offset, $completedFilters);
+
+        $requests = array_merge($pending, $approved, $completed, $rejected, $cancelled);
 
         return [
+            'filters' => $filters,
             'requests' => $requests,
-            'groups' => self::groupHistoryRows($requests),
-            'summary' => self::getDashboardSummary($patientId),
-            'pagination' => [
-                'current_page' => 1,
-                'per_page' => $limit,
-                'total_items' => $totalItems,
-                'total_pages' => 1,
+            'groups' => [
+                'active' => array_merge($pending, $approved),
+                'completed' => $completed,
+                'closed' => array_merge($rejected, $cancelled),
             ],
+            'grouped' => true,
+            'filterActive' => ListFilter::isActive($filters, ['sort' => '', 'per_page' => self::PER_PAGE]),
+            'summary' => self::getDashboardSummary($patientId),
+            'pagination' => $pagination,
+            'statusOptions' => self::getStatusOptions(),
+            'dateOptions' => self::getDateOptions(),
+            'sortOptions' => self::getSortOptions(),
+            'documentOptions' => self::getDocumentOptions(),
         ];
     }
 
@@ -98,6 +145,109 @@ class PatientConsultationBookingService
             'active' => $active,
             'completed' => $completed,
             'closed' => $closed,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function getStatusOptions(): array
+    {
+        return Status::consultationKeys();
+    }
+
+    /**
+     * @return list<array{value:string,label:string}>
+     */
+    public static function getDateOptions(): array
+    {
+        return [
+            ['value' => 'upcoming', 'label' => 'Upcoming'],
+            ['value' => 'past', 'label' => 'Past'],
+            ['value' => 'this_month', 'label' => 'This month'],
+            ['value' => 'custom', 'label' => 'Custom range'],
+        ];
+    }
+
+    /**
+     * @return list<array{value:string,label:string}>
+     */
+    public static function getSortOptions(): array
+    {
+        return [
+            ['value' => 'newest', 'label' => 'Newest first'],
+            ['value' => 'oldest', 'label' => 'Oldest first'],
+            ['value' => 'upcoming', 'label' => 'Upcoming first'],
+        ];
+    }
+
+    /**
+     * @return list<array{value:string,label:string}>
+     */
+    public static function getDocumentOptions(): array
+    {
+        return [
+            ['value' => 'record', 'label' => 'With clinical record'],
+            ['value' => 'prescription', 'label' => 'With prescription'],
+        ];
+    }
+
+    private static function shouldGroup(array $filters): bool
+    {
+        if (trim((string) ($filters['status'] ?? '')) !== '') {
+            return false;
+        }
+        if (trim((string) ($filters['date'] ?? '')) !== '') {
+            return false;
+        }
+        if (trim((string) ($filters['documents'] ?? '')) !== '') {
+            return false;
+        }
+
+        $sort = trim((string) ($filters['sort'] ?? ''));
+
+        return $sort === '';
+    }
+
+    /**
+     * @param array<string, mixed> $query
+     * @return array<string, mixed>
+     */
+    private static function normalizeFilters(array $query): array
+    {
+        $status = trim((string) ($query['status'] ?? ''));
+        $search = ListFilter::normalizeSearch((string) ($query['search'] ?? ''));
+        $sort = ListFilter::allowedValue(
+            trim((string) ($query['sort'] ?? '')),
+            ['newest', 'oldest', 'upcoming'],
+            ''
+        );
+        $documents = ListFilter::allowedValue(
+            trim((string) ($query['documents'] ?? '')),
+            ['record', 'prescription'],
+            ''
+        );
+        $range = ListFilter::resolveDateRange(
+            (string) ($query['date'] ?? ''),
+            (string) ($query['date_from'] ?? ''),
+            (string) ($query['date_to'] ?? '')
+        );
+        $perPage = ListFilter::allowedPerPage($query['per_page'] ?? self::PER_PAGE, self::PER_PAGE);
+
+        if (!in_array($status, self::getStatusOptions(), true)) {
+            $status = '';
+        }
+
+        return [
+            'status' => $status,
+            'search' => $search,
+            'date' => $range['preset'],
+            'date_from' => $range['preset'] === 'custom' ? $range['from'] : '',
+            'date_to' => $range['preset'] === 'custom' ? $range['to'] : '',
+            'date_range' => ['from' => $range['from'], 'to' => $range['to']],
+            'sort' => $sort,
+            'documents' => $documents,
+            'per_page' => $perPage,
         ];
     }
 
@@ -257,6 +407,14 @@ class PatientConsultationBookingService
 
             $db->commit();
 
+            NotificationService::notifyConsultationRequestCreated($requestId);
+            AuditLogService::record(
+                'consultation_request_created',
+                'Patient submitted a new consultation request.',
+                AuditLogService::ENTITY_CONSULTATION_REQUEST,
+                $requestId
+            );
+
             return [
                 'success' => true,
                 'requestId' => $requestId,
@@ -300,47 +458,7 @@ class PatientConsultationBookingService
 
     private static function buildStatusDistributionChart(array $distribution): array
     {
-        $labels = [];
-        $values = [];
-        $colors = [
-            'Pending' => '#F59E0B',
-            'Approved' => '#08B4C6',
-            'Rejected' => '#DC3545',
-            'Cancelled' => '#70838A',
-            'Completed' => '#455F68',
-        ];
-        $background = [];
-
-        foreach (['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'] as $status) {
-            $labels[] = $status;
-            $values[] = (int) ($distribution[$status] ?? 0);
-            $background[] = $colors[$status] ?? 'rgba(107, 114, 128, 0.6)';
-        }
-
-        return [
-            'type' => 'doughnut',
-            'data' => [
-                'labels' => $labels,
-                'datasets' => [
-                    [
-                        'data' => $values,
-                        'backgroundColor' => $background,
-                        'borderWidth' => 0,
-                    ],
-                ],
-            ],
-            'options' => [
-                'responsive' => true,
-                'maintainAspectRatio' => false,
-                'cutout' => '68%',
-                'plugins' => [
-                    'legend' => [
-                        'position' => 'bottom',
-                        'labels' => ['usePointStyle' => true, 'boxWidth' => 10],
-                    ],
-                ],
-            ],
-        ];
+        return Status::consultationDistributionChart($distribution);
     }
 
     private static function buildMonthlyRequestsChart(array $rows): array
@@ -367,7 +485,7 @@ class PatientConsultationBookingService
                     [
                         'label' => 'Requests',
                         'data' => $values,
-                        'backgroundColor' => '#0794E3',
+                        'backgroundColor' => Palette::MEDICAL_BLUE,
                         'borderRadius' => 8,
                     ],
                 ],

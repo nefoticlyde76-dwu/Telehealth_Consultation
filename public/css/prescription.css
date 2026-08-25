@@ -4,13 +4,13 @@
  * ================================================================ */
 
 :root {
-  --rx-navy: #455F68;
-  --rx-muted: #70838A;
-  --rx-ink: #212529;
-  --rx-rule: #DEE2E6;
-  --rx-paper: #ffffff;
-  --rx-canvas: #F8F8F8;
-  --rx-accent: #0794E3;
+  --rx-navy: var(--dark-navy);
+  --rx-muted: var(--dark-gray);
+  --rx-ink: var(--navy-black);
+  --rx-rule: var(--medium-gray);
+  --rx-paper: var(--white);
+  --rx-canvas: var(--light-gray);
+  --rx-accent: var(--medical-blue);
   --rx-page-width: 210mm;
   --rx-page-height: 297mm;
 }
@@ -34,9 +34,9 @@
   flex-direction: column;
   background: var(--rx-paper);
   color: var(--rx-ink);
-  border: 1px solid #C8D0D3;
+  border: 1px solid var(--medium-gray);
   border-radius: 0;
-  box-shadow: 0 8px 28px rgba(69, 95, 104, 0.12);
+  box-shadow: 0 8px 28px rgba(10, 111, 182, 0.12);
   padding: 18mm 16mm 14mm;
   font-family: "Times New Roman", Times, Georgia, serif;
 }
@@ -146,7 +146,7 @@
   grid-template-columns: 42mm minmax(0, 1fr);
   gap: 10px;
   padding: 5px 0;
-  border-bottom: 1px dotted #D5DBDE;
+  border-bottom: 1px dotted var(--medium-gray);
 }
 
 .rx-document__identity-row dt {

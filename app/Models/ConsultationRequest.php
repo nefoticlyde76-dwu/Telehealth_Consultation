@@ -3,15 +3,29 @@
 namespace App\Models;
 
 use App\Core\Database;
+use App\Helpers\ListFilter;
+use App\Helpers\Status;
 use PDO;
 
 class ConsultationRequest
 {
-    public static function countForPatient(int $patientId): int
+    public static function countForPatient(int $patientId, array $filters = []): int
     {
+        if ($patientId <= 0) {
+            return 0;
+        }
+
         $db = Database::getInstance();
-        $stmt = $db->prepare("SELECT COUNT(*) FROM consultation_requests WHERE patient_id = :patient_id");
-        $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
+        $sql = 'SELECT COUNT(*) ' . self::patientHistoryFromSql();
+        $conditions = ['consultation_requests.patient_id = :patient_id'];
+        $parameters = [':patient_id' => $patientId];
+
+        self::appendPatientHistoryFilters($filters, $conditions, $parameters);
+
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+
+        $stmt = $db->prepare($sql);
+        self::bindAdminParameters($stmt, $parameters);
         $stmt->execute();
 
         return (int) $stmt->fetchColumn();
@@ -60,11 +74,14 @@ class ConsultationRequest
         ];
     }
 
-    public static function findForPatient(int $patientId, int $limit = 10, int $offset = 0): array
+    public static function findForPatient(int $patientId, int $limit = 10, int $offset = 0, array $filters = []): array
     {
+        if ($patientId <= 0) {
+            return [];
+        }
+
         $db = Database::getInstance();
-        $stmt = $db->prepare(
-            "SELECT
+        $sql = 'SELECT
                 consultation_requests.id,
                 consultation_requests.request_date,
                 consultation_requests.reason,
@@ -83,7 +100,7 @@ class ConsultationRequest
                       FROM consultation_records
                      WHERE consultation_records.consultation_request_id = consultation_requests.id
                        AND consultation_records.patient_id = consultation_requests.patient_id
-                       AND consultation_records.record_status = 'Final'
+                       AND consultation_records.record_status = \'Final\'
                 ) AS has_final_record,
                 EXISTS(
                     SELECT 1
@@ -93,15 +110,17 @@ class ConsultationRequest
                      WHERE consultation_records.consultation_request_id = consultation_requests.id
                        AND prescriptions.patient_id = consultation_requests.patient_id
                 ) AS has_prescription
-            FROM consultation_requests
-            INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
-            INNER JOIN users ON users.id = doctor.user_id
-            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
-            WHERE consultation_requests.patient_id = :patient_id
-            ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC
-            LIMIT :limit OFFSET :offset"
-        );
-        $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
+            ' . self::patientHistoryFromSql();
+        $conditions = ['consultation_requests.patient_id = :patient_id'];
+        $parameters = [':patient_id' => $patientId];
+
+        self::appendPatientHistoryFilters($filters, $conditions, $parameters);
+
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        $sql .= self::patientHistoryOrderSql($filters) . ' LIMIT :limit OFFSET :offset';
+
+        $stmt = $db->prepare($sql);
+        self::bindAdminParameters($stmt, $parameters);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -387,7 +406,8 @@ class ConsultationRequest
                 COUNT(*) AS total_requests,
                 SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pending_requests,
                 SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) AS approved_requests,
-                SUM(CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_requests
+                SUM(CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_requests,
+                SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed_requests
             FROM consultation_requests"
         );
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -397,6 +417,7 @@ class ConsultationRequest
             'pending_requests' => (int) ($row['pending_requests'] ?? 0),
             'approved_requests' => (int) ($row['approved_requests'] ?? 0),
             'rejected_requests' => (int) ($row['rejected_requests'] ?? 0),
+            'completed_requests' => (int) ($row['completed_requests'] ?? 0),
         ];
     }
 
@@ -456,12 +477,12 @@ class ConsultationRequest
         return (int) $stmt->fetchColumn();
     }
 
-    public static function findRecentForAdmin(int $limit = 5): array
+    public static function findRecentForAdmin(int $limit = 5, string $status = ''): array
     {
         $limit = max(1, $limit);
+        $status = trim($status);
         $db = Database::getInstance();
-        $stmt = $db->prepare(
-            "SELECT
+        $sql = "SELECT
                 consultation_requests.id,
                 consultation_requests.request_date,
                 consultation_requests.reason,
@@ -478,10 +499,15 @@ class ConsultationRequest
             INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
             LEFT JOIN patient ON patient.user_id = consultation_requests.patient_id
             LEFT JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
-            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
-            ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC
-            LIMIT :limit"
-        );
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id";
+        if ($status !== '') {
+            $sql .= ' WHERE consultation_requests.status = :status';
+        }
+        $sql .= ' ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC LIMIT :limit';
+        $stmt = $db->prepare($sql);
+        if ($status !== '') {
+            $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+        }
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -564,7 +590,7 @@ class ConsultationRequest
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $sql .= self::adminQueueOrderSql() . ' LIMIT :limit OFFSET :offset';
+        $sql .= self::adminQueueOrderSql($filters) . ' LIMIT :limit OFFSET :offset';
 
         $stmt = $db->prepare($sql);
         self::bindAdminParameters($stmt, $parameters);
@@ -593,7 +619,7 @@ class ConsultationRequest
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $sql .= self::adminQueueOrderSql();
+        $sql .= self::adminQueueOrderSql($filters);
 
         $stmt = $db->prepare($sql);
         self::bindAdminParameters($stmt, $parameters);
@@ -636,14 +662,28 @@ class ConsultationRequest
             LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id";
     }
 
-    private static function adminQueueOrderSql(): string
+    /**
+     * Trusted ORDER BY expressions only. The sort key is whitelisted in the service.
+     */
+    private static function adminQueueOrderSql(array $filters = []): string
     {
-        return " ORDER BY
-            CASE WHEN doctor_availability.consultation_date IS NULL THEN 1 ELSE 0 END ASC,
-            doctor_availability.consultation_date ASC,
-            doctor_availability.start_time ASC,
-            consultation_requests.request_date ASC,
-            consultation_requests.id ASC";
+        $sort = (string) ($filters['sort'] ?? 'date_asc');
+
+        return match ($sort) {
+            'newest' => ' ORDER BY consultation_requests.request_date DESC, consultation_requests.id DESC',
+            'oldest' => ' ORDER BY consultation_requests.request_date ASC, consultation_requests.id ASC',
+            'date_desc' => ' ORDER BY
+                CASE WHEN doctor_availability.consultation_date IS NULL THEN 1 ELSE 0 END ASC,
+                doctor_availability.consultation_date DESC,
+                doctor_availability.start_time DESC,
+                consultation_requests.id DESC',
+            default => ' ORDER BY
+                CASE WHEN doctor_availability.consultation_date IS NULL THEN 1 ELSE 0 END ASC,
+                doctor_availability.consultation_date ASC,
+                doctor_availability.start_time ASC,
+                consultation_requests.request_date ASC,
+                consultation_requests.id ASC',
+        };
     }
 
     public static function findByIdForAdmin(int $requestId): ?array
@@ -751,10 +791,7 @@ class ConsultationRequest
                 ];
             }
 
-            $allowedTransitions = [
-                'Pending' => ['Approved', 'Rejected', 'Cancelled'],
-                'Approved' => ['Cancelled'],
-            ];
+            $allowedTransitions = Status::adminConsultationTransitions();
 
             if (
                 !isset($allowedTransitions[$currentStatus])
@@ -970,6 +1007,44 @@ class ConsultationRequest
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Approved consultations whose scheduled start is within the next N minutes.
+     * Used for opportunistic in-app upcoming reminders (no background scheduler).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function findApprovedStartingSoonForDoctor(int $doctorId, int $withinMinutes = 60): array
+    {
+        if ($doctorId <= 0) {
+            return [];
+        }
+
+        $withinMinutes = max(5, min(180, $withinMinutes));
+        $db = Database::getInstance();
+        $sql = "SELECT
+                consultation_requests.id,
+                consultation_requests.patient_id,
+                consultation_requests.doctor_id,
+                consultation_requests.status,
+                patient_user.full_name AS patient_name,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.doctor_id = :doctor_id
+              AND consultation_requests.status = 'Approved'
+              AND TIMESTAMP(doctor_availability.consultation_date, doctor_availability.start_time)
+                  BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL " . $withinMinutes . " MINUTE)
+            ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, consultation_requests.id ASC";
+        $stmt = $db->prepare($sql);
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function getDoctorStatusSummary(int $doctorId): array
     {
         if ($doctorId <= 0) {
@@ -1102,26 +1177,9 @@ class ConsultationRequest
             WHERE consultation_requests.doctor_id = :doctor_id";
         $parameters = [':doctor_id' => $doctorId];
 
-        $status = trim((string) ($filters['status'] ?? ''));
+        self::appendDoctorFilters($filters, $sql, $parameters);
 
-        if ($status !== '') {
-            $sql .= ' AND consultation_requests.status = :status';
-            $parameters[':status'] = $status;
-        }
-
-        $search = trim((string) ($filters['search'] ?? ''));
-
-        if ($search !== '') {
-            $sql .= ' AND (patient_user.full_name LIKE :search OR consultation_requests.reason LIKE :search)';
-            $parameters[':search'] = '%' . $search . '%';
-        }
-
-        $order = strtoupper(trim((string) ($filters['order'] ?? 'ASC')));
-        if ($order !== 'DESC') {
-            $order = 'ASC';
-        }
-
-        $sql .= " ORDER BY doctor_availability.consultation_date {$order}, doctor_availability.start_time {$order}, consultation_requests.id DESC LIMIT :limit OFFSET :offset";
+        $sql .= self::doctorOrderSql($filters) . ' LIMIT :limit OFFSET :offset';
 
         $stmt = $db->prepare($sql);
         foreach ($parameters as $key => $value) {
@@ -1148,19 +1206,7 @@ class ConsultationRequest
             WHERE consultation_requests.doctor_id = :doctor_id";
         $parameters = [':doctor_id' => $doctorId];
 
-        $status = trim((string) ($filters['status'] ?? ''));
-
-        if ($status !== '') {
-            $sql .= ' AND consultation_requests.status = :status';
-            $parameters[':status'] = $status;
-        }
-
-        $search = trim((string) ($filters['search'] ?? ''));
-
-        if ($search !== '') {
-            $sql .= ' AND (patient_user.full_name LIKE :search OR consultation_requests.reason LIKE :search)';
-            $parameters[':search'] = '%' . $search . '%';
-        }
+        self::appendDoctorFilters($filters, $sql, $parameters);
 
         $stmt = $db->prepare($sql);
         foreach ($parameters as $key => $value) {
@@ -1278,14 +1324,180 @@ class ConsultationRequest
         }
     }
 
+    private static function patientHistoryFromSql(): string
+    {
+        return 'FROM consultation_requests
+            INNER JOIN doctor ON doctor.user_id = consultation_requests.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id';
+    }
+
+    /**
+     * Trusted ORDER BY expressions only. The sort key is whitelisted in the service.
+     */
+    private static function patientHistoryOrderSql(array $filters = []): string
+    {
+        $sort = self::normalizedListSort($filters);
+
+        return match ($sort) {
+            'oldest', 'date_asc', 'upcoming' => ' ORDER BY
+                COALESCE(doctor_availability.consultation_date, DATE(consultation_requests.request_date)) ASC,
+                COALESCE(doctor_availability.start_time, \'00:00:00\') ASC,
+                consultation_requests.id ASC',
+            default => ' ORDER BY
+                COALESCE(doctor_availability.consultation_date, DATE(consultation_requests.request_date)) DESC,
+                COALESCE(doctor_availability.start_time, \'23:59:59\') DESC,
+                consultation_requests.id DESC',
+        };
+    }
+
+    /**
+     * @param list<string> $conditions
+     * @param array<string, mixed> $parameters
+     */
+    private static function appendPatientHistoryFilters(array $filters, array &$conditions, array &$parameters): void
+    {
+        $status = trim((string) ($filters['status'] ?? ''));
+        if ($status !== '') {
+            $conditions[] = 'consultation_requests.status = :status';
+            $parameters[':status'] = $status;
+        }
+
+        $search = ListFilter::normalizeSearch((string) ($filters['search'] ?? ''));
+        if ($search !== '') {
+            $like = ListFilter::likeContains($search);
+            $conditions[] = '(users.full_name LIKE :search_doctor
+                OR EXISTS (
+                    SELECT 1
+                      FROM prescriptions
+                     INNER JOIN consultation_records
+                        ON consultation_records.id = prescriptions.consultation_record_id
+                     WHERE consultation_records.consultation_request_id = consultation_requests.id
+                       AND prescriptions.patient_id = consultation_requests.patient_id
+                       AND prescriptions.medication_name LIKE :search_medication
+                ))';
+            $parameters[':search_doctor'] = $like;
+            $parameters[':search_medication'] = $like;
+        }
+
+        $documents = trim((string) ($filters['documents'] ?? ''));
+        if ($documents === 'prescription') {
+            $conditions[] = 'EXISTS (
+                SELECT 1
+                  FROM prescriptions
+                 INNER JOIN consultation_records
+                    ON consultation_records.id = prescriptions.consultation_record_id
+                 WHERE consultation_records.consultation_request_id = consultation_requests.id
+                   AND prescriptions.patient_id = consultation_requests.patient_id
+            )';
+        } elseif ($documents === 'record') {
+            $conditions[] = 'EXISTS (
+                SELECT 1
+                  FROM consultation_records
+                 WHERE consultation_records.consultation_request_id = consultation_requests.id
+                   AND consultation_records.patient_id = consultation_requests.patient_id
+                   AND consultation_records.record_status = \'Final\'
+            )';
+        }
+
+        self::appendSharedDateRange($filters, $conditions, $parameters);
+    }
+
+    /**
+     * @param array<string, mixed> $parameters
+     */
+    private static function appendDoctorFilters(array $filters, string &$sql, array &$parameters): void
+    {
+        $status = trim((string) ($filters['status'] ?? ''));
+        if ($status !== '') {
+            $sql .= ' AND consultation_requests.status = :status';
+            $parameters[':status'] = $status;
+        }
+
+        $search = ListFilter::normalizeSearch((string) ($filters['search'] ?? ''));
+        if ($search !== '') {
+            $sql .= ' AND (patient_user.full_name LIKE :search_name OR consultation_requests.reason LIKE :search_reason)';
+            $like = ListFilter::likeContains($search);
+            $parameters[':search_name'] = $like;
+            $parameters[':search_reason'] = $like;
+        }
+
+        $conditions = [];
+        self::appendSharedDateRange($filters, $conditions, $parameters);
+        if ($conditions !== []) {
+            $sql .= ' AND ' . implode(' AND ', $conditions);
+        }
+    }
+
+    /**
+     * Trusted ORDER BY expressions only. The sort key is whitelisted in the service.
+     */
+    private static function doctorOrderSql(array $filters = []): string
+    {
+        $sort = self::normalizedListSort($filters);
+
+        return match ($sort) {
+            'newest', 'date_desc' => ' ORDER BY
+                COALESCE(doctor_availability.consultation_date, DATE(consultation_requests.request_date)) DESC,
+                COALESCE(doctor_availability.start_time, \'23:59:59\') DESC,
+                consultation_requests.id DESC',
+            default => ' ORDER BY
+                COALESCE(doctor_availability.consultation_date, DATE(consultation_requests.request_date)) ASC,
+                COALESCE(doctor_availability.start_time, \'00:00:00\') ASC,
+                consultation_requests.id DESC',
+        };
+    }
+
+    /**
+     * @return 'newest'|'oldest'|'date_asc'|'date_desc'|'upcoming'
+     */
+    private static function normalizedListSort(array $filters): string
+    {
+        $sort = trim((string) ($filters['sort'] ?? ''));
+        if (in_array($sort, ['newest', 'oldest', 'date_asc', 'date_desc', 'upcoming'], true)) {
+            return $sort;
+        }
+
+        $legacyOrder = strtoupper(trim((string) ($filters['order'] ?? '')));
+        if ($legacyOrder === 'DESC') {
+            return 'date_desc';
+        }
+
+        return 'date_asc';
+    }
+
+    /**
+     * @param list<string> $conditions
+     * @param array<string, mixed> $parameters
+     */
+    private static function appendSharedDateRange(array $filters, array &$conditions, array &$parameters): void
+    {
+        $range = is_array($filters['date_range'] ?? null) ? $filters['date_range'] : [];
+        if (($range['from'] ?? '') !== '' || ($range['to'] ?? '') !== '') {
+            ListFilter::appendDateRange('doctor_availability.consultation_date', $range, $conditions, $parameters);
+            return;
+        }
+
+        $consultationDate = trim((string) ($filters['consultation_date'] ?? ''));
+        if ($consultationDate !== '' && ListFilter::isValidDate($consultationDate)) {
+            $conditions[] = 'doctor_availability.consultation_date = :consultation_date';
+            $parameters[':consultation_date'] = $consultationDate;
+        }
+    }
+
     private static function appendAdminFilters(array $filters, array &$conditions, array &$parameters): void
     {
-        $search = trim((string) ($filters['search'] ?? ''));
+        $search = ListFilter::normalizeSearch((string) ($filters['search'] ?? ''));
 
         if ($search !== '') {
-            $conditions[] = '(patient_user.full_name LIKE :search_patient OR doctor_user.full_name LIKE :search_doctor OR consultation_requests.reason LIKE :search_reason OR consultation_requests.id = :search_exact)';
-            $like = '%' . $search . '%';
+            $conditions[] = '(patient_user.full_name LIKE :search_patient
+                OR patient_user.email LIKE :search_email
+                OR doctor_user.full_name LIKE :search_doctor
+                OR consultation_requests.reason LIKE :search_reason
+                OR consultation_requests.id = :search_exact)';
+            $like = ListFilter::likeContains($search);
             $parameters[':search_patient'] = $like;
+            $parameters[':search_email'] = $like;
             $parameters[':search_doctor'] = $like;
             $parameters[':search_reason'] = $like;
             $parameters[':search_exact'] = ctype_digit($search) ? (int) $search : 0;
@@ -1312,12 +1524,7 @@ class ConsultationRequest
             $parameters[':doctor_id'] = $doctorId;
         }
 
-        $consultationDate = trim((string) ($filters['consultation_date'] ?? ''));
-
-        if ($consultationDate !== '') {
-            $conditions[] = 'doctor_availability.consultation_date = :consultation_date';
-            $parameters[':consultation_date'] = $consultationDate;
-        }
+        self::appendSharedDateRange($filters, $conditions, $parameters);
     }
 
     private static function bindAdminParameters(\PDOStatement $stmt, array $parameters): void

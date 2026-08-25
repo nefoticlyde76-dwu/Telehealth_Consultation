@@ -106,6 +106,8 @@ class Admin
                 users.status,
                 users.created_at,
                 users.updated_at,
+                users.last_login_at,
+                users.force_password_reset,
                 admin.employee_id,
                 admin.profile_photo_path
             FROM admin

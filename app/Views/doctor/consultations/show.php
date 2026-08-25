@@ -82,7 +82,7 @@ $summaryPartyMeta = trim((string) ($request['patient_gender'] ?? ''));
                       title="<?= \App\Helpers\Helper::escape($reason) ?>"
                     <?php endif; ?>>
               <i class="bi bi-camera-video me-1"></i>
-              <?= $status === 'ended' ? 'Room Ended' : ($status === 'early' ? 'Join Soon' : 'Join Consultation') ?>
+              <?= \App\Helpers\Status::joinButtonLabel($status) ?>
             </button>
           <?php endif; ?>
         <?php

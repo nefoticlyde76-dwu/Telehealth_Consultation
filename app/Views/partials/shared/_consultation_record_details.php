@@ -8,6 +8,8 @@ $printType = (string) ($printType ?? '');
 $requestStatus = (string) ($request['status'] ?? 'Pending');
 $requestId = (int) ($request['id'] ?? 0);
 
+require_once __DIR__ . '/status_helper.php';
+
 $isCompleted = $requestStatus === 'Completed';
 $hasFinalRecord = is_array($clinicalRecord) && (string) ($clinicalRecord['record_status'] ?? '') === \App\Models\ConsultationRecord::STATUS_FINAL;
 $showClinical = $printType !== 'prescription';
@@ -25,15 +27,6 @@ $summaryPartyName = (string) ($summaryPartyName ?? ($viewerRole === 'doctor'
     ? (string) ($request['patient_name'] ?? 'Patient')
     : (string) ($request['doctor_name'] ?? 'Doctor')));
 $summaryPartyMeta = (string) ($summaryPartyMeta ?? (string) ($request['specialization'] ?? 'General Practice'));
-
-$statusPillClass = 'cr-pill--neutral';
-if ($requestStatus === 'Completed' || $requestStatus === 'Approved') {
-    $statusPillClass = '';
-} elseif ($requestStatus === 'Pending') {
-    $statusPillClass = 'cr-pill--warning';
-} elseif (in_array($requestStatus, ['Rejected', 'Cancelled'], true)) {
-    $statusPillClass = 'cr-pill--danger';
-}
 
 $dateLabel = \App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not available');
 $timeLabel = trim(substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($request['end_time'] ?? ''), 0, 5), ' -');
@@ -60,7 +53,7 @@ $screenOnlyClass = $printType === 'record' ? '' : ' cr-print-hide';
     </span>
     <div>
       <span class="cr-kicker">Status</span>
-      <span class="cr-pill <?= $statusPillClass ?>"><?= \App\Helpers\Helper::escape($requestStatus) ?></span>
+      <?= ux_status_badge($requestStatus) ?>
     </div>
   </div>
   <div class="cr-summary__item">
@@ -150,7 +143,7 @@ $screenOnlyClass = $printType === 'record' ? '' : ' cr-print-hide';
         </div>
       </div>
       <?php if ($isCompleted): ?>
-        <span class="cr-pill">Completed</span>
+        <?= ux_status_badge(\App\Helpers\Status::COMPLETED) ?>
       <?php endif; ?>
     </div>
 

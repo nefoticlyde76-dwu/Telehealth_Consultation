@@ -1,136 +1,100 @@
 <?php
 
-$profile = $profile ?? [];
-$profilePhotoPath = $profile['profile_photo_path'] ?? null;
-$signaturePath = $profile['signature_path'] ?? null;
+use App\Helpers\Helper;
+
+$profile = is_array($profile ?? null) ? $profile : [];
 $statusMessage = $statusMessage ?? null;
+$signaturePath = $profile['signature_path'] ?? null;
+
+require __DIR__ . '/../../partials/profile/_helpers.php';
+
+$userName = (string) ($profile['full_name'] ?? 'Doctor');
+$roleLabel = user_profile_role_label('doctor');
+
+ob_start();
 ?>
-
-<section class="mb-4">
-  <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
-
-  <div class="ux-page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-start align-items-lg-center gap-3 mb-0">
-    <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
-        <li class="active">Profile</li>
-      </ol>
-      <span class="section-badge mb-3">
-        <i class="bi bi-person-vcard"></i>
-        Doctor Profile
-      </span>
-      <h2 class="ux-page-header__title h4 mb-2">View your clinician profile</h2>
-      <p class="ux-page-header__subtitle text-muted mb-0">Review your identity and uploaded assets as they will appear in future clinical workflows.</p>
+<div class="user-profile-signature">
+  <h4 class="user-profile-signature__title">Digital signature</h4>
+  <?php if (!empty($signaturePath)): ?>
+    <img class="doctor-signature-preview" src="<?= Helper::asset((string) $signaturePath) ?>" alt="Doctor digital signature">
+  <?php else: ?>
+    <div class="doctor-signature-placeholder">
+      <i class="bi bi-pen" aria-hidden="true"></i>
+      <span>Not assigned</span>
     </div>
-    <div class="ux-page-header__right d-flex flex-wrap gap-2">
-      <a href="<?= \App\Helpers\Helper::url('/doctor/profile/edit') ?>" class="btn btn-primary btn-sm">
-        <i class="bi bi-person-gear me-2"></i>
-        Edit Profile
-      </a>
-      <a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-arrow-left me-2"></i>
-        Back to Dashboard
-      </a>
-    </div>
-  </div>
-</section>
-
-<div class="row g-4">
-  <div class="col-lg-5">
-    <div class="card border-0 shadow-sm rounded-4 h-100">
-      <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-          <h3 class="h5 mb-0">Profile Photo</h3>
-          <span class="ux-chip ux-badge--dotless ux-badge--neutral">
-            <i class="bi bi-person-photo"></i>
-            <span>Identity</span>
-          </span>
-        </div>
-
-        <div class="doctor-profile-photo-shell">
-          <?php
-          $avatarPath = $profilePhotoPath;
-          $fullName = $profile['full_name'] ?? 'Doctor';
-          $avatarClass = 'user-avatar user-avatar--profile';
-          require __DIR__ . '/../../partials/shared/user_avatar.php';
-          ?>
-        </div>
-
-        <div class="admin-foundation-list mt-4">
-          <div class="admin-foundation-item">
-            <i class="bi bi-shield-lock"></i>
-            <span>Your profile photo is only managed by you and is stored under secure upload controls.</span>
-          </div>
-          <div class="admin-foundation-item">
-            <i class="bi bi-person-check"></i>
-            <span>Upload a professional headshot to strengthen clinician trust during future consultations.</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-7">
-    <div class="card border-0 shadow-sm rounded-4 h-100">
-      <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-          <div>
-            <h3 class="h5 mb-1">Profile Details</h3>
-            <p class="text-muted mb-0">Your specialization and contact details are displayed in clinician workflows.</p>
-          </div>
-          <span class="ux-badge ux-badge--neutral"><?= \App\Helpers\Helper::escape(ucfirst((string) ($profile['status'] ?? 'active'))) ?></span>
-        </div>
-
-        <div class="user-detail-grid">
-          <div class="user-detail-item">
-            <span class="user-detail-label">Full Name</span>
-            <strong><?= \App\Helpers\Helper::escape((string) ($profile['full_name'] ?? 'Not available')) ?></strong>
-          </div>
-          <div class="user-detail-item">
-            <span class="user-detail-label">Email</span>
-            <strong><?= \App\Helpers\Helper::escape((string) ($profile['email'] ?? 'Not available')) ?></strong>
-          </div>
-          <div class="user-detail-item">
-            <span class="user-detail-label">Phone</span>
-            <strong><?= \App\Helpers\Helper::escape((string) ($profile['phone'] ?? 'Not provided')) ?></strong>
-          </div>
-          <div class="user-detail-item">
-            <span class="user-detail-label">Specialization</span>
-            <strong><?= \App\Helpers\Helper::escape((string) ($profile['specialization'] ?? 'Not provided')) ?></strong>
-          </div>
-          <div class="user-detail-item">
-            <span class="user-detail-label">Professional Title</span>
-            <strong><?= \App\Helpers\Helper::escape((string) ($profile['professional_title'] ?? 'Not provided')) ?></strong>
-          </div>
-          <div class="user-detail-item">
-            <span class="user-detail-label">Employee ID</span>
-            <strong><?= \App\Helpers\Helper::escape((string) ($profile['employee_id'] ?? 'Not provided')) ?></strong>
-          </div>
-        </div>
-
-        <div class="card border-0 shadow-sm rounded-4 mt-4">
-          <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-              <h4 class="h6 mb-0">Digital Signature</h4>
-              <span class="ux-chip ux-badge--dotless ux-badge--neutral">
-                <i class="bi bi-patch-check"></i>
-                <span>Future-ready</span>
-              </span>
-            </div>
-
-            <?php if (!empty($signaturePath)): ?>
-              <img class="doctor-signature-preview" src="<?= \App\Helpers\Helper::asset($signaturePath) ?>" alt="Doctor digital signature">
-            <?php else: ?>
-              <div class="doctor-signature-placeholder">
-                <i class="bi bi-pen"></i>
-                <span>No signature uploaded yet</span>
-              </div>
-            <?php endif; ?>
-
-        <p class="text-muted small mb-0 mt-3">Your signature is attached automatically when you issue a prescription. Another doctor's signature cannot be used.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <?php endif; ?>
+  <p class="user-profile-card__lede mb-0 mt-3">Your signature is attached automatically when you issue a prescription. Another doctor's signature cannot be used.</p>
 </div>
+<?php
+$roleExtraHtml = ob_get_clean();
+
+$profilePage = [
+    'breadcrumbs' => [
+        ['label' => 'Dashboard', 'url' => '/doctor/dashboard'],
+        ['label' => 'Profile'],
+    ],
+    'title' => $userName,
+    'subtitle' => 'Review your identity and uploaded assets as they will appear in clinical workflows.',
+    'back' => ['label' => 'Back to dashboard', 'url' => '/doctor/dashboard'],
+    'photo' => $profile['profile_photo_path'] ?? null,
+    'photo_edit_url' => '/doctor/profile/edit',
+    'name' => $userName,
+    'email' => (string) ($profile['email'] ?? ''),
+    'role_label' => $roleLabel,
+    'status' => (string) ($profile['status'] ?? 'active'),
+    'overflow_actions' => [
+        ['label' => 'Edit', 'url' => '/doctor/profile/edit'],
+    ],
+    'account_tiles' => user_profile_account_tiles($profile, $roleLabel),
+    'actions' => [
+        [
+            'key' => 'edit',
+            'label' => 'Edit',
+            'url' => '/doctor/profile/edit',
+            'method' => 'GET',
+            'tone' => 'neutral',
+        ],
+        [
+            'key' => 'security',
+            'label' => 'Security',
+            'url' => '/account/security',
+            'method' => 'GET',
+            'tone' => 'neutral',
+        ],
+    ],
+    'role_tiles' => [
+        [
+            'label' => 'Specialization',
+            'value' => user_profile_value($profile['specialization'] ?? null),
+            'icon' => 'bi-heart-pulse',
+        ],
+        [
+            'label' => 'License Number',
+            'value' => user_profile_value($profile['license_number'] ?? null),
+            'icon' => 'bi-shield-check',
+        ],
+        [
+            'label' => 'Professional Title',
+            'value' => user_profile_value($profile['professional_title'] ?? null),
+            'icon' => 'bi-award',
+        ],
+        [
+            'label' => 'Employee ID',
+            'value' => user_profile_value($profile['employee_id'] ?? null),
+            'icon' => 'bi-person-badge',
+        ],
+        [
+            'label' => 'Phone',
+            'value' => user_profile_value($profile['phone'] ?? null),
+            'icon' => 'bi-telephone',
+        ],
+    ],
+    'role_extra_html' => $roleExtraHtml,
+    'role_permissions' => [
+        'show' => true,
+        'text' => 'Access level and permissions granted to this role.',
+    ],
+    'protected_history' => ['show' => false],
+];
+
+require __DIR__ . '/../../partials/profile/layout.php';

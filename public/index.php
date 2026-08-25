@@ -1,6 +1,14 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (!is_file($autoload)) {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'The application is not installed. Run composer install on the server.';
+    exit(1);
+}
+
+require_once $autoload;
 
 use App\Config\Environment;
 use App\Core\ErrorHandler;

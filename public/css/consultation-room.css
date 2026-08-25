@@ -5,14 +5,19 @@
  * ================================================================ */
 
 :root {
-  --vc-primary: #0794E3;
-  --vc-primary-rgb: 7, 148, 227;
-  --vc-teal: #08B4C6;
-  --vc-teal-rgb: 8, 180, 198;
-  --vc-green: #08B4C6;
-  --vc-surface: #ffffff;
-  --vc-border: #E2E6E7;
-  --vc-muted: #70838A;
+  --luna-light: var(--pale-blue);
+  --luna-cyan: var(--soft-cyan);
+  --luna-blue: var(--medical-blue);
+  --luna-deep: var(--dark-navy);
+  --luna-navy: var(--dark-navy);
+  --vc-primary: var(--medical-blue);
+  --vc-primary-rgb: var(--medical-blue-rgb);
+  --vc-teal: var(--soft-cyan);
+  --vc-teal-rgb: var(--soft-cyan-rgb);
+  --vc-green: var(--emerald-green);
+  --vc-surface: var(--white);
+  --vc-border: var(--medium-gray);
+  --vc-muted: var(--dark-gray);
   --vc-radius: 14px;
   --vc-radius-sm: 10px;
 }
@@ -22,19 +27,19 @@
  * ------------------------------ */
 .vc-room-wrapper {
   width: 100%;
-  background: #0F172A;
+  background: var(--dark-navy);
   border-radius: var(--vc-radius);
   overflow: hidden;
   position: relative;
-  box-shadow: 0 24px 54px rgba(15, 76, 129, 0.12);
+  box-shadow: 0 24px 54px rgba(10, 111, 182, 0.12);
   isolation: isolate;
-  border: 1px solid rgba(15, 76, 129, 0.08);
+  border: 1px solid rgba(10, 111, 182, 0.08);
 }
 
 .vc-daily-frame-wrapper {
   position: relative;
   width: 100%;
-  background: #364A51;
+  background: var(--navy-black);
   min-height: 560px;
   min-height: clamp(540px, 78vh, calc(100vh - 130px));
   max-height: calc(100vh - 120px);
@@ -65,7 +70,7 @@
   justify-content: center;
   padding: 48px 24px;
   text-align: center;
-  color: #E5E7EB;
+  color: var(--medium-gray);
   gap: 14px;
 }
 
@@ -78,8 +83,8 @@
   justify-content: center;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  box-shadow: 0 20px 50px rgba(15, 76, 129, 0.35);
+  color: var(--white);
+  box-shadow: 0 20px 50px rgba(10, 111, 182, 0.35);
   margin-bottom: 8px;
 }
 .vc-precall-state__logo-circle i {
@@ -90,13 +95,13 @@
 .vc-precall-state__title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #F8FAFC;
+  color: var(--light-gray);
   margin: 0;
   letter-spacing: -0.01em;
 }
 .vc-precall-state__message {
   max-width: 420px;
-  color: #CBD5E1;
+  color: var(--medium-gray);
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.5;
@@ -109,13 +114,13 @@
   border: 1px solid var(--vc-border);
   border-radius: var(--vc-radius);
   background: var(--vc-surface);
-  box-shadow: 0 18px 40px rgba(15, 76, 129, 0.06);
+  box-shadow: 0 18px 40px rgba(10, 111, 182, 0.06);
   overflow: hidden;
 }
 .vc-side-panel__header {
   padding: 14px 20px;
   background: rgba(var(--vc-primary-rgb), 0.06);
-  color: #0F4C81;
+  color: var(--vc-primary);
   font-weight: 600;
   font-size: 0.9rem;
   display: flex;
@@ -124,12 +129,12 @@
 }
 .vc-side-panel__header--primary {
   background: rgba(var(--vc-primary-rgb), 0.08);
-  color: #0F4C81;
+  color: var(--vc-primary);
   border-bottom-color: rgba(var(--vc-primary-rgb), 0.10);
 }
 .vc-side-panel__header--teal {
   background: rgba(var(--vc-teal-rgb), 0.08);
-  color: #236b63;
+  color: var(--luna-deep, var(--dark-navy));
   border-bottom-color: rgba(var(--vc-teal-rgb), 0.10);
 }
 .vc-side-panel__body {
@@ -157,7 +162,7 @@
 }
 .vc-precall-list strong {
   font-size: 0.9rem;
-  color: #1F2937;
+  color: var(--navy-black);
   display: block;
 }
 .vc-precall-list span {
@@ -193,11 +198,11 @@
 }
 
 .vc-clinical-panel__status.is-saved {
-  color: #236b63;
+  color: var(--success-text);
 }
 
 .vc-clinical-panel__status.is-error {
-  color: #9b2c2c;
+  color: var(--danger);
 }
 
 .vc-clinical-panel__meta {
@@ -215,10 +220,12 @@
 }
 
 .vc-clinical-panel__complete {
-  border-top: 1px solid #E2E6E7;
+  border-top: 1px solid var(--vc-border);
   padding-top: 0.9rem;
   margin-top: 0.25rem;
 }
+
+.vc-clinical-panel__complete .form-label {
   font-size: 0.8rem;
   font-weight: 600;
   margin-bottom: 0.35rem;
@@ -229,15 +236,114 @@
   resize: vertical;
 }
 
+.vc-clinical-panel .table-responsive.vc-clinical-doc {
+  margin: 0 0 16px;
+  border: 1px solid var(--vc-border);
+  border-radius: var(--vc-radius-sm);
+  overflow: hidden;
+  background: #fff;
+}
+
+.vc-clinical-doc__table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.vc-clinical-doc__table caption {
+  caption-side: top;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--vc-primary);
+  background: rgba(var(--vc-primary-rgb), 0.06);
+  text-align: left;
+}
+
+.vc-clinical-doc__table thead th {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dark-navy);
+  background: var(--light-gray);
+  border-bottom: 1px solid var(--vc-border);
+}
+
+.vc-clinical-doc__table th,
+.vc-clinical-doc__table td {
+  padding: 10px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--vc-border);
+}
+
+.vc-clinical-doc__table tbody th {
+  width: 34%;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--vc-muted);
+  background: var(--light-gray);
+}
+
+.vc-clinical-doc__table tbody td {
+  font-size: 14px;
+  color: var(--navy-black);
+}
+
+.vc-clinical-doc__table tbody tr:last-child th,
+.vc-clinical-doc__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.vc-clinical-doc__table--notes tbody th {
+  vertical-align: top;
+  padding-top: 14px;
+}
+
+.vc-clinical-doc__table--notes tbody th label {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  line-height: 1.35;
+}
+
+.vc-clinical-doc__table--notes textarea.form-control {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 2px 0;
+  min-height: 2.4rem;
+  border-radius: 0;
+}
+
+.vc-clinical-doc__table--notes textarea.form-control:focus {
+  background: var(--light-gray);
+  box-shadow: none;
+}
+
+.vc-clinical-doc__table--notes textarea.form-control:disabled {
+  background: transparent;
+  opacity: 1;
+  color: var(--navy-black);
+}
+
 /* ------------------------------
  *  Utility badge backgrounds for the room (not global)
  * ------------------------------ */
-.bg-primary-soft { background: rgba(var(--vc-primary-rgb), 0.10); color: #0a4f82; }
-.bg-teal-soft    { background: rgba(var(--vc-teal-rgb), 0.12);    color: #1e5d56; }
-.bg-info-soft    { background: rgba(14, 165, 233, 0.12);         color: #075985; }
-.text-primary-900 { color: #0a4f82; }
-.text-teal-900    { color: #1e5d56; }
-.text-info-900    { color: #075985; }
+.bg-primary-soft { background: rgba(var(--vc-primary-rgb), 0.10); color: var(--luna-deep); }
+.bg-teal-soft    { background: rgba(var(--vc-teal-rgb), 0.12);    color: var(--luna-deep); }
+.bg-info-soft    { background: rgba(64, 196, 255, 0.42);         color: var(--luna-blue); }
+.text-primary-900 { color: var(--luna-deep); }
+.text-teal-900    { color: var(--luna-deep); }
+.text-info-900    { color: var(--luna-blue); }
 
 /* ------------------------------
  *  Alert region — keeps same Bootstrap visual feel, ensures visibility
@@ -245,7 +351,7 @@
 #vc-alert-region .alert {
   border-radius: var(--vc-radius-sm);
   padding: 0.9rem 1rem;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 6px 18px rgba(16, 42, 67, 0.06);
   border-width: 1px;
 }
 

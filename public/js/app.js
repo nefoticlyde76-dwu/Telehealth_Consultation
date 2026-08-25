@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeCurrentYear();
   initializeRevealAnimations();
   initializeCounters();
-  initializePublicPageTransitions();
+  initializePageTransitions();
   initializeStaggeredLists();
 });
 
@@ -320,22 +320,70 @@ function easeOutCubic(value) {
   return 1 - ((1 - value) ** 3);
 }
 
-function initializePublicPageTransitions() {
-  if (!document.body.classList.contains("public-layout")) {
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function shouldSkipViewTransition(urlString) {
+  try {
+    const path = new URL(urlString, window.location.href).pathname;
+    return path.includes("/download-") || path.endsWith("/room");
+  } catch (error) {
+    return false;
+  }
+}
+
+function initializePageTransitions() {
+  if (prefersReducedMotion()) {
     return;
   }
 
+  window.addEventListener("pageswap", (event) => {
+    if (!event.viewTransition) {
+      return;
+    }
+    const destination = event.activation && event.activation.entry
+      ? event.activation.entry.url
+      : "";
+    if (destination && shouldSkipViewTransition(destination)) {
+      event.viewTransition.skipTransition();
+    }
+  });
+
+  window.addEventListener("pagereveal", (event) => {
+    if (event.viewTransition && prefersReducedMotion()) {
+      event.viewTransition.skipTransition();
+    }
+  });
+
+  if (document.body.classList.contains("public-layout")) {
+    initializePublicPageTransitions();
+  }
+
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted || "startViewTransition" in document) {
+      return;
+    }
+    document.body.classList.remove("ux-page-enter");
+    window.requestAnimationFrame(() => {
+      document.body.classList.add("ux-page-enter");
+    });
+  });
+}
+
+function initializePublicPageTransitions() {
   try {
     sessionStorage.removeItem("mbpha-ux-pt");
   } catch (error) {
     /* ignore quota / private mode */
   }
 
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if ("startViewTransition" in document) {
     return;
   }
 
   if (document.body.classList.contains("auth-login-layout")) {
+    document.body.classList.add("ux-page-enter");
     return;
   }
 
@@ -357,7 +405,7 @@ function initializePublicPageTransitions() {
  * from the demo are omitted — this runs once on page load.
  */
 function initializeStaggeredLists() {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (prefersReducedMotion()) {
     return;
   }
 
@@ -365,8 +413,11 @@ function initializeStaggeredLists() {
     return;
   }
 
+  if ("startViewTransition" in document) {
+    return;
+  }
+
   const groups = [
-    { selector: ".dashboard-sidebar .sidebar-link", variant: "ux-stag--right", delay: 70 },
     { selector: ".dashboard-content .ux-stat:not(.compact)", variant: "ux-stag--scale", delay: 90 },
     { selector: ".dashboard-content article.ux-card", variant: "ux-stag--scale", delay: 90 },
     { selector: ".lp-workflow__card", variant: "ux-stag--scale", delay: 90 },

@@ -10,7 +10,9 @@ class Session
     {
         if (session_status() === PHP_SESSION_NONE) {
             $config = AppConfig::getConfig();
-            $isSecure = parse_url($config['url'], PHP_URL_SCHEME) === 'https';
+            $isSecure = parse_url((string) ($config['url'] ?? ''), PHP_URL_SCHEME) === 'https'
+                || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443);
             $sessionPath = dirname(__DIR__, 2) . '/tmp/sessions';
 
             if (!is_dir($sessionPath)) {

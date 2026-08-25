@@ -10,52 +10,34 @@ $statusMessage = $statusMessage ?? null;
 $csrfToken = $csrfToken ?? '';
 ?>
 
-<section class="mb-4">
+<?php
+require __DIR__ . '/../../partials/profile/_helpers.php';
+$userName = (string) ($profile['full_name'] ?? 'Doctor');
+$profilePage = [
+    'breadcrumbs' => [
+        ['label' => 'Dashboard', 'url' => '/doctor/dashboard'],
+        ['label' => 'Profile', 'url' => '/doctor/profile'],
+        ['label' => 'Edit'],
+    ],
+    'title' => $userName,
+    'subtitle' => 'Update your phone number, specialization, profile photo, signature, and password securely.',
+    'header_links' => [
+        ['label' => 'Security', 'url' => '/account/security'],
+    ],
+    'back' => ['label' => 'Back to profile', 'url' => '/doctor/profile'],
+];
+?>
+<div class="user-profile-page">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
+  <?php require __DIR__ . '/../../partials/profile/header.php'; ?>
 
-  <div class="ux-page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-start align-items-lg-center gap-3 mb-0">
-    <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
-        <li class="active">Edit Profile</li>
-      </ol>
-      <span class="section-badge mb-3">
-        <i class="bi bi-person-gear"></i>
-        Doctor Profile Management
-      </span>
-      <h2 class="ux-page-header__title h4 mb-2">Edit your clinician profile</h2>
-      <p class="ux-page-header__subtitle text-muted mb-0">Update your phone number, specialization, profile photo, signature, and password securely.</p>
-    </div>
-    <div class="ux-page-header__right d-flex flex-wrap gap-2">
-      <a href="<?= \App\Helpers\Helper::url('/doctor/profile') ?>" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-person-vcard me-2"></i>
-        View Profile
-      </a>
-      <a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-arrow-left me-2"></i>
-        Back to Dashboard
-      </a>
-    </div>
-  </div>
-</section>
-
-<div class="row g-4">
-  <div class="col-xl-7">
-    <?php if ($errors !== []): ?>
-      <div class="mb-4">
-        <?php
-        $statusMessage = null;
-        require __DIR__ . '/../../partials/shared/alerts.php';
-        ?>
-      </div>
-    <?php endif; ?>
-
+<div class="user-profile-layout">
+  <div>
     <form method="POST" action="<?= \App\Helpers\Helper::url('/doctor/profile/edit') ?>" enctype="multipart/form-data" class="needs-validation" novalidate>
       <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
       <input type="hidden" name="form_action" value="profile">
 
-      <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-body p-4">
+      <div class="user-profile-card h-100">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
             <div>
               <h3 class="h5 mb-1">Profile Information</h3>
@@ -152,18 +134,17 @@ $csrfToken = $csrfToken ?? '';
             </div>
           </div>
 
-          <div class="d-flex justify-content-end gap-2 mt-4">
+          <div class="user-profile-form-actions">
             <button type="submit" class="btn btn-primary btn-sm">
               <i class="bi bi-save me-2"></i>
               Save Profile Updates
             </button>
           </div>
-        </div>
       </div>
     </form>
   </div>
 
-  <div class="col-xl-5">
+  <div>
     <?php if ($passwordErrors !== []): ?>
       <div class="mb-4">
         <?php
@@ -178,10 +159,9 @@ $csrfToken = $csrfToken ?? '';
       <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
       <input type="hidden" name="form_action" value="password">
 
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-4">
-          <h3 class="h5 mb-3">Change Password</h3>
-          <p class="text-muted mb-4">Confirm your current password, then provide a strong replacement credential.</p>
+      <div class="user-profile-card">
+        <h3 class="user-profile-card__title">Change Password</h3>
+        <p class="user-profile-card__lede">Confirm your current password, then provide a strong replacement credential.</p>
 
           <div class="row g-3">
             <div class="col-12">
@@ -230,34 +210,32 @@ $csrfToken = $csrfToken ?? '';
             </div>
           </div>
 
-          <div class="d-flex justify-content-end gap-2 mt-4">
+          <div class="user-profile-form-actions">
             <button type="submit" class="btn btn-primary btn-sm">
               <i class="bi bi-key-fill me-2"></i>
               Change Password
             </button>
           </div>
-        </div>
       </div>
     </form>
 
-    <div class="card border-0 shadow-sm rounded-4 mt-4">
-      <div class="card-body p-4">
-        <h3 class="h5 mb-3">Security Notes</h3>
-        <div class="admin-foundation-list">
-          <div class="admin-foundation-item">
-            <i class="bi bi-shield-lock"></i>
-            <span>Profile updates require a verified CSRF token and continue using the existing authenticated session.</span>
-          </div>
-          <div class="admin-foundation-item">
-            <i class="bi bi-upload"></i>
-            <span>Uploads are restricted to images and stored under clinician-specific directories.</span>
-          </div>
-          <div class="admin-foundation-item">
-            <i class="bi bi-key"></i>
-            <span>Password changes require the current password and store the new value as a secure password hash.</span>
-          </div>
+    <div class="user-profile-card mt-4">
+      <h3 class="user-profile-card__title">Security notes</h3>
+      <div class="admin-foundation-list">
+        <div class="admin-foundation-item">
+          <i class="bi bi-shield-lock"></i>
+          <span>Profile updates require a verified CSRF token and continue using the existing authenticated session.</span>
+        </div>
+        <div class="admin-foundation-item">
+          <i class="bi bi-upload"></i>
+          <span>Uploads are restricted to images and stored under clinician-specific directories.</span>
+        </div>
+        <div class="admin-foundation-item">
+          <i class="bi bi-key"></i>
+          <span>Password changes require the current password and store the new value as a secure password hash.</span>
         </div>
       </div>
     </div>
   </div>
+</div>
 </div>

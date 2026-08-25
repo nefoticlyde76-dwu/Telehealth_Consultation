@@ -14,6 +14,7 @@ use App\Services\PrescriptionPdfService;
 use App\Services\PatientConsultationBookingService;
 use App\Services\PatientDirectoryService;
 use App\Services\PatientProfileService;
+use App\Services\NotificationService;
 use App\Services\VideoConsultationService;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -53,6 +54,9 @@ class PatientController extends Controller
             : [];
         $nextAppointment = is_array($dashboardInsights['nextAppointment'] ?? null) ? $dashboardInsights['nextAppointment'] : null;
         $patientCharts = is_array($dashboardInsights['charts'] ?? null) ? $dashboardInsights['charts'] : [];
+        $headerNotifications = $user !== null && $user->id !== null
+            ? NotificationService::getHeaderData((int) $user->id, 'patient')
+            : ['unread_count' => 0, 'total_count' => 0, 'recent' => []];
 
         $this->render('patient/dashboard', [
             'title' => 'Patient Dashboard | MBPHA TeleHealth Consultation System',
@@ -106,6 +110,8 @@ class PatientController extends Controller
             'recentRequests' => $recentRequests,
             'nextAppointment' => $nextAppointment,
             'charts' => $patientCharts,
+            'headerNotifications' => $headerNotifications,
+            'recentNotifications' => array_slice($headerNotifications['recent'] ?? [], 0, 5),
             'rightbar' => [
                 'upcomingTitle' => 'Upcoming Consultation',
                 'upcomingItems' => $nextAppointment !== null
@@ -282,14 +288,23 @@ class PatientController extends Controller
 
         $errors = [];
         $fieldErrors = [];
+        $formData = [
+            'dob' => (string) ($profile['dob'] ?? ''),
+            'gender' => (string) ($profile['gender'] ?? ''),
+            'address' => (string) ($profile['address'] ?? ''),
+            'phone' => (string) ($profile['phone'] ?? ''),
+        ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $result = PatientProfileService::updateProfilePhoto((int) $user->id, $_POST, $_FILES);
+            $action = (string) ($_POST['form_action'] ?? 'photo');
+            $result = $action === 'details'
+                ? PatientProfileService::updateAccountDetails((int) $user->id, $_POST)
+                : PatientProfileService::updateProfilePhoto((int) $user->id, $_POST, $_FILES);
 
             if ($result['success'] ?? false) {
                 Session::flash('status', [
                     'type' => 'success',
-                    'message' => $result['message'] ?? 'Patient profile photo updated successfully.',
+                    'message' => $result['message'] ?? 'Patient profile updated successfully.',
                 ]);
                 Helper::redirect('/patient/profile');
                 return;
@@ -298,6 +313,9 @@ class PatientController extends Controller
             $errors = $result['errors'] ?? [];
             $fieldErrors = $result['fieldErrors'] ?? [];
             $profile = $result['profile'] ?? $profile;
+            if (isset($result['formData']) && is_array($result['formData'])) {
+                $formData = array_merge($formData, $result['formData']);
+            }
         }
 
         $this->render('patient/profile/edit', [
@@ -305,8 +323,8 @@ class PatientController extends Controller
             'user' => $user,
             'dashboardRole' => 'patient',
             'dashboardRoleLabel' => 'Patient Dashboard',
-            'dashboardTitle' => 'Edit Profile Photo',
-            'dashboardDescription' => 'Upload a professional patient profile picture securely.',
+            'dashboardTitle' => 'Edit Profile',
+            'dashboardDescription' => 'Update permitted personal details and your profile picture.',
             'sidebarItems' => [
                 ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
                 ['path' => '/patient/consultation-requests', 'label' => 'Consultation History', 'icon' => 'bi-clipboard2-check'],
@@ -316,6 +334,7 @@ class PatientController extends Controller
                 ['path' => '/patient/profile/edit', 'label' => 'Edit Profile Photo', 'icon' => 'bi-camera'],
             ],
             'profile' => $profile,
+            'formData' => $formData,
             'errors' => $errors,
             'fieldErrors' => $fieldErrors,
             'statusMessage' => Session::getFlash('status'),
@@ -338,17 +357,21 @@ class PatientController extends Controller
         }
 
         $pageData = PatientConsultationBookingService::getHistoryPageData((int) $user->id, $_GET);
+        $attachJoin = static function (array $row): array {
+            $row['videoJoin'] = self::computePatientVideoJoinContext($row);
+            return $row;
+        };
         $requests = $pageData['requests'] ?? [];
         if (is_array($requests)) {
-            $requests = array_map(
-                static function (array $row): array {
-                    $row['videoJoin'] = self::computePatientVideoJoinContext($row);
-                    return $row;
-                },
-                $requests
-            );
+            $requests = array_map($attachJoin, $requests);
         } else {
             $requests = [];
+        }
+
+        $groups = is_array($pageData['groups'] ?? null) ? $pageData['groups'] : PatientConsultationBookingService::groupHistoryRows($requests);
+        foreach (['active', 'completed', 'closed'] as $groupKey) {
+            $groupRows = $groups[$groupKey] ?? [];
+            $groups[$groupKey] = is_array($groupRows) ? array_map($attachJoin, $groupRows) : [];
         }
 
         $this->render('patient/consultation_requests/index', [
@@ -366,9 +389,16 @@ class PatientController extends Controller
                 ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
             ],
             'requests' => $requests,
-            'historyGroups' => PatientConsultationBookingService::groupHistoryRows($requests),
+            'historyGroups' => $groups,
+            'grouped' => (bool) ($pageData['grouped'] ?? true),
+            'filterActive' => (bool) ($pageData['filterActive'] ?? false),
             'summary' => $pageData['summary'] ?? [],
             'pagination' => $pageData['pagination'] ?? [],
+            'filters' => $pageData['filters'] ?? [],
+            'statusOptions' => $pageData['statusOptions'] ?? [],
+            'dateOptions' => $pageData['dateOptions'] ?? [],
+            'sortOptions' => $pageData['sortOptions'] ?? [],
+            'documentOptions' => $pageData['documentOptions'] ?? [],
             'statusMessage' => Session::getFlash('status'),
         ], 'layouts/dashboard');
     }

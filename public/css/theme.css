@@ -1,94 +1,174 @@
+@view-transition {
+  navigation: auto;
+}
+
+@keyframes ux-vt-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes ux-vt-fade-in {
+  from { opacity: 0; }
+}
+
+::view-transition-old(root) {
+  animation: 180ms ease-out both ux-vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 220ms ease-in both ux-vt-fade-in;
+}
+
+::view-transition-old(dash-sidebar),
+::view-transition-new(dash-sidebar),
+::view-transition-old(dash-topbar),
+::view-transition-new(dash-topbar),
+::view-transition-old(public-nav),
+::view-transition-new(public-nav),
+::view-transition-old(public-agh),
+::view-transition-new(public-agh),
+::view-transition-old(auth-visual),
+::view-transition-new(auth-visual) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-group(dash-sidebar) {
+  z-index: 6;
+}
+
+::view-transition-group(dash-topbar),
+::view-transition-group(public-nav) {
+  z-index: 5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
 :root {
   /* ============================================================
-     MBPHA TeleHealth colour palette
-     Deep Slate Blue, Muted Blue-Gray, Off-White, Bright Teal, Vibrant Blue.
-     Flat colour only — no gradients.
+     MBPHA TeleHealth design tokens — official color palette
+     Medical Blue · Emerald Green · Dark Navy · Soft Cyan
+     Light canvas + solid colour. Flat only — no decorative gradients.
      ============================================================ */
-  --ds-navy: #455F68;
-  --ds-navy-dark: #364A51;
-  --ds-hero: #455F68;
-  --ds-action: #067FBF;
-  --ds-accent: #0794E3;
-  --ds-accent-hover: #067FBF;
-  --ds-teal: #08B4C6;
-  --ds-green: #08B4C6;
-  --ds-canvas: #F8F8F8;
-  --ds-card: #FFFFFF;
-  --ds-border: #E2E6E7;
-  --ds-border-strong: #C5CDD0;
-  --ds-text: #455F68;
-  --ds-text-secondary: #70838A;
-  --ds-text-muted: #70838A;
-  --ds-sidebar-inactive: rgba(255, 255, 255, 0.76);
-  --ds-sidebar-active: #FFFFFF;
-  --ds-success-bg: rgba(8, 180, 198, 0.12);
-  --ds-success-text: #0A7A85;
-  --ds-success-dot: #08B4C6;
+  --medical-blue: #0A6FB6;
+  --emerald-green: #18A558;
+  --dark-navy: #17375E;
+  --soft-cyan: #40C4FF;
+  --white: #FFFFFF;
+
+  --light-gray: #F5F7FA;
+  --medium-gray: #D9E2EC;
+  --dark-gray: #4A5568;
+  --navy-black: #102A43;
+
+  --royal-blue: #1565C0;
+  --mint-green: #D8F3E8;
+  --pale-blue: #E3F2FD;
+
+  --medical-blue-hover: #085A94;
+  --emerald-green-hover: #147A45;
+  --danger: #DC3545;
+  --warning: #F59E0B;
+  --success-dark: #147A45;
+  --success-text: #147A45;
+
+  --medical-blue-rgb: 10, 111, 182;
+  --emerald-green-rgb: 24, 165, 88;
+  --dark-navy-rgb: 23, 55, 94;
+  --soft-cyan-rgb: 64, 196, 255;
+  --white-rgb: 255, 255, 255;
+  --light-gray-rgb: 245, 247, 250;
+  --medium-gray-rgb: 217, 226, 236;
+  --dark-gray-rgb: 74, 85, 104;
+  --navy-black-rgb: 16, 42, 67;
+  --royal-blue-rgb: 21, 101, 192;
+  --mint-green-rgb: 216, 243, 232;
+  --pale-blue-rgb: 227, 242, 253;
+
+  /* Backward-compatible LUNA aliases → new palette */
+  --luna-light: var(--pale-blue);
+  --luna-cyan: var(--soft-cyan);
+  --luna-blue: var(--medical-blue);
+  --luna-deep: var(--dark-navy);
+  --luna-navy: var(--dark-navy);
+  --luna-light-rgb: var(--pale-blue-rgb);
+  --luna-cyan-rgb: var(--soft-cyan-rgb);
+  --luna-blue-rgb: var(--medical-blue-rgb);
+  --luna-deep-rgb: var(--dark-navy-rgb);
+  --luna-navy-rgb: var(--dark-navy-rgb);
+
+  --color-primary: var(--medical-blue);
+  --color-primary-dark: var(--dark-navy);
+  --color-primary-deep: var(--navy-black);
+  --color-secondary: var(--emerald-green);
+  --color-accent-soft: var(--pale-blue);
+  --color-background: var(--light-gray);
+  --color-surface: var(--white);
+  --color-text: var(--navy-black);
+  --color-text-muted: var(--dark-gray);
+  --color-border: var(--medium-gray);
+
+  --ds-navy: var(--dark-navy);
+  --ds-navy-dark: var(--navy-black);
+  --ds-hero: var(--dark-navy);
+  --ds-action: var(--medical-blue);
+  --ds-accent: var(--medical-blue);
+  --ds-accent-hover: var(--medical-blue-hover);
+  --ds-teal: var(--soft-cyan);
+  --ds-green: var(--emerald-green);
+  --ds-canvas: var(--light-gray);
+  --ds-card: var(--white);
+  --ds-border: var(--medium-gray);
+  --ds-border-strong: var(--medium-gray);
+  --ds-text: var(--navy-black);
+  --ds-text-secondary: var(--dark-gray);
+  --ds-text-muted: var(--dark-gray);
+  --ds-sidebar-inactive: rgba(255, 255, 255, 0.78);
+  --ds-sidebar-active: var(--white);
+  --ds-success-bg: var(--mint-green);
+  --ds-success-text: var(--success-text);
+  --ds-success-dot: var(--emerald-green);
   --ds-warning-bg: rgba(245, 158, 11, 0.16);
   --ds-warning-text: #B45309;
-  --ds-warning-dot: #F59E0B;
-  --ds-info-bg: rgba(7, 148, 227, 0.10);
-  --ds-info-text: #0794E3;
-  --ds-info-dot: #0794E3;
+  --ds-warning-dot: var(--warning);
+  --ds-info-bg: var(--pale-blue);
+  --ds-info-text: var(--medical-blue);
+  --ds-info-dot: var(--soft-cyan);
   --ds-danger-bg: rgba(220, 53, 69, 0.10);
-  --ds-danger-text: #DC3545;
-  --ds-danger-dot: #DC3545;
-  --ds-neutral-bg: #F3F6F7;
-  --ds-neutral-text: #70838A;
-  --ds-neutral-dot: #70838A;
-  --ds-chart-line: #0794E3;
-  --ds-chart-fill: rgba(7, 148, 227, 0.12);
-  --ds-chart-grid: #E2E6E7;
-  --ds-shadow-card: 0 1px 3px rgba(69, 95, 104, 0.06);
-  --ds-shadow-overlay: 0 8px 24px rgba(69, 95, 104, 0.10);
+  --ds-danger-text: var(--danger);
+  --ds-danger-dot: var(--danger);
+  --ds-neutral-bg: var(--light-gray);
+  --ds-neutral-text: var(--dark-gray);
+  --ds-neutral-dot: var(--dark-gray);
+  --ds-chart-line: var(--medical-blue);
+  --ds-chart-fill: rgba(var(--medical-blue-rgb), 0.12);
+  --ds-chart-grid: var(--medium-gray);
+  --ds-shadow-card: 0 1px 3px rgba(var(--dark-navy-rgb), 0.06);
+  --ds-shadow-overlay: 0 8px 24px rgba(var(--dark-navy-rgb), 0.10);
   --ds-radius-sm: 8px;
   --ds-radius-md: 10px;
   --ds-radius-lg: 12px;
   --ds-radius-xl: 12px;
   --ds-radius-hero: 12px;
   --ds-radius-pill: 9999px;
-  --ds-headline-green: #08B4C6;
-  --ds-page: #F8F8F8;
-  --ds-soft-blue: #F3F6F7;
-  --ds-nav-text: #455F68;
-  --ds-login-border: #C5CDD0;
+  --ds-headline-green: var(--emerald-green);
+  --ds-page: var(--light-gray);
+  --ds-soft-blue: var(--pale-blue);
+  --ds-nav-text: var(--dark-navy);
+  --ds-login-border: var(--medium-gray);
   --ds-sidebar-width: 248px;
   --ds-topbar-height: 64px;
   --ds-space: 4px;
   --ds-font: Inter, "Segoe UI", -apple-system, Roboto, sans-serif;
 
-  --ds-navy-rgb: 69, 95, 104;
-  --ds-accent-rgb: 7, 148, 227;
-  --ds-teal-rgb: 8, 180, 198;
-  --ds-success-rgb: 8, 180, 198;
-  --ds-text-rgb: 69, 95, 104;
-
-  /* Backward-compatible aliases used by existing public + dashboard CSS */
-  --medical-blue: #0794E3;
-  --emerald-green: #08B4C6;
-  --dark-navy: #455F68;
-  --soft-cyan: #08B4C6;
-  --white: #ffffff;
-  --light-gray: #F8F8F8;
-  --medium-gray: #E2E6E7;
-  --dark-gray: #70838A;
-  --navy-black: #455F68;
-  --royal-blue: #0794E3;
-  --mint-green: rgba(8, 180, 198, 0.12);
-  --pale-blue: rgba(7, 148, 227, 0.12);
-  --danger: #dc3545;
-  --warning: #f59e0b;
-  --success-dark: #0A7A85;
-  --success-text: #0A7A85;
-
-  --medical-blue-rgb: 7, 148, 227;
-  --emerald-green-rgb: 8, 180, 198;
-  --dark-navy-rgb: 69, 95, 104;
-  --soft-cyan-rgb: 8, 180, 198;
-  --white-rgb: 255, 255, 255;
-  --light-gray-rgb: 248, 248, 248;
-  --medium-gray-rgb: 226, 230, 231;
-  --navy-black-rgb: 69, 95, 104;
+  --ds-navy-rgb: var(--dark-navy-rgb);
+  --ds-accent-rgb: var(--medical-blue-rgb);
+  --ds-teal-rgb: var(--soft-cyan-rgb);
+  --ds-success-rgb: var(--emerald-green-rgb);
+  --ds-text-rgb: var(--navy-black-rgb);
 
   --primary: var(--medical-blue);
   --primary-dark: var(--dark-navy);
@@ -106,17 +186,17 @@
   --surface-card: var(--ds-card);
   --surface-panel: var(--ds-card);
   --surface-glass: rgba(255, 255, 255, 0.92);
-  --surface-mint: var(--ds-success-bg);
-  --surface-blue: var(--ds-info-bg);
-  --surface-cyan: rgba(var(--ds-teal-rgb), 0.12);
-  --surface-primary: rgba(var(--ds-accent-rgb), 0.08);
-  --surface-success: var(--ds-success-bg);
-  --surface-navy: rgba(var(--ds-navy-rgb), 0.08);
+  --surface-mint: var(--mint-green);
+  --surface-blue: var(--pale-blue);
+  --surface-cyan: rgba(var(--soft-cyan-rgb), 0.12);
+  --surface-primary: rgba(var(--medical-blue-rgb), 0.08);
+  --surface-success: var(--mint-green);
+  --surface-navy: rgba(var(--dark-navy-rgb), 0.08);
   --surface-amber: var(--ds-warning-bg);
   --surface-danger: var(--ds-danger-bg);
-  --surface-purple: rgba(var(--ds-navy-rgb), 0.10);
-  --surface-slate: var(--ds-neutral-bg);
-  --surface-cyan-solid: rgba(var(--ds-teal-rgb), 0.12);
+  --surface-purple: rgba(var(--royal-blue-rgb), 0.10);
+  --surface-slate: var(--light-gray);
+  --surface-cyan-solid: rgba(var(--soft-cyan-rgb), 0.12);
 
   --shadow-soft: 0 8px 20px rgba(var(--dark-navy-rgb), 0.08);
   --shadow-card: 0 1px 2px rgba(var(--dark-navy-rgb), 0.06);
@@ -160,9 +240,9 @@
   --bs-danger: var(--danger);
   --bs-danger-rgb: 220, 53, 69;
   --bs-warning: var(--warning);
-  --bs-warning-rgb: 240, 180, 41;
-  --bs-light: var(--ds-canvas);
-  --bs-light-rgb: 244, 246, 249;
+  --bs-warning-rgb: 245, 158, 11;
+  --bs-light: var(--light-gray);
+  --bs-light-rgb: var(--light-gray-rgb);
   --bs-dark: var(--navy-black);
   --bs-dark-rgb: var(--navy-black-rgb);
   --bs-body-bg: var(--light-gray);
@@ -197,7 +277,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: var(--text);
+  color: var(--dark-navy);
   letter-spacing: -0.02em;
 }
 
@@ -246,21 +326,23 @@ a:hover {
 .btn-success:hover,
 .btn-success:focus-visible,
 .btn-success:active {
-  background-color: #14894a;
-  border-color: #14894a;
+  background-color: var(--emerald-green-hover);
+  border-color: var(--emerald-green-hover);
 }
 
 .btn-secondary {
-  background-color: var(--dark-navy);
-  border-color: var(--dark-navy);
-  box-shadow: 0 14px 28px rgba(var(--dark-navy-rgb), 0.2);
+  background-color: var(--white);
+  border-color: var(--medium-gray);
+  color: var(--dark-navy);
+  box-shadow: none;
 }
 
 .btn-secondary:hover,
 .btn-secondary:focus-visible,
 .btn-secondary:active {
-  background-color: var(--navy-black);
-  border-color: var(--navy-black);
+  background-color: var(--pale-blue);
+  border-color: var(--medical-blue);
+  color: var(--medical-blue);
 }
 
 .btn-info {
@@ -273,15 +355,15 @@ a:hover {
 .btn-info:hover,
 .btn-info:focus-visible,
 .btn-info:active {
-  background-color: #28b5f4;
-  border-color: #28b5f4;
+  background-color: var(--royal-blue);
+  border-color: var(--royal-blue);
   color: var(--navy-black);
 }
 
 .btn-outline-primary {
-  color: var(--primary);
-  border-color: rgba(var(--medical-blue-rgb), 0.24);
-  background-color: rgba(var(--white-rgb), 0.7);
+  color: var(--medical-blue);
+  border-color: var(--medical-blue);
+  background-color: var(--white);
 }
 
 .btn-outline-primary:hover,
@@ -310,7 +392,7 @@ a:hover {
 }
 
 .form-label {
-  color: var(--text);
+  color: var(--dark-navy);
   font-weight: 600;
   margin-bottom: 0.55rem;
 }
@@ -452,28 +534,6 @@ textarea.form-control {
   border: 1px solid rgba(var(--medium-gray-rgb), 0.95);
   box-shadow: var(--shadow-card);
   border-radius: var(--radius-lg);
-}
-
-/* ============================================================ MBPHA UX PRIME — Premium TeleHealth Design System (Week 5 refresh) ============================================================ */
-
-:root {
-  --space-4: 4px;
-  --space-8: 8px;
-  --space-12: 12px;
-  --space-16: 16px;
-  --space-20: 20px;
-  --space-24: 24px;
-  --space-32: 32px;
-  --space-40: 40px;
-  --space-48: 48px;
-  --space-64: 64px;
-
-  --radius-pill: 999px;
-  --radius-xs: 6px;
-  --radius-sm-new: 10px;
-  --radius-md-new: 14px;
-  --radius-lg-new: 18px;
-  --radius-xl-new: 24px;
 }
 
 .btn {
@@ -642,13 +702,13 @@ textarea.form-control {
   font-size: 24px;
   font-weight: 700;
   line-height: 1.2;
-  color: #102a43;
+  color: var(--navy-black);
 }
 
 .ux-stat.compact .ux-stat__label {
   font-size: 13px;
   font-weight: 500;
-  color: #6c757d;
+  color: var(--dark-gray);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -700,8 +760,8 @@ textarea.form-control {
 
 .ux-stat__icon--navy,
 .ux-stat.compact .ux-stat__icon--navy {
-  background: #E8EEF6;
-  color: #0A3C74;
+  background: var(--pale-blue);
+  color: var(--medical-blue);
 }
 
 .ux-stat__icon--surface,
@@ -714,13 +774,13 @@ textarea.form-control {
 .ux-stat__icon--cyan,
 .ux-stat.compact .ux-stat__icon--cyan {
   background: var(--surface-cyan-solid);
-  color: #0a6fb6;
+  color: var(--medical-blue);
 }
 
 .ux-stat__icon--purple,
 .ux-stat.compact .ux-stat__icon--purple {
   background: var(--surface-purple);
-  color: #6f42c1;
+  color: var(--medical-blue);
 }
 
 .ux-stat__icon--slate,
@@ -747,7 +807,7 @@ textarea.form-control {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #4a5568;
+  color: var(--dark-gray);
   margin: 0;
 }
 
@@ -755,14 +815,14 @@ textarea.form-control {
   font-size: 34px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #102a43;
+  color: var(--navy-black);
   line-height: 1.05;
   margin: 0;
 }
 
 .ux-stat__meta {
   font-size: 13px;
-  color: #4a5568;
+  color: var(--dark-gray);
   margin: 0;
 }
 
@@ -815,7 +875,7 @@ textarea.form-control {
   display: inline-flex;
   align-items: center;
   font-size: 13px;
-  color: #4a5568;
+  color: var(--dark-gray);
 }
 
 .ux-breadcrumb li + li::before {
@@ -825,7 +885,7 @@ textarea.form-control {
 }
 
 .ux-breadcrumb li a {
-  color: #4a5568;
+  color: var(--dark-gray);
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -843,14 +903,14 @@ textarea.form-control {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #102a43;
+  color: var(--dark-navy);
   margin: 0;
   line-height: 1.15;
 }
 
 .ux-page-header__subtitle {
   font-size: 14px;
-  color: #4a5568;
+  color: var(--dark-gray);
   margin: 0;
   max-width: 48rem;
   line-height: 1.5;
@@ -939,13 +999,13 @@ textarea.form-control {
 .ux-empty__title {
   font-size: 18px;
   font-weight: 600;
-  color: #102a43;
+  color: var(--navy-black);
   margin: 0 0 8px 0;
 }
 
 .ux-empty__text {
   font-size: 14px;
-  color: #4a5568;
+  color: var(--dark-gray);
   margin: 0 0 20px 0;
   line-height: 1.5;
 }
@@ -976,9 +1036,9 @@ textarea.form-control {
 }
 
 .ux-badge--pending {
-  background: #fff7e6;
-  color: #8a5a00;
-  border-color: #ffe0a3;
+  background: var(--pale-blue);
+  color: var(--medical-blue);
+  border-color: rgba(var(--medical-blue-rgb), 0.18);
 }
 
 .ux-badge--pending::before {
@@ -987,9 +1047,9 @@ textarea.form-control {
 
 .ux-badge--approved,
 .ux-badge--success {
-  background: #e9f8ef;
-  color: #0f5132;
-  border-color: #b9e7c7;
+  background: var(--mint-green);
+  color: var(--success-text);
+  border-color: rgba(var(--emerald-green-rgb), 0.28);
 }
 
 .ux-badge--approved::before,
@@ -1010,9 +1070,9 @@ textarea.form-control {
 }
 
 .ux-badge--available {
-  background: #e9f8ef;
-  color: #0f5132;
-  border-color: #b9e7c7;
+  background: var(--mint-green);
+  color: var(--success-text);
+  border-color: rgba(var(--emerald-green-rgb), 0.28);
 }
 
 .ux-badge--available::before {
@@ -1020,9 +1080,9 @@ textarea.form-control {
 }
 
 .ux-badge--booked {
-  background: #e3f2fd;
-  color: #0a3d85;
-  border-color: #b8d8f7;
+  background: var(--pale-blue);
+  color: var(--medical-blue);
+  border-color: rgba(var(--medical-blue-rgb), 0.18);
 }
 
 .ux-badge--booked::before {
@@ -1031,9 +1091,9 @@ textarea.form-control {
 
 .ux-badge--neutral,
 .ux-badge--info {
-  background: #e3f2fd;
-  color: var(--dark-navy);
-  border-color: #c8def5;
+  background: var(--pale-blue);
+  color: var(--medical-blue);
+  border-color: rgba(var(--soft-cyan-rgb), 0.28);
 }
 
 .ux-badge--neutral::before,
@@ -1074,7 +1134,7 @@ textarea.form-control {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: #4a5568;
+  color: var(--dark-gray);
   margin-bottom: 6px;
   display: block;
 }
@@ -1095,7 +1155,7 @@ textarea.form-control {
   font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.005em;
-  color: #102a43;
+  color: var(--navy-black);
   margin: 0;
 }
 
@@ -1108,7 +1168,7 @@ textarea.form-control {
 
 .ux-filter .form-control,
 .ux-filter .form-select {
-  border: 1px solid #d9e2ec;
+  border: 1px solid var(--medium-gray);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 14px;
@@ -1119,7 +1179,7 @@ textarea.form-control {
 
 .ux-filter .form-control:focus,
 .ux-filter .form-select:focus {
-  border: 2px solid #0a6fb6;
+  border: 2px solid var(--medical-blue);
   box-shadow: none;
   outline: none;
   padding: 9px 13px;
@@ -1373,7 +1433,7 @@ textarea.form-control {
 }
 
 .dashboard-sidebar {
-  background: var(--gradient-sidebar);
+  background: var(--dark-navy);
   width: 280px;
   min-height: 100vh;
   height: 100vh;
@@ -1418,29 +1478,29 @@ textarea.form-control {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border-radius: 0;
   font-size: 13px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.78);
   text-decoration: none;
-  border-left: 3px solid transparent;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  margin: 0 10px;
+  border: 0;
+  background: transparent;
+  transition: color 0.2s ease;
+  margin: 0;
   white-space: nowrap;
 }
 
 .sidebar-link:hover,
 .sidebar-link:focus-visible {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.95);
+  background: transparent;
+  color: var(--white);
   text-decoration: none;
 }
 
 .sidebar-link.active {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  border-left-color: #40c4ff;
+  background: transparent;
+  color: var(--white);
   font-weight: 600;
 }
 
@@ -1449,9 +1509,12 @@ textarea.form-control {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .sidebar-user-card {
@@ -1468,7 +1531,7 @@ textarea.form-control {
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--white);
   margin: 0;
   line-height: 1.3;
 }
@@ -1532,10 +1595,10 @@ textarea.form-control {
 }
 
 .dashboard-offcanvas {
-  background: var(--gradient-sidebar);
+  background: var(--dark-navy);
   width: 280px;
   max-width: 280px;
-  color: #ffffff;
+  color: var(--white);
 }
 
 .dashboard-offcanvas::before {
@@ -1573,7 +1636,7 @@ textarea.form-control {
 
 .dashboard-topbar {
   background: #fff;
-  border-bottom: 1px solid #d9e2ec;
+  border-bottom: 1px solid var(--medium-gray);
   padding: 0 28px;
   height: 64px;
   max-height: 64px;
@@ -1674,7 +1737,7 @@ textarea.form-control {
   padding: 8px 14px;
   background: var(--light-gray);
   border-radius: 10px;
-  border: 1px solid #d9e2ec;
+  border: 1px solid var(--medium-gray);
   font-size: 12px;
   font-weight: 500;
   color: var(--dark-navy);
@@ -1710,7 +1773,7 @@ textarea.form-control {
   padding: 4px 4px 4px 10px;
   height: 44px;
   border-radius: 12px;
-  border: 1px solid #d9e2ec;
+  border: 1px solid var(--medium-gray);
   background: #fff;
   box-shadow: none;
   transition: border-color 0.2s ease, background-color 0.2s ease;
@@ -1833,7 +1896,7 @@ textarea.form-control {
   min-width: 0;
   max-width: 440px;
   background: #fff;
-  border-left: 1px solid #d9e2ec;
+  border-left: 1px solid var(--medium-gray);
   position: sticky;
   top: 0;
   height: 100vh;
@@ -2161,7 +2224,7 @@ textarea.form-control {
   border-top: 1px solid #e3ecf5;
   border-right: 1px solid #e3ecf5;
   border-bottom: 1px solid #e3ecf5;
-  border-left: 4px solid #0a6fb6;
+  border-left: 4px solid var(--medical-blue);
   z-index: 0;
 }
 
@@ -2269,7 +2332,7 @@ textarea.form-control {
 
 .ux-welcome__breadcrumb a:hover,
 .ux-welcome__breadcrumb a:focus-visible {
-  color: #0a3c74;
+  color: var(--medical-blue);
 }
 
 .ux-welcome__breadcrumb .active {
@@ -2293,7 +2356,7 @@ textarea.form-control {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #0a3c74;
+  color: var(--medical-blue);
   margin: 0 0 8px 0;
   padding: 0;
 }
@@ -2339,8 +2402,8 @@ textarea.form-control {
 .ux-welcome__cta-secondary:hover,
 .ux-welcome__cta-secondary:focus-visible {
   background: rgba(255, 255, 255, 1);
-  color: #0a3c74;
-  border-color: rgba(10, 60, 116, 0.5);
+  color: var(--medical-blue);
+  border-color: rgba(10, 111, 182, 0.5);
   box-shadow: 0 1px 2px rgba(15, 36, 57, 0.04);
   text-decoration: none;
 }
@@ -2349,7 +2412,7 @@ textarea.form-control {
   position: absolute;
   width: 18px;
   height: 18px;
-  border-color: rgba(10, 60, 116, 0.22);
+  border-color: rgba(10, 111, 182, 0.22);
   z-index: 0;
   pointer-events: none;
 }
@@ -2374,7 +2437,7 @@ textarea.form-control {
   top: 32px;
   width: 160px;
   height: 1px;
-  background: rgba(69, 95, 104, 0.28);
+  background: rgba(10, 111, 182, 0.28);
   z-index: 0;
   pointer-events: none;
 }
@@ -2391,11 +2454,11 @@ textarea.form-control {
    ======================================================================== */
 
 .ux-welcome--admin {
-  background-color: #eaf2fb;
+  background-color: var(--pale-blue);
   border-top-color: #d5e4f4;
   border-right-color: #d5e4f4;
   border-bottom-color: #d5e4f4;
-  border-left-color: #0a3c74;
+  border-left-color: var(--medical-blue);
 }
 
 .ux-welcome--admin::before {
@@ -2403,7 +2466,7 @@ textarea.form-control {
 }
 
 .ux-welcome--admin .ux-welcome__eyebrow {
-  color: #0a3c74;
+  color: var(--medical-blue);
 }
 
 .ux-welcome--admin .ux-welcome__title {
@@ -2415,11 +2478,11 @@ textarea.form-control {
 }
 
 .ux-welcome--admin .ux-welcome__corner-tick {
-  border-color: rgba(10, 60, 116, 0.28);
+  border-color: rgba(10, 111, 182, 0.28);
 }
 
 .ux-welcome--admin .ux-welcome__sweep {
-  background: rgba(69, 95, 104, 0.22);
+  background: rgba(10, 111, 182, 0.22);
 }
 
 .ux-welcome--admin .ux-welcome__meta-pill {
@@ -2432,11 +2495,11 @@ textarea.form-control {
    ======================================================================== */
 
 .ux-welcome--doctor {
-  background-color: #effaf5;
+  background-color: var(--mint-green);
   border-top-color: #d5ecdf;
   border-right-color: #d5ecdf;
   border-bottom-color: #d5ecdf;
-  border-left-color: #137a48;
+  border-left-color: var(--emerald-green);
 }
 
 .ux-welcome--doctor::before {
@@ -2444,7 +2507,7 @@ textarea.form-control {
 }
 
 .ux-welcome--doctor .ux-welcome__eyebrow {
-  color: #137a48;
+  color: var(--emerald-green);
 }
 
 .ux-welcome--doctor .ux-welcome__title {
@@ -2461,7 +2524,7 @@ textarea.form-control {
 
 .ux-welcome--doctor .ux-welcome__breadcrumb a:hover,
 .ux-welcome--doctor .ux-welcome__breadcrumb a:focus-visible {
-  color: #0e5a34;
+  color: var(--success-text);
 }
 
 .ux-welcome--doctor .ux-welcome__breadcrumb .active {
@@ -2469,11 +2532,11 @@ textarea.form-control {
 }
 
 .ux-welcome--doctor .ux-welcome__corner-tick {
-  border-color: rgba(19, 122, 72, 0.26);
+  border-color: rgba(24, 165, 88, 0.26);
 }
 
 .ux-welcome--doctor .ux-welcome__sweep {
-  background: rgba(8, 180, 198, 0.28);
+  background: rgba(64, 196, 255, 0.28);
 }
 
 .ux-welcome--doctor .ux-welcome__meta-pill {
@@ -2489,8 +2552,8 @@ textarea.form-control {
 }
 
 .ux-welcome--doctor .ux-welcome__cta-secondary:hover {
-  color: #0e5a34;
-  border-color: rgba(19, 122, 72, 0.5);
+  color: var(--success-text);
+  border-color: rgba(24, 165, 88, 0.5);
 }
 
 /* ========================================================================
@@ -2498,15 +2561,15 @@ textarea.form-control {
    ======================================================================== */
 
 .ux-welcome--patient {
-  background-color: #eef7ff;
+  background-color: var(--pale-blue);
   border-top-color: #d3e7f6;
   border-right-color: #d3e7f6;
   border-bottom-color: #d3e7f6;
-  border-left-color: #0a6fb6;
+  border-left-color: var(--medical-blue);
 }
 
 .ux-welcome--patient::before {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='140' viewBox='0 0 300 140'><defs><pattern id='pgrid' width='24' height='24' patternUnits='userSpaceOnUse'><path d='M 24 0 L 0 0 0 24' fill='none' stroke='rgba(10,111,182,0.11)' stroke-width='1'/></pattern></defs><rect width='300' height='140' fill='url(%23pgrid)'/><g fill='none' stroke='rgba(10,111,182,0.20)' stroke-width='1.6' stroke-linecap='round'><path d='M22 58 C 50 30, 82 82, 110 54 S 168 28, 200 60 C 228 84, 252 40, 278 64'/><path d='M22 88 L 278 88' stroke-width='1' stroke-dasharray='2 4' opacity='0.55'/></g></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='140' viewBox='0 0 300 140'><defs><pattern id='pgrid' width='24' height='24' patternUnits='userSpaceOnUse'><path d='M 24 0 L 0 0 0 24' fill='none' stroke='rgba(10, 111, 182,0.11)' stroke-width='1'/></pattern></defs><rect width='300' height='140' fill='url(%23pgrid)'/><g fill='none' stroke='rgba(10, 111, 182,0.20)' stroke-width='1.6' stroke-linecap='round'><path d='M22 58 C 50 30, 82 82, 110 54 S 168 28, 200 60 C 228 84, 252 40, 278 64'/><path d='M22 88 L 278 88' stroke-width='1' stroke-dasharray='2 4' opacity='0.55'/></g></svg>");
 }
 
 .ux-welcome--patient .ux-welcome__eyebrow {
@@ -2526,7 +2589,7 @@ textarea.form-control {
 }
 
 .ux-welcome--patient .ux-welcome__sweep {
-  background: rgba(7, 148, 227, 0.28);
+  background: rgba(10, 111, 182, 0.28);
 }
 
 .ux-welcome--patient .ux-welcome__meta-pill {
@@ -2646,31 +2709,31 @@ textarea.form-control {
   letter-spacing: 0.01em;
 }
 .dashboard-layout .btn-outline-primary {
-  background: #fff;
-  border-color: rgba(15, 76, 129, 0.22);
-  color: #0F4C81;
+  background: var(--white);
+  border-color: var(--medical-blue);
+  color: var(--medical-blue);
 }
 .dashboard-layout .btn-outline-primary:hover,
 .dashboard-layout .btn-outline-primary:focus-visible {
-  background: #F1F5F9;
-  border-color: rgba(15, 76, 129, 0.42);
-  color: #0F4C81;
-  box-shadow: 0 10px 22px rgba(15, 76, 129, 0.07);
+  background: var(--pale-blue);
+  border-color: var(--medical-blue);
+  color: var(--medical-blue);
+  box-shadow: none;
 }
 .dashboard-layout .btn-primary {
-  background: #0F4C81;
-  border-color: #0F4C81;
-  box-shadow: 0 12px 24px rgba(15, 76, 129, 0.15);
+  background: var(--medical-blue);
+  border-color: var(--medical-blue);
+  box-shadow: none;
 }
 .dashboard-layout .btn-primary:hover,
 .dashboard-layout .btn-primary:focus-visible {
-  background: #0a3c66;
-  border-color: #0a3c66;
-  box-shadow: 0 14px 28px rgba(15, 76, 129, 0.20);
+  background: var(--medical-blue-hover);
+  border-color: var(--medical-blue-hover);
+  box-shadow: none;
 }
 .dashboard-layout .btn-danger {
-  background: #EF4444;
-  border-color: #EF4444;
+  background: var(--danger);
+  border-color: var(--danger);
   box-shadow: 0 10px 22px rgba(239, 68, 68, 0.16);
 }
 .dashboard-layout .btn-danger:hover,
@@ -2681,17 +2744,17 @@ textarea.form-control {
 
 /* ---------- Cards ---------- */
 .ux-card {
-  background: #ffffff !important;
+  background: var(--white) !important;
   background-image: none !important;
-  border: 1px solid #ECEFF4 !important;
+  border: 1px solid var(--medium-gray) !important;
   border-radius: var(--r-card, 14px) !important;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.045) !important;
+  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.045) !important;
   padding: var(--pad-card-y, 1.5rem) var(--pad-card-x, 1.5rem);
   transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
 }
 .ux-card:hover {
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.07) !important;
-  border-color: rgba(15, 76, 129, 0.12) !important;
+  box-shadow: 0 14px 40px rgba(16, 42, 67, 0.07) !important;
+  border-color: rgba(10, 111, 182, 0.12) !important;
   background-image: none !important;
 }
 .ux-card__header {
@@ -2706,7 +2769,7 @@ textarea.form-control {
 .ux-card__header h2.h5 {
   font-size: 0.98rem;
   letter-spacing: -0.008em;
-  color: #1F2937;
+  color: var(--navy-black);
   margin: 0 0 0.22rem;
   font-weight: 700;
 }
@@ -2715,13 +2778,13 @@ textarea.form-control {
   font-size: 0.78rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: #475569;
+  color: var(--dark-gray);
   margin: 0 0 0.35rem;
   font-weight: 600;
 }
 .ux-card__header .text-muted {
   font-size: 0.8rem;
-  color: #6B7280;
+  color: var(--dark-gray);
   line-height: 1.45;
 }
 .ux-card__body {
@@ -2731,7 +2794,7 @@ textarea.form-control {
 }
 .ux-card__footer {
   padding: 1rem 0 0 !important;
-  border-top: 1px solid #EEF2F7 !important;
+  border-top: 1px solid var(--medium-gray) !important;
   margin-top: 1.05rem;
   background: transparent !important;
 }
@@ -2739,16 +2802,16 @@ textarea.form-control {
 /* ---------- Stat widgets ---------- */
 .ux-stat {
   border-radius: var(--r-card, 14px) !important;
-  background: #ffffff !important;
+  background: var(--white) !important;
   background-image: none !important;
-  border: 1px solid #ECEFF4 !important;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
+  border: 1px solid var(--medium-gray) !important;
+  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.04) !important;
   padding: 1.15rem 1.15rem 1.05rem;
   transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
 }
 .ux-stat:hover {
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.07) !important;
-  border-color: rgba(15, 76, 129, 0.13) !important;
+  box-shadow: 0 14px 40px rgba(16, 42, 67, 0.07) !important;
+  border-color: rgba(10, 111, 182, 0.13) !important;
   background-image: none !important;
   transform: translateY(-1px);
 }
@@ -2756,7 +2819,7 @@ textarea.form-control {
   font-size: 0.7rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: #64748B;
+  color: var(--dark-gray);
   font-weight: 600;
   line-height: 1;
   padding-top: 2px;
@@ -2767,13 +2830,13 @@ textarea.form-control {
   font-size: 1.95rem;
   line-height: 1.02;
   letter-spacing: -0.03em;
-  color: #0F2744;
+  color: var(--medical-blue);
   font-weight: 800;
   margin: 0;
 }
 .ux-stat .text-muted {
   font-size: 0.78rem;
-  color: #6B7280;
+  color: var(--dark-gray);
   line-height: 1.45;
   margin-top: 0.3rem !important;
 }
@@ -2790,11 +2853,11 @@ textarea.form-control {
   flex-shrink: 0;
 }
 .ux-stat__icon i { line-height: 1; }
-.ux-stat__icon--mint    { background: rgba(34, 197, 94, 0.10);  color: #16A34A; border-color: rgba(34,197,94,0.18); }
-.ux-stat__icon--success { background: rgba(34, 197, 94, 0.10);  color: #16A34A; border-color: rgba(34,197,94,0.18); }
-.ux-stat__icon--amber   { background: rgba(245, 158, 11, 0.12); color: #B45309; border-color: rgba(245,158,11,0.20); }
-.ux-stat__icon--navy    { background: rgba(15, 76, 129, 0.10);  color: #0F4C81; border-color: rgba(15,76,129,0.18); }
-.ux-stat__icon--surface { background: rgba(15, 23, 42, 0.05);   color: #334155; border-color: rgba(15,23,42,0.08); }
+.ux-stat__icon--mint    { background: rgba(24, 165, 88, 0.10);  color: var(--emerald-green); border-color: rgba(34,197,94,0.18); }
+.ux-stat__icon--success { background: rgba(24, 165, 88, 0.10);  color: var(--emerald-green); border-color: rgba(34,197,94,0.18); }
+.ux-stat__icon--amber   { background: var(--pale-blue); color: var(--medical-blue); border-color: rgba(var(--medical-blue-rgb), 0.18); }
+.ux-stat__icon--navy    { background: rgba(10, 111, 182, 0.10);  color: var(--medical-blue); border-color: rgba(10, 111, 182,0.18); }
+.ux-stat__icon--surface { background: rgba(16, 42, 67, 0.05);   color: var(--navy-black); border-color: rgba(15,23,42,0.08); }
 
 /* ---------- Badges (clinical shape not candy pill) ---------- */
 .ux-badge {
@@ -2811,15 +2874,19 @@ textarea.form-control {
 }
 .ux-badge i { font-size: 0.78rem; line-height: 0; }
 .ux-badge::before { display: none; } /* remove old dot-pseudo indicator */
-.ux-badge--pending   { background: rgba(245, 158, 11, 0.12); color: #92400E; border-color: rgba(245,158,11,0.22); }
+.ux-badge--pending   { background: var(--pale-blue); color: var(--medical-blue); border-color: rgba(var(--medical-blue-rgb), 0.18); }
 .ux-badge--approved,
 .ux-badge--success,
-.ux-badge--available { background: rgba(34, 197, 94, 0.12); color: #166534; border-color: rgba(34,197,94,0.22); }
+.ux-badge--available { background: var(--mint-green); color: var(--success-text); border-color: rgba(var(--emerald-green-rgb), 0.22); }
 .ux-badge--rejected,
 .ux-badge--danger    { background: rgba(239, 68, 68, 0.12); color: #991B1B; border-color: rgba(239,68,68,0.22); }
-.ux-badge--booked    { background: rgba(15, 76, 129, 0.12); color: #0F4C81; border-color: rgba(15,76,129,0.22); }
+.ux-badge--booked    { background: var(--pale-blue); color: var(--medical-blue); border-color: rgba(var(--medical-blue-rgb), 0.18); }
+.ux-badge--completed { background: var(--mint-green); color: var(--success-text); border-color: rgba(var(--emerald-green-rgb), 0.22); }
+.ux-badge--final     { background: var(--pale-blue); color: var(--medical-blue); border-color: rgba(var(--medical-blue-rgb), 0.18); }
+.ux-badge--cancelled,
+.ux-badge--draft,
 .ux-badge--neutral,
-.ux-badge--info      { background: rgba(71, 85, 105, 0.10); color: #334155; border-color: rgba(71,85,105,0.18); }
+.ux-badge--info      { background: var(--pale-blue); color: var(--medical-blue); border-color: rgba(var(--soft-cyan-rgb), 0.22); }
 
 button.is-loading,
 .btn.is-loading {
@@ -2856,7 +2923,7 @@ button.is-loading::after,
 /* ---------- Tables ---------- */
 .ux-table-wrapper {
   border-radius: 11px;
-  border: 1px solid #EEF2F7;
+  border: 1px solid var(--medium-gray);
   overflow: hidden;
   background: #fff;
 }
@@ -2867,23 +2934,23 @@ button.is-loading::after,
   margin: 0 !important;
 }
 .ux-table thead th {
-  background: #F8FAFC;
-  color: #475569;
+  background: var(--light-gray);
+  color: var(--dark-gray);
   font-size: 0.7rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   font-weight: 700;
   padding: 0.7rem 0.9rem;
   border-top: 0;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--medium-gray);
   white-space: nowrap;
 }
 .ux-table tbody td {
   padding: 0.75rem 0.9rem;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--light-gray);
   vertical-align: middle;
   font-size: 0.85rem;
-  color: #1F2937;
+  color: var(--navy-black);
 }
 .ux-table tbody tr:last-child td { border-bottom: 0; }
 .ux-table tbody tr:hover td {
@@ -2892,7 +2959,7 @@ button.is-loading::after,
 .ux-table tbody strong {
   font-size: 0.87rem;
   letter-spacing: -0.005em;
-  color: #0F2744;
+  color: var(--medical-blue);
   line-height: 1.2;
 }
 .ux-table tbody td .text-muted {
@@ -2906,41 +2973,41 @@ button.is-loading::after,
 /* ---------- Empty states ---------- */
 .ux-empty {
   border-radius: 12px;
-  background: #F8FAFC;
-  border: 1px dashed #E2E8F0;
+  background: var(--light-gray);
+  border: 1px dashed var(--medium-gray);
   padding: 2rem 1.25rem;
 }
 .ux-empty__icon {
   width: 54px;
   height: 54px;
   border-radius: 16px;
-  background: rgba(15, 76, 129, 0.08);
-  color: #0F4C81;
+  background: rgba(10, 111, 182, 0.08);
+  color: var(--medical-blue);
   font-size: 1.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .ux-empty h4, .ux-empty .h6 {
-  color: #0F2744;
+  color: var(--medical-blue);
   letter-spacing: -0.01em;
   margin-top: 0.25rem;
 }
 .ux-empty .text-muted {
-  color: #64748B;
+  color: var(--dark-gray);
   font-size: 0.83rem;
   line-height: 1.5;
 }
 
 /* ---------- Welcome banner (solid, no sweep/corner blobs) ---------- */
 .ux-welcome {
-  background: #ffffff !important;
+  background: var(--white) !important;
   background-image: none !important;
-  border: 1px solid #ECEFF4 !important;
+  border: 1px solid var(--medium-gray) !important;
   border-radius: var(--r-card, 14px) !important;
   padding: 1.55rem 1.65rem 1.45rem;
   margin-bottom: 1.75rem;
-  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.055);
+  box-shadow: 0 14px 40px rgba(16, 42, 67, 0.055);
   position: relative;
   overflow: hidden;
 }
@@ -2976,30 +3043,30 @@ button.is-loading::after,
   font-size: 0.74rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #64748B;
+  color: var(--dark-gray);
 }
 .ux-welcome__breadcrumb a {
-  color: #64748B;
+  color: var(--dark-gray);
   text-decoration: none;
   padding: 0.12rem 0.38rem;
   border-radius: 8px;
 }
 .ux-welcome__breadcrumb a:hover,
 .ux-welcome__breadcrumb a:focus-visible {
-  color: #0F4C81;
-  background: rgba(15, 76, 129, 0.06);
+  color: var(--medical-blue);
+  background: rgba(10, 111, 182, 0.06);
 }
 .ux-welcome__breadcrumb li + li::before {
   content: "›";
   display: inline-block;
   margin-right: 0.45rem;
-  color: #CBD5E1;
+  color: var(--medium-gray);
 }
 .ux-welcome__breadcrumb .active {
-  color: #334155;
+  color: var(--navy-black);
   padding: 0.12rem 0.38rem;
   border-radius: 8px;
-  background: rgba(15, 23, 42, 0.04);
+  background: rgba(16, 42, 67, 0.04);
 }
 .ux-welcome__eyebrow {
   display: inline-block;
@@ -3012,27 +3079,27 @@ button.is-loading::after,
   font-weight: 700;
 }
 .ux-welcome--patient .ux-welcome__eyebrow {
-  background: rgba(15, 76, 129, 0.09);
-  color: #0F4C81;
+  background: rgba(10, 111, 182, 0.09);
+  color: var(--medical-blue);
 }
 .ux-welcome--doctor .ux-welcome__eyebrow {
-  background: rgba(42, 157, 143, 0.14);
-  color: #0F766E;
+  background: rgba(24, 165, 88, 0.14);
+  color: var(--emerald-green);
 }
 .ux-welcome--admin .ux-welcome__eyebrow {
-  background: rgba(15, 23, 42, 0.08);
-  color: #334155;
+  background: rgba(16, 42, 67, 0.08);
+  color: var(--navy-black);
 }
 .ux-welcome__title {
   font-size: 1.7rem;
   line-height: 1.13;
   letter-spacing: -0.02em;
-  color: #0F2744;
+  color: var(--dark-navy);
   font-weight: 800;
   margin: 0 0 0.35rem;
 }
 .ux-welcome__description {
-  color: #475569;
+  color: var(--dark-gray);
   font-size: 0.89rem;
   line-height: 1.55;
   margin: 0 0 1rem;
@@ -3045,9 +3112,9 @@ button.is-loading::after,
 }
 .ux-welcome__meta-pill {
   border-radius: var(--r-chip, 12px);
-  background: #F1F5F9;
-  border: 1px solid #E5E7EB;
-  color: #334155;
+  background: var(--light-gray);
+  border: 1px solid var(--medium-gray);
+  color: var(--navy-black);
   padding: 0.42rem 0.78rem;
   font-size: 0.78rem;
   display: inline-flex;
@@ -3058,19 +3125,19 @@ button.is-loading::after,
 }
 .ux-welcome__meta-pill:hover,
 .ux-welcome__meta-pill:focus-within {
-  background: #EEF2F7;
-  border-color: rgba(15, 76, 129, 0.14);
+  background: var(--medium-gray);
+  border-color: rgba(10, 111, 182, 0.14);
   background-image: none !important;
 }
 .ux-welcome__meta-pill i {
   font-size: 0.88rem;
-  color: #0F4C81;
+  color: var(--medical-blue);
 }
-.ux-welcome--doctor .ux-welcome__meta-pill i { color: #0F766E; }
-.ux-welcome--admin  .ux-welcome__meta-pill i { color: #334155; }
+.ux-welcome--doctor .ux-welcome__meta-pill i { color: var(--emerald-green); }
+.ux-welcome--admin  .ux-welcome__meta-pill i { color: var(--navy-black); }
 
 .ux-welcome--admin .ux-welcome__meta-pill {
-  background: #F8FAFC;
+  background: var(--light-gray);
 }
 
 .ux-welcome__actions {
@@ -3082,19 +3149,19 @@ button.is-loading::after,
 }
 .ux-welcome__actions .btn-primary-xl {
   background-image: none !important;
-  background: #0F4C81 !important;
-  box-shadow: 0 14px 30px rgba(15, 76, 129, 0.20);
+  background: var(--medical-blue) !important;
+  box-shadow: 0 14px 30px rgba(10, 111, 182, 0.20);
 }
 .ux-welcome__actions .btn-primary-xl:hover {
-  background: #0a3c66 !important;
-  box-shadow: 0 18px 34px rgba(15, 76, 129, 0.26);
+  background: var(--dark-navy) !important;
+  box-shadow: 0 18px 34px rgba(10, 111, 182, 0.26);
 }
 .ux-welcome__cta-secondary {
   border-radius: 13px;
   padding: 0.7rem 1rem;
-  border: 1px solid rgba(15, 76, 129, 0.18);
-  background: #ffffff;
-  color: #0F4C81;
+  border: 1px solid rgba(10, 111, 182, 0.18);
+  background: var(--white);
+  color: var(--medical-blue);
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -3105,9 +3172,9 @@ button.is-loading::after,
 }
 .ux-welcome__cta-secondary:hover,
 .ux-welcome__cta-secondary:focus-visible {
-  background: #F1F5F9;
-  border-color: rgba(15, 76, 129, 0.32);
-  color: #0F4C81;
+  background: var(--light-gray);
+  border-color: rgba(10, 111, 182, 0.32);
+  color: var(--medical-blue);
   background-image: none !important;
 }
 .ux-welcome__cta-secondary i {
@@ -3120,21 +3187,21 @@ button.is-loading::after,
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 4px;
-  background: #0F4C81;
+  background: var(--medical-blue);
 }
 .ux-welcome--doctor::before {
   content: "";
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 4px;
-  background: #2A9D8F;
+  background: var(--soft-cyan);
 }
 .ux-welcome--admin::before {
   content: "";
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 4px;
-  background: #334155;
+  background: var(--dark-navy);
 }
 
 /* ---------- Lists (latest-users, slot rows, rightbar-list) ---------- */
@@ -3143,12 +3210,12 @@ button.is-loading::after,
   flex-direction: column;
   border-radius: 11px;
   overflow: hidden;
-  border: 1px solid #EEF2F7;
+  border: 1px solid var(--medium-gray);
   background: #fff;
 }
 .ux-list__item {
   padding: 0.72rem 0.85rem;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--light-gray);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3158,9 +3225,9 @@ button.is-loading::after,
 .ux-list__item strong {
   font-size: 0.85rem;
   letter-spacing: -0.008em;
-  color: #0F2744;
+  color: var(--medical-blue);
 }
-.ux-list__item .small { color: #6B7280; font-size: 0.76rem; }
+.ux-list__item .small { color: var(--dark-gray); font-size: 0.76rem; }
 
 /* ---------- Slot rows (patient available-slots sidebar) ---------- */
 .ux-slot-row {
@@ -3170,60 +3237,60 @@ button.is-loading::after,
   grid-template-columns: 1.15fr 1fr auto;
   align-items: center;
   gap: 0.75rem;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--light-gray);
 }
 .ux-slot-row:last-child { border-bottom: 0; }
 .ux-slot-row strong {
   font-size: 0.86rem;
   letter-spacing: -0.008em;
-  color: #0F2744;
+  color: var(--medical-blue);
 }
 .ux-slot-row .small.text-muted {
   font-size: 0.75rem;
-  color: #64748B;
+  color: var(--dark-gray);
 }
-.ux-slot-row .text-center strong { color: #0F4C81; letter-spacing: -0.01em; }
+.ux-slot-row .text-center strong { color: var(--medical-blue); letter-spacing: -0.01em; }
 
 /* ---------- Form inputs (consistent density within cards) ---------- */
 .dashboard-layout .form-label {
   font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #334155;
+  color: var(--dark-navy);
   margin-bottom: 0.35rem;
 }
 .dashboard-layout .form-control,
 .dashboard-layout .form-select {
   border-radius: 12px;
-  border: 1px solid #D9DFE7;
-  background: #FFFFFF;
+  border: 1px solid var(--medium-gray);
+  background: var(--white);
   padding: 0.58rem 0.85rem;
   font-size: 0.87rem;
-  color: #0F2744;
+  color: var(--navy-black);
   box-shadow: none;
 }
 .dashboard-layout .form-control::placeholder,
 .dashboard-layout .form-select::placeholder {
-  color: #94A3B8;
+  color: var(--dark-gray);
 }
 .dashboard-layout .form-control:focus,
 .dashboard-layout .form-select:focus {
   background: #fff;
-  border-color: rgba(15, 76, 129, 0.36);
-  box-shadow: 0 0 0 3px rgba(15, 76, 129, 0.09);
-  color: #0F2744;
+  border-color: var(--medical-blue);
+  box-shadow: 0 0 0 3px rgba(10, 111, 182, 0.16);
+  color: var(--navy-black);
 }
 .dashboard-layout .form-text {
   font-size: 0.74rem;
-  color: #64748B;
+  color: var(--dark-gray);
   line-height: 1.45;
   margin-top: 0.3rem;
 }
 .dashboard-layout .input-group-text {
   border-radius: 12px;
-  border-color: #D9DFE7;
-  background: #F8FAFC;
-  color: #475569;
+  border-color: var(--medium-gray);
+  background: var(--light-gray);
+  color: var(--dark-gray);
 }
 
 /* ---------- Charts (card padding override for canvas containers) ---------- */

@@ -228,8 +228,13 @@ expect_true(
     'PDF does not accept a query-string signature when none is stored on the doctor'
 );
 
+$embedded = PrescriptionPdfService::embedSignatureImage('uploads/doctors/22/signature_week8_day3.png');
+expect_true(str_starts_with((string) ($embedded['src'] ?? ''), 'data:image/jpeg;base64,'), 'Authorized signature is flattened into an embedded JPEG data URI');
+expect_true((int) ($embedded['width'] ?? 0) === 1 && (int) ($embedded['height'] ?? 0) === 1, 'Tiny signature images keep their native size');
+
 $signedHtml = PrescriptionPdfService::renderDocumentHtml($signedPage);
-expect_true(str_contains($signedHtml, 'uploads/doctors/22/signature_week8_day3.png'), 'Rendered prescription PDF includes the authorized signature image');
+expect_true(str_contains($signedHtml, 'data:image/jpeg;base64,'), 'Rendered prescription PDF embeds the authorized signature image');
+expect_true(!str_contains($signedHtml, 'uploads/doctors/22/signature_week8_day3.png'), 'Rendered prescription PDF does not expose the stored signature filesystem path');
 expect_true(!str_contains($signedHtml, 'uploads/doctors/99/forged.png'), 'Rendered prescription PDF does not embed a forged signature path');
 
 unset($_GET['signature'], $_POST['signature_path']);

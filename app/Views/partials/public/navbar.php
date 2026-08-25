@@ -22,8 +22,10 @@ $isNavActive = static function (string $path) use ($currentPath): bool {
 
 $loginActive = $currentPath === '/login';
 $registerActive = $currentPath === '/register';
+$passwordSetupActive = str_starts_with($currentPath, '/doctor/setup-password');
+$isAuthPage = $loginActive || $registerActive || $passwordSetupActive;
 ?>
-<?php if (!$loginActive && !$registerActive): ?>
+<?php if (!$isAuthPage): ?>
   <div class="public-agh-layer" aria-hidden="true"></div>
 <?php endif; ?>
 <nav class="navbar navbar-expand-xl navbar-dark public-navbar" aria-label="MBPHA TeleHealth public navigation">

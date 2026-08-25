@@ -7,11 +7,12 @@ class Database
     public static function getConfig(): array
     {
         return [
-            'host' => Environment::get('DB_HOST', '127.0.0.1'),
-            'port' => Environment::get('DB_PORT', '3306'),
-            'name' => Environment::get('DB_NAME', 'telehealth_db'),
-            'user' => Environment::get('DB_USER', 'root'),
-            'pass' => Environment::get('DB_PASS', ''),
+            'host' => trim((string) Environment::get('DB_HOST', '')),
+            'port' => trim((string) Environment::get('DB_PORT', '3306')) ?: '3306',
+            'name' => trim((string) Environment::get('DB_NAME', '')),
+            'user' => trim((string) Environment::get('DB_USER', '')),
+            'pass' => (string) Environment::get('DB_PASS', ''),
+            'socket' => trim((string) Environment::get('DB_SOCKET', '')),
             'charset' => 'utf8mb4',
         ];
     }

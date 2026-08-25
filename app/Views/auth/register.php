@@ -9,6 +9,11 @@ $confirmInvalid = $errorText !== '' && (stripos($errorText, 'confirm') !== false
 $dobInvalid = $errorText !== '' && stripos($errorText, 'date of birth') !== false;
 $genderInvalid = $errorText !== '' && stripos($errorText, 'gender') !== false;
 $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || stripos($errorText, 'privacy') !== false);
+$optionalOpen = $dobInvalid
+    || $genderInvalid
+    || trim((string) ($oldInput['dob'] ?? '')) !== ''
+    || trim((string) ($oldInput['gender'] ?? '')) !== ''
+    || trim((string) ($oldInput['address'] ?? '')) !== '';
 ?>
 <?php require __DIR__ . '/../partials/public/navbar.php'; ?>
 
@@ -85,11 +90,23 @@ $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || 
             </span>
             <div>
               <h1 id="authRegisterHeading" class="auth-register-title">Patient registration</h1>
-              <p class="auth-register-subtitle">Complete the required fields to create your account.</p>
+              <p class="auth-register-subtitle">Create your account to book teleconsultations.</p>
             </div>
           </header>
 
+          <?php
+          $googleClientId = trim((string) (\App\Config\App::getConfig()['google']['client_id'] ?? ''));
+          ?>
+
           <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
+
+          <div
+            id="googleSignInAlert"
+            class="alert alert-danger d-none"
+            role="alert"
+            aria-live="polite"
+            data-google-auth-alert
+          ></div>
 
           <form
             action="<?= \App\Helpers\Helper::url('/register') ?>"
@@ -102,7 +119,7 @@ $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || 
 
             <div class="auth-register-grid">
               <div class="auth-login-field">
-                <label for="registerFullName" class="form-label">Full Name</label>
+                <label for="registerFullName" class="form-label">Full Name <span class="text-danger">*</span></label>
                 <div class="auth-login-input">
                   <i class="bi bi-person auth-login-input__icon" aria-hidden="true"></i>
                   <input
@@ -121,7 +138,7 @@ $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || 
               </div>
 
               <div class="auth-login-field">
-                <label for="registerEmail" class="form-label">Email Address</label>
+                <label for="registerEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
                 <div class="auth-login-input">
                   <i class="bi bi-envelope auth-login-input__icon" aria-hidden="true"></i>
                   <input
@@ -141,64 +158,7 @@ $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || 
               </div>
 
               <div class="auth-login-field">
-                <label for="registerDob" class="form-label">
-                  Date of birth <span class="auth-optional">(optional)</span>
-                </label>
-                <div class="auth-login-input">
-                  <i class="bi bi-calendar3 auth-login-input__icon" aria-hidden="true"></i>
-                  <input
-                    type="date"
-                    class="form-control<?= $dobInvalid ? ' is-invalid' : '' ?>"
-                    id="registerDob"
-                    name="dob"
-                    value="<?= \App\Helpers\Helper::escape($oldInput['dob'] ?? '') ?>"
-                    min="1900-01-01"
-                    max="<?= \App\Helpers\Helper::escape($today) ?>"
-                    autocomplete="bday"
-                  >
-                </div>
-                <div class="invalid-feedback">Date of birth cannot be in the future.</div>
-              </div>
-
-              <div class="auth-login-field">
-                <label for="registerGender" class="form-label">
-                  Gender <span class="auth-optional">(optional)</span>
-                </label>
-                <div class="auth-login-input">
-                  <i class="bi bi-person auth-login-input__icon" aria-hidden="true"></i>
-                  <select
-                    class="form-select<?= $genderInvalid ? ' is-invalid' : '' ?>"
-                    id="registerGender"
-                    name="gender"
-                    autocomplete="sex"
-                  >
-                    <option value="">Select gender</option>
-                    <option value="male" <?= ($oldInput['gender'] ?? '') === 'male' ? 'selected' : '' ?>>Male</option>
-                    <option value="female" <?= ($oldInput['gender'] ?? '') === 'female' ? 'selected' : '' ?>>Female</option>
-                    <option value="other" <?= ($oldInput['gender'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
-                  </select>
-                </div>
-                <div class="invalid-feedback">Please select a valid gender option.</div>
-              </div>
-
-              <div class="auth-login-field auth-register-grid__full">
-                <label for="registerAddress" class="form-label">Address</label>
-                <div class="auth-login-input auth-login-input--area">
-                  <i class="bi bi-geo-alt auth-login-input__icon" aria-hidden="true"></i>
-                  <textarea
-                    class="form-control"
-                    id="registerAddress"
-                    name="address"
-                    rows="2"
-                    maxlength="1000"
-                    placeholder="Enter your address"
-                    autocomplete="street-address"
-                  ><?= \App\Helpers\Helper::escape($oldInput['address'] ?? '') ?></textarea>
-                </div>
-              </div>
-
-              <div class="auth-login-field">
-                <label for="registerPassword" class="form-label">Password</label>
+                <label for="registerPassword" class="form-label">Password <span class="text-danger">*</span></label>
                 <div class="auth-login-input">
                   <i class="bi bi-lock auth-login-input__icon" aria-hidden="true"></i>
                   <input
@@ -226,7 +186,7 @@ $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || 
               </div>
 
               <div class="auth-login-field">
-                <label for="registerConfirmPassword" class="form-label">Confirm Password</label>
+                <label for="registerConfirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
                 <div class="auth-login-input">
                   <i class="bi bi-lock auth-login-input__icon" aria-hidden="true"></i>
                   <input
@@ -268,31 +228,91 @@ $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || 
                   <span></span>
                 </div>
                 <p class="auth-password-hint" data-password-requirements>
-                  Use at least <span data-req="length">8 characters</span> with
+                  <span data-req="length">8+ characters</span> with
                   <span data-req="upper">uppercase</span>,
                   <span data-req="lower">lowercase</span>,
                   <span data-req="number">number</span>,
-                  and <span data-req="symbol">symbol</span>.
+                  and
+                  <span data-req="symbol">symbol</span>.
                 </p>
               </div>
+            </div>
 
-              <div class="auth-login-field auth-register-grid__full auth-register-consent">
-                <div class="form-check">
-                  <input
-                    class="form-check-input<?= $termsInvalid ? ' is-invalid' : '' ?>"
-                    type="checkbox"
-                    value="1"
-                    id="acceptTerms"
-                    name="terms"
-                    <?= $oldTerms ? 'checked' : '' ?>
-                    required
-                  >
-                  <div class="auth-register-consent__copy">
-                    <label class="form-check-label" for="acceptTerms">
-                      I understand that my information will be used to provide telehealth services through MBPHA.
-                    </label>
-                    <div class="invalid-feedback">Please confirm you understand how your information will be used.</div>
+            <details class="auth-register-optional"<?= $optionalOpen ? ' open' : '' ?>>
+              <summary>Optional details</summary>
+              <div class="auth-register-grid auth-register-optional__fields">
+                <div class="auth-login-field">
+                  <label for="registerDob" class="form-label">Date of birth</label>
+                  <div class="auth-login-input">
+                    <i class="bi bi-calendar3 auth-login-input__icon" aria-hidden="true"></i>
+                    <input
+                      type="date"
+                      class="form-control<?= $dobInvalid ? ' is-invalid' : '' ?>"
+                      id="registerDob"
+                      name="dob"
+                      value="<?= \App\Helpers\Helper::escape($oldInput['dob'] ?? '') ?>"
+                      min="1900-01-01"
+                      max="<?= \App\Helpers\Helper::escape($today) ?>"
+                      autocomplete="bday"
+                    >
                   </div>
+                  <div class="invalid-feedback">Date of birth cannot be in the future.</div>
+                </div>
+
+                <div class="auth-login-field">
+                  <label for="registerGender" class="form-label">Gender</label>
+                  <div class="auth-login-input">
+                    <i class="bi bi-person auth-login-input__icon" aria-hidden="true"></i>
+                    <select
+                      class="form-select<?= $genderInvalid ? ' is-invalid' : '' ?>"
+                      id="registerGender"
+                      name="gender"
+                      autocomplete="sex"
+                    >
+                      <option value="">Select gender</option>
+                      <option value="male" <?= ($oldInput['gender'] ?? '') === 'male' ? 'selected' : '' ?>>Male</option>
+                      <option value="female" <?= ($oldInput['gender'] ?? '') === 'female' ? 'selected' : '' ?>>Female</option>
+                      <option value="other" <?= ($oldInput['gender'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
+                    </select>
+                  </div>
+                  <div class="invalid-feedback">Please select a valid gender option.</div>
+                </div>
+
+                <div class="auth-login-field auth-register-grid__full">
+                  <label for="registerAddress" class="form-label">Address</label>
+                  <div class="auth-login-input">
+                    <i class="bi bi-geo-alt auth-login-input__icon" aria-hidden="true"></i>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="registerAddress"
+                      name="address"
+                      value="<?= \App\Helpers\Helper::escape($oldInput['address'] ?? '') ?>"
+                      maxlength="1000"
+                      placeholder="Street, village, or town"
+                      autocomplete="street-address"
+                    >
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <div class="auth-login-field auth-register-consent">
+              <div class="form-check">
+                <input
+                  class="form-check-input<?= $termsInvalid ? ' is-invalid' : '' ?>"
+                  type="checkbox"
+                  value="1"
+                  id="acceptTerms"
+                  name="terms"
+                  <?= $oldTerms ? 'checked' : '' ?>
+                  required
+                >
+                <div class="auth-register-consent__copy">
+                  <label class="form-check-label" for="acceptTerms">
+                    I agree to the use of my information for MBPHA telehealth services.
+                  </label>
+                  <div class="invalid-feedback">Please confirm you understand how your information will be used.</div>
                 </div>
               </div>
             </div>
@@ -307,10 +327,32 @@ $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || 
                 <i class="bi bi-person-plus me-2" aria-hidden="true"></i>
                 <span data-auth-submit-label>Create patient account</span>
               </button>
-              <a href="<?= \App\Helpers\Helper::url('/login') ?>" class="btn auth-login-register">
-                Already have an account? Sign in
-                <i class="bi bi-chevron-right ms-1" aria-hidden="true"></i>
-              </a>
+              <?php if ($googleClientId !== ''): ?>
+              <div class="auth-login-or" role="separator" aria-label="or">OR</div>
+              <div
+                id="mbphaGoogleSignIn"
+                class="auth-login-google"
+                data-google-auth
+                data-client-id="<?= \App\Helpers\Helper::escape($googleClientId) ?>"
+                data-auth-url="<?= \App\Helpers\Helper::escape(\App\Helpers\Helper::url('/auth/google')) ?>"
+                data-error-generic="This Google account could not be used to create or access a patient account."
+                data-error-unavailable="Google sign-in is unavailable right now. Please create an account with email and password."
+                data-busy-label="Continuing with Google…"
+              >
+                <div
+                  id="mbphaGoogleSignInButton"
+                  class="auth-login-google__button"
+                  data-google-auth-button
+                  role="group"
+                  aria-label="Continue with Google"
+                ></div>
+                <p class="auth-login-google-status" data-google-auth-status aria-live="polite"></p>
+              </div>
+              <?php endif; ?>
+              <p class="auth-register-signin">
+                Already have an account?
+                <a href="<?= \App\Helpers\Helper::url('/login') ?>">Sign in</a>
+              </p>
             </div>
           </form>
         </div>
@@ -318,5 +360,10 @@ $termsInvalid = $errorText !== '' && (stripos($errorText, 'terms') !== false || 
     </article>
   </div>
 </main>
+
+<?php if ($googleClientId !== ''): ?>
+<script src="<?= \App\Helpers\Helper::asset('js/google-auth.js') ?>"></script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="window.mbphaGoogleGisLoaded && window.mbphaGoogleGisLoaded()"></script>
+<?php endif; ?>
 
 <?php require __DIR__ . '/../partials/public/footer.php'; ?>

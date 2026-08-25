@@ -1,9 +1,13 @@
 <?php
 
+use App\Helpers\Status;
+
 $historyRows = is_array($historyRows ?? null) ? $historyRows : [];
 $emptyTitle = (string) ($emptyTitle ?? 'No consultations in this section');
 $emptyText = (string) ($emptyText ?? 'Matching consultations will appear here.');
 $showResetAction = (bool) ($showResetAction ?? false);
+
+require_once __DIR__ . '/../../partials/shared/status_helper.php';
 ?>
 
 <div class="ux-table-wrapper border-0">
@@ -36,7 +40,7 @@ $showResetAction = (bool) ($showResetAction ?? false);
                   <div class="ux-empty__action">
                     <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
                       <i class="bi bi-arrow-clockwise me-1"></i>
-                      Reset Filters
+                      Clear Filters
                     </a>
                   </div>
                 <?php endif; ?>
@@ -46,12 +50,9 @@ $showResetAction = (bool) ($showResetAction ?? false);
         <?php else: ?>
           <?php foreach ($historyRows as $consultation): ?>
             <?php
-            $status = (string) ($consultation['status'] ?? 'Pending');
-            $statusBadge = ux_status_badge_class($status);
+            $status = (string) ($consultation['status'] ?? Status::PENDING);
             $dateLabel = \App\Helpers\Helper::formatDate((string) ($consultation['consultation_date'] ?? ''), 'd M Y', 'Not available');
             $timeLabel = substr((string) ($consultation['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($consultation['end_time'] ?? ''), 0, 5);
-            $canComplete = $status === 'Approved';
-            $isCompleted = $status === 'Completed';
             $hasFinalRecord = (int) ($consultation['has_final_record'] ?? 0) === 1;
             $hasPrescription = (int) ($consultation['has_prescription'] ?? 0) === 1;
             $consultationId = (int) ($consultation['id'] ?? 0);
@@ -66,10 +67,16 @@ $showResetAction = (bool) ($showResetAction ?? false);
             $canJoinNow = is_array($videoJoin) ? (bool) ($videoJoin['canJoin'] ?? false) : false;
             $joinStatus = is_array($videoJoin) ? (string) ($videoJoin['status'] ?? 'unavailable') : 'unavailable';
             $joinReason = is_array($videoJoin) ? (string) ($videoJoin['reason'] ?? '') : '';
-            $showJoin   = $joinUrl !== '' && in_array($joinStatus, ['open', 'early', 'ended'], true);
-            $joinLabel  = 'Join Consultation';
-            if ($joinStatus === 'early')   $joinLabel = 'Join Soon';
-            if ($joinStatus === 'ended')   $joinLabel = 'Room Ended';
+            $actions = Status::consultationUiActions($status, [
+                'role' => 'doctor',
+                'has_final_record' => $hasFinalRecord,
+                'has_prescription' => $hasPrescription,
+                'join_status' => $joinStatus,
+                'can_join' => $canJoinNow,
+                'join_url' => $joinUrl,
+            ]);
+            $isCompleted = (bool) $actions['view_record'];
+            $joinLabel = (string) ($actions['join_label'] ?: 'Join Consultation');
             ?>
             <tr>
               <td>
@@ -87,13 +94,11 @@ $showResetAction = (bool) ($showResetAction ?? false);
                 <span class="text-muted small"><?= \App\Helpers\Helper::escape(mb_strimwidth((string) ($consultation['reason'] ?? ''), 0, 70, '...')) ?></span>
               </td>
               <td>
-                <span class="ux-badge <?= $statusBadge ?>">
-                  <?= \App\Helpers\Helper::escape($status) ?>
-                </span>
+                <?= ux_status_badge($status) ?>
               </td>
               <td>
                 <?php if ($hasFinalRecord): ?>
-                  <span class="ux-badge ux-badge--approved">Available</span>
+                  <?= ux_status_badge(Status::RECORD_FINAL, Status::DOMAIN_RECORD) ?>
                 <?php elseif ($isCompleted): ?>
                   <span class="text-muted small">Not yet finalized</span>
                 <?php else: ?>
@@ -102,7 +107,7 @@ $showResetAction = (bool) ($showResetAction ?? false);
               </td>
               <td>
                 <?php if ($hasPrescription): ?>
-                  <span class="ux-badge ux-badge--approved">Issued</span>
+                  <?= ux_status_badge('Issued', Status::DOMAIN_PRESENCE) ?>
                 <?php elseif ($isCompleted): ?>
                   <span class="text-muted small">Not issued</span>
                 <?php else: ?>
@@ -111,8 +116,8 @@ $showResetAction = (bool) ($showResetAction ?? false);
               </td>
               <td class="text-end">
                 <div class="ux-table__actions">
-                  <?php if ($showJoin): ?>
-                    <?php if ($canJoinNow): ?>
+                  <?php if ($actions['join']): ?>
+                    <?php if ($actions['join_enabled']): ?>
                       <a href="<?= \App\Helpers\Helper::escape($joinUrl) ?>"
                          class="btn btn-primary btn-sm"
                          aria-label="Join video consultation room now">
@@ -139,7 +144,7 @@ $showResetAction = (bool) ($showResetAction ?? false);
                     <?php endif; ?>
                   <?php endif; ?>
 
-                  <?php if ($canComplete): ?>
+                  <?php if ($actions['review_complete']): ?>
                     <a href="<?= \App\Helpers\Helper::escape($consultationRoomUrl) ?>" class="btn btn-outline-primary btn-sm">
                       <i class="bi bi-clipboard2-pulse me-1"></i>
                       Review &amp; complete
@@ -165,7 +170,7 @@ $showResetAction = (bool) ($showResetAction ?? false);
                         Download Prescription
                       </a>
                     <?php endif; ?>
-                  <?php elseif (!$showJoin): ?>
+                  <?php elseif (!$actions['join']): ?>
                     <span class="text-muted small">No action</span>
                   <?php endif; ?>
                 </div>

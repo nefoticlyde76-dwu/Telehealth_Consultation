@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Core\Csrf;
 use App\Core\Database;
-use App\Models\AuditLog;
+use App\Helpers\Status;
 use App\Models\User;
 
 class AdminUserService
@@ -105,6 +105,10 @@ class AdminUserService
         $offset = ($page - 1) * self::PER_PAGE;
         $users = User::findForManagement($filters, self::PER_PAGE, $offset);
         $summary = User::getUserManagementSummary();
+        $actorUserId = (int) (AuthService::getUserId() ?? 0);
+        foreach ($users as $index => $row) {
+            $users[$index]['actions'] = self::availableActions($row, $actorUserId);
+        }
 
         return [
             'filters' => $filters,
@@ -118,19 +122,366 @@ class AdminUserService
             ],
             'roleOptions' => self::getRoleOptions(),
             'statusOptions' => self::getStatusOptions(),
+            'sortOptions' => self::getSortOptions(),
         ];
     }
 
-    public static function getUserDetail(int $userId): ?array
+    public static function getUserDetail(int $userId, int $actorUserId = 0): ?array
     {
         if ($userId <= 0) {
             return null;
         }
 
-        return User::findManagementDetailById($userId);
+        $user = User::findManagementDetailById($userId);
+        if ($user === null || Status::isDeletedUserStatus((string) ($user['status'] ?? ''))) {
+            return null;
+        }
+
+        $role = (string) ($user['role_name'] ?? '');
+        $user['actions'] = self::availableActions($user, $actorUserId);
+        $user['protected_counts'] = UserDeletionService::countProtectedRecords(
+            Database::getInstance(),
+            $userId,
+            $role
+        );
+        $user['edit_url'] = self::editUrlForRole($role, $userId);
+
+        return $user;
     }
 
-    public static function deleteUserAccount(int $targetUserId, int $actorUserId, string $csrfToken): array
+    /**
+     * @param array<string, mixed> $user
+     * @return list<array{key:string,label:string,url:string,method:string,tone:string}>
+     */
+    public static function availableActions(array $user, int $actorUserId): array
+    {
+        $userId = (int) ($user['id'] ?? 0);
+        $status = Status::normalizeKey(Status::DOMAIN_USER, (string) ($user['status'] ?? ''));
+        $role = (string) ($user['role_name'] ?? '');
+        $isSelf = $userId > 0 && $userId === $actorUserId;
+        $isDeleted = $status === Status::USER_DELETED;
+
+        $actions = [];
+        if ($userId <= 0) {
+            return $actions;
+        }
+
+        $actions[] = [
+            'key' => 'view',
+            'label' => 'View',
+            'url' => '/admin/users/' . $userId,
+            'method' => 'GET',
+            'tone' => 'primary',
+        ];
+
+        $editUrl = self::editUrlForRole($role, $userId);
+        if ($editUrl !== null && !$isDeleted) {
+            $actions[] = [
+                'key' => 'edit',
+                'label' => 'Edit',
+                'url' => $editUrl,
+                'method' => 'GET',
+                'tone' => 'neutral',
+            ];
+        }
+
+        if (!$isDeleted && !$isSelf && !Status::isInvitationPendingUserStatus($status)) {
+            $actions[] = [
+                'key' => 'reset_password',
+                'label' => 'Reset password',
+                'url' => '/admin/users/' . $userId . '/reset-password',
+                'method' => 'GET',
+                'tone' => 'neutral',
+            ];
+        }
+
+        if ($status === Status::USER_ACTIVE && !$isSelf) {
+            $actions[] = [
+                'key' => 'suspend',
+                'label' => 'Suspend',
+                'url' => '/admin/users/' . $userId . '/suspend',
+                'method' => 'POST',
+                'tone' => 'warning',
+            ];
+            $actions[] = [
+                'key' => 'deactivate',
+                'label' => 'Deactivate',
+                'url' => '/admin/users/' . $userId . '/deactivate',
+                'method' => 'POST',
+                'tone' => 'danger',
+            ];
+        } elseif ($status === Status::USER_SUSPENDED && !$isSelf) {
+            $actions[] = [
+                'key' => 'reactivate',
+                'label' => 'Reactivate',
+                'url' => '/admin/users/' . $userId . '/reactivate',
+                'method' => 'POST',
+                'tone' => 'success',
+            ];
+            $actions[] = [
+                'key' => 'deactivate',
+                'label' => 'Deactivate',
+                'url' => '/admin/users/' . $userId . '/deactivate',
+                'method' => 'POST',
+                'tone' => 'danger',
+            ];
+        } elseif ($status === Status::USER_INACTIVE && !$isSelf) {
+            $actions[] = [
+                'key' => 'reactivate',
+                'label' => 'Reactivate',
+                'url' => '/admin/users/' . $userId . '/reactivate',
+                'method' => 'POST',
+                'tone' => 'success',
+            ];
+        }
+
+        if (!$isDeleted && !$isSelf) {
+            $actions[] = [
+                'key' => 'delete',
+                'label' => 'Delete permanently',
+                'url' => '/admin/users/' . $userId . '/delete',
+                'method' => 'POST',
+                'tone' => 'destroy',
+            ];
+        }
+
+        return $actions;
+    }
+
+    public static function changeAccountStatus(
+        int $targetUserId,
+        int $actorUserId,
+        string $targetStatus,
+        string $csrfToken
+    ): array {
+        if (!Csrf::verify($csrfToken)) {
+            return [
+                'success' => false,
+                'message' => 'Unable to verify the request. Please refresh the page and try again.',
+                'type' => 'danger',
+            ];
+        }
+
+        if (!self::actorIsAdmin($actorUserId)) {
+            return [
+                'success' => false,
+                'message' => 'Only administrators can change account status.',
+                'type' => 'danger',
+            ];
+        }
+
+        $targetStatus = Status::normalizeKey(Status::DOMAIN_USER, $targetStatus);
+        if (!Status::canAssignUserStatus($targetStatus)) {
+            return [
+                'success' => false,
+                'message' => 'The requested account status is invalid.',
+                'type' => 'danger',
+            ];
+        }
+
+        $targetUser = User::findManagementDetailById($targetUserId);
+        if ($targetUser === null) {
+            return [
+                'success' => false,
+                'message' => 'The selected user account could not be found.',
+                'type' => 'warning',
+            ];
+        }
+
+        if ($targetUserId === $actorUserId) {
+            return [
+                'success' => false,
+                'message' => 'Administrators cannot change the status of their own account from this screen.',
+                'type' => 'warning',
+            ];
+        }
+
+        $currentStatus = Status::normalizeKey(Status::DOMAIN_USER, (string) ($targetUser['status'] ?? ''));
+        if ($currentStatus === Status::USER_DELETED) {
+            return [
+                'success' => false,
+                'message' => 'A permanently deleted account cannot be reactivated from user management.',
+                'type' => 'warning',
+            ];
+        }
+
+        if (Status::isInvitationPendingUserStatus($currentStatus)) {
+            return [
+                'success' => false,
+                'message' => 'This account cannot be activated or deactivated until password setup is complete.',
+                'type' => 'warning',
+            ];
+        }
+
+        if ($currentStatus === $targetStatus) {
+            return [
+                'success' => true,
+                'message' => 'This account is already ' . Status::label($targetStatus, Status::DOMAIN_USER) . '.',
+                'type' => 'info',
+            ];
+        }
+
+        $role = (string) ($targetUser['role_name'] ?? '');
+        if (
+            $role === 'admin'
+            && $currentStatus === Status::USER_ACTIVE
+            && $targetStatus !== Status::USER_ACTIVE
+            && User::countActiveAdministrators() <= 1
+        ) {
+            return [
+                'success' => false,
+                'message' => 'The final active administrator account cannot be suspended or deactivated.',
+                'type' => 'warning',
+            ];
+        }
+
+        try {
+            if (!User::updateStatus($targetUserId, $targetStatus)) {
+                throw new \RuntimeException('Account status update did not persist.');
+            }
+
+            if ($targetStatus !== Status::USER_ACTIVE) {
+                SessionService::revokeAll($targetUserId);
+            }
+
+            AuditLogService::record(
+                'user_status_updated',
+                'Administrator changed account status to ' . $targetStatus . '.',
+                AuditLogService::ENTITY_USER,
+                $targetUserId,
+                'success',
+                [
+                    'subject_name' => (string) ($targetUser['full_name'] ?? ''),
+                    'subject_role' => $role,
+                ]
+            );
+
+            return [
+                'success' => true,
+                'message' => 'Account status updated to ' . Status::label($targetStatus, Status::DOMAIN_USER) . '.',
+                'type' => 'success',
+            ];
+        } catch (\Throwable $exception) {
+            error_log('[AdminUserService::changeAccountStatus] ' . $exception->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Account status could not be updated right now.',
+                'type' => 'danger',
+            ];
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array{success:bool,message?:string,errors:list<string>,fieldErrors:array<string,string>,user?:array<string,mixed>}
+     */
+    public static function resetUserPassword(int $targetUserId, int $actorUserId, array $input): array
+    {
+        $user = User::findManagementDetailById($targetUserId);
+        if ($user === null) {
+            return [
+                'success' => false,
+                'errors' => ['The selected user account could not be found.'],
+                'fieldErrors' => [],
+            ];
+        }
+
+        $fieldErrors = [];
+        $errors = [];
+
+        if (!Csrf::verify((string) ($input['_token'] ?? ''))) {
+            $fieldErrors['_token'] = 'Unable to verify the request. Please refresh the page and try again.';
+        }
+
+        if (!self::actorIsAdmin($actorUserId)) {
+            $errors[] = 'Only administrators can reset another user password.';
+        }
+
+        if ($targetUserId === $actorUserId) {
+            $errors[] = 'Use Security settings to change your own password.';
+        }
+
+        $status = Status::normalizeKey(Status::DOMAIN_USER, (string) ($user['status'] ?? ''));
+        if ($status === Status::USER_DELETED) {
+            $errors[] = 'A permanently deleted account cannot receive a password reset.';
+        }
+
+        if (Status::isInvitationPendingUserStatus($status)) {
+            $errors[] = 'A password cannot be reset until invitation password setup is complete.';
+        }
+
+        $password = (string) ($input['password'] ?? '');
+        $confirmPassword = (string) ($input['confirm_password'] ?? '');
+        $forceReset = isset($input['force_password_reset']);
+
+        if ($password === '') {
+            $fieldErrors['password'] = 'New password is required.';
+        } elseif (!\App\Helpers\Helper::isStrongPassword($password)) {
+            $fieldErrors['password'] = 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.';
+        }
+
+        if ($confirmPassword === '') {
+            $fieldErrors['confirm_password'] = 'Please confirm the new password.';
+        } elseif ($confirmPassword !== $password) {
+            $fieldErrors['confirm_password'] = 'Passwords do not match.';
+        }
+
+        if ($fieldErrors !== [] || $errors !== []) {
+            if (isset($fieldErrors['_token'])) {
+                array_unshift($errors, $fieldErrors['_token']);
+            }
+            if ($fieldErrors !== []) {
+                $errors[] = 'Please correct the highlighted password reset fields.';
+            }
+
+            return [
+                'success' => false,
+                'errors' => $errors,
+                'fieldErrors' => $fieldErrors,
+                'user' => $user,
+            ];
+        }
+
+        try {
+            if (!User::updatePasswordHash($targetUserId, password_hash($password, PASSWORD_DEFAULT))) {
+                throw new \RuntimeException('Password reset did not persist.');
+            }
+
+            User::setForcePasswordReset($targetUserId, $forceReset);
+            SessionService::revokeAll($targetUserId);
+            AuditLogService::record(
+                'user_password_reset',
+                'Administrator reset a user account password.',
+                AuditLogService::ENTITY_USER,
+                $targetUserId,
+                'success',
+                [
+                    'subject_name' => (string) ($user['full_name'] ?? ''),
+                    'subject_role' => (string) ($user['role_name'] ?? ''),
+                ]
+            );
+
+            return [
+                'success' => true,
+                'message' => 'Password reset successfully. The user must sign in with the new password.',
+                'errors' => [],
+                'fieldErrors' => [],
+                'user' => $user,
+            ];
+        } catch (\Throwable $exception) {
+            error_log('[AdminUserService::resetUserPassword] ' . $exception->getMessage());
+
+            return [
+                'success' => false,
+                'errors' => ['Password reset is temporarily unavailable. Please try again later.'],
+                'fieldErrors' => [],
+                'user' => $user,
+            ];
+        }
+    }
+
+    public static function forcePasswordReset(int $targetUserId, int $actorUserId, string $csrfToken): array
     {
         if (!Csrf::verify($csrfToken)) {
             return [
@@ -140,9 +491,16 @@ class AdminUserService
             ];
         }
 
-        $targetUser = User::findDeletionContextById($targetUserId);
+        if (!self::actorIsAdmin($actorUserId)) {
+            return [
+                'success' => false,
+                'message' => 'Only administrators can require a password reset.',
+                'type' => 'danger',
+            ];
+        }
 
-        if ($targetUser === null) {
+        $user = User::findManagementDetailById($targetUserId);
+        if ($user === null) {
             return [
                 'success' => false,
                 'message' => 'The selected user account could not be found.',
@@ -150,82 +508,98 @@ class AdminUserService
             ];
         }
 
-        $actorUser = User::findById($actorUserId);
-
-        if ($actorUser === null) {
-            return [
-                'success' => false,
-                'message' => 'The administrator account performing this action could not be verified.',
-                'type' => 'danger',
-            ];
-        }
-
-        $targetRole = (string) ($targetUser['role_name'] ?? '');
-
         if ($targetUserId === $actorUserId) {
             return [
                 'success' => false,
-                'message' => 'Administrators cannot permanently delete their own account.',
+                'message' => 'Use Security settings to change your own password.',
                 'type' => 'warning',
             ];
         }
 
-        if ($targetRole === 'admin' && User::countAdministrators() <= 1) {
+        $status = Status::normalizeKey(Status::DOMAIN_USER, (string) ($user['status'] ?? ''));
+        if ($status === Status::USER_DELETED) {
             return [
                 'success' => false,
-                'message' => 'The final administrator account cannot be deleted.',
+                'message' => 'A permanently deleted account cannot be required to reset a password.',
                 'type' => 'warning',
             ];
         }
 
-        $db = Database::getInstance();
-        $assetPaths = self::collectDeletionAssetPaths($targetUser);
+        if (Status::isInvitationPendingUserStatus($status)) {
+            return [
+                'success' => false,
+                'message' => 'A password change cannot be required until invitation password setup is complete.',
+                'type' => 'warning',
+            ];
+        }
 
         try {
-            $db->beginTransaction();
-
-            if (!AuditLog::create([
-                'actor_user_id' => $actorUserId,
-                'actor_name' => $actorUser->full_name ?? 'Administrator',
-                'action' => 'user_deleted',
-                'subject_name' => (string) ($targetUser['full_name'] ?? 'Unknown User'),
-                'subject_role' => $targetRole,
-                'description' => sprintf(
-                    '%s permanently deleted %s (%s).',
-                    (string) ($actorUser->full_name ?? 'Administrator'),
-                    (string) ($targetUser['full_name'] ?? 'Unknown User'),
-                    ucfirst($targetRole)
-                ),
-            ])) {
-                throw new \RuntimeException('Unable to write the audit log entry.');
+            if (!User::setForcePasswordReset($targetUserId, true)) {
+                throw new \RuntimeException('Force password reset flag did not persist.');
             }
 
-            if (!User::deleteById($targetUserId)) {
-                throw new \RuntimeException('Unable to delete the user account.');
-            }
+            AuditLogService::record(
+                'user_force_password_reset',
+                'Administrator required a password change on next login.',
+                AuditLogService::ENTITY_USER,
+                $targetUserId,
+                'success',
+                [
+                    'subject_name' => (string) ($user['full_name'] ?? ''),
+                    'subject_role' => (string) ($user['role_name'] ?? ''),
+                ]
+            );
 
-            $db->commit();
+            return [
+                'success' => true,
+                'message' => 'This user will be required to choose a new password at next login.',
+                'type' => 'success',
+            ];
         } catch (\Throwable $exception) {
-            if ($db->inTransaction()) {
-                $db->rollBack();
-            }
-
-            error_log('User account deletion failed: ' . $exception->getMessage());
+            error_log('[AdminUserService::forcePasswordReset] ' . $exception->getMessage());
 
             return [
                 'success' => false,
-                'message' => 'The user account could not be deleted right now. Please try again later.',
+                'message' => 'The force password reset flag could not be saved right now.',
                 'type' => 'danger',
             ];
         }
+    }
 
-        self::deleteStoredAssets($assetPaths);
+    public static function deleteUserAccount(
+        int $targetUserId,
+        int $actorUserId,
+        string $csrfToken,
+        string $confirmationPhrase = '',
+        string $actorPassword = ''
+    ): array {
+        return UserDeletionService::permanentlyDelete(
+            $targetUserId,
+            $actorUserId,
+            $csrfToken,
+            $confirmationPhrase,
+            $actorPassword
+        );
+    }
 
-        return [
-            'success' => true,
-            'message' => ucfirst($targetRole) . ' account for ' . (string) ($targetUser['full_name'] ?? 'the selected user') . ' was permanently deleted.',
-            'type' => 'success',
-        ];
+    /**
+     * @param list<mixed> $targetUserIds
+     * @return array{success:bool,message:string,type:string,deleted?:int,skipped?:int}
+     */
+    public static function deleteSelectedUserAccounts(
+        array $targetUserIds,
+        int $actorUserId,
+        string $csrfToken,
+        string $confirmationPhrase = '',
+        string $actorPassword = ''
+    ): array {
+        return UserDeletionService::permanentlyDeleteMany(
+            $targetUserIds,
+            $actorUserId,
+            $csrfToken,
+            $confirmationPhrase,
+            $actorPassword
+        );
     }
 
     public static function getRoleOptions(): array
@@ -235,14 +609,39 @@ class AdminUserService
 
     public static function getStatusOptions(): array
     {
-        return ['active', 'inactive'];
+        return Status::assignableUserKeys();
+    }
+
+    /**
+     * @return list<array{value:string,label:string}>
+     */
+    public static function getSortOptions(): array
+    {
+        return [
+            ['value' => 'newest', 'label' => 'Newest first'],
+            ['value' => 'oldest', 'label' => 'Oldest first'],
+            ['value' => 'name', 'label' => 'Name'],
+            ['value' => 'email', 'label' => 'Email'],
+            ['value' => 'last_login', 'label' => 'Last login'],
+        ];
+    }
+
+    private static function editUrlForRole(string $role, int $userId): ?string
+    {
+        return match ($role) {
+            'doctor' => '/admin/doctors/' . $userId . '/edit',
+            'patient' => '/admin/patients/' . $userId . '/edit',
+            default => null,
+        };
     }
 
     private static function normalizeFilters(array $query): array
     {
         $search = trim((string) ($query['search'] ?? ''));
         $role = strtolower(trim((string) ($query['role'] ?? '')));
-        $status = strtolower(trim((string) ($query['status'] ?? '')));
+        $status = Status::normalizeKey(Status::DOMAIN_USER, (string) ($query['status'] ?? ''));
+        $sort = strtolower(trim((string) ($query['sort'] ?? 'newest')));
+        $allowedSort = array_column(self::getSortOptions(), 'value');
 
         if (!in_array($role, self::getRoleOptions(), true)) {
             $role = '';
@@ -252,10 +651,15 @@ class AdminUserService
             $status = '';
         }
 
+        if (!in_array($sort, $allowedSort, true)) {
+            $sort = 'newest';
+        }
+
         return [
             'search' => $search,
             'role' => $role,
             'status' => $status,
+            'sort' => $sort,
         ];
     }
 
@@ -276,7 +680,7 @@ class AdminUserService
         foreach ($latestUsers as $user) {
             $activity[] = [
                 'title' => $user['full_name'] . ' account visible',
-                'description' => 'Role: ' . ucfirst((string) $user['role_name']) . ' | Status: ' . ucfirst((string) $user['status']),
+                'description' => 'Role: ' . ucfirst((string) $user['role_name']) . ' | Status: ' . Status::label((string) $user['status'], Status::DOMAIN_USER),
                 'meta' => 'Joined ' . date('d M Y', strtotime((string) $user['created_at'])),
             ];
         }
@@ -284,20 +688,15 @@ class AdminUserService
         return $activity;
     }
 
-    private static function collectDeletionAssetPaths(array $targetUser): array
+    private static function actorIsAdmin(int $actorUserId): bool
     {
-        return array_values(array_filter([
-            (string) ($targetUser['admin_profile_photo_path'] ?? ''),
-            (string) ($targetUser['doctor_profile_photo_path'] ?? ''),
-            (string) ($targetUser['signature_path'] ?? ''),
-            (string) ($targetUser['patient_profile_photo_path'] ?? ''),
-        ], static fn (string $path): bool => trim($path) !== ''));
+        if ($actorUserId <= 0) {
+            return false;
+        }
+
+        $actor = User::findById($actorUserId);
+
+        return $actor !== null && $actor->getRole() === 'admin';
     }
 
-    private static function deleteStoredAssets(array $assetPaths): void
-    {
-        foreach ($assetPaths as $assetPath) {
-            ProfilePhotoService::deleteStoredPath((string) $assetPath);
-        }
-    }
 }

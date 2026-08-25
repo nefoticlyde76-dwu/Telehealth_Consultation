@@ -7,7 +7,6 @@ $requestId = (int) ($request['id'] ?? 0);
 
 require __DIR__ . '/../../partials/shared/status_helper.php';
 
-$badgeClass = ux_status_badge_class($status, 'ux-badge--neutral');
 $dateLabel = \App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'D, d M Y', 'Not available');
 $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($request['end_time'] ?? ''), 0, 5);
 ?>
@@ -34,9 +33,7 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
         <i class="bi bi-arrow-left me-2"></i>
         Back to Requests
       </a>
-      <span class="ux-badge <?= \App\Helpers\Helper::escape($badgeClass) ?> align-self-center">
-        <?= \App\Helpers\Helper::escape($status) ?>
-      </span>
+      <?= ux_status_badge($status, \App\Helpers\Status::DOMAIN_CONSULTATION, ['class' => 'align-self-center']) ?>
     </div>
   </div>
 

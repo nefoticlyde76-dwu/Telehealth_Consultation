@@ -15,6 +15,7 @@ use App\Services\DoctorConsultationService;
 use App\Services\DoctorDashboardService;
 use App\Services\DoctorPrescriptionService;
 use App\Services\DoctorProfileService;
+use App\Services\NotificationService;
 use App\Services\PatientClinicalRecordService;
 use App\Services\PrescriptionPdfService;
 use App\Services\VideoConsultationService;
@@ -39,6 +40,17 @@ class DoctorController extends Controller
         }
 
         $dashboardData = DoctorDashboardService::getDashboardData((int) $user->id);
+        $headerNotifications = NotificationService::getHeaderData((int) $user->id, 'doctor');
+        $unreadCount = (int) ($headerNotifications['unread_count'] ?? 0);
+        $stats = $dashboardData['stats'];
+        $stats[] = [
+            'label' => 'Unread Notifications',
+            'value' => (string) $unreadCount,
+            'icon' => 'bi-bell',
+            'description' => 'Consultation updates that still need your attention.',
+            'tone' => 'info',
+            'url' => '/notifications?read_state=unread',
+        ];
 
         $this->render('doctor/dashboard', [
             'title' => 'Doctor Dashboard | MBPHA TeleHealth Consultation System',
@@ -59,7 +71,7 @@ class DoctorController extends Controller
             'focusTitle' => 'Clinician profile readiness',
             'focusDescription' => 'Keep your phone number, specialization, profile photo, and signature up to date for future consultation records.',
             'statusMessage' => Session::getFlash('status'),
-            'stats' => $dashboardData['stats'],
+            'stats' => $stats,
             'quickActions' => $dashboardData['quickActions'],
             'recentActivity' => $dashboardData['recentActivity'],
             'emptyState' => $dashboardData['emptyState'],
@@ -70,9 +82,12 @@ class DoctorController extends Controller
             'availabilitySummary' => $dashboardData['availabilitySummary'],
             'assetReadiness' => $dashboardData['assetReadiness'],
             'upcomingApprovedAppointments' => $dashboardData['upcomingApprovedAppointments'] ?? [],
+            'recentCompletedConsultations' => $dashboardData['recentCompletedConsultations'] ?? [],
             'recentApprovedAppointmentCount' => $dashboardData['recentApprovedAppointmentCount'] ?? 0,
             'upcomingApprovedAppointmentCount' => $dashboardData['upcomingApprovedAppointmentCount'] ?? 0,
             'charts' => $dashboardData['charts'] ?? [],
+            'headerNotifications' => $headerNotifications,
+            'recentNotifications' => array_slice($headerNotifications['recent'] ?? [], 0, 5),
             'rightbar' => [
                 'upcomingTitle' => 'Upcoming Consultations',
                 'upcomingItems' => array_map(static function (array $appointment): array {
@@ -270,8 +285,11 @@ class DoctorController extends Controller
             'filters' => $pageData['filters'],
             'availability' => $pageData['availability'],
             'summary' => $pageData['summary'],
+            'filterActive' => (bool) ($pageData['filterActive'] ?? false),
             'pagination' => $pageData['pagination'],
             'statusOptions' => $pageData['statusOptions'],
+            'dateOptions' => $pageData['dateOptions'] ?? [],
+            'sortOptions' => $pageData['sortOptions'] ?? [],
             'statusMessage' => Session::getFlash('status'),
             'csrfToken' => Csrf::generate(),
         ], 'layouts/dashboard');
@@ -476,9 +494,12 @@ class DoctorController extends Controller
             'consultations' => $consultations,
             'grouped' => (bool) ($pageData['grouped'] ?? false),
             'historyGroups' => $groups,
+            'filterActive' => (bool) ($pageData['filterActive'] ?? false),
             'summary' => $pageData['summary'] ?? [],
             'pagination' => $pageData['pagination'] ?? [],
             'statusOptions' => $pageData['statusOptions'] ?? [],
+            'dateOptions' => $pageData['dateOptions'] ?? [],
+            'sortOptions' => $pageData['sortOptions'] ?? [],
             'statusMessage' => Session::getFlash('status'),
             'csrfToken' => Csrf::generate(),
         ], 'layouts/dashboard');

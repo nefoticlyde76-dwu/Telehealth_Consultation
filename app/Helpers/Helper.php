@@ -13,18 +13,23 @@ class Helper
 
     public static function baseUrl(): string
     {
+        $configured = rtrim((string) Environment::get('APP_URL', ''), '/');
+        if ($configured !== '') {
+            return $configured;
+        }
+
         $host = $_SERVER['HTTP_HOST'] ?? null;
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? null;
 
         if ($host && $scriptName) {
-            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $scheme = self::requestScheme();
             $scriptDirectory = str_replace('\\', '/', dirname($scriptName));
             $scriptDirectory = $scriptDirectory === '/' || $scriptDirectory === '.' ? '' : rtrim($scriptDirectory, '/');
 
             return $scheme . '://' . $host . $scriptDirectory;
         }
 
-        return rtrim((string) Environment::get('APP_URL', 'http://localhost'), '/');
+        return '';
     }
 
     public static function url(string $path = ''): string
@@ -38,6 +43,68 @@ class Helper
         return $baseUrl . '/' . ltrim($path, '/');
     }
 
+    /**
+     * Same-origin path for browser navigation (JSON redirects, fetch follow-ups).
+     * Includes the application subdirectory so window.location.assign() does
+     * not resolve against Apache's document root on XAMPP installs.
+     */
+    public static function browserPath(string $path = '/'): string
+    {
+        $absolute = self::url($path === '' ? '/' : $path);
+        $urlPath = parse_url($absolute, PHP_URL_PATH);
+        if (!is_string($urlPath) || $urlPath === '') {
+            $urlPath = '/' . ltrim($path, '/');
+        }
+
+        return self::safeInternalPath($urlPath, '/');
+    }
+
+    /**
+     * Absolute URL from APP_URL. Use this for emails so links follow
+     * the deployed application address rather than the current request host.
+     */
+    public static function applicationUrl(string $path = ''): string
+    {
+        $baseUrl = rtrim((string) Environment::get('APP_URL', ''), '/');
+        if ($baseUrl === '') {
+            $baseUrl = rtrim(self::baseUrl(), '/');
+        }
+
+        $host = strtolower((string) (parse_url($baseUrl, PHP_URL_HOST) ?: ''));
+        $environment = strtolower(trim((string) Environment::get('APP_ENV', 'production')));
+        if ($environment === 'production' && in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+            $baseUrl = '';
+        }
+
+        if ($path === '') {
+            return $baseUrl;
+        }
+
+        if ($baseUrl === '') {
+            return '/' . ltrim($path, '/');
+        }
+
+        return $baseUrl . '/' . ltrim($path, '/');
+    }
+
+    private static function requestScheme(): string
+    {
+        $forwarded = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        if ($forwarded === 'https') {
+            return 'https';
+        }
+
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return 'https';
+        }
+
+        if ((int) ($_SERVER['SERVER_PORT'] ?? 0) === 443) {
+            return 'https';
+        }
+
+        return 'http';
+    }
+
     public static function redirect(string $url): void
     {
         header('Location: ' . self::url($url));
@@ -46,19 +113,83 @@ class Helper
 
     public static function asset(string $path): string
     {
-        return self::url($path);
+        $url = self::url($path);
+        $file = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim($path, '/'));
+        if (is_file($file)) {
+            $url .= (str_contains($url, '?') ? '&' : '?') . 'v=' . filemtime($file);
+        }
+
+        return $url;
     }
 
     public static function currentPath(): string
     {
         $requestUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-        $basePath = parse_url(self::baseUrl(), PHP_URL_PATH) ?: '';
+        $prefixes = [];
 
-        if ($basePath !== '' && strpos($requestUri, $basePath) === 0) {
-            $requestUri = substr($requestUri, strlen($basePath));
+        $basePath = rtrim((string) (parse_url(self::baseUrl(), PHP_URL_PATH) ?: ''), '/');
+        if ($basePath !== '' && $basePath !== '/') {
+            $prefixes[] = $basePath;
         }
 
-        return $requestUri === '' ? '/' : $requestUri;
+        $scriptDir = rtrim(str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? ''))), '/');
+        if ($scriptDir !== '' && $scriptDir !== '/' && $scriptDir !== '.' && !in_array($scriptDir, $prefixes, true)) {
+            $prefixes[] = $scriptDir;
+        }
+
+        foreach ($prefixes as $prefix) {
+            if (strpos($requestUri, $prefix) === 0) {
+                $requestUri = substr($requestUri, strlen($prefix));
+                break;
+            }
+        }
+
+        if ($requestUri === '' || $requestUri[0] !== '/') {
+            $requestUri = '/' . ltrim($requestUri, '/');
+        }
+
+        return $requestUri;
+    }
+
+    /**
+     * Current application path including the query string, used as a
+     * post-action return target (e.g. after archiving a notification).
+     */
+    public static function currentRequestPath(): string
+    {
+        $path = self::currentPath();
+        $query = trim((string) ($_SERVER['QUERY_STRING'] ?? ''));
+
+        return $query === '' ? $path : $path . '?' . $query;
+    }
+
+    /**
+     * Allow only same-app relative paths. Rejects protocol-relative and
+     * external URLs so callers cannot bounce users off-site.
+     */
+    public static function safeInternalPath(string $path, string $fallback = '/'): string
+    {
+        $path = trim($path);
+        if ($path === '' || str_contains($path, "\0") || str_contains($path, "\n") || str_contains($path, "\r")) {
+            return $fallback;
+        }
+        if (!str_starts_with($path, '/') || str_starts_with($path, '//') || str_contains($path, '://') || str_contains($path, '\\')) {
+            return $fallback;
+        }
+
+        return $path;
+    }
+
+    public static function clientIp(): string
+    {
+        $ip = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+
+        return mb_substr($ip, 0, 45);
+    }
+
+    public static function userAgent(): string
+    {
+        return mb_substr(trim((string) ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 255);
     }
 
     public static function isStrongPassword(string $password): bool

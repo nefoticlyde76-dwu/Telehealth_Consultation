@@ -148,7 +148,7 @@ Controllers remain thin coordinators:
   border: 0 !important
   display: block
   ```
-- Pre-call card, summary strip, permission banner, and troubleshooting list use the established design tokens (`--ux-primary #0F4C81`, `--ux-secondary #2A9D8F`, `--ux-accent #3CB371`, `--ux-bg #F8FAFC`, `--ux-border #E5E7EB`, `--ux-radius 12px`) so the room page visually belongs to the same product as Weeks 1–5.
+- Pre-call card, summary strip, permission banner, and troubleshooting list use the established design tokens (`--ux-primary #26658C`, `--ux-secondary #2A9D8F`, `--ux-accent #3CB371`, `--ux-bg #F8FAFC`, `--ux-border #E5E7EB`, `--ux-radius 12px`) so the room page visually belongs to the same product as Weeks 1–5.
 
 ### 7. Daily Prebuilt Bootstrap Lifecycle — `consultation-room.js`
 

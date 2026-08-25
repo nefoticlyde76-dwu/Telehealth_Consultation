@@ -60,14 +60,14 @@ $additionalNotes = trim((string) ($clinicalRecord['additional_notes'] ?? ''));
     body {
       margin: 0;
       padding: 0;
-      color: #212529;
+      color: #102A43;
       font-family: DejaVu Sans, sans-serif;
       font-size: 10.5pt;
       line-height: 1.45;
     }
     .doc-header {
       width: 100%;
-      border-bottom: 2.5px solid #0F4C81;
+      border-bottom: 2.5px solid #0A6FB6;
       padding-bottom: 10px;
       margin-bottom: 14px;
     }
@@ -83,19 +83,19 @@ $additionalNotes = trim((string) ($clinicalRecord['additional_notes'] ?? ''));
       font-size: 8.5pt;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #6C757D;
+      color: #4A5568;
       font-weight: 700;
     }
     .brand {
       margin: 2px 0 0;
       font-size: 16pt;
       font-weight: 700;
-      color: #0F4C81;
+      color: #0A6FB6;
     }
     .doc-type {
       margin: 2px 0 0;
       font-size: 11pt;
-      color: #20B2AA;
+      color: #40C4FF;
       font-weight: 700;
     }
     .meta {
@@ -112,18 +112,18 @@ $additionalNotes = trim((string) ($clinicalRecord['additional_notes'] ?? ''));
       font-size: 7.5pt;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #6C757D;
+      color: #4A5568;
       font-weight: 700;
       margin-bottom: 2px;
     }
     .meta-value {
       font-size: 10.5pt;
       font-weight: 700;
-      color: #212529;
+      color: #102A43;
     }
     .meta-sub {
       font-size: 9pt;
-      color: #6C757D;
+      color: #4A5568;
     }
     h2 {
       margin: 16px 0 8px;
@@ -131,8 +131,8 @@ $additionalNotes = trim((string) ($clinicalRecord['additional_notes'] ?? ''));
       font-size: 10pt;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: #0F4C81;
-      border-bottom: 1px solid #DEE2E6;
+      color: #0A6FB6;
+      border-bottom: 1px solid #D9E2EC;
     }
     .grid {
       width: 100%;
@@ -146,13 +146,13 @@ $additionalNotes = trim((string) ($clinicalRecord['additional_notes'] ?? ''));
     .label {
       display: block;
       font-size: 8pt;
-      color: #6C757D;
+      color: #4A5568;
       font-weight: 700;
       margin-bottom: 1px;
     }
     .value {
       font-size: 10.5pt;
-      color: #212529;
+      color: #102A43;
       word-wrap: break-word;
       overflow-wrap: anywhere;
     }
@@ -163,15 +163,15 @@ $additionalNotes = trim((string) ($clinicalRecord['additional_notes'] ?? ''));
     .block-label {
       font-size: 8.5pt;
       font-weight: 700;
-      color: #0F4C81;
+      color: #0A6FB6;
       margin: 0 0 3px;
     }
     .block-value {
       margin: 0;
       padding: 7px 9px;
-      background: #F8F9FA;
-      border: 1px solid #DEE2E6;
-      border-left: 3px solid #20B2AA;
+      background: #F5F7FA;
+      border: 1px solid #D9E2EC;
+      border-left: 3px solid #40C4FF;
       font-size: 10.5pt;
       line-height: 1.5;
       white-space: pre-wrap;
@@ -181,7 +181,7 @@ $additionalNotes = trim((string) ($clinicalRecord['additional_notes'] ?? ''));
     .notice {
       margin-top: 16px;
       font-size: 8pt;
-      color: #6C757D;
+      color: #4A5568;
     }
   </style>
 </head>

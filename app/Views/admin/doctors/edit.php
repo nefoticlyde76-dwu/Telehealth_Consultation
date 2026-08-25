@@ -8,7 +8,8 @@ $genderOptions = $genderOptions ?? [];
 $statusOptions = $statusOptions ?? [];
 $csrfToken = $csrfToken ?? '';
 $statusMessage = $statusMessage ?? null;
-$showPasswordFields = false;
+$isInvitationPending = \App\Helpers\Status::isInvitationPendingUserStatus((string) ($doctor['status'] ?? ''));
+$showStatusField = !$isInvitationPending;
 ?>
 
 <section class="mb-4">
@@ -29,10 +30,12 @@ $showPasswordFields = false;
       <p class="ux-page-header__subtitle text-muted mb-0">Update clinician identity, professional profile, and secure access status while preserving the linked doctor record.</p>
     </div>
     <div class="ux-page-header__right d-flex flex-wrap gap-2">
+      <?php if (!$isInvitationPending): ?>
       <a href="<?= \App\Helpers\Helper::url('/admin/doctors/' . (int) ($doctor['id'] ?? 0) . '/reset-password') ?>" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-key me-2"></i>
         Reset Password
       </a>
+      <?php endif; ?>
       <a href="<?= \App\Helpers\Helper::url('/admin/doctors') ?>" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-arrow-left me-2"></i>
         Back to Doctor Accounts

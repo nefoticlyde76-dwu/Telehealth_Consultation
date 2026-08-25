@@ -6,6 +6,8 @@ use App\Models\Doctor;
 use App\Models\ConsultationRequest;
 use App\Models\DoctorAvailability;
 use App\Models\User;
+use App\Helpers\Palette;
+use App\Helpers\Status;
 
 class DoctorDashboardService
 {
@@ -23,6 +25,10 @@ class DoctorDashboardService
         $consultationSummary = ConsultationRequest::getDoctorStatusSummary($userId);
         $weeklyRequestCounts = ConsultationRequest::findDailyRequestCountsForDoctor($userId, 7);
         $statusDistribution = ConsultationRequest::getStatusDistributionForDoctor($userId);
+        $recentCompleted = ConsultationRequest::findForDoctor($userId, [
+            'status' => Status::COMPLETED,
+            'sort' => 'newest',
+        ], 5, 0);
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
         $hasSignature = !empty($doctor['signature_path'] ?? '');
@@ -32,72 +38,52 @@ class DoctorDashboardService
             'doctor' => $doctor,
             'stats' => [
                 [
-                    'label' => "Today's Schedule",
-                    'value' => (string) ($todaySummary['total_today_slots'] ?? 0),
+                    'label' => "Today's Consultations",
+                    'value' => (string) ($todaySummary['booked_today_slots'] ?? 0),
                     'icon' => 'bi-calendar-date',
-                    'description' => 'Consultation slots currently scheduled on your calendar for today.',
-                ],
-                [
-                    'label' => 'Approved Appointments',
-                    'value' => (string) ($consultationSummary['approved_appointments'] ?? 0),
-                    'icon' => 'bi-check2-circle',
-                    'description' => 'Appointments approved by administration and assigned to your consultation workflow.',
+                    'description' => 'Approved consultations booked for today.',
+                    'tone' => 'pending',
+                    'url' => '/doctor/consultations?date=today',
                 ],
                 [
                     'label' => 'Upcoming Consultations',
                     'value' => (string) ($consultationSummary['upcoming_consultations'] ?? 0),
                     'icon' => 'bi-clock-history',
-                    'description' => 'Approved consultations scheduled from today onward.',
+                    'description' => 'Approved consultations from today onward.',
+                    'tone' => 'success',
+                    'url' => Status::filteredListUrl('/doctor/consultations', Status::APPROVED) . '&date=upcoming',
                 ],
                 [
-                    'label' => 'New Approved Appointments',
-                    'value' => (string) $recentApprovedAppointments,
-                    'icon' => 'bi-bell',
-                    'description' => 'Recently approved consultation requests assigned to your clinician schedule.',
+                    'label' => 'Completed Consultations',
+                    'value' => (string) ($consultationSummary['completed_consultations'] ?? 0),
+                    'icon' => 'bi-clipboard2-check',
+                    'description' => 'Consultations you have completed.',
+                    'tone' => 'navy',
+                    'url' => Status::filteredListUrl('/doctor/consultations', Status::COMPLETED),
                 ],
             ],
             'quickActions' => [
                 [
-                    'title' => 'View Consultations',
-                    'description' => 'Review upcoming, approved, and completed consultations.',
-                    'icon' => 'bi-clipboard2-pulse',
-                    'status' => 'Active',
-                    'url' => '/doctor/consultations',
-                    'action_label' => 'Open Consultations',
-                ],
-                [
-                    'title' => 'View My Profile',
-                    'description' => 'Review your name, specialization, profile photo, and signature.',
-                    'icon' => 'bi-person-vcard',
-                    'status' => 'Available',
-                    'url' => '/doctor/profile',
-                    'action_label' => 'Open Profile',
-                ],
-                [
-                    'title' => 'Edit Profile Settings',
-                    'description' => 'Update phone number, specialization, profile photo, signature, and password.',
-                    'icon' => 'bi-person-gear',
-                    'status' => 'Available',
-                    'url' => '/doctor/profile/edit',
-                    'action_label' => 'Edit Profile',
-                ],
-                [
                     'title' => 'Manage Availability',
-                    'description' => 'Create, review, update, and delete consultation slots.',
+                    'description' => 'Create and update consultation slots patients can book.',
                     'icon' => 'bi-calendar-week',
-                    'status' => 'Available',
                     'url' => '/doctor/availability',
-                    'action_label' => 'Open Availability',
+                    'action_label' => 'Open',
+                    'emphasis' => 'primary',
                 ],
                 [
-                    'title' => 'Profile photo and signature',
-                    'description' => $hasProfilePhoto && $hasSignature
-                        ? 'Your profile photo and signature are on file.'
-                        : 'Add a profile photo and signature for consultation documentation.',
-                    'icon' => $hasProfilePhoto && $hasSignature ? 'bi-check2-circle' : 'bi-cloud-arrow-up',
-                    'status' => $hasProfilePhoto && $hasSignature ? 'Up to date' : 'Action needed',
-                    'url' => '/doctor/profile/edit',
-                    'action_label' => 'Update Profile',
+                    'title' => 'View Upcoming Consultations',
+                    'description' => 'Review approved consultations assigned to you.',
+                    'icon' => 'bi-calendar2-check',
+                    'url' => Status::filteredListUrl('/doctor/consultations', Status::APPROVED),
+                    'action_label' => 'Open',
+                ],
+                [
+                    'title' => 'Consultation History',
+                    'description' => 'Open completed records and prescriptions.',
+                    'icon' => 'bi-journal-medical',
+                    'url' => Status::filteredListUrl('/doctor/consultations', Status::COMPLETED),
+                    'action_label' => 'Open',
                 ],
             ],
             'recentActivity' => [
@@ -128,6 +114,7 @@ class DoctorDashboardService
             'upcomingApprovedAppointments' => $upcomingApprovedAppointments,
             'recentApprovedAppointmentCount' => $recentApprovedAppointments,
             'upcomingApprovedAppointmentCount' => $upcomingApprovedCount,
+            'recentCompletedConsultations' => $recentCompleted,
             'consultationSummary' => $consultationSummary,
             'charts' => [
                 'weekly_requests' => self::buildWeeklyRequestsChart($weeklyRequestCounts),
@@ -172,12 +159,12 @@ class DoctorDashboardService
                     [
                         'label' => 'Requests',
                         'data' => $values,
-                        'borderColor' => '#0794E3',
-                        'backgroundColor' => 'rgba(7, 148, 227, 0.12)',
+                        'borderColor' => Palette::MEDICAL_BLUE,
+                        'backgroundColor' => 'rgba(' . Palette::MEDICAL_BLUE_RGB . ', 0.12)',
                         'fill' => true,
                         'tension' => 0.25,
                         'pointRadius' => 3,
-                        'pointBackgroundColor' => '#0794E3',
+                        'pointBackgroundColor' => Palette::MEDICAL_BLUE,
                     ],
                 ],
             ],
@@ -221,14 +208,14 @@ class DoctorDashboardService
                     [
                         'label' => 'Available',
                         'data' => $available,
-                        'backgroundColor' => '#B8DFF6',
+                        'backgroundColor' => Palette::MEDIUM_GRAY,
                         'borderRadius' => 6,
                         'stack' => 'slots',
                     ],
                     [
                         'label' => 'Booked',
                         'data' => $booked,
-                        'backgroundColor' => '#0794E3',
+                        'backgroundColor' => Palette::MEDICAL_BLUE,
                         'borderRadius' => 6,
                         'stack' => 'slots',
                     ],
@@ -253,46 +240,6 @@ class DoctorDashboardService
 
     private static function buildStatusDistributionChart(array $distribution): array
     {
-        $labels = [];
-        $values = [];
-        $colors = [
-            'Pending' => '#F59E0B',
-            'Approved' => '#08B4C6',
-            'Rejected' => '#DC3545',
-            'Cancelled' => '#70838A',
-            'Completed' => '#455F68',
-        ];
-        $background = [];
-
-        foreach (['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'] as $status) {
-            $labels[] = $status;
-            $values[] = (int) ($distribution[$status] ?? 0);
-            $background[] = $colors[$status] ?? 'rgba(107, 114, 128, 0.6)';
-        }
-
-        return [
-            'type' => 'doughnut',
-            'data' => [
-                'labels' => $labels,
-                'datasets' => [
-                    [
-                        'data' => $values,
-                        'backgroundColor' => $background,
-                        'borderWidth' => 0,
-                    ],
-                ],
-            ],
-            'options' => [
-                'responsive' => true,
-                'maintainAspectRatio' => false,
-                'cutout' => '68%',
-                'plugins' => [
-                    'legend' => [
-                        'position' => 'bottom',
-                        'labels' => ['usePointStyle' => true, 'boxWidth' => 10],
-                    ],
-                ],
-            ],
-        ];
+        return Status::consultationDistributionChart($distribution);
     }
 }

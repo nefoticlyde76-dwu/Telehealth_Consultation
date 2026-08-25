@@ -6,6 +6,8 @@ $request = is_array($request ?? null) ? $request : [];
 $prescriptions = is_array($prescriptions ?? null) ? $prescriptions : [];
 $logoSrc = (string) ($logoSrc ?? '');
 $signatureSrc = (string) ($signatureSrc ?? '');
+$signatureWidth = (int) ($signatureWidth ?? 0);
+$signatureHeight = (int) ($signatureHeight ?? 0);
 
 $patientName = trim((string) ($request['patient_name'] ?? ''));
 $patientAddress = trim((string) ($request['patient_address'] ?? ''));
@@ -54,14 +56,14 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
     body {
       margin: 0;
       padding: 0;
-      color: #212529;
+      color: #102A43;
       font-family: DejaVu Sans, sans-serif;
       font-size: 10.5pt;
       line-height: 1.45;
     }
     .doc-header {
       width: 100%;
-      border-bottom: 2.5px solid #0F4C81;
+      border-bottom: 2.5px solid #0A6FB6;
       padding-bottom: 10px;
       margin-bottom: 14px;
     }
@@ -77,26 +79,26 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
       font-size: 8.5pt;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #6C757D;
+      color: #4A5568;
       font-weight: 700;
     }
     .brand {
       margin: 2px 0 0;
       font-size: 16pt;
       font-weight: 700;
-      color: #0F4C81;
+      color: #0A6FB6;
     }
     .doc-type {
       margin: 2px 0 0;
       font-size: 11pt;
-      color: #20B2AA;
+      color: #40C4FF;
       font-weight: 700;
     }
     .rx-mark {
       text-align: right;
       font-size: 22pt;
       font-weight: 700;
-      color: #0F4C81;
+      color: #0A6FB6;
       font-style: italic;
     }
     h2 {
@@ -105,8 +107,8 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
       font-size: 10pt;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: #0F4C81;
-      border-bottom: 1px solid #DEE2E6;
+      color: #0A6FB6;
+      border-bottom: 1px solid #D9E2EC;
     }
     .grid {
       width: 100%;
@@ -120,35 +122,35 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
     .label {
       display: block;
       font-size: 8pt;
-      color: #6C757D;
+      color: #4A5568;
       font-weight: 700;
       margin-bottom: 1px;
     }
     .value {
       font-size: 10.5pt;
-      color: #212529;
+      color: #102A43;
       word-wrap: break-word;
       overflow-wrap: anywhere;
     }
     .med {
       margin: 0 0 10px;
       padding: 8px 10px;
-      background: #F8F9FA;
-      border: 1px solid #DEE2E6;
-      border-left: 3px solid #0F4C81;
+      background: #F5F7FA;
+      border: 1px solid #D9E2EC;
+      border-left: 3px solid #0A6FB6;
       page-break-inside: avoid;
     }
     .med-name {
       margin: 0 0 6px;
       font-size: 11.5pt;
       font-weight: 700;
-      color: #0F4C81;
+      color: #0A6FB6;
       word-wrap: break-word;
       overflow-wrap: anywhere;
     }
     .med-strength {
       font-weight: 400;
-      color: #212529;
+      color: #102A43;
     }
     .med-meta {
       width: 100%;
@@ -161,18 +163,14 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
     .med-notes {
       margin: 6px 0 0;
       font-size: 9.5pt;
-      color: #212529;
+      color: #102A43;
       white-space: pre-wrap;
       word-wrap: break-word;
       overflow-wrap: anywhere;
     }
-    .doctor-table td {
-      width: 58%;
-      vertical-align: top;
-    }
-    .doctor-table td.sign {
-      width: 42%;
-      text-align: center;
+    .signature-block {
+      margin-top: 14px;
+      width: 220px;
     }
     .signature-label {
       display: block;
@@ -180,37 +178,35 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #6C757D;
+      color: #4A5568;
       margin-bottom: 6px;
     }
     .signature-image {
-      max-width: 160px;
-      max-height: 56px;
       display: block;
-      margin: 0 auto 4px;
+      margin: 0 0 6px;
     }
     .signature-missing {
       min-height: 40px;
       font-size: 9pt;
-      color: #6C757D;
+      color: #4A5568;
       margin-bottom: 6px;
     }
     .signature-rule {
       display: block;
-      border-top: 1px solid #212529;
+      border-top: 1px solid #102A43;
       width: 160px;
-      margin: 4px auto 4px;
+      margin: 4px 0;
     }
     .signature-name {
       display: block;
       font-size: 9pt;
       font-weight: 700;
-      color: #212529;
+      color: #102A43;
     }
     .notice {
       margin-top: 16px;
       font-size: 8pt;
-      color: #6C757D;
+      color: #4A5568;
     }
   </style>
 </head>
@@ -292,7 +288,7 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
   <?php endforeach; ?>
 
   <h2>Doctor information</h2>
-  <table class="grid doctor-table">
+  <table class="grid">
     <tr>
       <td>
         <span class="label">Prescribing doctor</span>
@@ -301,25 +297,35 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
           <span class="label" style="margin-top:8px;">Professional details</span>
           <div class="value"><?= Helper::escape($doctorLine) ?></div>
         <?php endif; ?>
+      </td>
+      <td>
         <?php if ($doctorClinic !== ''): ?>
-          <span class="label" style="margin-top:8px;">Clinic</span>
+          <span class="label">Clinic</span>
           <div class="value"><?= $pdfValue($doctorClinic, 'Not provided') ?></div>
         <?php endif; ?>
-        <span class="label" style="margin-top:8px;">Date</span>
+        <span class="label" style="<?= $doctorClinic !== '' ? 'margin-top:8px;' : '' ?>">Date</span>
         <div class="value"><?= Helper::escape($issuedDateLabel) ?></div>
-      </td>
-      <td class="sign">
-        <span class="signature-label">Doctor's signature</span>
-        <?php if ($signatureSrc !== ''): ?>
-          <img src="<?= Helper::escape($signatureSrc) ?>" alt="Signature of <?= Helper::escape($doctorName !== '' ? $doctorName : 'the prescribing doctor') ?>" class="signature-image">
-        <?php else: ?>
-          <div class="signature-missing">Signature not on file</div>
-        <?php endif; ?>
-        <span class="signature-rule"></span>
-        <span class="signature-name"><?= Helper::escape($doctorName !== '' ? $doctorName : 'Prescribing doctor') ?></span>
       </td>
     </tr>
   </table>
+
+  <div class="signature-block">
+    <span class="signature-label">Doctor's signature</span>
+    <?php if ($signatureSrc !== '' && $signatureWidth > 0 && $signatureHeight > 0): ?>
+      <img
+        src="<?= $signatureSrc ?>"
+        width="<?= $signatureWidth ?>"
+        height="<?= $signatureHeight ?>"
+        style="width:<?= $signatureWidth ?>px;height:<?= $signatureHeight ?>px;"
+        alt="Signature of <?= Helper::escape($doctorName !== '' ? $doctorName : 'the prescribing doctor') ?>"
+        class="signature-image"
+      >
+    <?php else: ?>
+      <div class="signature-missing">Signature not on file</div>
+    <?php endif; ?>
+    <span class="signature-rule"></span>
+    <span class="signature-name"><?= Helper::escape($doctorName !== '' ? $doctorName : 'Prescribing doctor') ?></span>
+  </div>
 
   <p class="notice">This document is an export of the issued prescription stored in MBPHA TeleHealth. It does not create or change the prescription record.</p>
 </body>

@@ -1,93 +1,76 @@
 <?php
+use App\Helpers\Helper;
+use App\Helpers\Status;
+
 $stats = is_array($stats ?? null) ? $stats : [];
 $charts = is_array($charts ?? null) ? $charts : [];
-$weeklyChart = $charts['weekly_requests'] ?? null;
 $availabilityChart = $charts['availability'] ?? null;
-$statusChart = $charts['status_distribution'] ?? null;
 $upcomingApprovedAppointments = is_array($upcomingApprovedAppointments ?? null) ? $upcomingApprovedAppointments : [];
+$recentCompletedConsultations = is_array($recentCompletedConsultations ?? null) ? $recentCompletedConsultations : [];
+$recentNotifications = is_array($recentNotifications ?? null) ? $recentNotifications : [];
 $todaySummary = is_array($todaySummary ?? null) ? $todaySummary : [];
+$headerNotifications = is_array($headerNotifications ?? null) ? $headerNotifications : [];
+$actionCards = is_array($quickActions ?? null) ? $quickActions : [];
+require_once __DIR__ . '/../partials/shared/status_helper.php';
+
+$bookedToday = (int) ($todaySummary['booked_today_slots'] ?? 0);
+$openToday = (int) ($todaySummary['available_today_slots'] ?? 0);
+$unreadCount = (int) ($headerNotifications['unread_count'] ?? 0);
+$todayDate = date('Y-m-d');
+$todaysAppointments = array_values(array_filter($upcomingApprovedAppointments, static function ($apt) use ($todayDate) {
+    return ($apt['consultation_date'] ?? '') === $todayDate;
+}));
+
+$attentionText = 'No consultations are scheduled for today.';
+$attentionIcon = 'bi-calendar2-week';
+$attentionAction = ['label' => 'Manage Availability', 'url' => '/doctor/availability', 'icon' => 'bi-calendar-week'];
+if ($bookedToday > 0) {
+    $attentionText = $bookedToday === 1
+        ? 'You have 1 consultation booked today.'
+        : 'You have ' . $bookedToday . ' consultations booked today.';
+    $attentionIcon = 'bi-calendar2-check';
+    $attentionAction = ['label' => "View Today's Consultations", 'url' => '/doctor/consultations?date=today', 'icon' => 'bi-calendar2-check'];
+} elseif ($unreadCount > 0) {
+    $attentionText = $unreadCount === 1
+        ? 'You have 1 unread notification.'
+        : 'You have ' . $unreadCount . ' unread notifications.';
+    $attentionIcon = 'bi-bell';
+    $attentionAction = ['label' => 'View Notifications', 'url' => '/notifications?read_state=unread', 'icon' => 'bi-bell'];
+} elseif ($openToday === 0) {
+    $attentionText = 'No open slots remain today. Add availability if patients should be able to book you.';
+    $attentionIcon = 'bi-calendar-plus';
+}
+
+$pageHeaderTitle = 'Doctor Dashboard';
+$pageHeaderSubtitle = "See today's workload, upcoming consultations, and what needs your attention.";
+$pageHeaderBreadcrumbs = [];
+ob_start();
+?>
+<a href="<?= Helper::url('/doctor/availability') ?>" class="btn btn-primary btn-sm">
+  <i class="bi bi-calendar-week me-1" aria-hidden="true"></i>Manage Availability
+</a>
+<?php
+$pageHeaderActions = ob_get_clean();
+$summaryStats = $stats;
+
+$notificationItems = [];
+foreach ($recentNotifications as $item) {
+    $notificationItems[] = [
+        'title' => (string) ($item['title'] ?? 'Notification'),
+        'description' => (string) ($item['message'] ?? ''),
+        'meta' => (string) ($item['relative_time'] ?? ''),
+        'url' => (string) ($item['open_url'] ?? '/notifications'),
+        'icon' => (string) ($item['icon'] ?? 'bi-bell'),
+        'unread' => !empty($item['unread']),
+    ];
+}
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
-
-<?php
-$doctorStats = ['Today' => 0, 'Approved' => 0, 'Pending' => 0, 'Completed' => 0];
-foreach ($stats as $statItem) {
-    $lblLower = strtolower(trim((string) ($statItem['label'] ?? '')));
-    $valInt = (int) ($statItem['value'] ?? 0);
-    if (str_contains($lblLower, 'today')) { $doctorStats['Today'] = $valInt; }
-    elseif (str_contains($lblLower, 'approved') || str_contains($lblLower, 'upcoming')) { $doctorStats['Approved'] = $valInt; }
-    elseif (str_contains($lblLower, 'pending')) { $doctorStats['Pending'] = $valInt; }
-    elseif (str_contains($lblLower, 'completed')) { $doctorStats['Completed'] = $valInt; }
-}
-$nowDt = new DateTimeImmutable();
-$doctorToday = $nowDt->format('l, d F Y');
-$doctorCurrentTime = $nowDt->format('g:i A');
-$bookedToday = (int) ($todaySummary['booked_today_slots'] ?? 0);
-$openToday = (int) ($todaySummary['available_today_slots'] ?? 0);
-$shiftStatus = 'Availability not set for today';
-if ($bookedToday > 0 && $openToday === 0) { $shiftStatus = 'No open slots remaining today'; }
-elseif ($bookedToday === 0 && $openToday > 0) { $shiftStatus = 'Open slots available today'; }
-elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations scheduled today'; }
-?>
-
-<div class="ux-welcome ux-welcome--doctor">
-  <div class="ux-welcome__grid">
-    <div>
-      <span class="ux-welcome__eyebrow">Welcome back, Doctor</span>
-      <h1 class="ux-welcome__title">Doctor Dashboard</h1>
-      <p class="ux-welcome__description">Review today's appointments, keep your availability current, and join consultations when they are due.</p>
-
-      <div class="ux-welcome__meta-pill-row">
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-calendar2-week"></i>
-          <span><?= \App\Helpers\Helper::escape((string) $bookedToday) ?> booked · <?= \App\Helpers\Helper::escape((string) $openToday) ?> open</span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-clipboard2-pulse"></i>
-          <span><?= \App\Helpers\Helper::escape($shiftStatus) ?></span>
-        </span>
-        <span class="ux-welcome__meta-pill">
-          <i class="bi bi-clock"></i>
-          <span><?= \App\Helpers\Helper::escape($doctorCurrentTime) ?></span>
-        </span>
-      </div>
-    </div>
-
-    <div class="ux-welcome__actions">
-      <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn-primary-xl">
-        <i class="bi bi-calendar-week me-2"></i>Manage Availability
-      </a>
-      <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="ux-welcome__cta-secondary">
-        <i class="bi bi-calendar2-check"></i>
-        <span>View Consultations</span>
-      </a>
-    </div>
-  </div>
-</div>
-
-<section class="mb-4">
-  <div class="row g-4">
-    <?php foreach ($stats as $stat): ?>
-      <?php $statValue = (string) ($stat['value'] ?? '0'); ?>
-      <?php $iconTone = ($stat['tone'] ?? '') === 'success' ? 'ux-stat__icon--mint' : 'ux-stat__icon--surface'; ?>
-      <div class="col-sm-6 col-xl-3">
-        <div class="ux-stat h-100">
-          <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
-            <div>
-              <span class="ux-stat__label"><?= \App\Helpers\Helper::escape((string) ($stat['label'] ?? '')) ?></span>
-              <h3 class="ux-stat__value" <?= is_numeric($statValue) ? 'data-counter="' . \App\Helpers\Helper::escape($statValue) . '"' : '' ?>>
-                <?= \App\Helpers\Helper::escape($statValue) ?>
-              </h3>
-            </div>
-            <span class="ux-stat__icon <?= $iconTone ?>"><i class="bi <?= \App\Helpers\Helper::escape((string) ($stat['icon'] ?? 'bi-graph-up')) ?>"></i></span>
-          </div>
-          <p class="text-muted mb-0 small"><?= \App\Helpers\Helper::escape((string) ($stat['description'] ?? '')) ?></p>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  </div>
-</section>
+<?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
+<?php require __DIR__ . '/../partials/dashboard/attention_banner.php'; ?>
+<?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
+<?php require __DIR__ . '/../partials/dashboard/action_cards.php'; ?>
 
 <section class="mb-4">
   <div class="row g-4">
@@ -95,19 +78,21 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
       <div class="ux-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
           <div>
-            <h3 class="h5 mb-1">Today's Schedule</h3>
-            <p class="text-muted mb-0 small">Approved consultations booked for today · <?= \App\Helpers\Helper::escape((string) ((int) ($todaySummary['booked_today_slots'] ?? 0))) ?> booked · <?= \App\Helpers\Helper::escape((string) ((int) ($todaySummary['available_today_slots'] ?? 0))) ?> open slots.</p>
+            <h2 class="h5 mb-1">Today's Schedule</h2>
+            <p class="text-muted mb-0 small"><?= Helper::escape((string) $bookedToday) ?> booked · <?= Helper::escape((string) $openToday) ?> open slots</p>
           </div>
-          <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">View Consultations</a>
+          <a href="<?= Helper::url('/doctor/consultations?date=today') ?>" class="btn btn-outline-primary btn-sm">View Today</a>
         </div>
         <div class="ux-card__body">
-          <?php if ($upcomingApprovedAppointments === []): ?>
-            <div class="ux-empty py-5 text-center">
-              <div class="ux-empty__icon mx-auto mb-3"><i class="bi bi-calendar2-x"></i></div>
-              <h4 class="h6 mb-2">No approved appointments scheduled today.</h4>
-              <p class="text-muted mb-4">No consultations are scheduled for this view. Add availability if patients should be able to book you.</p>
-              <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-primary btn-sm">Create Availability Slot</a>
-            </div>
+          <?php if ($todaysAppointments === []): ?>
+            <?php
+            $emptyIcon = 'bi-calendar2-x';
+            $emptyTitle = 'No consultations scheduled today';
+            $emptyText = 'Approved consultations for today will appear here.';
+            $emptyActions = '<a href="' . Helper::url('/doctor/availability') . '" class="btn btn-primary btn-sm">Create Availability Slot</a>';
+            $emptyCompact = false;
+            require __DIR__ . '/../partials/shared/empty_state.php';
+            ?>
           <?php else: ?>
             <div class="ux-table-wrapper">
               <table class="ux-table align-middle mb-0">
@@ -115,25 +100,14 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
                   <tr>
                     <th scope="col">Time</th>
                     <th scope="col">Patient</th>
-                    <th scope="col">Type</th>
                     <th scope="col">Status</th>
-                    <th scope="col" class="text-end">Actions</th>
+                    <th scope="col" class="text-end">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <?php
-                  $todayDate = date('Y-m-d');
-                  $todaysAppointments = array_filter($upcomingApprovedAppointments, function ($apt) use ($todayDate) {
-                      return ($apt['consultation_date'] ?? '') === $todayDate;
-                  });
-                  $displayAppointments = !empty($todaysAppointments) ? $todaysAppointments : array_slice($upcomingApprovedAppointments, 0, 5);
-                  ?>
-                  <?php foreach ($displayAppointments as $appointment): ?>
-                    <?php
-                    $timeLabel = substr((string) ($appointment['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($appointment['end_time'] ?? ''), 0, 5);
-                    ?>
+                  <?php foreach (array_slice($todaysAppointments, 0, 5) as $appointment): ?>
                     <tr>
-                      <td class="text-muted small"><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></td>
+                      <td class="text-muted small"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
                       <td>
                         <?php
                         $personName = (string) ($appointment['patient_name'] ?? 'Patient');
@@ -143,10 +117,9 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
                         require __DIR__ . '/../partials/shared/person_row.php';
                         ?>
                       </td>
-                      <td>Video</td>
-                      <td><span class="ux-badge ux-badge--approved"><i class="bi bi-check-circle-fill me-1"></i>Approved</span></td>
+                      <td><?= ux_status_badge(Status::APPROVED) ?></td>
                       <td class="text-end">
-                        <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . (string) ((int) ($appointment['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm">View</a>
+                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">Open</a>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -160,12 +133,21 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
 
     <div class="col-xl-4">
       <div class="ux-card h-100">
-        <div class="ux-card__header mb-3">
-          <h3 class="h5 mb-1">Availability Coverage</h3>
-          <p class="text-muted mb-0 small">Slots for the next 7 days</p>
+        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h2 class="h5 mb-1">Notifications</h2>
+            <p class="text-muted mb-0 small">Recent consultation updates.</p>
+          </div>
+          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">View All</a>
         </div>
         <div class="ux-card__body">
-          <canvas height="280" data-chart="<?= $availabilityChart !== null ? \App\Helpers\Helper::escape((string) json_encode($availabilityChart, JSON_UNESCAPED_SLASHES)) : '' ?>"></canvas>
+          <?php
+          $activityItems = $notificationItems;
+          $activityEmptyTitle = "You're all caught up";
+          $activityEmptyText = "You don't have any notifications yet.";
+          $activityEmptyIcon = 'bi-bell';
+          require __DIR__ . '/../partials/shared/activity_list.php';
+          ?>
         </div>
       </div>
     </div>
@@ -176,87 +158,130 @@ elseif ($bookedToday > 0 && $openToday > 0) { $shiftStatus = 'Consultations sche
   <div class="row g-4">
     <div class="col-xl-7">
       <div class="ux-card h-100">
-        <div class="ux-card__header mb-3">
-          <h3 class="h5 mb-1">Weekly Consultation Requests</h3>
-          <p class="text-muted mb-0 small">Assigned request volume this week</p>
+        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h2 class="h5 mb-1">Upcoming Consultations</h2>
+            <p class="text-muted mb-0 small">Approved consultations from today forward.</p>
+          </div>
+          <a href="<?= Helper::url(Status::filteredListUrl('/doctor/consultations', Status::APPROVED)) ?>" class="btn btn-outline-primary btn-sm">View Upcoming</a>
         </div>
         <div class="ux-card__body">
-          <canvas height="280" data-chart="<?= $weeklyChart !== null ? \App\Helpers\Helper::escape((string) json_encode($weeklyChart, JSON_UNESCAPED_SLASHES)) : '' ?>"></canvas>
+          <?php if ($upcomingApprovedAppointments === []): ?>
+            <?php
+            $emptyIcon = 'bi-calendar2-x';
+            $emptyTitle = 'No upcoming consultations';
+            $emptyText = 'Your next approved consultation will appear here.';
+            $emptyActions = '';
+            $emptyCompact = true;
+            require __DIR__ . '/../partials/shared/empty_state.php';
+            ?>
+          <?php else: ?>
+            <div class="ux-table-wrapper">
+              <table class="ux-table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Time</th>
+                    <th scope="col" class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach (array_slice($upcomingApprovedAppointments, 0, 5) as $appointment): ?>
+                    <tr>
+                      <td>
+                        <?php
+                        $personName = (string) ($appointment['patient_name'] ?? 'Patient');
+                        $personPhoto = $appointment['patient_photo_path'] ?? null;
+                        $personMeta = '';
+                        $personSize = 'sm';
+                        require __DIR__ . '/../partials/shared/person_row.php';
+                        ?>
+                      </td>
+                      <td><?= Helper::escape(Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                      <td class="text-muted small"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
+                      <td class="text-end">
+                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">Open</a>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
 
     <div class="col-xl-5">
       <div class="ux-card h-100">
-        <div class="ux-card__header mb-3">
-          <h3 class="h5 mb-1">Request Status Mix</h3>
-          <p class="text-muted mb-0 small">Distribution of all request statuses</p>
+        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <h2 class="h5 mb-1">Recent Consultations</h2>
+            <p class="text-muted mb-0 small">Recently completed visits.</p>
+          </div>
+          <a href="<?= Helper::url(Status::filteredListUrl('/doctor/consultations', Status::COMPLETED)) ?>" class="btn btn-outline-primary btn-sm">View History</a>
         </div>
         <div class="ux-card__body">
-          <canvas height="280" data-chart="<?= $statusChart !== null ? \App\Helpers\Helper::escape((string) json_encode($statusChart, JSON_UNESCAPED_SLASHES)) : '' ?>"></canvas>
+          <?php if ($recentCompletedConsultations === []): ?>
+            <?php
+            $emptyIcon = 'bi-journal-medical';
+            $emptyTitle = 'No completed consultations';
+            $emptyText = 'Completed consultations and records will appear here.';
+            $emptyActions = '';
+            $emptyCompact = true;
+            require __DIR__ . '/../partials/shared/empty_state.php';
+            ?>
+          <?php else: ?>
+            <div class="ux-table-wrapper">
+              <table class="ux-table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Patient</th>
+                    <th scope="col">Date</th>
+                    <th scope="col" class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($recentCompletedConsultations as $consultation): ?>
+                    <tr>
+                      <td>
+                        <?php
+                        $personName = (string) ($consultation['patient_name'] ?? 'Patient');
+                        $personPhoto = $consultation['patient_photo_path'] ?? null;
+                        $personMeta = '';
+                        $personSize = 'sm';
+                        require __DIR__ . '/../partials/shared/person_row.php';
+                        ?>
+                      </td>
+                      <td><?= Helper::escape(Helper::formatDate((string) ($consultation['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                      <td class="text-end">
+                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($consultation['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">View Record</a>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="mb-4">
-  <div class="ux-card">
-    <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-      <div>
-        <h3 class="h5 mb-1">Upcoming Approved Consultations</h3>
-        <p class="text-muted mb-0 small">From today forward</p>
-      </div>
-      <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">Open Schedule</a>
+<?php require __DIR__ . '/../partials/dashboard/wallet_heroes.php'; ?>
+
+<?php if ($availabilityChart !== null): ?>
+<section class="mb-0" aria-label="Availability coverage">
+  <div class="ux-card ux-card--quiet">
+    <div class="ux-card__header mb-3">
+      <h2 class="h5 mb-1">Availability Coverage</h2>
+      <p class="text-muted mb-0 small">Slots for the next 7 days</p>
     </div>
     <div class="ux-card__body">
-      <?php if ($upcomingApprovedAppointments === []): ?>
-        <div class="ux-empty py-5 text-center">
-          <div class="ux-empty__icon mx-auto mb-3"><i class="bi bi-calendar2-x"></i></div>
-          <h4 class="h6 mb-2">No upcoming approved consultations.</h4>
-          <p class="text-muted mb-0">Approved consultations will appear here once requests are reviewed.</p>
-        </div>
-      <?php else: ?>
-        <?php $nextFive = array_slice($upcomingApprovedAppointments, 0, 5); ?>
-        <div class="ux-table-wrapper">
-          <table class="ux-table align-middle mb-0">
-            <thead>
-              <tr>
-                <th scope="col">Patient</th>
-                <th scope="col">Date</th>
-                <th scope="col">Time</th>
-                <th scope="col">Status</th>
-                <th scope="col" class="text-end">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($nextFive as $appointment): ?>
-                <?php
-                $dateLabel = \App\Helpers\Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled');
-                $timeLabel = substr((string) ($appointment['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($appointment['end_time'] ?? ''), 0, 5);
-                ?>
-                <tr>
-                  <td>
-                    <?php
-                    $personName = (string) ($appointment['patient_name'] ?? 'Patient');
-                    $personPhoto = $appointment['patient_photo_path'] ?? null;
-                    $personMeta = '';
-                    $personSize = 'sm';
-                    require __DIR__ . '/../partials/shared/person_row.php';
-                    ?>
-                  </td>
-                  <td><?= \App\Helpers\Helper::escape((string) $dateLabel) ?></td>
-                  <td class="text-muted small"><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></td>
-                  <td><span class="ux-badge ux-badge--approved"><i class="bi bi-check-circle-fill me-1"></i>Approved</span></td>
-                  <td class="text-end">
-                    <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . (string) ((int) ($appointment['id'] ?? 0))) ?>" class="btn btn-outline-primary btn-sm">View</a>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
-      <?php endif; ?>
+      <canvas height="220" data-chart="<?= Helper::escape((string) json_encode($availabilityChart, JSON_UNESCAPED_SLASHES)) ?>"></canvas>
     </div>
   </div>
 </section>
+<?php endif; ?>

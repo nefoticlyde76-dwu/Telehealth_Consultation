@@ -5,7 +5,11 @@ $fieldErrors = $fieldErrors ?? [];
 $genderOptions = $genderOptions ?? [];
 $statusOptions = $statusOptions ?? [];
 $showPasswordFields = $showPasswordFields ?? false;
+$showStatusField = $showStatusField ?? true;
+$isCreateForm = $isCreateForm ?? false;
 $doctor = $doctor ?? [];
+$currentStatus = (string) ($formData['status'] ?? $doctor['status'] ?? '');
+$isPendingDoctor = \App\Helpers\Status::isInvitationPendingUserStatus($currentStatus);
 ?>
 
 <div class="row g-4">
@@ -26,7 +30,11 @@ $doctor = $doctor ?? [];
               </div>
             <?php endif; ?>
             <h3 class="h5 mb-1">Doctor Account Information</h3>
-            <p class="text-muted mb-0">Capture the clinician identity, contact details, and professional profile required for secure access.</p>
+            <?php if ($isCreateForm): ?>
+              <p class="text-muted mb-0">The administrator does not create a login password. The doctor will receive an email invitation, create their own password, and then sign in through /login.</p>
+            <?php else: ?>
+              <p class="text-muted mb-0">Capture the clinician identity, contact details, and professional profile required for secure access.</p>
+            <?php endif; ?>
           </div>
           <span class="ux-chip ux-badge--dotless ux-badge--neutral">
             <i class="bi bi-person-gear"></i>
@@ -36,7 +44,7 @@ $doctor = $doctor ?? [];
 
         <div class="row g-3">
           <div class="col-md-6">
-            <label for="full_name" class="form-label">Full Name</label>
+            <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
             <input
               type="text"
               class="form-control <?= isset($fieldErrors['full_name']) ? 'is-invalid' : '' ?>"
@@ -51,7 +59,7 @@ $doctor = $doctor ?? [];
           </div>
 
           <div class="col-md-6">
-            <label for="email" class="form-label">Email Address</label>
+            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
             <input
               type="email"
               class="form-control <?= isset($fieldErrors['email']) ? 'is-invalid' : '' ?>"
@@ -66,7 +74,7 @@ $doctor = $doctor ?? [];
           </div>
 
           <div class="col-md-6">
-            <label for="phone" class="form-label">Phone</label>
+            <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
             <input
               type="text"
               class="form-control <?= isset($fieldErrors['phone']) ? 'is-invalid' : '' ?>"
@@ -81,7 +89,7 @@ $doctor = $doctor ?? [];
           </div>
 
           <div class="col-md-6">
-            <label for="gender" class="form-label">Gender</label>
+            <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
             <select class="form-select <?= isset($fieldErrors['gender']) ? 'is-invalid' : '' ?>" id="gender" name="gender" required>
               <option value="">Select gender</option>
               <?php foreach ($genderOptions as $genderOption): ?>
@@ -94,7 +102,7 @@ $doctor = $doctor ?? [];
           </div>
 
           <div class="col-md-6">
-            <label for="professional_title" class="form-label">Professional Title</label>
+            <label for="professional_title" class="form-label">Professional Title <span class="text-danger">*</span></label>
             <input
               type="text"
               class="form-control <?= isset($fieldErrors['professional_title']) ? 'is-invalid' : '' ?>"
@@ -109,7 +117,7 @@ $doctor = $doctor ?? [];
           </div>
 
           <div class="col-md-6">
-            <label for="specialization" class="form-label">Specialization</label>
+            <label for="specialization" class="form-label">Specialization <span class="text-danger">*</span></label>
             <input
               type="text"
               class="form-control <?= isset($fieldErrors['specialization']) ? 'is-invalid' : '' ?>"
@@ -137,17 +145,25 @@ $doctor = $doctor ?? [];
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['employee_id'] ?? 'Please provide a valid employee ID or leave it blank.') ?></div>
           </div>
 
+          <?php if ($showStatusField): ?>
           <div class="col-md-6">
-            <label for="status" class="form-label">Account Status</label>
+            <label for="status" class="form-label">Account Status <span class="text-danger">*</span></label>
             <select class="form-select <?= isset($fieldErrors['status']) ? 'is-invalid' : '' ?>" id="status" name="status" required>
               <?php foreach ($statusOptions as $statusOption): ?>
                 <option value="<?= \App\Helpers\Helper::escape($statusOption) ?>" <?= ($formData['status'] ?? 'active') === $statusOption ? 'selected' : '' ?>>
-                  <?= \App\Helpers\Helper::escape(ucfirst($statusOption)) ?>
+                <?= \App\Helpers\Helper::escape(\App\Helpers\Status::label($statusOption, \App\Helpers\Status::DOMAIN_USER)) ?>
                 </option>
               <?php endforeach; ?>
             </select>
             <div class="invalid-feedback"><?= \App\Helpers\Helper::escape($fieldErrors['status'] ?? 'Please select an account status.') ?></div>
           </div>
+          <?php elseif ($isPendingDoctor && !$isCreateForm): ?>
+          <div class="col-md-6">
+            <span class="form-label d-block">Account Status</span>
+            <?= \App\Helpers\Status::badgeHtml($currentStatus, \App\Helpers\Status::DOMAIN_USER) ?>
+            <p class="small text-muted mt-2 mb-0">Invitation pending accounts stay pending until the doctor completes password setup.</p>
+          </div>
+          <?php endif; ?>
 
           <?php if ($showPasswordFields): ?>
             <div class="col-md-6">
@@ -200,14 +216,28 @@ $doctor = $doctor ?? [];
             <i class="bi bi-link-45deg"></i>
             <span>Submitting this form creates or updates the linked user and doctor records together.</span>
           </div>
+          <?php if ($isCreateForm || $isPendingDoctor): ?>
+          <div class="admin-foundation-item">
+            <i class="bi bi-envelope"></i>
+            <span>The doctor will receive an email invitation to create their own password, then sign in through /login.</span>
+          </div>
+          <?php else: ?>
           <div class="admin-foundation-item">
             <i class="bi bi-key"></i>
             <span>Passwords are stored using password hashing and are never saved in plain text.</span>
           </div>
+          <?php endif; ?>
+          <?php if ($showStatusField): ?>
           <div class="admin-foundation-item">
             <i class="bi bi-person-check"></i>
             <span>Status controls determine whether the doctor can authenticate through the shared login page.</span>
           </div>
+          <?php elseif ($isCreateForm || $isPendingDoctor): ?>
+          <div class="admin-foundation-item">
+            <i class="bi bi-hourglass-split"></i>
+            <span>Invitation pending doctors stay pending until they complete password setup.</span>
+          </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>

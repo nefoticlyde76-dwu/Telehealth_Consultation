@@ -3,17 +3,19 @@
 namespace App\Services;
 
 use App\Core\Csrf;
+use App\Helpers\ListFilter;
+use App\Helpers\Palette;
+use App\Helpers\Status;
 use App\Models\ConsultationRequest;
 
 class AdminConsultationService
 {
     public const PER_PAGE = 20;
 
-    public static function getDashboardSummary(): array
+    public static function getDashboardSummary(int $unreadNotifications = 0): array
     {
         $summary = ConsultationRequest::getAdminStatusSummary();
-        $recentRequests = ConsultationRequest::findRecentForAdmin(5);
-        $recentActivityCount = ConsultationRequest::countRecentForAdmin(7);
+        $recentRequests = ConsultationRequest::findRecentForAdmin(5, Status::PENDING);
         $weeklyRequests = ConsultationRequest::findDailyRequestCountsForAdmin(7);
         $statusDistribution = ConsultationRequest::getStatusDistributionForAdmin();
 
@@ -25,25 +27,33 @@ class AdminConsultationService
                     'label' => 'Pending Requests',
                     'value' => (string) ($summary['pending_requests'] ?? 0),
                     'icon' => 'bi-hourglass-split',
-                    'description' => 'Consultation requests currently waiting for administrator review.',
+                    'description' => 'Requests waiting for administrator review.',
+                    'tone' => 'pending',
+                    'url' => Status::filteredListUrl('/admin/consultation-requests', Status::PENDING),
                 ],
                 [
-                    'label' => 'Approved Appointments',
+                    'label' => 'Approved Consultations',
                     'value' => (string) ($summary['approved_requests'] ?? 0),
                     'icon' => 'bi-check2-circle',
-                    'description' => 'Consultation appointments approved and reserved in the schedule.',
+                    'description' => 'Approved consultations currently on the schedule.',
+                    'tone' => 'success',
+                    'url' => Status::filteredListUrl('/admin/consultation-requests', Status::APPROVED),
                 ],
                 [
-                    'label' => 'Rejected Requests',
-                    'value' => (string) ($summary['rejected_requests'] ?? 0),
-                    'icon' => 'bi-x-circle',
-                    'description' => 'Consultation requests declined during administrator review.',
+                    'label' => 'Completed Consultations',
+                    'value' => (string) ($summary['completed_requests'] ?? 0),
+                    'icon' => 'bi-clipboard2-check',
+                    'description' => 'Consultations marked complete.',
+                    'tone' => 'navy',
+                    'url' => Status::filteredListUrl('/admin/consultation-requests', Status::COMPLETED),
                 ],
                 [
-                    'label' => 'Recent Activity',
-                    'value' => (string) $recentActivityCount,
-                    'icon' => 'bi-activity',
-                    'description' => 'Consultation requests submitted within the last seven days.',
+                    'label' => 'Unread Notifications',
+                    'value' => (string) max(0, $unreadNotifications),
+                    'icon' => 'bi-bell',
+                    'description' => 'Notifications that still require attention.',
+                    'tone' => 'info',
+                    'url' => '/notifications?read_state=unread',
                 ],
             ],
             'recentActivity' => self::buildRecentActivity($recentRequests),
@@ -59,19 +69,21 @@ class AdminConsultationService
         $filters = self::normalizeFilters($query);
         $queueIds = ConsultationRequest::findQueueIdsForAdmin($filters);
         $totalItems = count($queueIds);
-        $totalPages = max(1, (int) ceil(max($totalItems, 1) / self::PER_PAGE));
+        $pagination = ListFilter::paginate(
+            max(1, (int) ($query['page'] ?? 1)),
+            $totalItems,
+            self::PER_PAGE
+        );
         $selectedId = (int) ($query['selected'] ?? 0);
-        $page = max(1, (int) ($query['page'] ?? 1));
+        $page = $pagination['current_page'];
         $position = 0;
 
         $queueIndex = $selectedId > 0 ? array_search($selectedId, $queueIds, true) : false;
         if ($queueIndex !== false) {
             $page = (int) ceil(($queueIndex + 1) / self::PER_PAGE);
             $position = $queueIndex + 1;
+            $pagination = ListFilter::paginate($page, $totalItems, self::PER_PAGE);
         } else {
-            if ($page > $totalPages) {
-                $page = $totalPages;
-            }
             if ($selectedId <= 0 && $queueIds !== []) {
                 $pageOffset = ($page - 1) * self::PER_PAGE;
                 $selectedId = (int) ($queueIds[$pageOffset] ?? $queueIds[0]);
@@ -79,11 +91,12 @@ class AdminConsultationService
                 if ($queueIndex !== false) {
                     $page = (int) ceil(($queueIndex + 1) / self::PER_PAGE);
                     $position = $queueIndex + 1;
+                    $pagination = ListFilter::paginate($page, $totalItems, self::PER_PAGE);
                 }
             }
         }
 
-        $offset = ($page - 1) * self::PER_PAGE;
+        $offset = ($pagination['current_page'] - 1) * self::PER_PAGE;
         $requests = ConsultationRequest::findForAdmin($filters, self::PER_PAGE, $offset);
         $selectedRequest = $selectedId > 0
             ? ConsultationRequest::findByIdForAdmin($selectedId)
@@ -95,15 +108,13 @@ class AdminConsultationService
             'selectedId' => $selectedId,
             'selectedRequest' => $selectedRequest,
             'queuePosition' => $position,
+            'filterActive' => ListFilter::isActive($filters, ['status' => 'Pending', 'sort' => 'date_asc']),
             'summary' => self::getWorkspaceSummary(),
-            'pagination' => [
-                'current_page' => $page,
-                'per_page' => self::PER_PAGE,
-                'total_items' => $totalItems,
-                'total_pages' => $totalPages,
-            ],
+            'pagination' => $pagination,
             'statusOptions' => self::getStatusOptions(),
             'doctorOptions' => ConsultationRequest::getDoctorOptionsForAdmin(),
+            'dateOptions' => self::getDateOptions(),
+            'sortOptions' => self::getSortOptions(),
         ];
     }
 
@@ -133,20 +144,25 @@ class AdminConsultationService
 
     public static function workspacePath(array $filters, ?int $selectedId = null, int $page = 1): string
     {
-        $query = array_filter([
+        $sort = (string) ($filters['sort'] ?? 'date_asc');
+        $query = [
             'search' => (string) ($filters['search'] ?? ''),
             'status' => (string) ($filters['status'] ?? ''),
             'doctor_id' => (int) ($filters['doctor_id'] ?? 0) > 0 ? (int) $filters['doctor_id'] : '',
-            'consultation_date' => (string) ($filters['consultation_date'] ?? ''),
+            'date' => (string) ($filters['date'] ?? ''),
+            'date_from' => (string) ($filters['date'] ?? '') === 'custom' ? (string) ($filters['date_from'] ?? '') : '',
+            'date_to' => (string) ($filters['date'] ?? '') === 'custom' ? (string) ($filters['date_to'] ?? '') : '',
+            'sort' => $sort !== 'date_asc' ? $sort : '',
             'page' => $page > 1 ? $page : '',
             'selected' => $selectedId !== null && $selectedId > 0 ? $selectedId : '',
-        ], static fn ($value) => $value !== '' && $value !== 0);
+        ];
 
-        $queryString = http_build_query($query);
+        $query = array_filter($query, static fn ($value) => $value !== '' && $value !== 0);
         if (!array_key_exists('status', $query)) {
             $query['status'] = (string) ($filters['status'] ?? 'Pending');
-            $queryString = http_build_query($query);
         }
+
+        $queryString = http_build_query($query);
 
         return '/admin/consultation-requests' . ($queryString !== '' ? '?' . $queryString : '');
     }
@@ -171,22 +187,49 @@ class AdminConsultationService
 
     public static function approveRequest(int $requestId, string $csrfToken): array
     {
-        return self::updateRequestStatus($requestId, 'Approved', $csrfToken);
+        return self::updateRequestStatus($requestId, Status::APPROVED, $csrfToken);
     }
 
     public static function rejectRequest(int $requestId, string $csrfToken): array
     {
-        return self::updateRequestStatus($requestId, 'Rejected', $csrfToken);
+        return self::updateRequestStatus($requestId, Status::REJECTED, $csrfToken);
     }
 
     public static function cancelRequest(int $requestId, string $csrfToken): array
     {
-        return self::updateRequestStatus($requestId, 'Cancelled', $csrfToken);
+        return self::updateRequestStatus($requestId, Status::CANCELLED, $csrfToken);
     }
 
     public static function getStatusOptions(): array
     {
-        return ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'];
+        return Status::consultationKeys();
+    }
+
+    /**
+     * @return list<array{value:string,label:string}>
+     */
+    public static function getDateOptions(): array
+    {
+        return [
+            ['value' => 'today', 'label' => 'Today'],
+            ['value' => 'tomorrow', 'label' => 'Tomorrow'],
+            ['value' => 'this_week', 'label' => 'This week'],
+            ['value' => 'this_month', 'label' => 'This month'],
+            ['value' => 'custom', 'label' => 'Custom range'],
+        ];
+    }
+
+    /**
+     * @return list<array{value:string,label:string}>
+     */
+    public static function getSortOptions(): array
+    {
+        return [
+            ['value' => 'date_asc', 'label' => 'Consultation date (soonest)'],
+            ['value' => 'date_desc', 'label' => 'Consultation date (latest)'],
+            ['value' => 'newest', 'label' => 'Newest first'],
+            ['value' => 'oldest', 'label' => 'Oldest first'],
+        ];
     }
 
     private static function updateRequestStatus(int $requestId, string $targetStatus, string $csrfToken): array
@@ -199,7 +242,7 @@ class AdminConsultationService
             ];
         }
 
-        if (!in_array($targetStatus, self::getStatusOptions(), true)) {
+        if (!in_array($targetStatus, Status::adminActionableStatuses(), true)) {
             return [
                 'success' => false,
                 'message' => 'The requested consultation status is invalid.',
@@ -208,21 +251,60 @@ class AdminConsultationService
         }
 
         $result = ConsultationRequest::updateStatusForAdmin($requestId, $targetStatus);
+        $success = (bool) ($result['success'] ?? false);
+        $type = (string) ($result['type'] ?? ($success ? 'success' : 'danger'));
+
+        if ($success && $type === 'success') {
+            if ($targetStatus === Status::APPROVED) {
+                NotificationService::notifyConsultationApproved($requestId);
+                AuditLogService::record(
+                    'consultation_approved',
+                    'Consultation request approved by administrator.',
+                    AuditLogService::ENTITY_CONSULTATION_REQUEST,
+                    $requestId
+                );
+            } elseif ($targetStatus === Status::REJECTED) {
+                NotificationService::notifyConsultationRejected($requestId);
+                AuditLogService::record(
+                    'consultation_rejected',
+                    'Consultation request rejected by administrator.',
+                    AuditLogService::ENTITY_CONSULTATION_REQUEST,
+                    $requestId
+                );
+            } elseif ($targetStatus === Status::CANCELLED) {
+                AuditLogService::record(
+                    'consultation_cancelled',
+                    'Consultation request cancelled by administrator.',
+                    AuditLogService::ENTITY_CONSULTATION_REQUEST,
+                    $requestId
+                );
+            }
+        }
 
         return [
-            'success' => (bool) ($result['success'] ?? false),
+            'success' => $success,
             'message' => (string) ($result['message'] ?? 'Consultation status updated.'),
-            'type' => (string) ($result['type'] ?? (($result['success'] ?? false) ? 'success' : 'danger')),
+            'type' => $type,
         ];
     }
 
     public static function normalizeFilters(array $query): array
     {
-        $search = trim((string) ($query['search'] ?? ''));
+        $search = ListFilter::normalizeSearch((string) ($query['search'] ?? ''));
         $status = trim((string) ($query['status'] ?? ''));
         $patientId = (int) ($query['patient_id'] ?? 0);
         $doctorId = (int) ($query['doctor_id'] ?? 0);
-        $consultationDate = trim((string) ($query['consultation_date'] ?? ''));
+        $sort = ListFilter::allowedValue(
+            trim((string) ($query['sort'] ?? 'date_asc')),
+            ['date_asc', 'date_desc', 'newest', 'oldest'],
+            'date_asc'
+        );
+        $range = ListFilter::resolveDateRange(
+            (string) ($query['date'] ?? ''),
+            (string) ($query['date_from'] ?? ''),
+            (string) ($query['date_to'] ?? ''),
+            (string) ($query['consultation_date'] ?? '')
+        );
 
         if (!array_key_exists('status', $query)) {
             $status = 'Pending';
@@ -238,16 +320,16 @@ class AdminConsultationService
             $doctorId = 0;
         }
 
-        if ($consultationDate !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $consultationDate)) {
-            $consultationDate = '';
-        }
-
         return [
             'search' => $search,
             'status' => $status,
             'patient_id' => $patientId,
             'doctor_id' => $doctorId,
-            'consultation_date' => $consultationDate,
+            'date' => $range['preset'],
+            'date_from' => $range['preset'] === 'custom' ? $range['from'] : '',
+            'date_to' => $range['preset'] === 'custom' ? $range['to'] : '',
+            'date_range' => ['from' => $range['from'], 'to' => $range['to']],
+            'sort' => $sort,
         ];
     }
 
@@ -307,12 +389,12 @@ class AdminConsultationService
                     [
                         'label' => 'Weekly Requests',
                         'data' => $values,
-                        'borderColor' => '#0794E3',
-                        'backgroundColor' => 'rgba(7, 148, 227, 0.12)',
+                        'borderColor' => Palette::MEDICAL_BLUE,
+                        'backgroundColor' => 'rgba(' . Palette::MEDICAL_BLUE_RGB . ', 0.12)',
                         'fill' => true,
                         'tension' => 0.25,
                         'pointRadius' => 3,
-                        'pointBackgroundColor' => '#0794E3',
+                        'pointBackgroundColor' => Palette::MEDICAL_BLUE,
                     ],
                 ],
             ],
@@ -336,49 +418,6 @@ class AdminConsultationService
 
     private static function buildStatusDistributionChart(array $distribution): array
     {
-        $labels = [];
-        $values = [];
-        $colors = [
-            'Pending' => '#F59E0B',
-            'Approved' => '#08B4C6',
-            'Rejected' => '#DC3545',
-            'Cancelled' => '#70838A',
-            'Completed' => '#455F68',
-        ];
-        $background = [];
-
-        foreach (['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'] as $status) {
-            $labels[] = $status;
-            $values[] = (int) ($distribution[$status] ?? 0);
-            $background[] = $colors[$status] ?? 'rgba(107, 114, 128, 0.6)';
-        }
-
-        return [
-            'type' => 'doughnut',
-            'data' => [
-                'labels' => $labels,
-                'datasets' => [
-                    [
-                        'data' => $values,
-                        'backgroundColor' => $background,
-                        'borderWidth' => 0,
-                    ],
-                ],
-            ],
-            'options' => [
-                'responsive' => true,
-                'maintainAspectRatio' => false,
-                'cutout' => '68%',
-                'plugins' => [
-                    'legend' => [
-                        'position' => 'bottom',
-                        'labels' => [
-                            'usePointStyle' => true,
-                            'boxWidth' => 10,
-                        ],
-                    ],
-                ],
-            ],
-        ];
+        return Status::consultationDistributionChart($distribution);
     }
 }

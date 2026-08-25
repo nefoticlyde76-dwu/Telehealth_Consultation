@@ -9,7 +9,7 @@ class Environment
     public static function load(string $path): void
     {
         if (!file_exists($path)) {
-            throw new \RuntimeException('.env file not found at: ' . $path);
+            throw new \RuntimeException('.env file not found.');
         }
 
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -27,7 +27,7 @@ class Environment
 
             [$name, $value] = explode('=', $trimmed, 2);
             $name = trim($name);
-            $value = trim($value);
+            $value = self::unquote(trim($value));
 
             if ($name === '') {
                 continue;
@@ -49,6 +49,49 @@ class Environment
 
         if ($value === false) {
             return $default;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Read a boolean environment flag.
+     *
+     * PHP casts the string "false" to true, so APP_DEBUG=false must be parsed
+     * explicitly. Accepted true values: 1, true, yes, on. Accepted false
+     * values: 0, false, no, off, empty string.
+     */
+    public static function getBool(string $key, bool $default = false): bool
+    {
+        $value = self::get($key, null);
+        if ($value === null || $value === false) {
+            return $default;
+        }
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        $normalized = strtolower(trim((string) $value));
+
+        return match ($normalized) {
+            '1', 'true', 'yes', 'on' => true,
+            '0', 'false', 'no', 'off', '' => false,
+            default => $default,
+        };
+    }
+
+    private static function unquote(string $value): string
+    {
+        if ($value === '') {
+            return $value;
+        }
+
+        $first = $value[0];
+        $last = $value[strlen($value) - 1];
+
+        if (strlen($value) >= 2 && (($first === '"' && $last === '"') || ($first === "'" && $last === "'"))) {
+            return substr($value, 1, -1);
         }
 
         return $value;

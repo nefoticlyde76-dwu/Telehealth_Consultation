@@ -73,13 +73,25 @@
             <p class="auth-login-subtitle">Use your MBPHA TeleHealth email and password to open your account.</p>
           </header>
 
+          <?php
+          $googleClientId = trim((string) (\App\Config\App::getConfig()['google']['client_id'] ?? ''));
+          ?>
+
           <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
+
+          <div
+            id="googleSignInAlert"
+            class="alert alert-danger d-none"
+            role="alert"
+            aria-live="polite"
+            data-google-auth-alert
+          ></div>
 
           <form action="<?= \App\Helpers\Helper::url('/login') ?>" method="POST" class="auth-login-form needs-validation" novalidate>
             <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken ?? '') ?>">
 
             <div class="auth-login-field">
-              <label for="loginEmail" class="form-label">Email Address</label>
+              <label for="loginEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
               <div class="auth-login-input">
                 <i class="bi bi-envelope auth-login-input__icon" aria-hidden="true"></i>
                 <input
@@ -97,7 +109,7 @@
             </div>
 
             <div class="auth-login-field">
-              <label for="loginPassword" class="form-label">Password</label>
+              <label for="loginPassword" class="form-label">Password <span class="text-danger">*</span></label>
               <div class="auth-login-input">
                 <i class="bi bi-lock auth-login-input__icon" aria-hidden="true"></i>
                 <input
@@ -125,6 +137,28 @@
             <div class="auth-login-actions">
               <button type="submit" class="btn auth-login-submit">Sign in</button>
               <div class="auth-login-or" role="separator" aria-label="or">OR</div>
+              <?php if ($googleClientId !== ''): ?>
+              <div
+                id="mbphaGoogleSignIn"
+                class="auth-login-google"
+                data-google-auth
+                data-client-id="<?= \App\Helpers\Helper::escape($googleClientId) ?>"
+                data-auth-url="<?= \App\Helpers\Helper::escape(\App\Helpers\Helper::url('/auth/google')) ?>"
+                data-error-generic="Google sign-in could not be completed."
+                data-error-unavailable="Google sign-in is unavailable right now. Please sign in with email and password."
+                data-busy-label="Signing in…"
+              >
+                <div
+                  id="mbphaGoogleSignInButton"
+                  class="auth-login-google__button"
+                  data-google-auth-button
+                  role="group"
+                  aria-label="Continue with Google"
+                ></div>
+                <p class="auth-login-google-status" data-google-auth-status aria-live="polite"></p>
+                <p class="auth-login-google-hint">Patients can continue with Google. Doctors and administrators sign in with email and password.</p>
+              </div>
+              <?php endif; ?>
               <a href="<?= \App\Helpers\Helper::url('/register') ?>" class="btn auth-login-register">
                 <i class="bi bi-person-plus me-2" aria-hidden="true"></i>
                 Register as a patient
@@ -136,5 +170,10 @@
     </article>
   </div>
 </main>
+
+<?php if ($googleClientId !== ''): ?>
+<script src="<?= \App\Helpers\Helper::asset('js/google-auth.js') ?>"></script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="window.mbphaGoogleGisLoaded && window.mbphaGoogleGisLoaded()"></script>
+<?php endif; ?>
 
 <?php require __DIR__ . '/../partials/public/footer.php'; ?>

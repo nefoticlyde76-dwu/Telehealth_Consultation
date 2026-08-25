@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\Database;
+use App\Helpers\ListFilter;
 use PDO;
 
 class DoctorAvailability
@@ -147,7 +148,7 @@ class DoctorAvailability
         self::appendFilters($filters, $conditions, $parameters);
 
         $sql .= ' WHERE ' . implode(' AND ', $conditions);
-        $sql .= ' ORDER BY consultation_date ASC, start_time ASC, id ASC LIMIT :limit OFFSET :offset';
+        $sql .= self::doctorAvailabilityOrderSql($filters) . ' LIMIT :limit OFFSET :offset';
 
         $stmt = $db->prepare($sql);
         self::bindParameters($stmt, $parameters);
@@ -471,10 +472,22 @@ class DoctorAvailability
         return $row ?: null;
     }
 
+    /**
+     * Trusted ORDER BY expressions only. The sort key is whitelisted in the service.
+     */
+    private static function doctorAvailabilityOrderSql(array $filters = []): string
+    {
+        $sort = trim((string) ($filters['sort'] ?? 'earliest'));
+
+        return match ($sort) {
+            'latest' => ' ORDER BY consultation_date DESC, start_time DESC, id DESC',
+            default => ' ORDER BY consultation_date ASC, start_time ASC, id ASC',
+        };
+    }
+
     private static function appendFilters(array $filters, array &$conditions, array &$parameters): void
     {
-        $search = trim((string) ($filters['search'] ?? ''));
-        $filterDate = trim((string) ($filters['filter_date'] ?? ''));
+        $search = ListFilter::normalizeSearch((string) ($filters['search'] ?? ''));
         $status = trim((string) ($filters['status'] ?? ''));
 
         if ($search !== '') {
@@ -484,16 +497,22 @@ class DoctorAvailability
                 OR TIME_FORMAT(end_time, "%H:%i") LIKE :search_end
                 OR notes LIKE :search_notes
             )';
-            $searchValue = '%' . $search . '%';
+            $searchValue = ListFilter::likeContains($search);
             $parameters[':search_date'] = $searchValue;
             $parameters[':search_start'] = $searchValue;
             $parameters[':search_end'] = $searchValue;
             $parameters[':search_notes'] = $searchValue;
         }
 
-        if ($filterDate !== '') {
-            $conditions[] = 'consultation_date = :filter_date';
-            $parameters[':filter_date'] = $filterDate;
+        $range = is_array($filters['date_range'] ?? null) ? $filters['date_range'] : [];
+        if (($range['from'] ?? '') !== '' || ($range['to'] ?? '') !== '') {
+            ListFilter::appendDateRange('consultation_date', $range, $conditions, $parameters);
+        } else {
+            $filterDate = trim((string) ($filters['filter_date'] ?? ''));
+            if ($filterDate !== '' && ListFilter::isValidDate($filterDate)) {
+                $conditions[] = 'consultation_date = :filter_date';
+                $parameters[':filter_date'] = $filterDate;
+            }
         }
 
         if ($status !== '') {

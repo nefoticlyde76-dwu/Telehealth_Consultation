@@ -1,100 +1,47 @@
 <?php
 
-$currentPath = \App\Helpers\Helper::currentPath();
+use App\Helpers\DashboardNav;
+use App\Helpers\Helper;
+use App\Core\Csrf;
+
+$currentPath = Helper::currentPath();
 $dashboardRole = (string) ($dashboardRole ?? '');
-
-$canonicalNav = [
-    'admin' => [
-        'roleLabel' => 'Administrator',
-        'primary' => [
-            ['path' => '/admin/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
-            ['path' => '/admin/users', 'label' => 'Users', 'icon' => 'bi-people'],
-            ['path' => '/admin/doctors', 'label' => 'Doctors', 'icon' => 'bi-person-badge'],
-            ['path' => '/admin/patients', 'label' => 'Patients', 'icon' => 'bi-heart-pulse'],
-            ['path' => '/admin/consultation-requests', 'label' => 'Consultation Requests', 'icon' => 'bi-clipboard2-check'],
-        ],
-        'account' => [
-            ['path' => '/admin/profile', 'label' => 'Profile', 'icon' => 'bi-person'],
-            ['path' => '/admin/profile', 'label' => 'Settings', 'icon' => 'bi-gear', 'skipActive' => true],
-        ],
-    ],
-    'doctor' => [
-        'roleLabel' => 'Doctor',
-        'primary' => [
-            ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
-            ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
-            ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-calendar2-check'],
-        ],
-        'account' => [
-            ['path' => '/doctor/profile', 'label' => 'Profile', 'icon' => 'bi-person'],
-            ['path' => '/doctor/profile/edit', 'label' => 'Settings', 'icon' => 'bi-gear'],
-        ],
-    ],
-    'patient' => [
-        'roleLabel' => 'Patient',
-        'primary' => [
-            ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
-            ['path' => '/patient/available-slots', 'label' => 'Book Consultation', 'icon' => 'bi-calendar2-plus'],
-            ['path' => '/patient/doctors', 'label' => 'Doctors', 'icon' => 'bi-person-badge'],
-            ['path' => '/patient/consultation-requests', 'label' => 'My Consultations', 'icon' => 'bi-clipboard2-check'],
-        ],
-        'account' => [
-            ['path' => '/patient/profile', 'label' => 'Profile', 'icon' => 'bi-person'],
-            ['path' => '/patient/profile/edit', 'label' => 'Settings', 'icon' => 'bi-gear'],
-        ],
-    ],
-];
-
-$navConfig = $canonicalNav[$dashboardRole] ?? [
-    'roleLabel' => (string) ($dashboardRoleLabel ?? 'Dashboard'),
-    'primary' => is_array($sidebarItems ?? null) ? $sidebarItems : [],
-    'account' => [],
-];
-
+$navConfig = DashboardNav::forRole($dashboardRole);
 $roleFooterLabel = (string) ($navConfig['roleLabel'] ?? 'Dashboard');
-$primaryItems = is_array($navConfig['primary'] ?? null) ? $navConfig['primary'] : [];
+$navGroups = is_array($navConfig['groups'] ?? null) ? $navConfig['groups'] : [];
 $accountItems = is_array($navConfig['account'] ?? null) ? $navConfig['account'] : [];
+$allNavItems = DashboardNav::allItems($dashboardRole);
+$homePath = (string) ($navConfig['home'] ?? '/');
 
-$isNavActive = static function (string $itemPath, string $currentPath, array $siblings = []): bool {
-    if ($itemPath === '' || $itemPath === '#') {
-        return false;
-    }
-    if ($currentPath === $itemPath) {
-        return true;
-    }
-    if ($itemPath !== '/' && str_starts_with($currentPath, $itemPath . '/')) {
-        foreach ($siblings as $sibling) {
-            $siblingPath = (string) ($sibling['path'] ?? '');
-            if ($siblingPath !== '' && $siblingPath !== $itemPath && ($currentPath === $siblingPath || str_starts_with($currentPath, $siblingPath . '/'))) {
-                if (strlen($siblingPath) > strlen($itemPath)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    return false;
-};
-
-$renderNavGroup = static function (array $items, string $currentPath) use ($isNavActive): void {
+$renderNavGroup = static function (array $items, string $currentPath, array $allNavItems): void {
     foreach ($items as $item):
         $itemPath = (string) ($item['path'] ?? '#');
         $itemLabel = (string) ($item['label'] ?? 'Link');
-        $isActive = empty($item['skipActive']) && $isNavActive($itemPath, $currentPath, $items);
+        $isActive = empty($item['skipActive']) && DashboardNav::isActive($itemPath, $currentPath, $allNavItems);
         ?>
-        <a href="<?= \App\Helpers\Helper::url($itemPath) ?>"
-           class="sidebar-link <?= $isActive ? 'active' : '' ?>"
-           data-tooltip="<?= \App\Helpers\Helper::escape($itemLabel) ?>"
-           title="<?= \App\Helpers\Helper::escape($itemLabel) ?>"
+        <a href="<?= Helper::url($itemPath) ?>"
+           class="sidebar-link<?= $isActive ? ' active' : '' ?>"
+           data-tooltip="<?= Helper::escape($itemLabel) ?>"
+           title="<?= Helper::escape($itemLabel) ?>"
            <?= $isActive ? ' aria-current="page"' : '' ?>>
-            <span class="sidebar-link-icon"><i class="bi <?= \App\Helpers\Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
-            <span class="sidebar-link-label"><?= \App\Helpers\Helper::escape($itemLabel) ?></span>
+            <span class="sidebar-link-icon" aria-hidden="true"><i class="bi <?= Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
+            <span class="sidebar-link-label"><?= Helper::escape($itemLabel) ?></span>
         </a>
         <?php
     endforeach;
 };
 
-$renderSidebarBody = static function (array $primaryItems, array $accountItems, string $currentPath, $user, string $roleFooterLabel, bool $forOffcanvas = false) use ($renderNavGroup): void {
+$renderSidebarBody = static function (
+    array $navGroups,
+    array $accountItems,
+    array $allNavItems,
+    string $currentPath,
+    $user,
+    string $roleFooterLabel,
+    string $homePath,
+    bool $forOffcanvas = false
+) use ($renderNavGroup): void {
+    $idPrefix = $forOffcanvas ? 'offcanvas-' : 'rail-';
     ?>
     <div class="sidebar-rail-top<?= $forOffcanvas ? ' sidebar-rail-top--offcanvas' : '' ?>">
       <?php if (!$forOffcanvas): ?>
@@ -116,28 +63,40 @@ $renderSidebarBody = static function (array $primaryItems, array $accountItems, 
         $brandRoleLabel = '';
         $brandShowTitle = false;
         $brandShowWordmark = false;
-        $brandLink = \App\Helpers\Helper::url('/');
+        $brandLink = Helper::url($homePath !== '' ? $homePath : '/');
         require __DIR__ . '/../shared/brand_logo.php';
         ?>
       </div>
     </div>
 
     <div class="sidebar-nav-scroll">
-      <div class="sidebar-nav-group">
-        <p class="sidebar-caption">Main</p>
-        <nav class="nav flex-column">
-          <?php $renderNavGroup($primaryItems, $currentPath); ?>
-        </nav>
-      </div>
+      <?php foreach ($navGroups as $group): ?>
+        <?php
+        $groupCaption = (string) ($group['caption'] ?? '');
+        $groupItems = is_array($group['items'] ?? null) ? $group['items'] : [];
+        if ($groupItems === []) {
+            continue;
+        }
+        $groupSlug = $idPrefix . strtolower(preg_replace('/[^a-z0-9]+/i', '-', $groupCaption) ?: 'nav');
+        ?>
+        <div class="sidebar-nav-group">
+          <?php if ($groupCaption !== ''): ?>
+            <p class="sidebar-caption" id="sidebar-<?= \App\Helpers\Helper::escape($groupSlug) ?>"><?= \App\Helpers\Helper::escape($groupCaption) ?></p>
+          <?php endif; ?>
+          <nav class="nav flex-column" <?= $groupCaption !== '' ? 'aria-labelledby="sidebar-' . \App\Helpers\Helper::escape($groupSlug) . '"' : 'aria-label="Dashboard navigation"' ?>>
+            <?php $renderNavGroup($groupItems, $currentPath, $allNavItems); ?>
+          </nav>
+        </div>
+      <?php endforeach; ?>
 
       <div class="sidebar-nav-group">
-        <p class="sidebar-caption">Account</p>
-        <nav class="nav flex-column">
-          <?php $renderNavGroup($accountItems, $currentPath); ?>
+        <p class="sidebar-caption" id="<?= $idPrefix ?>account">Account</p>
+        <nav class="nav flex-column" aria-labelledby="<?= $idPrefix ?>account">
+          <?php $renderNavGroup($accountItems, $currentPath, $allNavItems); ?>
           <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
-            <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(\App\Core\Csrf::generate()) ?>">
+            <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(Csrf::generate()) ?>">
             <button type="submit" class="sidebar-link sidebar-logout-btn" data-tooltip="Logout" title="Logout">
-              <span class="sidebar-link-icon"><i class="bi bi-box-arrow-left"></i></span>
+              <span class="sidebar-link-icon" aria-hidden="true"><i class="bi bi-box-arrow-left"></i></span>
               <span class="sidebar-link-label">Logout</span>
             </button>
           </form>
@@ -154,30 +113,28 @@ $renderSidebarBody = static function (array $primaryItems, array $accountItems, 
           $avatarClass = 'user-avatar user-avatar--sm';
           require __DIR__ . '/../shared/user_avatar.php';
           ?>
-          <span class="sidebar-online-dot" title="Online" aria-hidden="true"></span>
+          <span class="sidebar-online-dot" title="Signed in" aria-hidden="true"></span>
         </div>
       </div>
       <div class="sidebar-user-copy">
         <strong><?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?></strong>
-        <span class="sidebar-user-role">
-          <?= \App\Helpers\Helper::escape($roleFooterLabel) ?>
-        </span>
+        <span class="sidebar-user-role"><?= \App\Helpers\Helper::escape($roleFooterLabel) ?></span>
       </div>
     </div>
     <?php
 };
 ?>
 
-<aside class="dashboard-sidebar d-none d-lg-flex flex-column">
-  <?php $renderSidebarBody($primaryItems, $accountItems, $currentPath, $user, $roleFooterLabel, false); ?>
+<aside class="dashboard-sidebar d-none d-lg-flex flex-column" aria-label="<?= \App\Helpers\Helper::escape($roleFooterLabel) ?> navigation">
+  <?php $renderSidebarBody($navGroups, $accountItems, $allNavItems, $currentPath, $user, $roleFooterLabel, $homePath, false); ?>
 </aside>
 
 <div class="offcanvas offcanvas-start dashboard-offcanvas" tabindex="-1" id="dashboardSidebar" aria-labelledby="dashboardSidebarLabel">
   <div class="offcanvas-header border-0 pb-0">
     <span class="visually-hidden" id="dashboardSidebarLabel">Dashboard navigation</span>
-    <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Close navigation"></button>
   </div>
   <div class="offcanvas-body d-flex flex-column p-0">
-    <?php $renderSidebarBody($primaryItems, $accountItems, $currentPath, $user, $roleFooterLabel, true); ?>
+    <?php $renderSidebarBody($navGroups, $accountItems, $allNavItems, $currentPath, $user, $roleFooterLabel, $homePath, true); ?>
   </div>
 </div>

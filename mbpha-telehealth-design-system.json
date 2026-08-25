@@ -20,40 +20,40 @@
 
   "colorPalette": {
     "brand": {
-      "primaryNavy": "#0F2544",
-      "primaryNavyDark": "#0B1B33",
-      "accentBlue": "#2563EB",
-      "accentBlueHover": "#1D4ED8",
-      "logoTeal": "#0EA5A0"
+      "primaryNavy": "#17375E",
+      "primaryNavyDark": "#102A43",
+      "accentBlue": "#0A6FB6",
+      "accentBlueHover": "#1565C0",
+      "logoTeal": "#18A558"
     },
     "neutrals": {
-      "canvasBackground": "#F4F6F9",
+      "canvasBackground": "#F5F7FA",
       "cardBackground": "#FFFFFF",
-      "borderSubtle": "#E5E9F0",
-      "borderStrong": "#D1D9E6",
-      "textPrimary": "#111827",
-      "textSecondary": "#6B7280",
-      "textMuted": "#9CA3AF",
+      "borderSubtle": "#D9E2EC",
+      "borderStrong": "#D9E2EC",
+      "textPrimary": "#102A43",
+      "textSecondary": "#4A5568",
+      "textMuted": "#4A5568",
       "sidebarTextInactive": "#B9C4D6",
       "sidebarTextActive": "#FFFFFF"
     },
     "status": {
-      "success": { "bg": "#DCFCE7", "text": "#16A34A", "dot": "#22C55E" },
-      "warning": { "bg": "#FEF3C7", "text": "#D97706", "dot": "#F59E0B" },
-      "info": { "bg": "#DBEAFE", "text": "#2563EB", "dot": "#3B82F6" },
-      "danger": { "bg": "#FEE2E2", "text": "#DC2626", "dot": "#EF4444" },
-      "neutralPill": { "bg": "#F1F5F9", "text": "#64748B", "dot": "#94A3B8" }
+      "success": { "bg": "#D8F3E8", "text": "#147A45", "dot": "#18A558" },
+      "warning": { "bg": "#FEF3C7", "text": "#B45309", "dot": "#F59E0B" },
+      "info": { "bg": "#E3F2FD", "text": "#0A6FB6", "dot": "#40C4FF" },
+      "danger": { "bg": "#FEE2E2", "text": "#DC2626", "dot": "#DC3545" },
+      "neutralPill": { "bg": "#F5F7FA", "text": "#4A5568", "dot": "#4A5568" }
     },
     "dataViz": {
-      "donutSlices": ["#22C55E", "#3B82F6", "#F59E0B", "#94A3B8"],
-      "lineChartStroke": "#3B82F6",
-      "lineChartFill": "rgba(37,99,235,0.08)",
-      "gridLines": "#EEF1F6"
+      "donutSlices": ["#18A558", "#0A6FB6", "#F59E0B", "#4A5568"],
+      "lineChartStroke": "#0A6FB6",
+      "lineChartFill": "rgba(10,111,182,0.08)",
+      "gridLines": "#D9E2EC"
     },
     "usageRules": [
-      "Navy (#0F2544) reserved for sidebar/nav chrome only — never used as a content background",
-      "Accent blue reserved for primary actions, active nav states, links, and 'info/video' status chips",
-      "Green = confirmed/available/success; Amber = pending/warning; Red = cancelled/blocked/expired; Gray = neutral/inactive",
+      "Navy (#17375E) reserved for sidebar/nav chrome, major headings, and structural labels — never used as a large content background",
+      "Medical Blue reserved for primary actions, active nav states, links, and pending/info status chips",
+      "Emerald Green = approved/completed/success; Medical Blue = pending/active; Red = cancelled/blocked/expired; Gray = neutral/inactive",
       "Status color always paired: light tint background + saturated text, never solid-fill unless it's a dot/icon"
     ]
   },
@@ -144,7 +144,7 @@
     "button": {
       "primary": { "bg": "accentBlue", "text": "#FFFFFF", "radius": "8-10px", "padding": "8-10px 16px", "weight": 600 },
       "secondary": { "bg": "transparent/white", "border": "1px solid borderStrong", "text": "textPrimary", "radius": "8-10px" },
-      "iconButton": { "shape": "circular or 8px rounded square", "bg": "#F1F5F9 or transparent", "size": "32-36px" },
+      "iconButton": { "shape": "circular or 8px rounded square", "bg": "#F5F7FA or transparent", "size": "32-36px" },
       "danger": { "bg": "#DC2626 or tinted red", "text": "#FFFFFF or #DC2626" }
     },
     "quickActionButton": {

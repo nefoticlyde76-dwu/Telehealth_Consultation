@@ -1,9 +1,13 @@
 <?php
 
+use App\Controllers\AccountController;
 use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\DoctorController;
+use App\Controllers\DoctorPasswordSetupController;
+use App\Controllers\GoogleAuthController;
 use App\Controllers\HomeController;
+use App\Controllers\NotificationController;
 use App\Controllers\PatientController;
 use App\Middleware\RoleMiddleware;
 
@@ -18,6 +22,30 @@ $router->post('/login', [AuthController::class, 'login']);
 $router->get('/register', [AuthController::class, 'register']);
 $router->post('/register', [AuthController::class, 'register']);
 $router->post('/logout', [AuthController::class, 'logout']);
+$router->post('/auth/google', [GoogleAuthController::class, 'authenticate']);
+$router->get('/auth/google', [GoogleAuthController::class, 'methodNotAllowed']);
+$router->add('PUT', '/auth/google', [GoogleAuthController::class, 'methodNotAllowed']);
+$router->add('PATCH', '/auth/google', [GoogleAuthController::class, 'methodNotAllowed']);
+$router->add('DELETE', '/auth/google', [GoogleAuthController::class, 'methodNotAllowed']);
+
+$router->get('/doctor/setup-password', [DoctorPasswordSetupController::class, 'show']);
+$router->post('/doctor/setup-password', [DoctorPasswordSetupController::class, 'store']);
+
+$authenticatedRoles = [new RoleMiddleware(['admin', 'doctor', 'patient'])];
+$router->get('/notifications', [NotificationController::class, 'index'], $authenticatedRoles);
+$router->post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'], $authenticatedRoles);
+$router->post('/notifications/delete-selected', [NotificationController::class, 'deleteSelected'], $authenticatedRoles);
+$router->post('/notifications/clear-all', [NotificationController::class, 'clearAll'], $authenticatedRoles);
+$router->post('/notifications/{id}/read', [NotificationController::class, 'markRead'], $authenticatedRoles);
+$router->post('/notifications/{id}/unread', [NotificationController::class, 'markUnread'], $authenticatedRoles);
+$router->post('/notifications/{id}/delete', [NotificationController::class, 'delete'], $authenticatedRoles);
+$router->get('/notifications/{id}', [NotificationController::class, 'open'], $authenticatedRoles);
+
+$router->get('/account/security', [AccountController::class, 'security'], $authenticatedRoles);
+$router->post('/account/password', [AccountController::class, 'changePassword'], $authenticatedRoles);
+$router->post('/account/sessions/logout-others', [AccountController::class, 'logoutOtherSessions'], $authenticatedRoles);
+$router->get('/account/notifications/preferences', [AccountController::class, 'notificationPreferences'], $authenticatedRoles);
+$router->post('/account/notifications/preferences', [AccountController::class, 'notificationPreferences'], $authenticatedRoles);
 
 $router->get('/patient/dashboard', [PatientController::class, 'dashboard'], [
     new RoleMiddleware(['patient']),
@@ -163,11 +191,47 @@ $router->get('/admin/users', [AdminController::class, 'users'], [
     new RoleMiddleware(['admin']),
 ]);
 
+$router->post('/admin/users/delete-selected', [AdminController::class, 'deleteSelectedUsers'], [
+    new RoleMiddleware(['admin']),
+]);
+
 $router->get('/admin/users/{id}', [AdminController::class, 'showUser'], [
     new RoleMiddleware(['admin']),
 ]);
 
+$router->post('/admin/users/{id}/suspend', [AdminController::class, 'suspendUser'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/users/{id}/deactivate', [AdminController::class, 'deactivateUser'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/users/{id}/reactivate', [AdminController::class, 'reactivateUser'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/users/{id}/reset-password', [AdminController::class, 'resetUserPassword'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/users/{id}/reset-password', [AdminController::class, 'resetUserPassword'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/users/{id}/force-password-reset', [AdminController::class, 'forceUserPasswordReset'], [
+    new RoleMiddleware(['admin']),
+]);
+
 $router->post('/admin/users/{id}/delete', [AdminController::class, 'deleteUser'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/audit-logs', [AdminController::class, 'auditLogs'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/audit-logs/{id}', [AdminController::class, 'showAuditLog'], [
     new RoleMiddleware(['admin']),
 ]);
 
@@ -236,6 +300,10 @@ $router->post('/admin/doctors/{id}/activate', [AdminController::class, 'activate
 ]);
 
 $router->post('/admin/doctors/{id}/deactivate', [AdminController::class, 'deactivateDoctor'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/doctors/{id}/resend-invitation', [AdminController::class, 'resendDoctorInvitation'], [
     new RoleMiddleware(['admin']),
 ]);
 

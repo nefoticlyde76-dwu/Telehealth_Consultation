@@ -70,7 +70,7 @@ $doctorSpecialization = (string) ($slot['specialization'] ?? 'General Practice')
         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
 
         <div class="mb-3">
-          <label for="reason" class="form-label">Brief Reason for Consultation (Chief Complaint)</label>
+          <label for="reason" class="form-label">Brief Reason for Consultation (Chief Complaint) <span class="text-danger">*</span></label>
           <textarea
             class="form-control <?= isset($fieldErrors['reason']) ? 'is-invalid' : '' ?>"
             id="reason"

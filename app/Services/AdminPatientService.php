@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Helpers\Status;
 use App\Models\Patient;
 use App\Models\User;
 
@@ -39,7 +40,7 @@ class AdminPatientService
                 'total_items' => $totalPatients,
                 'total_pages' => $totalPages,
             ],
-            'statusOptions' => self::getStatusOptions(),
+            'statusOptions' => Status::assignableUserKeys(),
             'genderOptions' => self::getGenderOptions(),
         ];
     }
@@ -50,7 +51,12 @@ class AdminPatientService
             return null;
         }
 
-        return Patient::findManagementDetailByUserId($userId);
+        $patient = Patient::findManagementDetailByUserId($userId);
+        if ($patient === null || Status::isDeletedUserStatus((string) ($patient['status'] ?? ''))) {
+            return null;
+        }
+
+        return $patient;
     }
 
     public static function getPatientFormData(?array $patient = null): array
@@ -120,6 +126,14 @@ class AdminPatientService
             }
 
             $db->commit();
+            AuditLogService::record(
+                'patient_account_updated',
+                'Administrator updated a patient account.',
+                AuditLogService::ENTITY_USER,
+                $userId,
+                'success',
+                ['subject_name' => $formData['full_name'], 'subject_role' => 'patient']
+            );
 
             return [
                 'success' => true,
@@ -170,6 +184,14 @@ class AdminPatientService
             ];
         }
 
+        if (Status::isDeletedUserStatus((string) ($patient['status'] ?? ''))) {
+            return [
+                'success' => false,
+                'message' => 'A permanently deleted patient account cannot be updated.',
+                'type' => 'warning',
+            ];
+        }
+
         if (($patient['status'] ?? '') === $targetStatus) {
             return [
                 'success' => true,
@@ -182,6 +204,17 @@ class AdminPatientService
             if (!User::updateStatus($userId, $targetStatus)) {
                 throw new \RuntimeException('The patient account status update did not persist.');
             }
+            if ($targetStatus !== Status::USER_ACTIVE) {
+                SessionService::revokeAll($userId);
+            }
+            AuditLogService::record(
+                'patient_status_updated',
+                'Administrator updated patient account status to ' . $targetStatus . '.',
+                AuditLogService::ENTITY_USER,
+                $userId,
+                'success',
+                ['subject_name' => (string) ($patient['full_name'] ?? ''), 'subject_role' => 'patient']
+            );
 
             return [
                 'success' => true,
@@ -206,15 +239,15 @@ class AdminPatientService
 
     public static function getStatusOptions(): array
     {
-        return ['active', 'inactive'];
+        return Status::assignableUserKeys();
     }
 
     private static function normalizeFilters(array $query): array
     {
         $search = trim((string) ($query['search'] ?? ''));
-        $status = strtolower(trim((string) ($query['status'] ?? '')));
+        $status = Status::normalizeKey(Status::DOMAIN_USER, (string) ($query['status'] ?? ''));
 
-        if (!in_array($status, self::getStatusOptions(), true)) {
+        if (!in_array($status, Status::assignableUserKeys(), true)) {
             $status = '';
         }
 

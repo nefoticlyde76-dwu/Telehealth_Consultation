@@ -5,6 +5,12 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeAosAnimations();
   initializeConsultationQueueWorkspace();
   initializeDesktopSidebarToggle();
+  initializeListFilterLoading();
+  initializeNotificationToasts();
+  initializeUxConfirmModal();
+  initializePermanentDeleteModal();
+  initializeUserBulkSelection();
+  initializeNotificationBulkSelection();
 });
 
 /**
@@ -375,7 +381,23 @@ function initializeDesktopSidebarToggle() {
     return;
   }
 
-  const applyCollapsed = (collapsed) => {
+  const prefersReducedMotion = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let animationTimer = 0;
+
+  const endSidebarAnimation = () => {
+    window.clearTimeout(animationTimer);
+    shell.classList.remove("dashboard-shell--sidebar-animating");
+  };
+
+  const applyCollapsed = (collapsed, animate) => {
+    window.clearTimeout(animationTimer);
+    if (animate && !prefersReducedMotion()) {
+      shell.classList.add("dashboard-shell--sidebar-animating");
+      animationTimer = window.setTimeout(endSidebarAnimation, 360);
+    } else {
+      shell.classList.remove("dashboard-shell--sidebar-animating");
+    }
     shell.classList.toggle("dashboard-shell--sidebar-collapsed", collapsed);
     toggles.forEach((toggle) => {
       toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
@@ -393,15 +415,28 @@ function initializeDesktopSidebarToggle() {
   };
 
   try {
-    applyCollapsed(window.localStorage.getItem(storageKey) === "1");
+    applyCollapsed(window.localStorage.getItem(storageKey) === "1", false);
   } catch (error) {
-    applyCollapsed(false);
+    applyCollapsed(false, false);
   }
+
+  window.requestAnimationFrame(() => {
+    shell.classList.add("dashboard-shell--sidebar-ready");
+  });
+
+  shell.addEventListener("transitionend", (event) => {
+    if (
+      event.propertyName === "--dash-sidebar-track" ||
+      (event.target.classList && event.target.classList.contains("dashboard-sidebar") && event.propertyName === "width")
+    ) {
+      endSidebarAnimation();
+    }
+  });
 
   toggles.forEach((toggle) => {
     toggle.addEventListener("click", () => {
       const collapsed = !shell.classList.contains("dashboard-shell--sidebar-collapsed");
-      applyCollapsed(collapsed);
+      applyCollapsed(collapsed, true);
       try {
         window.localStorage.setItem(storageKey, collapsed ? "1" : "0");
       } catch (error) {
@@ -409,4 +444,325 @@ function initializeDesktopSidebarToggle() {
       }
     });
   });
+}
+
+function initializeListFilterLoading() {
+  const forms = document.querySelectorAll("form[data-list-filter]");
+  forms.forEach((form) => {
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+    form.addEventListener("submit", () => {
+      const shell = form.closest(".ux-filter");
+      if (shell) {
+        shell.classList.add("is-loading");
+        shell.setAttribute("aria-busy", "true");
+      }
+      const button = form.querySelector('button[type="submit"]');
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = true;
+        button.setAttribute("aria-disabled", "true");
+        if (!button.dataset.originalHtml) {
+          button.dataset.originalHtml = button.innerHTML;
+        }
+        button.innerHTML = '<span class="ux-loading__spinner" aria-hidden="true"></span> Loading…';
+      }
+    });
+  });
+}
+
+function initializeNotificationToasts() {
+  const stack = document.querySelector("[data-notification-toasts]");
+  if (!(stack instanceof HTMLElement)) {
+    return;
+  }
+
+  const storageKey = "mbpha-notification-toasts-dismissed";
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let dismissed = [];
+  try {
+    const stored = JSON.parse(window.sessionStorage.getItem(storageKey) || "[]");
+    if (Array.isArray(stored)) {
+      dismissed = stored.map((id) => String(id));
+    }
+  } catch (error) {
+    dismissed = [];
+  }
+
+  const persist = (id) => {
+    if (id === "" || dismissed.includes(id)) {
+      return;
+    }
+    dismissed.push(id);
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify(dismissed.slice(-40)));
+    } catch (error) {
+      // Ignore private-browsing storage failures.
+    }
+  };
+
+  const removeToast = (toast) => {
+    if (!(toast instanceof HTMLElement) || toast.classList.contains("is-leaving")) {
+      return;
+    }
+    persist(String(toast.getAttribute("data-toast-id") || ""));
+    toast.classList.add("is-leaving");
+    window.setTimeout(() => {
+      toast.remove();
+      if (!stack.querySelector("[data-notification-toast]")) {
+        stack.remove();
+      }
+    }, 280);
+  };
+
+  const toasts = Array.from(stack.querySelectorAll("[data-notification-toast]"));
+  let visibleIndex = 0;
+  toasts.forEach((toast) => {
+    const id = String(toast.getAttribute("data-toast-id") || "");
+    if (id !== "" && dismissed.includes(id)) {
+      toast.remove();
+      return;
+    }
+
+    toast.style.setProperty("--d", (0.2 + visibleIndex * 0.9).toFixed(1) + "s");
+    visibleIndex += 1;
+
+    const bar = toast.querySelector(".notification-toast__bar");
+    if (bar instanceof HTMLElement && !reducedMotion) {
+      bar.addEventListener("animationend", (event) => {
+        if (event.animationName === "notification-toast-drain") {
+          removeToast(toast);
+        }
+      });
+    }
+  });
+
+  if (!stack.querySelector("[data-notification-toast]")) {
+    stack.remove();
+  }
+}
+
+function initializeUxConfirmModal() {
+  const modalEl = document.getElementById("uxConfirmModal");
+  if (!(modalEl instanceof HTMLElement)) {
+    return;
+  }
+
+  const titleEl = document.getElementById("uxConfirmModalLabel");
+  const bodyEl = document.getElementById("uxConfirmModalBody");
+  const hintEl = document.getElementById("uxConfirmModalHint");
+  const submitEl = document.getElementById("uxConfirmModalSubmit");
+  if (!(submitEl instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  let pendingForm = null;
+  const modal = window.bootstrap && typeof window.bootstrap.Modal === "function"
+    ? window.bootstrap.Modal.getOrCreateInstance(modalEl)
+    : null;
+
+  document.addEventListener("submit", (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+    if (form.id === "permanentDeleteForm") {
+      return;
+    }
+    if (form.dataset.confirmSkip === "1") {
+      delete form.dataset.confirmSkip;
+      return;
+    }
+
+    const title = (form.getAttribute("data-confirm-title") || "").trim();
+    if (title === "") {
+      return;
+    }
+
+    event.preventDefault();
+    pendingForm = form;
+
+    if (titleEl) {
+      titleEl.textContent = title;
+    }
+    if (bodyEl) {
+      bodyEl.textContent = form.getAttribute("data-confirm-body") || "Please confirm this action.";
+    }
+    if (hintEl) {
+      hintEl.textContent = form.getAttribute("data-confirm-hint") || "You can cancel if you are not sure.";
+    }
+
+    const tone = (form.getAttribute("data-confirm-tone") || "danger").trim();
+    submitEl.textContent = form.getAttribute("data-confirm-action") || "Confirm";
+    submitEl.className = tone === "primary" ? "btn btn-primary" : "btn btn-danger";
+
+    if (modal) {
+      modal.show();
+    } else if (window.confirm(title + "\n\n" + (bodyEl ? bodyEl.textContent : ""))) {
+      form.dataset.confirmSkip = "1";
+      form.submit();
+    }
+  });
+
+  submitEl.addEventListener("click", () => {
+    if (!(pendingForm instanceof HTMLFormElement)) {
+      return;
+    }
+    const form = pendingForm;
+    pendingForm = null;
+    form.dataset.confirmSkip = "1";
+    if (modal) {
+      modal.hide();
+    }
+    form.submit();
+  });
+
+  modalEl.addEventListener("hidden.bs.modal", () => {
+    pendingForm = null;
+  });
+}
+
+function initializePermanentDeleteModal() {
+  const modalEl = document.getElementById("permanentDeleteModal");
+  const form = document.getElementById("permanentDeleteForm");
+  const phraseInput = document.getElementById("confirmation_phrase");
+  const submit = document.getElementById("permanentDeleteSubmit");
+  const nameEl = document.getElementById("permanentDeleteName");
+  const titleEl = document.getElementById("permanentDeleteModalLabel");
+  const idFields = document.getElementById("permanentDeleteIdFields");
+  if (
+    !(modalEl instanceof HTMLElement) ||
+    !(form instanceof HTMLFormElement) ||
+    !(phraseInput instanceof HTMLInputElement) ||
+    !(submit instanceof HTMLButtonElement)
+  ) {
+    return;
+  }
+
+  const expected = (phraseInput.getAttribute("data-confirm-phrase") || "DELETE USER").trim();
+  const bulkUrl = form.getAttribute("data-bulk-url") || "";
+
+  const clearIdFields = () => {
+    if (idFields instanceof HTMLElement) {
+      idFields.replaceChildren();
+    }
+  };
+
+  const syncSubmit = () => {
+    submit.disabled = phraseInput.value.trim() !== expected;
+  };
+
+  phraseInput.addEventListener("input", syncSubmit);
+  phraseInput.addEventListener("keyup", syncSubmit);
+  syncSubmit();
+
+  modalEl.addEventListener("show.bs.modal", (event) => {
+    const trigger = event.relatedTarget;
+    clearIdFields();
+
+    if (trigger instanceof HTMLElement && trigger.getAttribute("data-bulk-delete") === "1") {
+      const selected = Array.from(document.querySelectorAll(".user-select-box:checked"));
+      if (selected.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const url = trigger.getAttribute("data-bulk-url") || bulkUrl;
+      if (url !== "") {
+        form.setAttribute("action", url);
+      }
+      if (titleEl) {
+        titleEl.textContent = "Permanently delete selected users?";
+      }
+      if (nameEl) {
+        nameEl.textContent =
+          selected.length === 1 ? "1 selected account" : selected.length + " selected accounts";
+      }
+      selected.forEach((input) => {
+        if (!(input instanceof HTMLInputElement) || !(idFields instanceof HTMLElement)) {
+          return;
+        }
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.name = "user_ids[]";
+        hidden.value = input.value;
+        idFields.appendChild(hidden);
+      });
+    } else if (trigger instanceof HTMLElement) {
+      const url = trigger.getAttribute("data-delete-url") || "";
+      const name = trigger.getAttribute("data-delete-name") || "this user";
+      if (url !== "") {
+        form.setAttribute("action", url);
+      }
+      if (titleEl) {
+        titleEl.textContent = "Permanently delete this user?";
+      }
+      if (nameEl) {
+        nameEl.textContent = name;
+      }
+    }
+
+    phraseInput.value = "";
+    const password = form.querySelector("#admin_password");
+    if (password instanceof HTMLInputElement) {
+      password.value = "";
+    }
+    syncSubmit();
+  });
+}
+
+function initializeUserBulkSelection() {
+  const boxes = Array.from(document.querySelectorAll(".user-select-box"));
+  const selectAll = document.getElementById("userSelectAll");
+  const bulkButton = document.getElementById("userBulkDeleteButton");
+  const countEl = document.getElementById("userBulkCount");
+  if (boxes.length === 0 || !(bulkButton instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const sync = () => {
+    const selected = boxes.filter((box) => box instanceof HTMLInputElement && box.checked);
+    bulkButton.disabled = selected.length === 0;
+    if (countEl) {
+      countEl.textContent = selected.length === 1 ? "1 selected" : selected.length + " selected";
+    }
+    if (selectAll instanceof HTMLInputElement) {
+      const enabled = boxes.filter((box) => box instanceof HTMLInputElement && !box.disabled);
+      selectAll.checked = enabled.length > 0 && enabled.every((box) => box.checked);
+      selectAll.indeterminate = selected.length > 0 && !selectAll.checked;
+    }
+  };
+
+  boxes.forEach((box) => box.addEventListener("change", sync));
+  if (selectAll instanceof HTMLInputElement) {
+    selectAll.addEventListener("change", () => {
+      boxes.forEach((box) => {
+        if (box instanceof HTMLInputElement && !box.disabled) {
+          box.checked = selectAll.checked;
+        }
+      });
+      sync();
+    });
+  }
+  sync();
+}
+
+function initializeNotificationBulkSelection() {
+  const bulkForm = document.getElementById("notificationBulkForm");
+  if (!(bulkForm instanceof HTMLFormElement)) {
+    return;
+  }
+
+  const submit = bulkForm.querySelector("[data-bulk-submit]");
+  if (!(submit instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const sync = () => {
+    const selected = bulkForm.querySelectorAll('input[name="notification_ids[]"]:checked');
+    submit.disabled = selected.length === 0;
+  };
+
+  bulkForm.addEventListener("change", sync);
+  sync();
 }

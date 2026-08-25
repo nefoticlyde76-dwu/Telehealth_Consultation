@@ -1,4 +1,9 @@
 
+-- PRODUCTION WARNING
+-- Do not import this file onto a production database.
+-- It DROPS existing tables and seeds a local administrator password.
+-- Use database/schema.sql for a fresh production install.
+--
 -- Create database
 CREATE DATABASE IF NOT EXISTS telehealth_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -35,7 +40,7 @@ CREATE TABLE users (
     role_id BIGINT NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -164,7 +169,8 @@ INSERT INTO roles (name) VALUES
 ('doctor'),
 ('patient');
 
--- Insert default admin user (password: admin123)
+-- Insert default admin user for LOCAL development only.
+-- Password is admin123. Never use this account unchanged in production.
 INSERT INTO users (role_id, full_name, email, password, status) VALUES
 (1, 'System Administrator', 'admin@telehealth.local', '$2y$10$iCQxLpuu12uiBBNZWkiZi.aMA9K/VcbZsJrTANxUaamMdF5eq9PzK', 'active');
 

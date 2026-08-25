@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Core\Csrf;
+use App\Helpers\ListFilter;
+use App\Helpers\Status;
 use App\Models\DoctorAvailability;
 
 class DoctorAvailabilityService
@@ -11,28 +13,21 @@ class DoctorAvailabilityService
 
     public static function getAvailabilityPageData(int $doctorId, array $query): array
     {
-        $page = max(1, (int) ($query['page'] ?? 1));
         $filters = self::normalizeFilters($query);
+        $perPage = (int) ($filters['per_page'] ?? self::PER_PAGE);
         $totalItems = DoctorAvailability::countForDoctor($doctorId, $filters);
-        $totalPages = max(1, (int) ceil($totalItems / self::PER_PAGE));
-
-        if ($page > $totalPages) {
-            $page = $totalPages;
-        }
-
-        $offset = ($page - 1) * self::PER_PAGE;
+        $pagination = ListFilter::paginate(max(1, (int) ($query['page'] ?? 1)), $totalItems, $perPage);
+        $offset = ($pagination['current_page'] - 1) * $perPage;
 
         return [
             'filters' => $filters,
-            'availability' => DoctorAvailability::findForDoctor($doctorId, $filters, self::PER_PAGE, $offset),
+            'availability' => DoctorAvailability::findForDoctor($doctorId, $filters, $perPage, $offset),
             'summary' => DoctorAvailability::getSummaryForDoctor($doctorId),
-            'pagination' => [
-                'current_page' => $page,
-                'per_page' => self::PER_PAGE,
-                'total_items' => $totalItems,
-                'total_pages' => $totalPages,
-            ],
+            'filterActive' => ListFilter::isActive($filters, ['sort' => 'earliest', 'per_page' => self::PER_PAGE]),
+            'pagination' => $pagination,
             'statusOptions' => self::getStatusOptions(),
+            'dateOptions' => self::getDateOptions(),
+            'sortOptions' => self::getSortOptions(),
         ];
     }
 
@@ -84,6 +79,13 @@ class DoctorAvailabilityService
             if (!$availability->save()) {
                 throw new \RuntimeException('The availability slot could not be created.');
             }
+
+            AuditLogService::record(
+                'availability_created',
+                'Doctor created an availability slot.',
+                AuditLogService::ENTITY_AVAILABILITY,
+                (int) ($availability->id ?? 0)
+            );
 
             return [
                 'success' => true,
@@ -149,6 +151,13 @@ class DoctorAvailabilityService
                 throw new \RuntimeException('The availability slot could not be updated.');
             }
 
+            AuditLogService::record(
+                'availability_updated',
+                'Doctor updated an availability slot.',
+                AuditLogService::ENTITY_AVAILABILITY,
+                $availabilityId
+            );
+
             return [
                 'success' => true,
                 'message' => 'Availability slot updated successfully.',
@@ -199,6 +208,13 @@ class DoctorAvailabilityService
                 throw new \RuntimeException('The availability slot could not be deleted.');
             }
 
+            AuditLogService::record(
+                'availability_deleted',
+                'Doctor deleted an availability slot.',
+                AuditLogService::ENTITY_AVAILABILITY,
+                $availabilityId
+            );
+
             return [
                 'success' => true,
                 'message' => 'Availability slot deleted successfully.',
@@ -217,27 +233,64 @@ class DoctorAvailabilityService
 
     public static function getStatusOptions(): array
     {
-        return ['Available', 'Booked'];
+        return Status::slotKeys();
+    }
+
+    /**
+     * @return list<array{value:string,label:string}>
+     */
+    public static function getDateOptions(): array
+    {
+        return [
+            ['value' => 'today', 'label' => 'Today'],
+            ['value' => 'this_week', 'label' => 'This week'],
+            ['value' => 'future', 'label' => 'Future'],
+            ['value' => 'past', 'label' => 'Past'],
+            ['value' => 'custom', 'label' => 'Custom range'],
+        ];
+    }
+
+    /**
+     * @return list<array{value:string,label:string}>
+     */
+    public static function getSortOptions(): array
+    {
+        return [
+            ['value' => 'earliest', 'label' => 'Earliest first'],
+            ['value' => 'latest', 'label' => 'Latest first'],
+        ];
     }
 
     private static function normalizeFilters(array $query): array
     {
-        $search = trim((string) ($query['search'] ?? ''));
-        $filterDate = trim((string) ($query['filter_date'] ?? ''));
+        $search = ListFilter::normalizeSearch((string) ($query['search'] ?? ''));
         $status = trim((string) ($query['status'] ?? ''));
+        $sort = ListFilter::allowedValue(
+            trim((string) ($query['sort'] ?? 'earliest')),
+            ['earliest', 'latest'],
+            'earliest'
+        );
+        $range = ListFilter::resolveDateRange(
+            (string) ($query['date'] ?? ''),
+            (string) ($query['date_from'] ?? ''),
+            (string) ($query['date_to'] ?? ''),
+            (string) ($query['filter_date'] ?? '')
+        );
+        $perPage = ListFilter::allowedPerPage($query['per_page'] ?? self::PER_PAGE, self::PER_PAGE);
 
         if (!in_array($status, self::getStatusOptions(), true)) {
             $status = '';
         }
 
-        if ($filterDate !== '' && !self::isValidDate($filterDate)) {
-            $filterDate = '';
-        }
-
         return [
             'search' => $search,
-            'filter_date' => $filterDate,
             'status' => $status,
+            'date' => $range['preset'],
+            'date_from' => $range['preset'] === 'custom' ? $range['from'] : '',
+            'date_to' => $range['preset'] === 'custom' ? $range['to'] : '',
+            'date_range' => ['from' => $range['from'], 'to' => $range['to']],
+            'sort' => $sort,
+            'per_page' => $perPage,
         ];
     }
 

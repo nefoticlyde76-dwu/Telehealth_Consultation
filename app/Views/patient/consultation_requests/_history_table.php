@@ -1,9 +1,13 @@
 <?php
 
+use App\Helpers\Status;
+
 $historyRows = is_array($historyRows ?? null) ? $historyRows : [];
 $emptyTitle = (string) ($emptyTitle ?? 'No consultations in this section');
 $emptyText = (string) ($emptyText ?? 'Matching consultations will appear here.');
 $showEmptyAction = (bool) ($showEmptyAction ?? false);
+
+require_once __DIR__ . '/../../partials/shared/status_helper.php';
 ?>
 
 <div class="ux-table-wrapper border-0">
@@ -45,10 +49,8 @@ $showEmptyAction = (bool) ($showEmptyAction ?? false);
         <?php else: ?>
           <?php foreach ($historyRows as $request): ?>
             <?php
-            $status = (string) ($request['status'] ?? 'Pending');
-            $statusBadge = ux_status_badge_class($status);
+            $status = (string) ($request['status'] ?? Status::PENDING);
             $requestId = (int) ($request['id'] ?? 0);
-            $isCompleted = $status === 'Completed';
             $hasFinalRecord = (int) ($request['has_final_record'] ?? 0) === 1;
             $hasPrescription = (int) ($request['has_prescription'] ?? 0) === 1;
             $detailUrl = \App\Helpers\Helper::url('/patient/consultation-requests/' . (string) $requestId);
@@ -60,14 +62,16 @@ $showEmptyAction = (bool) ($showEmptyAction ?? false);
             $canJoinNow = is_array($videoJoin) ? (bool) ($videoJoin['canJoin'] ?? false) : false;
             $joinStatus = is_array($videoJoin) ? (string) ($videoJoin['status'] ?? 'unavailable') : 'unavailable';
             $joinReason = is_array($videoJoin) ? (string) ($videoJoin['reason'] ?? '') : '';
-            $showJoin = $joinUrl !== '' && in_array($joinStatus, ['open', 'early', 'ended'], true);
-            $joinLabel = 'Join Consultation';
-            if ($joinStatus === 'early') {
-                $joinLabel = 'Not Yet Open';
-            }
-            if ($joinStatus === 'ended') {
-                $joinLabel = 'Consultation Ended';
-            }
+            $actions = Status::consultationUiActions($status, [
+                'role' => 'patient',
+                'has_final_record' => $hasFinalRecord,
+                'has_prescription' => $hasPrescription,
+                'join_status' => $joinStatus,
+                'can_join' => $canJoinNow,
+                'join_url' => $joinUrl,
+            ]);
+            $isCompleted = (bool) $actions['view_record'];
+            $joinLabel = (string) ($actions['join_label'] ?: 'Join Consultation');
             ?>
             <tr>
               <td>
@@ -86,18 +90,16 @@ $showEmptyAction = (bool) ($showEmptyAction ?? false);
                 ?>
               </td>
               <td>
-                <span class="ux-badge ux-badge--neutral">
+                <span class="ux-badge ux-badge--neutral ux-badge--dotless">
                   <?= \App\Helpers\Helper::escape((string) ($request['specialization'] ?? 'General Practice')) ?>
                 </span>
               </td>
               <td>
-                <span class="ux-badge <?= $statusBadge ?>">
-                  <?= \App\Helpers\Helper::escape($status) ?>
-                </span>
+                <?= ux_status_badge($status) ?>
               </td>
               <td>
                 <?php if ($hasFinalRecord): ?>
-                  <span class="ux-badge ux-badge--approved">Available</span>
+                  <?= ux_status_badge(Status::RECORD_FINAL, Status::DOMAIN_RECORD) ?>
                 <?php elseif ($isCompleted): ?>
                   <span class="text-muted small">Not yet finalized</span>
                 <?php else: ?>
@@ -106,7 +108,7 @@ $showEmptyAction = (bool) ($showEmptyAction ?? false);
               </td>
               <td>
                 <?php if ($hasPrescription): ?>
-                  <span class="ux-badge ux-badge--approved">Issued</span>
+                  <?= ux_status_badge('Issued', Status::DOMAIN_PRESENCE) ?>
                 <?php elseif ($isCompleted): ?>
                   <span class="text-muted small">Not issued</span>
                 <?php else: ?>
@@ -134,13 +136,13 @@ $showEmptyAction = (bool) ($showEmptyAction ?? false);
                         Download Prescription
                       </a>
                     <?php endif; ?>
-                  <?php elseif ($showJoin): ?>
-                    <?php if ($canJoinNow): ?>
+                  <?php elseif ($actions['join']): ?>
+                    <?php if ($actions['join_enabled']): ?>
                       <a href="<?= \App\Helpers\Helper::escape($joinUrl) ?>"
                          class="btn btn-primary btn-sm"
                          aria-label="Join the video consultation">
                         <i class="bi bi-camera-video-fill me-1"></i>
-                        Join Consultation
+                        <?= \App\Helpers\Helper::escape($joinLabel) ?>
                       </a>
                     <?php else: ?>
                       <button type="button"

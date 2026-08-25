@@ -71,7 +71,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
             <option value="">All statuses</option>
             <?php foreach ($statusOptions as $statusOption): ?>
               <option value="<?= \App\Helpers\Helper::escape($statusOption) ?>" <?= ($filters['status'] ?? '') === $statusOption ? 'selected' : '' ?>>
-                <?= \App\Helpers\Helper::escape(ucfirst($statusOption)) ?>
+                <?= \App\Helpers\Helper::escape(\App\Helpers\Status::label($statusOption, \App\Helpers\Status::DOMAIN_USER)) ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -195,9 +195,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     <span class="text-muted small"><?= \App\Helpers\Helper::escape($patient['address'] ?? 'Not provided') ?></span>
                   </td>
                   <td>
-                    <span class="ux-badge <?= $statusBadge ?>">
-                      <?= \App\Helpers\Helper::escape(ucfirst((string) ($patient['status'] ?? 'unknown'))) ?>
-                    </span>
+                    <?= ux_status_badge((string) ($patient['status'] ?? ''), \App\Helpers\Status::DOMAIN_USER) ?>
                   </td>
                   <td class="text-end">
                     <div class="ux-table__actions">
@@ -205,7 +203,19 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                         <i class="bi bi-pencil-square me-1"></i>
                         Edit
                       </a>
-                      <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/patients/' . $patientId . '/' . ($isActive ? 'deactivate' : 'activate')) ?>" class="d-inline">
+                      <form
+                        method="POST"
+                        action="<?= \App\Helpers\Helper::url('/admin/patients/' . $patientId . '/' . ($isActive ? 'deactivate' : 'activate')) ?>"
+                        class="d-inline"
+                        data-confirm-title="<?= $isActive ? 'Deactivate this patient account?' : 'Reactivate this patient account?' ?>"
+                        data-confirm-body="<?= $isActive
+                            ? 'The patient will be unable to sign in. This is not permanent deletion.'
+                            : 'This patient will be able to sign in again.' ?>"
+                        data-confirm-hint="<?= $isActive
+                            ? 'You can reactivate the account later if this was a mistake.'
+                            : 'You can change the status again later if needed.' ?>"
+                        data-confirm-tone="<?= $isActive ? 'danger' : 'primary' ?>"
+                      >
                         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
                         <button type="submit" class="btn <?= $isActive ? 'btn-outline-danger' : 'btn-outline-success' ?> btn-sm" aria-label="<?= ($isActive ? 'Deactivate' : 'Activate') . ' patient account for ' . \App\Helpers\Helper::escape($fullName) ?>">
                           <i class="bi <?= $isActive ? 'bi-person-dash' : 'bi-person-check' ?> me-1"></i>

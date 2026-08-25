@@ -27,6 +27,8 @@ $sideColClass      = $isDoctorViewer ? 'col-xl-5 order-2' : 'col-xl-4 order-1 or
 $roomScriptAsset   = \App\Helpers\Helper::asset('js/consultation-room.js');
 $clinicalScriptAsset = \App\Helpers\Helper::asset('js/consultation-clinical-record.js');
 
+require_once __DIR__ . '/../../partials/shared/status_helper.php';
+
 $formattedDate = \App\Helpers\Helper::formatDate($consultationDate, 'l, j F Y', '');
 $formattedTime = '';
 if ($consultationStart !== '' && $consultationEnd !== '') {
@@ -194,7 +196,7 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
                 <?php if ($consultationStatus !== ''): ?>
                   <dt class="col-5 small text-muted mb-0">Status</dt>
                   <dd class="col-7 mb-0">
-                    <span class="ux-badge ux-badge--neutral"><?= \App\Helpers\Helper::escape($consultationStatus) ?></span>
+                    <?= ux_status_badge($consultationStatus) ?>
                   </dd>
                 <?php endif; ?>
               </dl>

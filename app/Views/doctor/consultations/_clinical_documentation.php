@@ -33,6 +33,61 @@ $initialState = $clinicalRecord === null
     ? ''
     : ($isFinal ? 'Final' : 'Saved');
 $disabledAttr = $canEdit ? '' : ' disabled';
+$consultationDate = \App\Helpers\Helper::formatDate((string) ($context['consultation_date'] ?? ''), 'D, d M Y', 'Not scheduled');
+$startLabel = substr((string) ($context['consultation_start_time'] ?? ''), 0, 5);
+$endLabel = substr((string) ($context['consultation_end_time'] ?? ''), 0, 5);
+$timeLabel = ($startLabel !== '' && $endLabel !== '') ? $startLabel . ' – ' . $endLabel : 'Not scheduled';
+
+$clinicalFields = [
+    [
+        'id' => 'clinical_chief_complaint',
+        'name' => 'chief_complaint',
+        'label' => \App\Models\ConsultationRecord::REQUIRED_FIELDS['chief_complaint'],
+        'value' => $chiefComplaint,
+        'rows' => 2,
+        'required' => true,
+    ],
+    [
+        'id' => 'clinical_symptoms',
+        'name' => 'symptoms',
+        'label' => \App\Models\ConsultationRecord::REQUIRED_FIELDS['symptoms'],
+        'value' => $field('symptoms'),
+        'rows' => 3,
+        'required' => true,
+    ],
+    [
+        'id' => 'clinical_findings',
+        'name' => 'clinical_findings',
+        'label' => \App\Models\ConsultationRecord::REQUIRED_FIELDS['clinical_findings'],
+        'value' => $field('clinical_findings'),
+        'rows' => 3,
+        'required' => true,
+    ],
+    [
+        'id' => 'clinical_diagnosis',
+        'name' => 'diagnosis',
+        'label' => \App\Models\ConsultationRecord::REQUIRED_FIELDS['diagnosis'],
+        'value' => $field('diagnosis'),
+        'rows' => 2,
+        'required' => true,
+    ],
+    [
+        'id' => 'clinical_treatment',
+        'name' => 'treatment_plan',
+        'label' => \App\Models\ConsultationRecord::REQUIRED_FIELDS['treatment_plan'],
+        'value' => $field('treatment_plan'),
+        'rows' => 3,
+        'required' => true,
+    ],
+    [
+        'id' => 'clinical_notes',
+        'name' => 'additional_notes',
+        'label' => 'Additional clinical notes',
+        'value' => $field('additional_notes'),
+        'rows' => 3,
+        'required' => false,
+    ],
+];
 ?>
 
 <section class="vc-side-panel vc-clinical-panel" aria-label="Clinical documentation">
@@ -42,8 +97,8 @@ $disabledAttr = $canEdit ? '' : ' disabled';
         <i class="bi bi-clipboard2-pulse me-2"></i>
         Clinical documentation
       </span>
-      <span class="vc-clinical-panel__status-group">
-        <span class="ux-badge ux-badge--neutral"><?= \App\Helpers\Helper::escape($isFinal ? 'Final' : 'Draft') ?></span>
+        <span class="vc-clinical-panel__status-group">
+          <?= ux_status_badge($recordStatus, \App\Helpers\Status::DOMAIN_RECORD) ?>
         <span id="vc-clinical-save-state" class="vc-clinical-panel__status<?= $initialState === 'Saved' ? ' is-saved' : '' ?>" aria-live="polite">
           <?= \App\Helpers\Helper::escape($initialState) ?>
         </span>
@@ -51,14 +106,36 @@ $disabledAttr = $canEdit ? '' : ' disabled';
     </div>
   </div>
   <div class="vc-side-panel__body">
-    <div class="mb-3">
-      <?php
-      $personName = $patientName;
-      $personPhoto = $context['other_party_photo'] ?? null;
-      $personMeta = 'Consultation #' . (string) $consultationId;
-      $personSize = 'sm';
-      require __DIR__ . '/../../partials/shared/person_row.php';
-      ?>
+    <div class="table-responsive vc-clinical-doc">
+      <table class="vc-clinical-doc__table">
+        <caption class="visually-hidden">Consultation identity</caption>
+        <tbody>
+          <tr>
+            <th scope="row">Patient</th>
+            <td>
+              <?php
+              $personName = $patientName;
+              $personPhoto = $context['other_party_photo'] ?? null;
+              $personMeta = '';
+              $personSize = 'sm';
+              require __DIR__ . '/../../partials/shared/person_row.php';
+              ?>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Consultation</th>
+            <td class="font-monospace">#<?= \App\Helpers\Helper::escape((string) $consultationId) ?></td>
+          </tr>
+          <tr>
+            <th scope="row">Date</th>
+            <td><?= \App\Helpers\Helper::escape($consultationDate) ?></td>
+          </tr>
+          <tr>
+            <th scope="row">Time</th>
+            <td><?= \App\Helpers\Helper::escape($timeLabel) ?></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <?php if (!$canEdit): ?>
@@ -73,7 +150,7 @@ $disabledAttr = $canEdit ? '' : ' disabled';
         <?php endif; ?>
       </p>
     <?php else: ?>
-      <p class="small text-muted mb-3">Record clinical information while speaking with the patient. Notes are saved as a draft until you complete the consultation.</p>
+      <p class="small text-muted mb-3">Record notes during the consultation. Drafts save automatically until you mark it complete.</p>
     <?php endif; ?>
 
     <form id="vc-clinical-form"
@@ -86,34 +163,39 @@ $disabledAttr = $canEdit ? '' : ' disabled';
       <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($clinicalCsrf) ?>">
       <input type="hidden" name="record_id" id="vc-clinical-record-id" value="<?= \App\Helpers\Helper::escape((string) $recordId) ?>">
 
-      <div class="mb-3">
-        <label for="clinical_chief_complaint" class="form-label">Chief complaint / presenting problem <span class="text-danger">*</span></label>
-        <textarea class="form-control" id="clinical_chief_complaint" name="chief_complaint" rows="2" maxlength="8000"<?= $disabledAttr ?>><?= \App\Helpers\Helper::escape($chiefComplaint) ?></textarea>
-      </div>
-
-      <div class="mb-3">
-        <label for="clinical_symptoms" class="form-label">History / symptoms <span class="text-danger">*</span></label>
-        <textarea class="form-control" id="clinical_symptoms" name="symptoms" rows="3" maxlength="8000"<?= $disabledAttr ?>><?= \App\Helpers\Helper::escape($field('symptoms')) ?></textarea>
-      </div>
-
-      <div class="mb-3">
-        <label for="clinical_findings" class="form-label">Clinical findings / assessment <span class="text-danger">*</span></label>
-        <textarea class="form-control" id="clinical_findings" name="clinical_findings" rows="3" maxlength="8000"<?= $disabledAttr ?>><?= \App\Helpers\Helper::escape($field('clinical_findings')) ?></textarea>
-      </div>
-
-      <div class="mb-3">
-        <label for="clinical_diagnosis" class="form-label">Diagnosis <span class="text-danger">*</span></label>
-        <textarea class="form-control" id="clinical_diagnosis" name="diagnosis" rows="2" maxlength="8000"<?= $disabledAttr ?>><?= \App\Helpers\Helper::escape($field('diagnosis')) ?></textarea>
-      </div>
-
-      <div class="mb-3">
-        <label for="clinical_treatment" class="form-label">Treatment / medical advice <span class="text-danger">*</span></label>
-        <textarea class="form-control" id="clinical_treatment" name="treatment_plan" rows="3" maxlength="8000"<?= $disabledAttr ?>><?= \App\Helpers\Helper::escape($field('treatment_plan')) ?></textarea>
-      </div>
-
-      <div class="mb-3">
-        <label for="clinical_notes" class="form-label">Additional clinical notes</label>
-        <textarea class="form-control" id="clinical_notes" name="additional_notes" rows="3" maxlength="8000"<?= $disabledAttr ?>><?= \App\Helpers\Helper::escape($field('additional_notes')) ?></textarea>
+      <div class="table-responsive vc-clinical-doc">
+        <table class="vc-clinical-doc__table vc-clinical-doc__table--notes">
+          <caption>Clinical notes</caption>
+          <thead>
+            <tr>
+              <th scope="col">Section</th>
+              <th scope="col">Entry</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($clinicalFields as $clinicalField): ?>
+              <tr>
+                <th scope="row">
+                  <label for="<?= \App\Helpers\Helper::escape((string) $clinicalField['id']) ?>">
+                    <?= \App\Helpers\Helper::escape((string) $clinicalField['label']) ?>
+                    <?php if (!empty($clinicalField['required'])): ?>
+                      <span class="text-danger">*</span>
+                    <?php endif; ?>
+                  </label>
+                </th>
+                <td>
+                  <textarea
+                    class="form-control"
+                    id="<?= \App\Helpers\Helper::escape((string) $clinicalField['id']) ?>"
+                    name="<?= \App\Helpers\Helper::escape((string) $clinicalField['name']) ?>"
+                    rows="<?= (int) $clinicalField['rows'] ?>"
+                    maxlength="8000"<?= $disabledAttr ?>
+                  ><?= \App\Helpers\Helper::escape((string) $clinicalField['value']) ?></textarea>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
       </div>
 
       <?php if ($canEdit): ?>

@@ -7,6 +7,7 @@ use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
 use App\Models\User;
+use App\Services\AuditLogService;
 use App\Services\AuthService;
 
 class AuthController extends Controller
@@ -32,10 +33,29 @@ class AuthController extends Controller
                     $user = AuthService::authenticate($email, $password);
                     if ($user && $user->getRole()) {
                         AuthService::login($user->id, $user->getRole());
+                        AuditLogService::record(
+                            'login_success',
+                            'User authenticated successfully.',
+                            AuditLogService::ENTITY_AUTH,
+                            (int) $user->id
+                        );
                         Helper::redirect(AuthService::getRoleRedirectUrl($user->getRole()));
                         return;
                     }
 
+                    AuditLogService::record(
+                        'login_failed',
+                        'Authentication failed for supplied credentials.',
+                        AuditLogService::ENTITY_AUTH,
+                        null,
+                        'failed',
+                        [
+                            'actor_name' => 'Guest',
+                            'actor_role' => 'guest',
+                            'subject_name' => $email,
+                            'subject_role' => 'guest',
+                        ]
+                    );
                     $errors[] = 'Invalid email, password, or account status.';
                 } catch (\Throwable $exception) {
                     error_log('Authentication error: ' . $exception->getMessage());
@@ -123,6 +143,11 @@ class AuthController extends Controller
             Helper::redirect('/');
         }
 
+        AuditLogService::record(
+            'logout',
+            'User logged out securely.',
+            AuditLogService::ENTITY_AUTH
+        );
         AuthService::logout();
         Session::flash('status', [
             'type' => 'success',

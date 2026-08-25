@@ -8,7 +8,7 @@ $disabled = $disabled ?? false;
 
 <div class="row g-3">
   <div class="col-md-6">
-    <label for="consultation_date" class="form-label">Consultation Date</label>
+    <label for="consultation_date" class="form-label">Consultation Date <span class="text-danger">*</span></label>
     <input
       type="date"
       class="form-control <?= isset($fieldErrors['consultation_date']) ? 'is-invalid' : '' ?>"
@@ -22,7 +22,7 @@ $disabled = $disabled ?? false;
   </div>
 
   <div class="col-md-3">
-    <label for="start_time" class="form-label">Start Time</label>
+    <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
     <input
       type="time"
       class="form-control <?= isset($fieldErrors['start_time']) ? 'is-invalid' : '' ?>"
@@ -36,7 +36,7 @@ $disabled = $disabled ?? false;
   </div>
 
   <div class="col-md-3">
-    <label for="end_time" class="form-label">End Time</label>
+    <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
     <input
       type="time"
       class="form-control <?= isset($fieldErrors['end_time']) ? 'is-invalid' : '' ?>"

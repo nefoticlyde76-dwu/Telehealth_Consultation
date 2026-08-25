@@ -34,7 +34,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
         <li class="active">Doctors</li>
       </ol>
       <h2 class="ux-page-header__title">Doctor Account Management</h2>
-      <p class="ux-page-header__subtitle">Manage clinician access securely — create profiles, control status, and reset passwords.</p>
+      <p class="ux-page-header__subtitle">Manage clinician access securely — create profiles, review invitation status, and control established accounts.</p>
     </div>
     <div class="ux-page-header__right">
       <span class="ux-chip ux-badge--dotless">
@@ -75,7 +75,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
             <option value="">All statuses</option>
             <?php foreach ($statusOptions as $statusOption): ?>
               <option value="<?= \App\Helpers\Helper::escape($statusOption) ?>" <?= ($filters['status'] ?? '') === $statusOption ? 'selected' : '' ?>>
-                <?= \App\Helpers\Helper::escape(ucfirst($statusOption)) ?>
+                <?= \App\Helpers\Helper::escape(\App\Helpers\Status::label($statusOption, \App\Helpers\Status::DOMAIN_USER)) ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -97,7 +97,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
   </div>
 
   <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-4">
+    <div class="col-sm-6 col-xl-3">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--navy">
           <i class="bi bi-person-badge-fill"></i>
@@ -108,7 +108,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
         </div>
       </div>
     </div>
-    <div class="col-sm-6 col-xl-4">
+    <div class="col-sm-6 col-xl-3">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--success">
           <i class="bi bi-check-circle-fill"></i>
@@ -119,14 +119,25 @@ $buildPageUrl = static function (int $page) use ($filters): string {
         </div>
       </div>
     </div>
-    <div class="col-sm-6 col-xl-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--pending">
+          <i class="bi bi-envelope"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['pending_doctors'] ?? 0) ?></div>
+          <div class="ux-stat__label">Invitation pending</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--slate">
           <i class="bi bi-person-dash-fill"></i>
         </div>
         <div class="flex-grow-1">
-          <div class="ux-stat__value"><?= (int) ($summary['inactive_doctors'] ?? 0) ?></div>
-          <div class="ux-stat__label">Inactive</div>
+          <div class="ux-stat__value"><?= (int) ($summary['inactive_suspended_doctors'] ?? 0) ?></div>
+          <div class="ux-stat__label">Inactive / Suspended</div>
         </div>
       </div>
     </div>
@@ -169,9 +180,8 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               <?php foreach ($doctors as $doctor): ?>
                 <?php
                 $doctorId = (int) ($doctor['id'] ?? 0);
-                $isActive = ($doctor['status'] ?? '') === 'active';
                 $fullName = trim((string) ($doctor['full_name'] ?? 'Doctor'));
-                $statusBadge = ux_active_badge_class($doctor['status'] ?? 'inactive');
+                $actions = \App\Services\AdminDoctorService::managementActions($doctor);
                 ?>
                 <tr>
                   <td>
@@ -200,27 +210,72 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     </div>
                   </td>
                   <td>
-                    <span class="ux-badge <?= $statusBadge ?>">
-                      <?= \App\Helpers\Helper::escape(ucfirst((string) ($doctor['status'] ?? 'unknown'))) ?>
-                    </span>
+                    <?= ux_status_badge((string) ($doctor['status'] ?? ''), \App\Helpers\Status::DOMAIN_USER) ?>
                   </td>
                   <td class="text-end">
                     <div class="ux-table__actions">
+                      <?php if ($actions['edit']): ?>
                       <a href="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/edit') ?>" class="btn btn-outline-primary btn-sm" aria-label="Edit doctor account for <?= \App\Helpers\Helper::escape($fullName) ?>">
                         <i class="bi bi-pencil-square me-1"></i>
                         Edit
                       </a>
+                      <?php endif; ?>
+                      <?php if ($actions['resend_invitation']): ?>
+                      <form
+                        method="POST"
+                        action="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/resend-invitation') ?>"
+                        class="d-inline"
+                        data-confirm-title="Resend the password setup invitation?"
+                        data-confirm-body="The previous invitation link will stop working. A new invitation will be emailed to the doctor's registered address."
+                        data-confirm-hint="The doctor remains invitation pending until they set a password."
+                        data-confirm-tone="primary"
+                      >
+                        <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm" aria-label="Resend invitation for <?= \App\Helpers\Helper::escape($fullName) ?>">
+                          <i class="bi bi-envelope me-1"></i>
+                          Resend Invitation
+                        </button>
+                      </form>
+                      <?php endif; ?>
+                      <?php if ($actions['reset_password']): ?>
                       <a href="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/reset-password') ?>" class="btn btn-outline-secondary btn-sm" aria-label="Reset password for <?= \App\Helpers\Helper::escape($fullName) ?>">
                         <i class="bi bi-key me-1"></i>
                         Reset Password
                       </a>
-                      <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/' . ($isActive ? 'deactivate' : 'activate')) ?>" class="d-inline">
+                      <?php endif; ?>
+                      <?php if ($actions['deactivate']): ?>
+                      <form
+                        method="POST"
+                        action="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/deactivate') ?>"
+                        class="d-inline"
+                        data-confirm-title="Deactivate this doctor account?"
+                        data-confirm-body="The doctor will be unable to sign in. This is not permanent deletion."
+                        data-confirm-hint="You can reactivate the account later if this was a mistake."
+                        data-confirm-tone="danger"
+                      >
                         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-                        <button type="submit" class="btn <?= $isActive ? 'btn-outline-danger' : 'btn-outline-success' ?> btn-sm" aria-label="<?= ($isActive ? 'Deactivate' : 'Activate') . ' doctor account for ' . \App\Helpers\Helper::escape($fullName) ?>">
-                          <i class="bi <?= $isActive ? 'bi-person-dash' : 'bi-person-check' ?> me-1"></i>
-                          <?= $isActive ? 'Deactivate' : 'Activate' ?>
+                        <button type="submit" class="btn btn-outline-danger btn-sm" aria-label="Deactivate doctor account for <?= \App\Helpers\Helper::escape($fullName) ?>">
+                          <i class="bi bi-person-dash me-1"></i>
+                          Deactivate
                         </button>
                       </form>
+                      <?php elseif ($actions['activate']): ?>
+                      <form
+                        method="POST"
+                        action="<?= \App\Helpers\Helper::url('/admin/doctors/' . $doctorId . '/activate') ?>"
+                        class="d-inline"
+                        data-confirm-title="Reactivate this doctor account?"
+                        data-confirm-body="This doctor will be able to sign in again."
+                        data-confirm-hint="You can change the status again later if needed."
+                        data-confirm-tone="primary"
+                      >
+                        <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+                        <button type="submit" class="btn btn-outline-success btn-sm" aria-label="Activate doctor account for <?= \App\Helpers\Helper::escape($fullName) ?>">
+                          <i class="bi bi-person-check me-1"></i>
+                          Activate
+                        </button>
+                      </form>
+                      <?php endif; ?>
                     </div>
                   </td>
                 </tr>

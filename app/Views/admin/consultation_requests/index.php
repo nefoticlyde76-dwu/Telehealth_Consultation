@@ -4,17 +4,23 @@ $filters = $filters ?? [
     'search' => '',
     'status' => 'Pending',
     'doctor_id' => 0,
-    'consultation_date' => '',
+    'date' => '',
+    'date_from' => '',
+    'date_to' => '',
+    'sort' => 'date_asc',
 ];
-$pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0, 'per_page' => 20];
+$pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0, 'per_page' => 20, 'from' => 0, 'to' => 0];
 $summary = $summary ?? [];
 $requests = $requests ?? [];
 $statusOptions = $statusOptions ?? [];
 $doctorOptions = $doctorOptions ?? [];
+$dateOptions = $dateOptions ?? [];
+$sortOptions = $sortOptions ?? [];
 $selectedId = (int) ($selectedId ?? 0);
 $selectedRequest = is_array($selectedRequest ?? null) ? $selectedRequest : null;
 $queuePosition = (int) ($queuePosition ?? 0);
 $csrfToken = $csrfToken ?? '';
+$filterActive = (bool) ($filterActive ?? false);
 
 require_once __DIR__ . '/../../partials/shared/status_helper.php';
 
@@ -27,6 +33,76 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
 
     return \App\Helpers\Helper::url(\App\Services\AdminConsultationService::workspacePath($merged, $selected, $page));
 };
+
+$doctorFieldOptions = [];
+foreach ($doctorOptions as $doctorOption) {
+    $doctorFieldOptions[] = [
+        'value' => (string) ((int) ($doctorOption['id'] ?? 0)),
+        'label' => (string) ($doctorOption['full_name'] ?? 'Doctor'),
+    ];
+}
+
+$statusFieldOptions = \App\Helpers\Status::filterOptions(
+    \App\Helpers\Status::DOMAIN_CONSULTATION,
+    $statusOptions
+);
+
+$filterForm = [
+    'action' => \App\Helpers\Helper::url('/admin/consultation-requests'),
+    'title' => 'Filter queue',
+    'search' => [
+        'label' => 'Search',
+        'placeholder' => 'Patient, email, doctor, or request ID',
+        'value' => (string) ($filters['search'] ?? ''),
+    ],
+    'fields' => [
+        [
+            'type' => 'select',
+            'name' => 'status',
+            'label' => 'Status',
+            'value' => (string) ($filters['status'] ?? ''),
+            'empty_label' => 'All statuses',
+            'options' => $statusFieldOptions,
+        ],
+        [
+            'type' => 'select',
+            'name' => 'doctor_id',
+            'label' => 'Doctor',
+            'value' => (string) ((int) ($filters['doctor_id'] ?? 0)),
+            'empty_label' => 'All doctors',
+            'options' => $doctorFieldOptions,
+        ],
+        [
+            'type' => 'date_preset',
+            'name' => 'date',
+            'label' => 'Date',
+            'value' => (string) ($filters['date'] ?? ''),
+            'empty_label' => 'All dates',
+            'options' => $dateOptions,
+            'from_value' => (string) ($filters['date_from'] ?? ''),
+            'to_value' => (string) ($filters['date_to'] ?? ''),
+        ],
+        [
+            'type' => 'select',
+            'name' => 'sort',
+            'label' => 'Sort',
+            'value' => (string) ($filters['sort'] ?? 'date_asc'),
+            'include_empty' => false,
+            'options' => $sortOptions,
+        ],
+    ],
+    'clear_url' => \App\Helpers\Helper::url('/admin/consultation-requests'),
+];
+
+$queueNoun = ((string) ($filters['status'] ?? '')) === 'Pending'
+    ? 'pending requests'
+    : 'matching requests';
+$emptyTitle = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActive
+    ? 'No pending requests'
+    : 'No matching requests';
+$emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActive
+    ? 'All consultation requests have been reviewed.'
+    : 'Try changing your search or filters.';
 ?>
 
 <section class="mb-4 ux-review-workspace" data-consultation-queue-workspace>
@@ -43,11 +119,6 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
       <span class="ux-chip ux-badge--dotless">
         <i class="bi bi-list-check"></i>
         <span>
-          <?php
-          $queueNoun = ((string) ($filters['status'] ?? '')) === 'Pending'
-              ? 'pending requests'
-              : 'matching requests';
-          ?>
           <?php if ($queuePosition > 0 && $totalItems > 0): ?>
             <?= (int) $queuePosition ?> of <?= (int) $totalItems ?> <?= $queueNoun ?>
           <?php else: ?>
@@ -60,10 +131,10 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="row g-3 mb-4">
+  <div class="row g-3 mb-4 ux-review-workspace__stats">
     <div class="col-sm-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--amber"><i class="bi bi-hourglass-split"></i></div>
+      <div class="ux-stat compact d-flex align-items-center gap-3 h-100">
+        <div class="ux-stat__icon ux-stat__icon--pending"><i class="bi bi-hourglass-split"></i></div>
         <div>
           <div class="ux-stat__value"><?= (int) ($summary['pending_requests'] ?? 0) ?></div>
           <div class="ux-stat__label">Pending Requests</div>
@@ -71,7 +142,7 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
       </div>
     </div>
     <div class="col-sm-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
+      <div class="ux-stat compact d-flex align-items-center gap-3 h-100">
         <div class="ux-stat__icon ux-stat__icon--navy"><i class="bi bi-calendar2-day"></i></div>
         <div>
           <div class="ux-stat__value"><?= (int) ($summary['today_requests'] ?? 0) ?></div>
@@ -80,7 +151,7 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
       </div>
     </div>
     <div class="col-sm-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
+      <div class="ux-stat compact d-flex align-items-center gap-3 h-100">
         <div class="ux-stat__icon ux-stat__icon--mint"><i class="bi bi-check2-circle"></i></div>
         <div>
           <div class="ux-stat__value"><?= (int) ($summary['approved_requests'] ?? 0) ?></div>
@@ -90,61 +161,7 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
     </div>
   </div>
 
-  <div class="ux-card ux-filter">
-    <div class="card-header">
-      <h3 class="h6">
-        <i class="bi bi-funnel-fill ux-filter__header-icon"></i>
-        Filter queue
-      </h3>
-    </div>
-    <form method="GET" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>" novalidate>
-      <div class="row g-3 align-items-end">
-        <div class="col-lg-3">
-          <label for="search" class="form-label">Search</label>
-          <input type="text" class="form-control" id="search" name="search"
-                 value="<?= \App\Helpers\Helper::escape((string) ($filters['search'] ?? '')) ?>"
-                 placeholder="Patient, doctor, or request ID">
-        </div>
-        <div class="col-lg-2">
-          <label for="status" class="form-label">Status</label>
-          <select class="form-select" id="status" name="status" aria-label="Filter by status">
-            <option value="">All statuses</option>
-            <?php foreach ($statusOptions as $statusOption): ?>
-              <option value="<?= \App\Helpers\Helper::escape((string) $statusOption) ?>" <?= (string) ($filters['status'] ?? '') === (string) $statusOption ? 'selected' : '' ?>>
-                <?= \App\Helpers\Helper::escape((string) $statusOption) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="col-lg-3">
-          <label for="doctor_id" class="form-label">Doctor</label>
-          <select class="form-select" id="doctor_id" name="doctor_id" aria-label="Filter by doctor">
-            <option value="">All doctors</option>
-            <?php foreach ($doctorOptions as $doctorOption): ?>
-              <?php $doctorId = (int) ($doctorOption['id'] ?? 0); ?>
-              <option value="<?= \App\Helpers\Helper::escape((string) $doctorId) ?>" <?= (int) ($filters['doctor_id'] ?? 0) === $doctorId ? 'selected' : '' ?>>
-                <?= \App\Helpers\Helper::escape((string) ($doctorOption['full_name'] ?? 'Doctor')) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="col-lg-4">
-          <label for="consultation_date" class="form-label">Consultation date</label>
-          <input type="date" class="form-control" id="consultation_date" name="consultation_date"
-                 value="<?= \App\Helpers\Helper::escape((string) ($filters['consultation_date'] ?? '')) ?>">
-        </div>
-        <div class="col-12">
-          <div class="ux-filter__actions">
-            <button type="submit" class="btn btn-primary btn-sm">
-              <i class="bi bi-funnel-fill me-1"></i>
-              Apply Filters
-            </button>
-            <a href="<?= \App\Helpers\Helper::url('/admin/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">Reset</a>
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
+  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="ux-review-workspace__grid">
     <aside class="ux-card ux-queue" aria-label="Consultation request queue">
@@ -153,11 +170,11 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
         <span class="text-muted small"><?= (int) $totalItems ?></span>
       </div>
       <?php if ($requests === []): ?>
-        <div class="ux-empty p-4">
-          <div class="ux-empty__icon"><i class="bi bi-clipboard2-check"></i></div>
-          <h4 class="ux-empty__title">No matching requests</h4>
-          <p class="ux-empty__text mb-0">Adjust the filters or wait for new consultation bookings.</p>
-        </div>
+        <?php
+        $emptyIcon = 'bi-clipboard2-check';
+        $emptyCompact = true;
+        require __DIR__ . '/../../partials/shared/empty_state.php';
+        ?>
       <?php else: ?>
         <ul class="ux-queue__list">
           <?php foreach ($requests as $request): ?>
@@ -180,7 +197,7 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
                   $personSize = 'sm';
                   require __DIR__ . '/../../partials/shared/person_row.php';
                   ?>
-                  <span class="ux-badge <?= ux_status_badge_class($status) ?>"><?= \App\Helpers\Helper::escape($status) ?></span>
+                  <span class="ux-badge <?= ux_status_badge_class($status) ?>"><?= \App\Helpers\Helper::escape(ux_status_label($status)) ?></span>
                 </div>
                 <div class="ux-queue__meta d-flex align-items-center gap-2">
                   <?php
@@ -201,21 +218,17 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
         </ul>
       <?php endif; ?>
 
-      <?php if (is_array($pagination) && (int) ($pagination['total_pages'] ?? 0) > 1): ?>
-        <?php
-        $page = (int) ($pagination['current_page'] ?? 1);
-        $totalPages = (int) ($pagination['total_pages'] ?? 1);
-        ?>
-        <nav class="ux-queue__pager" aria-label="Queue pagination">
-          <?php if ($page > 1): ?>
-            <a href="<?= $buildQueueUrl(['page' => $page - 1, 'selected' => 0]) ?>" class="btn btn-outline-primary btn-sm">Previous</a>
-          <?php endif; ?>
-          <span class="small text-muted">Page <?= $page ?> of <?= $totalPages ?></span>
-          <?php if ($page < $totalPages): ?>
-            <a href="<?= $buildQueueUrl(['page' => $page + 1, 'selected' => 0]) ?>" class="btn btn-outline-primary btn-sm">Next</a>
-          <?php endif; ?>
-        </nav>
-      <?php endif; ?>
+      <?php
+      $paginationPath = '/admin/consultation-requests';
+      $paginationFilters = $filters;
+      $paginationLabel = $queueNoun;
+      $paginationAria = 'Queue pagination';
+      $paginationShowCount = true;
+      $paginationBuildUrl = static function (int $page) use ($buildQueueUrl): string {
+          return $buildQueueUrl(['page' => $page, 'selected' => 0]);
+      };
+      require __DIR__ . '/../../partials/shared/list_pagination.php';
+      ?>
     </aside>
 
     <div class="ux-review-workspace__detail">

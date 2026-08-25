@@ -1,118 +1,87 @@
 <?php
 
+use App\Helpers\Status;
+
 if (!isset($GLOBALS['UX_SYSTEM_STATUS_MAP_DEFINED'])) {
     $GLOBALS['UX_SYSTEM_STATUS_MAP_DEFINED'] = true;
 
-    $GLOBALS['UX_STATUS_BADGE_MAP'] = [
-        'Pending' => 'ux-badge--pending',
-        'Approved' => 'ux-badge--approved',
-        'Completed' => 'ux-badge--approved',
-        'Active' => 'ux-badge--approved',
-        'Available' => 'ux-badge--approved',
-        'Rejected' => 'ux-badge--rejected',
-        'Cancelled' => 'ux-badge--rejected',
-        'Canceled' => 'ux-badge--rejected',
-        'Inactive' => 'ux-badge--rejected',
-        'Unavailable' => 'ux-badge--rejected',
-        'Booked' => 'ux-badge--booked',
-        'Scheduled' => 'ux-badge--booked',
-        'Assigned' => 'ux-badge--booked',
-        'Expired' => 'ux-badge--rejected',
-    ];
+    if (!function_exists('ux_status_badge')) {
+        /**
+         * Render a consistent status badge. Label text is always present for accessibility.
+         *
+         * @param array<string, mixed> $options
+         */
+        function ux_status_badge(string $status, string $domain = Status::DOMAIN_CONSULTATION, array $options = []): string
+        {
+            return Status::badgeHtml($status, $domain, $options);
+        }
+    }
 
-    $GLOBALS['UX_STATUS_ICON_MAP'] = [
-        'Pending' => 'bi-clock-fill',
-        'Approved' => 'bi-check-circle-fill',
-        'Completed' => 'bi-check2-circle',
-        'Active' => 'bi-check-circle-fill',
-        'Available' => 'bi-calendar2-check-fill',
-        'Rejected' => 'bi-x-circle-fill',
-        'Cancelled' => 'bi-x-circle-fill',
-        'Canceled' => 'bi-x-circle-fill',
-        'Inactive' => 'bi-person-dash-fill',
-        'Unavailable' => 'bi-calendar2-x-fill',
-        'Booked' => 'bi-calendar2-event-fill',
-        'Scheduled' => 'bi-calendar3-event-fill',
-        'Assigned' => 'bi-calendar3-event-fill',
-        'Expired' => 'bi-calendar-x-fill',
-    ];
+    if (!function_exists('ux_status_label')) {
+        function ux_status_label(string $status, string $domain = Status::DOMAIN_CONSULTATION): string
+        {
+            return Status::label($status, $domain);
+        }
+    }
 
     if (!function_exists('ux_status_badge_class')) {
-        function ux_status_badge_class(string $status, string $default = 'ux-badge--neutral'): string {
-            $map = $GLOBALS['UX_STATUS_BADGE_MAP'] ?? [];
-            $key = trim($status);
-            if (isset($map[$key])) {
-                return (string) $map[$key];
+        function ux_status_badge_class(string $status, string $default = 'ux-badge--neutral'): string
+        {
+            $domain = ux_status_guess_domain($status);
+            $resolved = Status::resolve($status, $domain);
+            if ($resolved['known']) {
+                return $resolved['badge'];
             }
-            if ($key === '') {
-                return $default;
-            }
-            $lower = strtolower($key);
-            foreach ($map as $label => $cls) {
-                if (strtolower((string) $label) === $lower) {
-                    return (string) $cls;
-                }
-            }
-            return $default;
+
+            return $default !== '' ? $default : $resolved['badge'];
         }
     }
 
     if (!function_exists('ux_status_icon_class')) {
-        function ux_status_icon_class(string $status, string $default = 'bi-circle-fill'): string {
-            $map = $GLOBALS['UX_STATUS_ICON_MAP'] ?? [];
-            $key = trim($status);
-            if (isset($map[$key])) {
-                return (string) $map[$key];
+        function ux_status_icon_class(string $status, string $default = 'bi-circle-fill'): string
+        {
+            $domain = ux_status_guess_domain($status);
+            $resolved = Status::resolve($status, $domain);
+            if ($resolved['known']) {
+                return $resolved['icon'];
             }
-            if ($key === '') {
-                return $default;
-            }
-            $lower = strtolower($key);
-            foreach ($map as $label => $cls) {
-                if (strtolower((string) $label) === $lower) {
-                    return (string) $cls;
-                }
-            }
-            return $default;
+
+            return $default !== '' ? $default : $resolved['icon'];
         }
     }
 
     if (!function_exists('ux_active_badge_class')) {
-        function ux_active_badge_class($value, bool $numericActive = true): string {
+        function ux_active_badge_class($value, bool $numericActive = true): string
+        {
             if (is_bool($value)) {
-                return $value ? 'ux-badge--approved' : 'ux-badge--rejected';
+                return Status::badgeClass($value ? Status::USER_ACTIVE : Status::USER_INACTIVE, Status::DOMAIN_USER);
             }
             if (is_numeric($value)) {
-                return $numericActive
-                    ? ((int) $value === 1 ? 'ux-badge--approved' : 'ux-badge--rejected')
-                    : ((int) $value === 0 ? 'ux-badge--approved' : 'ux-badge--rejected');
+                $isActive = $numericActive ? ((int) $value === 1) : ((int) $value === 0);
+                return Status::badgeClass($isActive ? Status::USER_ACTIVE : Status::USER_INACTIVE, Status::DOMAIN_USER);
             }
-            $v = strtolower(trim((string) $value));
-            if (in_array($v, ['active', 'available', 'approved', 'completed', '1', 'true', 'yes'], true)) {
-                return 'ux-badge--approved';
-            }
-            if (in_array($v, ['inactive', 'unavailable', 'rejected', 'cancelled', 'canceled', '0', 'false', 'no'], true)) {
-                return 'ux-badge--rejected';
-            }
-            return ux_status_badge_class((string) $value, 'ux-badge--neutral');
+
+            return Status::badgeClass((string) $value, Status::DOMAIN_USER);
         }
     }
 
     if (!function_exists('ux_slot_status_badge_class')) {
-        function ux_slot_status_badge_class($status, ?bool $isBooked = null): string {
+        function ux_slot_status_badge_class($status, ?bool $isBooked = null): string
+        {
             if ($isBooked === true) {
-                return 'ux-badge--booked';
+                return Status::badgeClass(Status::SLOT_BOOKED, Status::DOMAIN_SLOT);
             }
             if ($isBooked === false) {
-                return 'ux-badge--approved';
+                return Status::badgeClass(Status::SLOT_AVAILABLE, Status::DOMAIN_SLOT);
             }
-            $label = is_string($status) ? $status : '';
-            return ux_status_badge_class($label, 'ux-badge--approved');
+
+            return Status::badgeClass(is_string($status) ? $status : '', Status::DOMAIN_SLOT);
         }
     }
 
     if (!function_exists('ux_stat_color_class')) {
-        function ux_stat_color_class(string $variant): string {
+        function ux_stat_color_class(string $variant): string
+        {
             $variant = strtolower(trim($variant));
             $palette = [
                 'navy' => 'ux-stat__icon--navy',
@@ -121,8 +90,9 @@ if (!isset($GLOBALS['UX_SYSTEM_STATUS_MAP_DEFINED'])) {
                 'success' => 'ux-stat__icon--success',
                 'green' => 'ux-stat__icon--green',
                 'mint' => 'ux-stat__icon--mint',
-                'amber' => 'ux-stat__icon--amber',
-                'warning' => 'ux-stat__icon--amber',
+                'amber' => 'ux-stat__icon--pending',
+                'warning' => 'ux-stat__icon--pending',
+                'pending' => 'ux-stat__icon--pending',
                 'cyan' => 'ux-stat__icon--cyan',
                 'info' => 'ux-stat__icon--cyan',
                 'purple' => 'ux-stat__icon--purple',
@@ -131,8 +101,28 @@ if (!isset($GLOBALS['UX_SYSTEM_STATUS_MAP_DEFINED'])) {
                 'surface' => 'ux-stat__icon--surface',
                 'danger' => 'ux-stat__icon--danger',
                 'red' => 'ux-stat__icon--danger',
+                'completed' => 'ux-stat__icon--cyan',
+                'cancelled' => 'ux-stat__icon--slate',
             ];
             return $palette[$variant] ?? 'ux-stat__icon--navy';
+        }
+    }
+
+    if (!function_exists('ux_status_guess_domain')) {
+        function ux_status_guess_domain(string $status): string
+        {
+            $lower = strtolower(trim($status));
+            if (in_array($lower, ['active', 'inactive', 'invitation_pending', 'suspended', 'deleted'], true)) {
+                return Status::DOMAIN_USER;
+            }
+            if (in_array($lower, ['available', 'booked'], true)) {
+                return Status::DOMAIN_SLOT;
+            }
+            if (in_array($lower, ['draft', 'final'], true)) {
+                return Status::DOMAIN_RECORD;
+            }
+
+            return Status::DOMAIN_CONSULTATION;
         }
     }
 }

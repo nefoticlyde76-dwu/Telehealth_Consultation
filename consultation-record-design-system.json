@@ -18,7 +18,7 @@
       },
   
       "pageShell": {
-        "background": "#F7F9FC",
+        "background": "#F5F7FA",
         "contentMaxWidth": "1280px",
         "contentPadding": {
           "desktop": "28px 26px 40px",
@@ -32,9 +32,9 @@
           "display": true,
           "fontSize": "11px",
           "fontWeight": 400,
-          "color": "#708397",
-          "activeColor": "#183653",
-          "separatorColor": "#AAB6C2",
+          "color": "#4A5568",
+          "activeColor": "#102A43",
+          "separatorColor": "#D9E2EC",
           "gap": "8px",
           "marginBottom": "10px"
         },
@@ -46,7 +46,7 @@
           "lineHeight": "32px",
           "fontWeight": 600,
           "letterSpacing": "-0.02em",
-          "color": "#183653",
+          "color": "#102A43",
           "marginBottom": "4px"
         },
   
@@ -55,7 +55,7 @@
           "fontSize": "12px",
           "lineHeight": "18px",
           "fontWeight": 400,
-          "color": "#718397"
+          "color": "#4A5568"
         },
   
         "actions": {
@@ -138,7 +138,7 @@
               "text": "18 Aug 2026",
               "fontSize": "18px",
               "fontWeight": 600,
-              "color": "#183653"
+              "color": "#102A43"
             },
             "time": {
               "text": "13:31 - 14:50",
@@ -162,7 +162,7 @@
               "text": "Mikey",
               "fontSize": "18px",
               "fontWeight": 600,
-              "color": "#183653"
+              "color": "#102A43"
             },
             "department": {
               "text": "General Medicine",
@@ -248,7 +248,7 @@
             "text": "Patient information",
             "fontSize": "13px",
             "fontWeight": 600,
-            "color": "#183653"
+            "color": "#102A43"
           },
           "gap": "9px",
           "paddingBottom": "14px",
@@ -310,7 +310,7 @@
           "fontSize": "13px",
           "lineHeight": "18px",
           "fontWeight": 600,
-          "color": "#183653"
+          "color": "#102A43"
         },
   
         "fieldIcon": {
@@ -351,7 +351,7 @@
             "text": "Clinical consultation record",
             "fontSize": "13px",
             "fontWeight": 600,
-            "color": "#183653"
+            "color": "#102A43"
           },
   
           "status": {
@@ -469,7 +469,7 @@
             "text": "Prescription",
             "fontSize": "13px",
             "fontWeight": 600,
-            "color": "#183653"
+            "color": "#102A43"
           }
         },
   
@@ -503,10 +503,10 @@
         "colors": {
           "primary": "#0787E8",
           "primaryDark": "#104364",
-          "pageBackground": "#F7F9FC",
+          "pageBackground": "#F5F7FA",
           "surface": "#FFFFFF",
           "surfaceBlue": "#F7FBFE",
-          "textPrimary": "#183653",
+          "textPrimary": "#102A43",
           "textSecondary": "#60758B",
           "textMuted": "#8293A5",
           "border": "#DDE6EF",

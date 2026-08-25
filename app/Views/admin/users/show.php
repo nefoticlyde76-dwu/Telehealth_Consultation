@@ -1,188 +1,140 @@
 <?php
 
-$managedUser = $managedUser ?? [];
-$roleName = ucfirst((string) ($managedUser['role_name'] ?? 'user'));
-$statusName = ucfirst((string) ($managedUser['status'] ?? 'unknown'));
-?>
+use App\Helpers\Helper;
+use App\Helpers\Status;
+use App\Services\AccountSecurityService;
 
-<section class="mb-4">
-  <div class="ux-page-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-start align-items-lg-center gap-3 mb-0">
-    <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/admin/dashboard') ?>">Dashboard</a></li>
-        <li><a href="<?= \App\Helpers\Helper::url('/admin/users') ?>">Users</a></li>
-        <li class="active"><?= \App\Helpers\Helper::escape($managedUser['full_name'] ?? 'User') ?></li>
-      </ol>
-      <span class="section-badge mb-3">
-        <i class="bi bi-person-vcard"></i>
-        User account
-      </span>
-      <h2 class="ux-page-header__title h4 mb-2"><?= \App\Helpers\Helper::escape($managedUser['full_name'] ?? 'User') ?></h2>
-      <p class="ux-page-header__subtitle text-muted mb-0">Review this account’s identity, role, status, and profile details.</p>
-    </div>
-    <div class="ux-page-header__right">
-      <a href="<?= \App\Helpers\Helper::url('/admin/users') ?>" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-arrow-left me-2"></i>
-        Back to User Management
-      </a>
-    </div>
-  </div>
-</section>
+$managedUser = is_array($managedUser ?? null) ? $managedUser : [];
+$csrfToken = (string) ($csrfToken ?? '');
+$confirmationPhrase = (string) ($confirmationPhrase ?? AccountSecurityService::CONFIRMATION_PHRASE);
+$actions = is_array($managedUser['actions'] ?? null) ? $managedUser['actions'] : [];
+$counts = is_array($managedUser['protected_counts'] ?? null) ? $managedUser['protected_counts'] : [];
+$roleName = (string) ($managedUser['role_name'] ?? '');
+$statusKey = (string) ($managedUser['status'] ?? '');
+$userId = (int) ($managedUser['id'] ?? 0);
+$userName = (string) ($managedUser['full_name'] ?? 'User');
+$isDeleted = Status::isDeletedUserStatus($statusKey);
+$isInvitationPending = Status::isInvitationPendingUserStatus($statusKey);
 
-<section class="mb-4">
-  <div class="row g-4">
-    <div class="col-lg-8">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-body p-4">
-          <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
-            <div>
-              <?php
-              $personName = (string) ($managedUser['full_name'] ?? 'User');
-              $personPhoto = $managedUser['profile_photo_path'] ?? null;
-              $personMeta = (string) ($managedUser['email'] ?? '');
-              $personSize = 'lg';
-              require __DIR__ . '/../../partials/shared/person_row.php';
-              ?>
-              <p class="text-muted mb-0 mt-3">Name, email, role, and current account status.</p>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-              <span class="ux-badge ux-badge--neutral"><?= \App\Helpers\Helper::escape($roleName) ?></span>
-              <span class="ux-badge <?= ($managedUser['status'] ?? '') === 'active' ? 'ux-badge--approved' : 'ux-badge--pending' ?>"><?= \App\Helpers\Helper::escape($statusName) ?></span>
-            </div>
-          </div>
+require __DIR__ . '/../../partials/profile/_helpers.php';
 
-          <div class="user-detail-grid">
-            <div class="user-detail-item">
-              <span class="user-detail-label">Full Name</span>
-              <strong><?= \App\Helpers\Helper::escape($managedUser['full_name'] ?? 'Not available') ?></strong>
-            </div>
-            <div class="user-detail-item">
-              <span class="user-detail-label">Email Address</span>
-              <strong><?= \App\Helpers\Helper::escape($managedUser['email'] ?? 'Not available') ?></strong>
-            </div>
-            <div class="user-detail-item">
-              <span class="user-detail-label">Account Status</span>
-              <strong><?= \App\Helpers\Helper::escape($statusName) ?></strong>
-            </div>
-            <div class="user-detail-item">
-              <span class="user-detail-label">Role</span>
-              <strong><?= \App\Helpers\Helper::escape($roleName) ?></strong>
-            </div>
-            <div class="user-detail-item">
-              <span class="user-detail-label">Created At</span>
-              <strong><?= \App\Helpers\Helper::escape(date('d M Y, h:i A', strtotime((string) ($managedUser['created_at'] ?? 'now')))) ?></strong>
-            </div>
-            <div class="user-detail-item">
-              <span class="user-detail-label">Last Updated</span>
-              <strong><?= \App\Helpers\Helper::escape(date('d M Y, h:i A', strtotime((string) ($managedUser['updated_at'] ?? 'now')))) ?></strong>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+$roleLabel = user_profile_role_label($roleName);
+$editUrl = (string) ($managedUser['edit_url'] ?? '');
+if ($editUrl === '') {
+    foreach ($actions as $action) {
+        if (($action['key'] ?? '') === 'edit') {
+            $editUrl = (string) ($action['url'] ?? '');
+            break;
+        }
+    }
+}
 
-    <div class="col-lg-4">
-      <div class="card border-0 shadow-sm rounded-4 h-100">
-        <div class="card-body p-4">
-          <h3 class="h5 mb-3">Account notes</h3>
-          <div class="activity-list">
-            <div class="activity-item">
-              <span class="activity-dot"></span>
-              <div>
-                <strong class="d-block">Status and role</strong>
-                <p class="text-muted small mb-0">Use this page to confirm identity, role, and whether the account is active.</p>
-              </div>
-            </div>
-            <div class="activity-item">
-              <span class="activity-dot"></span>
-              <div>
-                <strong class="d-block">Patient and doctor records</strong>
-                <p class="text-muted small mb-0">Patient details and doctor accounts are managed from their dedicated administration pages.</p>
-              </div>
-            </div>
-            <div class="activity-item">
-              <span class="activity-dot"></span>
-              <div>
-                <strong class="d-block">Access control</strong>
-                <p class="text-muted small mb-0">Only signed-in administrators can view this record.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+$overflowActions = [];
+foreach ($actions as $action) {
+    if (($action['key'] ?? '') === 'edit' && ($action['method'] ?? 'GET') === 'GET') {
+        $overflowActions[] = $action;
+    }
+}
 
-<section>
-  <div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body p-4">
-      <div class="row g-4">
-        <div class="col-lg-6">
-          <h3 class="h5 mb-3">Role-Specific Profile Data</h3>
-          <div class="user-detail-grid">
-            <?php if (($managedUser['role_name'] ?? '') === 'admin'): ?>
-              <div class="user-detail-item">
-                <span class="user-detail-label">Employee ID</span>
-                <strong><?= \App\Helpers\Helper::escape($managedUser['employee_id'] ?? 'Not assigned') ?></strong>
-              </div>
-            <?php elseif (($managedUser['role_name'] ?? '') === 'doctor'): ?>
-              <div class="user-detail-item">
-                <span class="user-detail-label">Specialization</span>
-                <strong><?= \App\Helpers\Helper::escape($managedUser['specialization'] ?? 'Not assigned') ?></strong>
-              </div>
-              <div class="user-detail-item">
-                <span class="user-detail-label">License Number</span>
-                <strong><?= \App\Helpers\Helper::escape($managedUser['license_number'] ?? 'Not assigned') ?></strong>
-              </div>
-              <div class="user-detail-item">
-                <span class="user-detail-label">Clinic Address</span>
-                <strong><?= \App\Helpers\Helper::escape($managedUser['clinic_address'] ?? 'Not assigned') ?></strong>
-              </div>
-            <?php elseif (($managedUser['role_name'] ?? '') === 'patient'): ?>
-              <div class="user-detail-item">
-                <span class="user-detail-label">Date of Birth</span>
-                <strong><?= \App\Helpers\Helper::escape($managedUser['dob'] ? date('d M Y', strtotime((string) $managedUser['dob'])) : 'Not provided') ?></strong>
-              </div>
-              <div class="user-detail-item">
-                <span class="user-detail-label">Gender</span>
-                <strong><?= \App\Helpers\Helper::escape($managedUser['gender'] ? ucfirst((string) $managedUser['gender']) : 'Not provided') ?></strong>
-              </div>
-              <div class="user-detail-item">
-                <span class="user-detail-label">Address</span>
-                <strong><?= \App\Helpers\Helper::escape($managedUser['address'] ?? 'Not provided') ?></strong>
-              </div>
-            <?php else: ?>
-              <div class="user-detail-item">
-                <span class="user-detail-label">Role Data</span>
-                <strong>No role-specific profile data is available for this account.</strong>
-              </div>
-            <?php endif; ?>
-          </div>
-        </div>
+$roleTiles = [];
+if ($roleName === 'admin') {
+    $roleTiles[] = [
+        'label' => 'Employee ID',
+        'value' => user_profile_value($managedUser['employee_id'] ?? null),
+        'icon' => 'bi-person-badge',
+    ];
+} elseif ($roleName === 'doctor') {
+    $roleTiles[] = [
+        'label' => 'Specialization',
+        'value' => user_profile_value($managedUser['specialization'] ?? null),
+        'icon' => 'bi-heart-pulse',
+    ];
+    $roleTiles[] = [
+        'label' => 'License Number',
+        'value' => user_profile_value($managedUser['license_number'] ?? null),
+        'icon' => 'bi-shield-check',
+    ];
+} elseif ($roleName === 'patient') {
+    $roleTiles[] = [
+        'label' => 'Date of birth',
+        'value' => Helper::formatDate($managedUser['dob'] ?? null, 'd M Y', 'Not assigned'),
+        'icon' => 'bi-calendar-event',
+    ];
+    $roleTiles[] = [
+        'label' => 'Gender',
+        'value' => user_profile_value(!empty($managedUser['gender']) ? ucfirst((string) $managedUser['gender']) : null),
+        'icon' => 'bi-gender-ambiguous',
+    ];
+}
 
-        <div class="col-lg-6">
-          <h3 class="h5 mb-3">What you can do next</h3>
-          <div class="admin-foundation-list">
-            <div class="admin-foundation-item">
-              <i class="bi bi-check2-circle"></i>
-              <span>Search and filter accounts from the Users list.</span>
-            </div>
-            <div class="admin-foundation-item">
-              <i class="bi bi-check2-circle"></i>
-              <span>Create and update doctor accounts from Doctors.</span>
-            </div>
-            <div class="admin-foundation-item">
-              <i class="bi bi-check2-circle"></i>
-              <span>Review patient records and account status from Patients.</span>
-            </div>
-            <div class="admin-foundation-item">
-              <i class="bi bi-info-circle"></i>
-              <span>Permanent deletion of patient and doctor accounts is available from the Users list, with safeguards against removing your own or the last administrator account.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+$profilePage = [
+    'breadcrumbs' => [
+        ['label' => 'Dashboard', 'url' => '/admin/dashboard'],
+        ['label' => 'Users', 'url' => '/admin/users'],
+        ['label' => $userName],
+    ],
+    'title' => $userName,
+    'subtitle' => 'Non-clinical account details. Consultation notes and prescriptions are not available here.',
+    'back' => ['label' => 'Back to users', 'url' => '/admin/users'],
+    'photo' => $managedUser['profile_photo_path'] ?? null,
+    'photo_edit_url' => $editUrl,
+    'name' => $userName,
+    'email' => (string) ($managedUser['email'] ?? ''),
+    'role_label' => $roleLabel,
+    'status' => $statusKey,
+    'overflow_actions' => $overflowActions,
+    'account_tiles' => user_profile_account_tiles($managedUser, $roleLabel),
+    'actions' => $actions,
+    'csrf_token' => $csrfToken,
+    'user_id' => $userId,
+    'return_to' => '/admin/users/' . $userId,
+    'force_password_reset' => [
+        'show' => !$isDeleted && !$isInvitationPending && $userId > 0,
+        'url' => '/admin/users/' . $userId . '/force-password-reset',
+        'csrf' => $csrfToken,
+        'checked' => !empty($managedUser['force_password_reset']),
+    ],
+    'role_tiles' => $roleTiles,
+    'role_permissions' => [
+        'show' => true,
+        'text' => 'Access level and permissions granted to this role.',
+        'details_url' => $roleName !== '' ? '/admin/users?role=' . rawurlencode($roleName) : '',
+        'details_label' => 'View role details',
+    ],
+    'protected_history' => [
+        'show' => true,
+        'subtitle' => 'These counts confirm related operational records. Their contents are not displayed.',
+        'notice' => 'Sensitive operational data is hidden for non-clinical accounts.',
+        'stats' => [
+            [
+                'label' => 'Consultation records retained',
+                'value' => (string) (int) ($counts['consultation_records'] ?? 0),
+                'icon' => 'bi-file-earmark-person',
+                'tone' => 'blue',
+            ],
+            [
+                'label' => 'Prescriptions retained',
+                'value' => (string) (int) ($counts['prescriptions'] ?? 0),
+                'icon' => 'bi-capsule',
+                'tone' => 'green',
+            ],
+            [
+                'label' => 'Completed appointments retained',
+                'value' => (string) (int) ($counts['completed_requests'] ?? 0),
+                'icon' => 'bi-calendar2-check',
+                'tone' => 'purple',
+            ],
+            [
+                'label' => 'Open bookings that would be cancelled',
+                'value' => (string) (int) ($counts['open_requests'] ?? 0),
+                'icon' => 'bi-calendar2-x',
+                'tone' => 'orange',
+            ],
+        ],
+    ],
+    'show_delete_modal' => true,
+    'is_deleted' => $isDeleted,
+    'confirmation_phrase' => $confirmationPhrase,
+];
+
+require __DIR__ . '/../../partials/profile/layout.php';

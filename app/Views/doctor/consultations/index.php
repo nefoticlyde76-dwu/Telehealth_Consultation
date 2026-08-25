@@ -1,13 +1,16 @@
 <?php
 
-$filters = $filters ?? ['status' => '', 'search' => ''];
+$filters = $filters ?? ['status' => '', 'search' => '', 'date' => '', 'sort' => '', 'per_page' => 10];
 $consultations = $consultations ?? [];
 $historyGroups = $historyGroups ?? ['active' => [], 'completed' => [], 'closed' => []];
 $grouped = (bool) ($grouped ?? false);
 $summary = $summary ?? [];
-$pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0];
+$pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0, 'from' => 0, 'to' => 0];
 $statusOptions = $statusOptions ?? [];
+$dateOptions = $dateOptions ?? [];
+$sortOptions = $sortOptions ?? [];
 $csrfToken = $csrfToken ?? '';
+$filterActive = (bool) ($filterActive ?? false);
 
 require __DIR__ . '/../../partials/shared/status_helper.php';
 
@@ -15,39 +18,79 @@ $activeRows = is_array($historyGroups['active'] ?? null) ? $historyGroups['activ
 $completedRows = is_array($historyGroups['completed'] ?? null) ? $historyGroups['completed'] : [];
 $closedRows = is_array($historyGroups['closed'] ?? null) ? $historyGroups['closed'] : [];
 $hasAny = $activeRows !== [] || $completedRows !== [] || $closedRows !== [];
-$filterActive = trim((string) ($filters['status'] ?? '')) !== '' || trim((string) ($filters['search'] ?? '')) !== '';
+if (!$filterActive) {
+    $filterActive = trim((string) ($filters['status'] ?? '')) !== ''
+        || trim((string) ($filters['search'] ?? '')) !== ''
+        || trim((string) ($filters['date'] ?? '')) !== '';
+}
 
-$buildPageUrl = static function (int $page) use ($filters): string {
-    $query = array_filter([
-        'status' => $filters['status'] ?? '',
-        'search' => $filters['search'] ?? '',
-        'page' => $page,
-    ], static fn ($value) => $value !== '');
+$statusFieldOptions = \App\Helpers\Status::filterOptions(
+    \App\Helpers\Status::DOMAIN_CONSULTATION,
+    $statusOptions
+);
 
-    $queryString = http_build_query($query);
+$filterForm = [
+    'action' => \App\Helpers\Helper::url('/doctor/consultations'),
+    'title' => 'Filter consultations',
+    'search' => [
+        'label' => 'Search',
+        'placeholder' => 'Search by patient name',
+        'value' => (string) ($filters['search'] ?? ''),
+    ],
+    'fields' => [
+        [
+            'type' => 'select',
+            'name' => 'status',
+            'label' => 'Status',
+            'value' => (string) ($filters['status'] ?? ''),
+            'empty_label' => 'All statuses',
+            'options' => $statusFieldOptions,
+        ],
+        [
+            'type' => 'date_preset',
+            'name' => 'date',
+            'label' => 'Date',
+            'value' => (string) ($filters['date'] ?? ''),
+            'empty_label' => 'All dates',
+            'options' => $dateOptions,
+            'from_value' => (string) ($filters['date_from'] ?? ''),
+            'to_value' => (string) ($filters['date_to'] ?? ''),
+        ],
+        [
+            'type' => 'select',
+            'name' => 'sort',
+            'label' => 'Sort',
+            'value' => (string) ($filters['sort'] ?? ''),
+            'empty_label' => 'Default',
+            'options' => $sortOptions,
+        ],
+        [
+            'type' => 'select',
+            'name' => 'per_page',
+            'label' => 'Per page',
+            'value' => (string) ((int) ($filters['per_page'] ?? 10)),
+            'include_empty' => false,
+            'options' => [
+                ['value' => '10', 'label' => '10'],
+                ['value' => '25', 'label' => '25'],
+                ['value' => '50', 'label' => '50'],
+            ],
+        ],
+    ],
+    'clear_url' => \App\Helpers\Helper::url('/doctor/consultations'),
+];
 
-    return \App\Helpers\Helper::url('/doctor/consultations') . ($queryString !== '' ? '?' . $queryString : '');
-};
+$paginationPath = '/doctor/consultations';
+$paginationFilters = $filters;
+$paginationLabel = 'consultations';
+$paginationAria = 'Doctor consultations pagination';
+$paginationShowCount = true;
+$paginationBuildUrl = null;
 
-$renderPagination = static function () use ($pagination, $buildPageUrl): void {
-    if (($pagination['total_pages'] ?? 1) <= 1) {
-        return;
-    }
+$renderPagination = static function () use ($pagination, $paginationPath, $paginationFilters, $paginationLabel, $paginationAria, $paginationShowCount): void {
     ?>
     <div class="card-footer border-0 bg-transparent pt-4 pb-0">
-      <nav class="admin-pagination d-flex justify-content-end align-items-center gap-2 flex-wrap" aria-label="Doctor consultations pagination">
-        <a class="btn btn-outline-primary btn-sm <?= ($pagination['current_page'] ?? 1) <= 1 ? 'disabled' : '' ?>" href="<?= ($pagination['current_page'] ?? 1) <= 1 ? '#' : $buildPageUrl((int) $pagination['current_page'] - 1) ?>">
-          <i class="bi bi-chevron-left me-1"></i>
-          Previous
-        </a>
-        <span class="small text-muted">
-          Page <?= (int) ($pagination['current_page'] ?? 1) ?> of <?= (int) ($pagination['total_pages'] ?? 1) ?>
-        </span>
-        <a class="btn btn-outline-primary btn-sm <?= ($pagination['current_page'] ?? 1) >= ($pagination['total_pages'] ?? 1) ? 'disabled' : '' ?>" href="<?= ($pagination['current_page'] ?? 1) >= ($pagination['total_pages'] ?? 1) ? '#' : $buildPageUrl((int) $pagination['current_page'] + 1) ?>">
-          Next
-          <i class="bi bi-chevron-right ms-1"></i>
-        </a>
-      </nav>
+      <?php require __DIR__ . '/../../partials/shared/list_pagination.php'; ?>
     </div>
     <?php
 };
@@ -77,56 +120,12 @@ $renderPagination = static function () use ($pagination, $buildPageUrl): void {
     </div>
   </div>
 
-  <div class="ux-card ux-filter">
-    <div class="card-header">
-      <h3 class="h6">
-        <i class="bi bi-funnel-fill ux-filter__header-icon"></i>
-        Filter consultations
-      </h3>
-    </div>
-    <form method="GET" action="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="user-filter-form">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-7">
-          <label for="search" class="form-label">Search consultations</label>
-          <input
-            type="text"
-            class="form-control"
-            id="search"
-            name="search"
-            value="<?= \App\Helpers\Helper::escape((string) ($filters['search'] ?? '')) ?>"
-            placeholder="Search by patient name or chief complaint"
-          >
-        </div>
-        <div class="col-md-3">
-          <label for="status" class="form-label">Status</label>
-          <select class="form-select" id="status" name="status" aria-label="Filter consultations by status">
-            <option value="">All statuses</option>
-            <?php foreach ($statusOptions as $statusOption): ?>
-              <option value="<?= \App\Helpers\Helper::escape((string) $statusOption) ?>" <?= ($filters['status'] ?? '') === $statusOption ? 'selected' : '' ?>>
-                <?= \App\Helpers\Helper::escape((string) $statusOption) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <div class="ux-filter__actions">
-            <button type="submit" class="btn btn-primary btn-sm">
-              <i class="bi bi-funnel-fill me-1"></i>
-              Apply
-            </button>
-            <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
-              Reset
-            </a>
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
+  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
     <div class="col-sm-4">
       <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--navy">
+        <div class="ux-stat__icon ux-stat__icon--success">
           <i class="bi bi-calendar2-check-fill"></i>
         </div>
         <div class="flex-grow-1">
@@ -164,8 +163,10 @@ $renderPagination = static function () use ($pagination, $buildPageUrl): void {
       <div class="ux-card">
         <?php
         $historyRows = [];
-        $emptyTitle = 'No consultations matched the current filters';
-        $emptyText = 'Approved and completed consultations will appear here.';
+        $emptyTitle = $filterActive ? 'No matching consultations' : 'No consultations yet';
+        $emptyText = $filterActive
+            ? 'Try changing your search or filters.'
+            : 'Approved and completed consultations will appear here.';
         $showResetAction = $filterActive;
         require __DIR__ . '/_history_table.php';
         ?>
@@ -203,7 +204,9 @@ $renderPagination = static function () use ($pagination, $buildPageUrl): void {
         $showResetAction = false;
         require __DIR__ . '/_history_table.php';
         ?>
-        <?php $renderPagination(); ?>
+        <?php if ((int) ($pagination['total_items'] ?? 0) > 0): ?>
+          <?php $renderPagination(); ?>
+        <?php endif; ?>
       </div>
 
       <?php if ($closedRows !== []): ?>
@@ -229,8 +232,10 @@ $renderPagination = static function () use ($pagination, $buildPageUrl): void {
     <div class="ux-card">
       <?php
       $historyRows = $consultations;
-      $emptyTitle = 'No consultations matched the current filters';
-      $emptyText = 'Approved and completed consultations will appear here.';
+      $emptyTitle = $filterActive ? 'No matching consultations' : 'No consultations yet';
+      $emptyText = $filterActive
+          ? 'Try changing your search or filters.'
+          : 'Approved and completed consultations will appear here.';
       $showResetAction = true;
       require __DIR__ . '/_history_table.php';
       ?>

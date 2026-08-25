@@ -150,10 +150,13 @@ class Doctor
                 users.status,
                 users.created_at,
                 users.updated_at,
+                users.last_login_at,
+                users.force_password_reset,
                 doctor.phone,
                 doctor.gender,
                 doctor.professional_title,
                 doctor.specialization,
+                doctor.license_number,
                 doctor.employee_id,
                 doctor.signature_path,
                 doctor.profile_photo_path
@@ -207,16 +210,21 @@ class Doctor
             "SELECT
                 COUNT(*) AS total_doctors,
                 SUM(CASE WHEN users.status = 'active' THEN 1 ELSE 0 END) AS active_doctors,
-                SUM(CASE WHEN users.status = 'inactive' THEN 1 ELSE 0 END) AS inactive_doctors
+                SUM(CASE WHEN users.status = 'invitation_pending' THEN 1 ELSE 0 END) AS pending_doctors,
+                SUM(CASE WHEN users.status = 'inactive' THEN 1 ELSE 0 END) AS inactive_doctors,
+                SUM(CASE WHEN users.status IN ('inactive', 'suspended') THEN 1 ELSE 0 END) AS inactive_suspended_doctors
             FROM doctor
-            INNER JOIN users ON users.id = doctor.user_id"
+            INNER JOIN users ON users.id = doctor.user_id
+            WHERE users.status <> 'deleted'"
         );
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
         return [
             'total_doctors' => (int) ($row['total_doctors'] ?? 0),
             'active_doctors' => (int) ($row['active_doctors'] ?? 0),
+            'pending_doctors' => (int) ($row['pending_doctors'] ?? 0),
             'inactive_doctors' => (int) ($row['inactive_doctors'] ?? 0),
+            'inactive_suspended_doctors' => (int) ($row['inactive_suspended_doctors'] ?? 0),
         ];
     }
 
@@ -410,6 +418,7 @@ class Doctor
         $status = trim((string) ($filters['status'] ?? ''));
 
         $conditions[] = "roles.name = 'doctor'";
+        $conditions[] = "users.status <> 'deleted'";
 
         if ($search !== '') {
             $conditions[] = '(
@@ -427,7 +436,7 @@ class Doctor
             $parameters[':search_employee_id'] = $searchValue;
         }
 
-        if ($status !== '') {
+        if ($status !== '' && $status !== \App\Helpers\Status::USER_DELETED) {
             $conditions[] = 'users.status = :status';
             $parameters[':status'] = $status;
         }

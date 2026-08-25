@@ -106,7 +106,7 @@ $patient = $patient ?? [];
             <select class="form-select <?= isset($fieldErrors['status']) ? 'is-invalid' : '' ?>" id="status" name="status" required>
               <?php foreach ($statusOptions as $statusOption): ?>
                 <option value="<?= \App\Helpers\Helper::escape($statusOption) ?>" <?= ($formData['status'] ?? 'active') === $statusOption ? 'selected' : '' ?>>
-                  <?= \App\Helpers\Helper::escape(ucfirst($statusOption)) ?>
+                  <?= \App\Helpers\Helper::escape(\App\Helpers\Status::label($statusOption, \App\Helpers\Status::DOMAIN_USER)) ?>
                 </option>
               <?php endforeach; ?>
             </select>

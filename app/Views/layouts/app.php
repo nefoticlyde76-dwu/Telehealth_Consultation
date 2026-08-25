@@ -21,10 +21,17 @@
 <body class="<?= \App\Helpers\Helper::escape($bodyClass ?? 'public-layout') ?>">
   <script>
     (function () {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if ("startViewTransition" in document) {
+        try { sessionStorage.removeItem("mbpha-ux-pt"); } catch (e) {}
+        return;
+      }
       if (!document.body.classList.contains("public-layout")) return;
       try { sessionStorage.removeItem("mbpha-ux-pt"); } catch (e) {}
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      if (document.body.classList.contains("auth-login-layout")) return;
+      if (document.body.classList.contains("auth-login-layout")) {
+        document.body.classList.add("ux-page-enter");
+        return;
+      }
       document.body.classList.add("ux-pt-enter");
     })();
   </script>

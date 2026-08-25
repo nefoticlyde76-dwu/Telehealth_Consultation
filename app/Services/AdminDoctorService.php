@@ -5,12 +5,24 @@ namespace App\Services;
 use App\Core\Csrf;
 use App\Core\Database;
 use App\Helpers\Helper;
+use App\Helpers\Status;
 use App\Models\Doctor;
 use App\Models\User;
 
 class AdminDoctorService
 {
     public const PER_PAGE = 10;
+
+    /**
+     * Test-only hook used to prove user+doctor creation rolls back together.
+     * Production callers must leave this false.
+     */
+    public static bool $testFailDoctorProfileInsert = false;
+
+    public static function resetTestState(): void
+    {
+        self::$testFailDoctorProfileInsert = false;
+    }
 
     public static function getDashboardSummary(): array
     {
@@ -40,7 +52,7 @@ class AdminDoctorService
                 'total_items' => $totalDoctors,
                 'total_pages' => $totalPages,
             ],
-            'statusOptions' => self::getStatusOptions(),
+            'statusOptions' => Status::filterableUserKeys(),
         ];
     }
 
@@ -50,7 +62,35 @@ class AdminDoctorService
             return null;
         }
 
-        return Doctor::findManagementDetailByUserId($userId);
+        $doctor = Doctor::findManagementDetailByUserId($userId);
+        if ($doctor === null || Status::isDeletedUserStatus((string) ($doctor['status'] ?? ''))) {
+            return null;
+        }
+
+        return $doctor;
+    }
+
+    /**
+     * Presentation actions for the doctor management table.
+     * Backend endpoints still enforce the same pending-doctor restrictions.
+     *
+     * @param array<string, mixed> $doctor
+     * @return array{edit:bool,reset_password:bool,resend_invitation:bool,activate:bool,deactivate:bool}
+     */
+    public static function managementActions(array $doctor): array
+    {
+        $status = Status::normalizeKey(Status::DOMAIN_USER, (string) ($doctor['status'] ?? ''));
+        $isDeleted = Status::isDeletedUserStatus($status);
+        $isPending = Status::isInvitationPendingUserStatus($status);
+        $isActive = $status === Status::USER_ACTIVE;
+
+        return [
+            'edit' => !$isDeleted,
+            'reset_password' => !$isDeleted && !$isPending,
+            'resend_invitation' => !$isDeleted && $isPending,
+            'activate' => !$isDeleted && !$isPending && !$isActive,
+            'deactivate' => !$isDeleted && !$isPending && $isActive,
+        ];
     }
 
     public static function getDoctorFormData(?array $doctor = null): array
@@ -69,14 +109,14 @@ class AdminDoctorService
 
     public static function createDoctorAccount(array $input): array
     {
-        $formData = self::normalizeFormData($input);
-        $password = (string) ($input['password'] ?? '');
-        $confirmPassword = (string) ($input['confirm_password'] ?? '');
-        [$errors, $fieldErrors] = self::validateDoctorForm($formData, $password, $confirmPassword, true);
+        $formData = self::normalizeFormData($input, true);
+        [$errors, $fieldErrors] = self::validateDoctorForm($formData, '', '', true);
 
         if ($errors !== []) {
             return [
                 'success' => false,
+                'accountCreated' => false,
+                'invitationSent' => false,
                 'errors' => $errors,
                 'fieldErrors' => $fieldErrors,
                 'formData' => $formData,
@@ -88,6 +128,8 @@ class AdminDoctorService
         if ($roleId === null) {
             return [
                 'success' => false,
+                'accountCreated' => false,
+                'invitationSent' => false,
                 'errors' => ['The doctor role is not configured in the database.'],
                 'fieldErrors' => [],
                 'formData' => $formData,
@@ -99,14 +141,13 @@ class AdminDoctorService
         try {
             $db->beginTransaction();
 
-            $user = new User();
-            $user->role_id = $roleId;
-            $user->full_name = $formData['full_name'];
-            $user->email = $formData['email'];
-            $user->password = password_hash($password, PASSWORD_DEFAULT);
-            $user->status = $formData['status'];
+            $user = User::createInvitedDoctorUser([
+                'role_id' => $roleId,
+                'full_name' => $formData['full_name'],
+                'email' => $formData['email'],
+            ]);
 
-            if (!$user->save() || $user->id === null) {
+            if ($user === null || $user->id === null) {
                 throw new \RuntimeException('Unable to create the doctor user account.');
             }
 
@@ -118,16 +159,36 @@ class AdminDoctorService
             $doctor->specialization = $formData['specialization'];
             $doctor->employee_id = $formData['employee_id'] !== '' ? $formData['employee_id'] : null;
 
-            if (!$doctor->save()) {
+            if (self::$testFailDoctorProfileInsert || !$doctor->save()) {
                 throw new \RuntimeException('Unable to create the linked doctor profile.');
             }
 
             $db->commit();
+            AuditLogService::record(
+                'doctor_account_created',
+                'Administrator created a doctor account.',
+                AuditLogService::ENTITY_USER,
+                (int) $user->id,
+                'success',
+                ['subject_name' => $formData['full_name'], 'subject_role' => 'doctor']
+            );
+
+            $invitationSent = false;
+            $issued = DoctorInvitationService::issueToken((int) $user->id);
+            if (is_array($issued)) {
+                $sendResult = DoctorInvitationService::sendIssuedInvitation($issued);
+                $invitationSent = (bool) ($sendResult['success'] ?? false)
+                    && (bool) ($sendResult['smtp_accepted'] ?? false);
+            }
 
             return [
                 'success' => true,
+                'accountCreated' => true,
+                'invitationSent' => $invitationSent,
                 'doctorId' => $user->id,
-                'message' => 'Doctor account created successfully.',
+                'message' => $invitationSent
+                    ? 'Doctor account created successfully. A password setup invitation has been sent to the doctor\'s email.'
+                    : 'Doctor account was created, but the invitation email could not be sent. Please use Resend Invitation.',
             ];
         } catch (\Throwable $exception) {
             if ($db->inTransaction()) {
@@ -138,6 +199,8 @@ class AdminDoctorService
 
             return [
                 'success' => false,
+                'accountCreated' => false,
+                'invitationSent' => false,
                 'errors' => ['Doctor account creation is temporarily unavailable. Please try again later.'],
                 'fieldErrors' => [],
                 'formData' => $formData,
@@ -158,8 +221,9 @@ class AdminDoctorService
             ];
         }
 
-        $formData = self::normalizeFormData($input);
-        [$errors, $fieldErrors] = self::validateDoctorForm($formData, '', '', false, $userId);
+        $preserveInvitationPending = Status::isInvitationPendingUserStatus((string) ($existingDoctor['status'] ?? ''));
+        $formData = self::normalizeFormData($input, false, $preserveInvitationPending);
+        [$errors, $fieldErrors] = self::validateDoctorForm($formData, '', '', false, $userId, $preserveInvitationPending);
 
         if ($errors !== []) {
             return [
@@ -182,12 +246,18 @@ class AdminDoctorService
                 throw new \RuntimeException('The doctor account could not be loaded for editing.');
             }
 
-            $user->full_name = $formData['full_name'];
-            $user->email = $formData['email'];
-            $user->status = $formData['status'];
+            if ($preserveInvitationPending) {
+                if (!User::updateIdentity($userId, $formData['full_name'], $formData['email'])) {
+                    throw new \RuntimeException('The doctor user account could not be updated.');
+                }
+            } else {
+                $user->full_name = $formData['full_name'];
+                $user->email = $formData['email'];
+                $user->status = $formData['status'];
 
-            if (!$user->save()) {
-                throw new \RuntimeException('The doctor user account could not be updated.');
+                if (!$user->save()) {
+                    throw new \RuntimeException('The doctor user account could not be updated.');
+                }
             }
 
             $doctor->phone = $formData['phone'];
@@ -201,6 +271,14 @@ class AdminDoctorService
             }
 
             $db->commit();
+            AuditLogService::record(
+                'doctor_account_updated',
+                'Administrator updated a doctor account.',
+                AuditLogService::ENTITY_USER,
+                $userId,
+                'success',
+                ['subject_name' => $formData['full_name'], 'subject_role' => 'doctor']
+            );
 
             return [
                 'success' => true,
@@ -251,6 +329,22 @@ class AdminDoctorService
             ];
         }
 
+        if (Status::isDeletedUserStatus((string) ($doctor['status'] ?? ''))) {
+            return [
+                'success' => false,
+                'message' => 'A permanently deleted doctor account cannot be updated.',
+                'type' => 'warning',
+            ];
+        }
+
+        if (Status::isInvitationPendingUserStatus((string) ($doctor['status'] ?? ''))) {
+            return [
+                'success' => false,
+                'message' => 'This doctor account cannot be activated or deactivated until password setup is complete.',
+                'type' => 'warning',
+            ];
+        }
+
         if (($doctor['status'] ?? '') === $targetStatus) {
             return [
                 'success' => true,
@@ -263,6 +357,17 @@ class AdminDoctorService
             if (!User::updateStatus($userId, $targetStatus)) {
                 throw new \RuntimeException('The doctor account status update did not persist.');
             }
+            if ($targetStatus !== Status::USER_ACTIVE) {
+                SessionService::revokeAll($userId);
+            }
+            AuditLogService::record(
+                'doctor_status_updated',
+                'Administrator updated doctor account status to ' . $targetStatus . '.',
+                AuditLogService::ENTITY_USER,
+                $userId,
+                'success',
+                ['subject_name' => (string) ($doctor['full_name'] ?? ''), 'subject_role' => 'doctor']
+            );
 
             return [
                 'success' => true,
@@ -289,6 +394,15 @@ class AdminDoctorService
                 'success' => false,
                 'errors' => ['The requested doctor account could not be found.'],
                 'fieldErrors' => [],
+            ];
+        }
+
+        if (Status::isInvitationPendingUserStatus((string) ($doctor['status'] ?? ''))) {
+            return [
+                'success' => false,
+                'errors' => ['A password cannot be reset for a doctor whose invitation is still pending.'],
+                'fieldErrors' => [],
+                'doctor' => $doctor,
             ];
         }
 
@@ -333,6 +447,14 @@ class AdminDoctorService
             if (!User::updatePasswordHash($userId, password_hash($password, PASSWORD_DEFAULT))) {
                 throw new \RuntimeException('The doctor password reset did not persist.');
             }
+            AuditLogService::record(
+                'doctor_password_reset',
+                'Administrator reset a doctor account password.',
+                AuditLogService::ENTITY_USER,
+                $userId,
+                'success',
+                ['subject_name' => (string) ($doctor['full_name'] ?? ''), 'subject_role' => 'doctor']
+            );
 
             return [
                 'success' => true,
@@ -350,6 +472,36 @@ class AdminDoctorService
         }
     }
 
+    /**
+     * @return array{success:bool,invitationSent?:bool,type:string,message:string}
+     */
+    public static function resendDoctorInvitation(int $userId, string $csrfToken): array
+    {
+        if (!Csrf::verify($csrfToken)) {
+            return [
+                'success' => false,
+                'invitationSent' => false,
+                'type' => 'danger',
+                'message' => 'Unable to verify the request. Please refresh the page and try again.',
+            ];
+        }
+
+        $doctor = self::getDoctorDetail($userId);
+        if (
+            $doctor === null
+            || !Status::isInvitationPendingUserStatus((string) ($doctor['status'] ?? ''))
+        ) {
+            return [
+                'success' => false,
+                'invitationSent' => false,
+                'type' => 'warning',
+                'message' => 'The invitation could not be resent. Please verify that the doctor is still pending.',
+            ];
+        }
+
+        return DoctorInvitationService::resendInvitation($userId);
+    }
+
     public static function getGenderOptions(): array
     {
         return ['male', 'female', 'other'];
@@ -357,15 +509,15 @@ class AdminDoctorService
 
     public static function getStatusOptions(): array
     {
-        return ['active', 'inactive'];
+        return Status::assignableUserKeys();
     }
 
     private static function normalizeFilters(array $query): array
     {
         $search = trim((string) ($query['search'] ?? ''));
-        $status = strtolower(trim((string) ($query['status'] ?? '')));
+        $status = Status::normalizeKey(Status::DOMAIN_USER, (string) ($query['status'] ?? ''));
 
-        if (!in_array($status, self::getStatusOptions(), true)) {
+        if (!in_array($status, Status::filterableUserKeys(), true)) {
             $status = '';
         }
 
@@ -375,12 +527,16 @@ class AdminDoctorService
         ];
     }
 
-    private static function normalizeFormData(array $input): array
+    private static function normalizeFormData(array $input, bool $isCreate = false, bool $preserveInvitationPending = false): array
     {
-        $status = strtolower(trim((string) ($input['status'] ?? 'active')));
+        $status = Status::USER_INVITATION_PENDING;
 
-        if (!in_array($status, self::getStatusOptions(), true)) {
-            $status = 'active';
+        if (!$isCreate && !$preserveInvitationPending) {
+            $status = strtolower(trim((string) ($input['status'] ?? 'active')));
+
+            if (!in_array($status, self::getStatusOptions(), true)) {
+                $status = 'active';
+            }
         }
 
         return [
@@ -401,7 +557,8 @@ class AdminDoctorService
         string $password,
         string $confirmPassword,
         bool $isCreate,
-        ?int $excludeUserId = null
+        ?int $excludeUserId = null,
+        bool $preserveInvitationPending = false
     ): array {
         $errors = [];
         $fieldErrors = [];
@@ -459,22 +616,12 @@ class AdminDoctorService
             }
         }
 
-        if (!in_array($formData['status'], self::getStatusOptions(), true)) {
+        if (
+            !$isCreate
+            && !$preserveInvitationPending
+            && !in_array($formData['status'], self::getStatusOptions(), true)
+        ) {
             $fieldErrors['status'] = 'Please select a valid account status.';
-        }
-
-        if ($isCreate) {
-            if ($password === '') {
-                $fieldErrors['password'] = 'Initial password is required.';
-            } elseif (!Helper::isStrongPassword($password)) {
-                $fieldErrors['password'] = 'Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.';
-            }
-
-            if ($confirmPassword === '') {
-                $fieldErrors['confirm_password'] = 'Please confirm the initial password.';
-            } elseif ($confirmPassword !== $password) {
-                $fieldErrors['confirm_password'] = 'Passwords do not match.';
-            }
         }
 
         if ($fieldErrors !== []) {

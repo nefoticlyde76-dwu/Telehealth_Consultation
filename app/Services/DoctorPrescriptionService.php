@@ -114,11 +114,23 @@ class DoctorPrescriptionService
             $medications = [];
         }
 
-        return Prescription::createForCompletedConsultation(
+        $result = Prescription::createForCompletedConsultation(
             (int) $record['id'],
             $doctorId,
             (int) $record['patient_id'],
             $medications
         );
+
+        if (($result['success'] ?? false) === true) {
+            NotificationService::notifyPrescriptionCreated($consultationRequestId);
+            AuditLogService::record(
+                'prescription_created',
+                'Doctor created a prescription for a completed consultation.',
+                AuditLogService::ENTITY_PRESCRIPTION,
+                $consultationRequestId
+            );
+        }
+
+        return $result;
     }
 }

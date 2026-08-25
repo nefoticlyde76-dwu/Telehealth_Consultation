@@ -100,19 +100,11 @@ class ProfilePhotoService
 
         $existingPath = str_replace(['\\', "\0"], ['/', ''], $existingPath);
 
-        if (strpos($existingPath, $expectedPrefix) !== 0) {
+        if (strpos($existingPath, $expectedPrefix) !== 0 || !self::isSafePublicUploadPath($existingPath)) {
             return;
         }
 
-        $absolutePath = dirname(__DIR__, 2)
-            . DIRECTORY_SEPARATOR
-            . 'public'
-            . DIRECTORY_SEPARATOR
-            . str_replace('/', DIRECTORY_SEPARATOR, $existingPath);
-
-        if (is_file($absolutePath)) {
-            @unlink($absolutePath);
-        }
+        self::unlinkPublicRelativePath($existingPath);
     }
 
     public static function deleteStoredPath(?string $relativePath): void
@@ -122,14 +114,43 @@ class ProfilePhotoService
         }
 
         $safePath = str_replace(['\\', "\0"], ['/', ''], $relativePath);
-        $absolutePath = dirname(__DIR__, 2)
-            . DIRECTORY_SEPARATOR
-            . 'public'
-            . DIRECTORY_SEPARATOR
-            . str_replace('/', DIRECTORY_SEPARATOR, $safePath);
-
-        if (is_file($absolutePath)) {
-            @unlink($absolutePath);
+        if (!self::isSafePublicUploadPath($safePath)) {
+            return;
         }
+
+        self::unlinkPublicRelativePath($safePath);
+    }
+
+    private static function isSafePublicUploadPath(string $relativePath): bool
+    {
+        $relativePath = ltrim($relativePath, '/');
+
+        return $relativePath !== ''
+            && str_starts_with($relativePath, 'uploads/')
+            && !str_contains($relativePath, '..');
+    }
+
+    private static function unlinkPublicRelativePath(string $relativePath): void
+    {
+        $publicRoot = realpath(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public');
+        if ($publicRoot === false) {
+            return;
+        }
+
+        $absolutePath = $publicRoot
+            . DIRECTORY_SEPARATOR
+            . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+
+        if (!is_file($absolutePath)) {
+            return;
+        }
+
+        $resolved = realpath($absolutePath);
+        $publicPrefix = $publicRoot . DIRECTORY_SEPARATOR;
+        if ($resolved === false || strncasecmp($resolved, $publicPrefix, strlen($publicPrefix)) !== 0) {
+            return;
+        }
+
+        @unlink($resolved);
     }
 }

@@ -79,7 +79,7 @@ $summaryPartyMeta = trim(implode(' · ', array_filter([
                       title="<?= \App\Helpers\Helper::escape($reason) ?>"
                     <?php endif; ?>>
               <i class="bi bi-camera-video me-1"></i>
-              <?= $status === 'ended' ? 'Consultation Ended' : ($status === 'early' ? 'Not Yet Open' : 'Join Consultation') ?>
+              <?= \App\Helpers\Status::joinButtonLabel($status) ?>
             </button>
           <?php endif; ?>
         <?php

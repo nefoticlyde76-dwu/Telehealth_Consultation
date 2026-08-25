@@ -188,7 +188,6 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               <?php foreach ($slots as $slot): ?>
                 <?php
                 $slotId = (int) ($slot['id'] ?? 0);
-                $slotStatusBadge = ux_slot_status_badge_class('Available', false);
                 ?>
                 <tr>
                   <td>
@@ -221,7 +220,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
                     <span class="text-muted small"><?= \App\Helpers\Helper::escape((string) ($slot['notes'] ?? 'No notes provided')) ?></span>
                   </td>
                   <td>
-                    <span class="ux-badge <?= $slotStatusBadge ?>">Available</span>
+                    <?= ux_status_badge(\App\Helpers\Status::SLOT_AVAILABLE, \App\Helpers\Status::DOMAIN_SLOT) ?>
                   </td>
                   <td class="text-end">
                     <div class="ux-table__actions">

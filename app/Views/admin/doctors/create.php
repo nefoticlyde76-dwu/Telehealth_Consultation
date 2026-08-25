@@ -7,7 +7,9 @@ $genderOptions = $genderOptions ?? [];
 $statusOptions = $statusOptions ?? [];
 $csrfToken = $csrfToken ?? '';
 $statusMessage = $statusMessage ?? null;
-$showPasswordFields = true;
+$showPasswordFields = false;
+$showStatusField = false;
+$isCreateForm = true;
 ?>
 
 <section class="mb-4">
@@ -25,7 +27,7 @@ $showPasswordFields = true;
         Doctor Account Provisioning
       </span>
       <h2 class="ux-page-header__title h4 mb-2">Create a new doctor account</h2>
-      <p class="ux-page-header__subtitle text-muted mb-0">Provision a clinician login securely so the doctor can access the shared MBPHA TeleHealth platform.</p>
+      <p class="ux-page-header__subtitle text-muted mb-0">The administrator does not create a login password. The doctor receives an email invitation, creates their own password, then signs in through the shared /login page.</p>
     </div>
     <div class="ux-page-header__right">
       <a href="<?= \App\Helpers\Helper::url('/admin/doctors') ?>" class="btn btn-outline-primary btn-sm">

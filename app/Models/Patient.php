@@ -11,6 +11,7 @@ class Patient
     public ?string $dob = null;
     public ?string $gender = null;
     public ?string $address = null;
+    public ?string $phone = null;
     public ?string $medical_history = null;
     public ?string $profile_photo_path = null;
 
@@ -36,6 +37,7 @@ class Patient
         $patient->dob = $row['dob'] ?? null;
         $patient->gender = $row['gender'] ?? null;
         $patient->address = $row['address'] ?? null;
+        $patient->phone = $row['phone'] ?? null;
         $patient->medical_history = $row['medical_history'] ?? null;
         $patient->profile_photo_path = $row['profile_photo_path'] ?? null;
 
@@ -47,15 +49,16 @@ class Patient
         $db = Database::getInstance();
 
         if (self::findByUserId($this->user_id)) {
-            $stmt = $db->prepare("UPDATE patient SET dob = :dob, gender = :gender, address = :address, medical_history = :medical_history, profile_photo_path = :profile_photo_path WHERE user_id = :user_id");
+            $stmt = $db->prepare("UPDATE patient SET dob = :dob, gender = :gender, address = :address, phone = :phone, medical_history = :medical_history, profile_photo_path = :profile_photo_path WHERE user_id = :user_id");
         } else {
-            $stmt = $db->prepare("INSERT INTO patient (user_id, dob, gender, address, medical_history, profile_photo_path) VALUES (:user_id, :dob, :gender, :address, :medical_history, :profile_photo_path)");
+            $stmt = $db->prepare("INSERT INTO patient (user_id, dob, gender, address, phone, medical_history, profile_photo_path) VALUES (:user_id, :dob, :gender, :address, :phone, :medical_history, :profile_photo_path)");
         }
 
         $stmt->bindParam(':user_id', $this->user_id, PDO::PARAM_INT);
         $stmt->bindParam(':dob', $this->dob);
         $stmt->bindParam(':gender', $this->gender);
         $stmt->bindParam(':address', $this->address);
+        $stmt->bindParam(':phone', $this->phone);
         $stmt->bindParam(':medical_history', $this->medical_history);
         $stmt->bindParam(':profile_photo_path', $this->profile_photo_path);
 
@@ -73,9 +76,12 @@ class Patient
                 users.status,
                 users.created_at,
                 users.updated_at,
+                users.last_login_at,
+                users.force_password_reset,
                 patient.dob,
                 patient.gender,
                 patient.address,
+                patient.phone,
                 patient.medical_history,
                 patient.profile_photo_path
             FROM patient
@@ -100,7 +106,8 @@ class Patient
                 SUM(CASE WHEN users.status = 'active' THEN 1 ELSE 0 END) AS active_patients,
                 SUM(CASE WHEN users.status = 'inactive' THEN 1 ELSE 0 END) AS inactive_patients
             FROM patient
-            INNER JOIN users ON users.id = patient.user_id"
+            INNER JOIN users ON users.id = patient.user_id
+            WHERE users.status <> 'deleted'"
         );
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
@@ -184,6 +191,7 @@ class Patient
                 patient.dob,
                 patient.gender,
                 patient.address,
+                patient.phone,
                 patient.medical_history,
                 patient.profile_photo_path
             FROM patient
@@ -205,6 +213,7 @@ class Patient
         $status = trim((string) ($filters['status'] ?? ''));
 
         $conditions[] = "roles.name = 'patient'";
+        $conditions[] = "users.status <> 'deleted'";
 
         if ($search !== '') {
             $conditions[] = '(
@@ -218,7 +227,7 @@ class Patient
             $parameters[':search_address'] = $searchValue;
         }
 
-        if ($status !== '') {
+        if ($status !== '' && $status !== \App\Helpers\Status::USER_DELETED) {
             $conditions[] = 'users.status = :status';
             $parameters[':status'] = $status;
         }

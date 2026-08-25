@@ -6,13 +6,17 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
+use App\Helpers\Status;
 use App\Models\ConsultationRequest;
+use App\Services\AccountSecurityService;
 use App\Services\AdminConsultationService;
 use App\Services\AdminDoctorService;
 use App\Services\AdminPatientService;
 use App\Services\AdminProfileService;
+use App\Services\AuditLogService;
 use App\Services\AuthService;
 use App\Services\AdminUserService;
+use App\Services\NotificationService;
 
 class AdminController extends Controller
 {
@@ -28,7 +32,11 @@ class AdminController extends Controller
         $summary = $dashboardData['summary'];
         $doctorSummary = AdminDoctorService::getDashboardSummary();
         $patientSummary = AdminPatientService::getDashboardSummary();
-        $consultationDashboard = AdminConsultationService::getDashboardSummary();
+        $headerNotifications = NotificationService::getHeaderData((int) $user->id, 'admin');
+        $consultationDashboard = AdminConsultationService::getDashboardSummary(
+            (int) ($headerNotifications['unread_count'] ?? 0)
+        );
+        $recentAudit = AuditLogService::getDashboardRecent(5);
 
         $this->render('admin/dashboard', array_merge(
             $this->getAdminViewData($user, [
@@ -58,24 +66,27 @@ class AdminController extends Controller
                 'recentConsultationRequests' => $consultationDashboard['recentRequests'] ?? [],
                 'latestUsers' => $dashboardData['latestUsers'],
                 'charts' => $consultationDashboard['charts'] ?? [],
+                'headerNotifications' => $headerNotifications,
+                'recentNotifications' => array_slice($headerNotifications['recent'] ?? [], 0, 5),
+                'recentAudit' => $recentAudit,
                 'rightbar' => [
-                    'upcomingTitle' => 'Recent Activity',
+                    'upcomingTitle' => 'Recent Audit Activity',
                     'upcomingItems' => array_map(static function (array $activity): array {
                         return [
-                            'icon' => 'bi-activity',
+                            'icon' => $activity['icon'] ?? 'bi-journal-text',
                             'title' => (string) ($activity['title'] ?? ''),
                             'meta' => (string) ($activity['meta'] ?? ''),
                         ];
-                    }, $consultationDashboard['recentActivity'] ?? []),
+                    }, $recentAudit),
                     'quickActions' => [
-                        ['label' => 'Consultation Requests', 'url' => '/admin/consultation-requests', 'icon' => 'bi-clipboard2-check'],
-                        ['label' => 'User Management', 'url' => '/admin/users', 'icon' => 'bi-people'],
-                        ['label' => 'Doctor Accounts', 'url' => '/admin/doctors', 'icon' => 'bi-person-badge'],
+                        ['label' => 'Review Pending Requests', 'url' => \App\Helpers\Status::filteredListUrl('/admin/consultation-requests', \App\Helpers\Status::PENDING), 'icon' => 'bi-clipboard2-check'],
+                        ['label' => 'Consultation Queue', 'url' => '/admin/consultation-requests', 'icon' => 'bi-list-check'],
+                        ['label' => 'View Audit Activity', 'url' => '/admin/audit-logs', 'icon' => 'bi-journal-text'],
                     ],
                     'summaryStats' => [
                         ['label' => 'Pending', 'value' => (string) ((int) ($consultationDashboard['summary']['pending_requests'] ?? 0))],
                         ['label' => 'Approved', 'value' => (string) ((int) ($consultationDashboard['summary']['approved_requests'] ?? 0))],
-                        ['label' => 'Rejected', 'value' => (string) ((int) ($consultationDashboard['summary']['rejected_requests'] ?? 0))],
+                        ['label' => 'Completed', 'value' => (string) ((int) ($consultationDashboard['summary']['completed_requests'] ?? 0))],
                     ],
                 ],
             ]
@@ -105,8 +116,69 @@ class AdminController extends Controller
                 'pagination' => $pageData['pagination'],
                 'roleOptions' => $pageData['roleOptions'],
                 'statusOptions' => $pageData['statusOptions'],
+                'sortOptions' => $pageData['sortOptions'] ?? [],
                 'statusMessage' => Session::getFlash('status'),
                 'csrfToken' => Csrf::generate(),
+                'actorUserId' => (int) $user->id,
+            ]
+        ), 'layouts/dashboard');
+    }
+
+    public function auditLogs(): void
+    {
+        $user = $this->requireAdminUser();
+        if ($user === null) {
+            return;
+        }
+
+        $pageData = AuditLogService::getPageData($_GET);
+        $this->render('admin/audit_logs/index', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Activity & Audit Logs | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Activity & Audit Logs',
+                'dashboardDescription' => 'Centralized activity records for accountability and troubleshooting.',
+            ]),
+            [
+                'filters' => $pageData['filters'] ?? [],
+                'logs' => $pageData['logs'] ?? [],
+                'pagination' => $pageData['pagination'] ?? [],
+                'filterActive' => (bool) ($pageData['filterActive'] ?? false),
+                'actionOptions' => $pageData['actionOptions'] ?? [],
+                'roleOptions' => $pageData['roleOptions'] ?? [],
+                'dateOptions' => $pageData['dateOptions'] ?? [],
+                'sortOptions' => $pageData['sortOptions'] ?? [],
+                'userOptions' => $pageData['userOptions'] ?? [],
+                'statusMessage' => Session::getFlash('status'),
+            ]
+        ), 'layouts/dashboard');
+    }
+
+    public function showAuditLog(string $id): void
+    {
+        $user = $this->requireAdminUser();
+        if ($user === null) {
+            return;
+        }
+
+        $auditId = (int) $id;
+        $audit = AuditLogService::findDetailForAdmin($auditId);
+        if ($audit === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested audit event could not be found.',
+            ]);
+            Helper::redirect('/admin/audit-logs');
+            return;
+        }
+
+        $this->render('admin/audit_logs/show', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Audit Event Details | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Audit Event Details',
+                'dashboardDescription' => 'Review event metadata and accountability information.',
+            ]),
+            [
+                'audit' => $audit,
             ]
         ), 'layouts/dashboard');
     }
@@ -333,10 +405,15 @@ class AdminController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = AdminDoctorService::createDoctorAccount($_POST);
 
-            if ($result['success'] ?? false) {
+            if (($result['accountCreated'] ?? false) === true || ($result['success'] ?? false) === true) {
+                $invitationSent = (bool) ($result['invitationSent'] ?? false);
                 Session::flash('status', [
-                    'type' => 'success',
-                    'message' => $result['message'] ?? 'Doctor account created successfully.',
+                    'type' => $invitationSent ? 'success' : 'warning',
+                    'message' => $result['message'] ?? (
+                        $invitationSent
+                            ? 'Doctor account created successfully. A password setup invitation has been sent to the doctor\'s email.'
+                            : 'Doctor account was created, but the invitation email could not be sent. Please use Resend Invitation.'
+                    ),
                 ]);
                 Helper::redirect('/admin/doctors');
                 return;
@@ -351,7 +428,7 @@ class AdminController extends Controller
             $this->getAdminViewData($user, [
                 'title' => 'Create Doctor Account | MBPHA TeleHealth Consultation System',
                 'dashboardTitle' => 'Create Doctor Account',
-                'dashboardDescription' => 'Register a new clinician account with secure access managed by the administrator.',
+                'dashboardDescription' => 'Register a new clinician profile. The doctor will receive an email invitation to create their own password.',
             ]),
             [
                 'errors' => $errors,
@@ -435,6 +512,29 @@ class AdminController extends Controller
         $this->handleDoctorStatusUpdate((int) $id, 'inactive');
     }
 
+    public function resendDoctorInvitation(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/doctors');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $result = AdminDoctorService::resendDoctorInvitation((int) $id, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? (($result['success'] ?? false) ? 'success' : 'warning'),
+            'message' => $result['message'] ?? 'The invitation could not be resent. Please verify that the doctor is still pending.',
+        ]);
+
+        Helper::redirect('/admin/doctors');
+    }
+
     public function resetDoctorPassword(string $id): void
     {
         $user = $this->requireAdminUser();
@@ -450,6 +550,15 @@ class AdminController extends Controller
             Session::flash('status', [
                 'type' => 'warning',
                 'message' => 'The requested doctor account could not be found.',
+            ]);
+            Helper::redirect('/admin/doctors');
+            return;
+        }
+
+        if (Status::isInvitationPendingUserStatus((string) ($doctor['status'] ?? ''))) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'A password cannot be reset for a doctor whose invitation is still pending.',
             ]);
             Helper::redirect('/admin/doctors');
             return;
@@ -499,7 +608,7 @@ class AdminController extends Controller
         }
 
         $userId = (int) $id;
-        $managedUser = AdminUserService::getUserDetail($userId);
+        $managedUser = AdminUserService::getUserDetail($userId, (int) $user->id);
 
         if ($managedUser === null) {
             Session::flash('status', [
@@ -514,10 +623,105 @@ class AdminController extends Controller
             $this->getAdminViewData($user, [
                 'title' => 'User Details | MBPHA TeleHealth Consultation System',
                 'dashboardTitle' => 'User Details',
-                'dashboardDescription' => 'Review role, status, and account profile data for a specific user.',
+                'dashboardDescription' => 'Review role, status, and non-clinical account details.',
             ]),
             [
                 'managedUser' => $managedUser,
+                'csrfToken' => Csrf::generate(),
+                'actorUserId' => (int) $user->id,
+                'statusMessage' => Session::getFlash('status'),
+                'confirmationPhrase' => AccountSecurityService::CONFIRMATION_PHRASE,
+            ]
+        ), 'layouts/dashboard');
+    }
+
+    public function suspendUser(string $id): void
+    {
+        $this->handleUserStatusChange((int) $id, \App\Helpers\Status::USER_SUSPENDED);
+    }
+
+    public function deactivateUser(string $id): void
+    {
+        $this->handleUserStatusChange((int) $id, \App\Helpers\Status::USER_INACTIVE);
+    }
+
+    public function reactivateUser(string $id): void
+    {
+        $this->handleUserStatusChange((int) $id, \App\Helpers\Status::USER_ACTIVE);
+    }
+
+    public function forceUserPasswordReset(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/users');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+        if ($user === null || $user->id === null) {
+            return;
+        }
+
+        $result = AdminUserService::forcePasswordReset(
+            (int) $id,
+            (int) $user->id,
+            (string) ($_POST['_token'] ?? '')
+        );
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? 'danger',
+            'message' => $result['message'] ?? 'Unable to require a password reset.',
+        ]);
+        Helper::redirect('/admin/users/' . (int) $id);
+    }
+
+    public function resetUserPassword(string $id): void
+    {
+        $user = $this->requireAdminUser();
+        if ($user === null || $user->id === null) {
+            return;
+        }
+
+        $userId = (int) $id;
+        $managedUser = AdminUserService::getUserDetail($userId, (int) $user->id);
+        if ($managedUser === null) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => 'The requested user record could not be found.',
+            ]);
+            Helper::redirect('/admin/users');
+            return;
+        }
+
+        $errors = [];
+        $fieldErrors = [];
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $result = AdminUserService::resetUserPassword($userId, (int) $user->id, $_POST);
+            if ($result['success'] ?? false) {
+                Session::flash('status', [
+                    'type' => 'success',
+                    'message' => $result['message'] ?? 'Password reset successfully.',
+                ]);
+                Helper::redirect('/admin/users/' . $userId);
+                return;
+            }
+
+            $errors = $result['errors'] ?? [];
+            $fieldErrors = $result['fieldErrors'] ?? [];
+        }
+
+        $this->render('admin/users/reset_password', array_merge(
+            $this->getAdminViewData($user, [
+                'title' => 'Reset User Password | MBPHA TeleHealth Consultation System',
+                'dashboardTitle' => 'Reset Password',
+                'dashboardDescription' => 'Issue a secure replacement password for this account.',
+            ]),
+            [
+                'managedUser' => $managedUser,
+                'errors' => $errors,
+                'fieldErrors' => $fieldErrors,
+                'csrfToken' => Csrf::generate(),
             ]
         ), 'layouts/dashboard');
     }
@@ -536,7 +740,13 @@ class AdminController extends Controller
         }
 
         $userId = (int) $id;
-        $result = AdminUserService::deleteUserAccount($userId, (int) $user->id, (string) ($_POST['_token'] ?? ''));
+        $result = AdminUserService::deleteUserAccount(
+            $userId,
+            (int) $user->id,
+            (string) ($_POST['_token'] ?? ''),
+            (string) ($_POST['confirmation_phrase'] ?? ''),
+            (string) ($_POST['admin_password'] ?? '')
+        );
 
         Session::flash('status', [
             'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
@@ -544,6 +754,67 @@ class AdminController extends Controller
         ]);
 
         Helper::redirect('/admin/users');
+    }
+
+    public function deleteSelectedUsers(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/users');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+        if ($user === null || $user->id === null) {
+            return;
+        }
+
+        $ids = $_POST['user_ids'] ?? [];
+        if (!is_array($ids)) {
+            $ids = [];
+        }
+
+        $result = AdminUserService::deleteSelectedUserAccounts(
+            $ids,
+            (int) $user->id,
+            (string) ($_POST['_token'] ?? ''),
+            (string) ($_POST['confirmation_phrase'] ?? ''),
+            (string) ($_POST['admin_password'] ?? '')
+        );
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Selected user accounts could not be deleted.',
+        ]);
+
+        Helper::redirect('/admin/users');
+    }
+
+    private function handleUserStatusChange(int $userId, string $status): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/users');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+        if ($user === null || $user->id === null) {
+            return;
+        }
+
+        $result = AdminUserService::changeAccountStatus(
+            $userId,
+            (int) $user->id,
+            $status,
+            (string) ($_POST['_token'] ?? '')
+        );
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? 'danger',
+            'message' => $result['message'] ?? 'Account status could not be updated.',
+        ]);
+
+        $returnTo = Helper::safeInternalPath((string) ($_POST['return_to'] ?? ''), '/admin/users/' . $userId);
+        Helper::redirect($returnTo);
     }
 
     private function requireAdminUser(): ?\App\Models\User
@@ -575,6 +846,7 @@ class AdminController extends Controller
                 ['path' => '/admin/doctors', 'label' => 'Doctors', 'icon' => 'bi-person-badge-fill'],
                 ['path' => '/admin/patients', 'label' => 'Patients', 'icon' => 'bi-people'],
                 ['path' => '/admin/consultation-requests', 'label' => 'Consultation Requests', 'icon' => 'bi-clipboard2-check'],
+                ['path' => '/admin/audit-logs', 'label' => 'Audit Logs', 'icon' => 'bi-journal-text'],
                 ['path' => '/admin/profile', 'label' => 'Settings', 'icon' => 'bi-gear'],
             ],
             'sidebarStatusTitle' => 'Consultation oversight',
@@ -610,6 +882,9 @@ class AdminController extends Controller
                 'pagination' => $pageData['pagination'] ?? [],
                 'statusOptions' => $pageData['statusOptions'] ?? [],
                 'doctorOptions' => $pageData['doctorOptions'] ?? [],
+                'dateOptions' => $pageData['dateOptions'] ?? [],
+                'sortOptions' => $pageData['sortOptions'] ?? [],
+                'filterActive' => (bool) ($pageData['filterActive'] ?? false),
                 'statusMessage' => Session::getFlash('status'),
                 'csrfToken' => Csrf::generate(),
             ]

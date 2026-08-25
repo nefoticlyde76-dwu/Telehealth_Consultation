@@ -200,13 +200,31 @@ class DoctorClinicalDocumentationService
             ];
         }
 
-        return ConsultationRecord::completeConsultationForDoctor(
+        $result = ConsultationRecord::completeConsultationForDoctor(
             $consultationRequestId,
             $doctorId,
             $patientId,
             self::resolveConsultationDateTime($request),
             $fields
         );
+
+        if (($result['success'] ?? false) === true && ($result['type'] ?? '') === 'success') {
+            NotificationService::notifyConsultationCompleted($consultationRequestId);
+            AuditLogService::record(
+                'clinical_record_finalized',
+                'Doctor finalized the clinical record.',
+                AuditLogService::ENTITY_CONSULTATION_RECORD,
+                (int) ($result['record']['id'] ?? 0)
+            );
+            AuditLogService::record(
+                'consultation_completed',
+                'Doctor marked consultation as completed.',
+                AuditLogService::ENTITY_CONSULTATION_REQUEST,
+                $consultationRequestId
+            );
+        }
+
+        return $result;
     }
 
     /**

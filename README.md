@@ -301,7 +301,7 @@ Daily.co Prebuilt WebRTC integration wired to the approved consultation request 
   - Primary CTA "Join Consultation"
   - `#vc-alert-region` with `aria-live="polite"` for Bootstrap-flavored permission / network / room errors
   - `#vc-daily-frame-wrapper` container used for Daily Prebuilt
-- Custom stylesheet: [consultation-room.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-room.css) — dark navy frame container, belt-and-suspenders guarantee that the Daily iframe fills its wrapper (CSS `width:100%!important; height:100%!important` with `min-height: clamp(540px, 78vh, calc(100vh − 130px))`). Uses the TeleHealth design tokens `--ux-primary:#0F4C81`, `--ux-secondary:#2A9D8F`, `--ux-accent:#3CB371`
+- Custom stylesheet: [consultation-room.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-room.css) — dark navy frame container, belt-and-suspenders guarantee that the Daily iframe fills its wrapper (CSS `width:100%!important; height:100%!important` with `min-height: clamp(540px, 78vh, calc(100vh − 130px))`). Uses the TeleHealth design tokens `--ux-primary:#26658C`, `--ux-secondary:#2A9D8F`, `--ux-accent:#3CB371`
 - Daily.js CDN bootstrap pinned to jsdelivr for network reliability:
   - `<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@daily-co/daily-js@0.67.0/dist/daily-iframe.min.js" onerror=...>`
   - Custom `waitForDailyFactory(6000)` 80 ms poller resolves the factory through `window.DailyIframe` / `window.Daily` / `window.DailyJs` and early-aborts on `window.__dailyJsLoadFailed`
@@ -620,11 +620,11 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
 - Core palette is centralized in [theme.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/theme.css)
 - Shared UI refinements are applied through [style.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/style.css)
 - Colours are managed through CSS variables instead of page-level hardcoded values
-- Week 6 consultation-room visual language is defined in [consultation-room.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-room.css) and shares the tokens `--ux-primary:#0F4C81`, `--ux-secondary:#2A9D8F`, `--ux-accent:#3CB371`
+- Week 6 consultation-room visual language is defined in [consultation-room.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-room.css) and shares the tokens `--ux-primary:#26658C`, `--ux-secondary:#2A9D8F`, `--ux-accent:#3CB371`
 - Week 7 consultation-record and prescription screens use [consultation-record.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/consultation-record.css) and [prescription.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/prescription.css) with the same MBPHA palette
 - Shared dashboard workspace tokens for the administrator review queue live in [design-system.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/design-system.css)
 - Week 8 public, auth, and dashboard consistency styles live in [home.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/home.css), [auth-login.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/auth-login.css), [auth-register.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/auth-register.css), and [dashboard-ui.css](file:///c:/xampp/htdocs/Telehealth_Consultation_System/public/css/dashboard-ui.css)
-- Week 8 PDF templates use inline A4 portrait styles and the same MBPHA navy (`#0F4C81`) document header language
+- Week 8 PDF templates use inline A4 portrait styles and the same MBPHA navy (`#26658C`) document header language
 
 ## Testing Summary
 
