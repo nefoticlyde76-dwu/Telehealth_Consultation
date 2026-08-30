@@ -4,7 +4,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ## Current Status
 
-- Current Week: Week 8
+- Current Week: Week 9
 - Architecture: Custom MVC (PHP 8.x)
 - Database: MySQL with PDO prepared statements
 - Frontend: HTML5, CSS3, Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
@@ -25,6 +25,10 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Video Consultation Module: Week 6 end-to-end Daily.co Prebuilt video consultation integration (secure server-side creds, idempotent rooms, join-window, role tokens) implemented for approved appointments
 - Consultation Records and Prescriptions: Week 7 live clinical documentation, doctor-controlled completion, explicit prescription issuance, and read-only historical record views implemented
 - Consultation History and PDF Export: Week 8 authorized consultation-record and A4 portrait prescription PDF downloads, refined history actions, and supporting public/dashboard UI consistency implemented
+- Week 9 Stabilization: End-to-end integration testing, access-control and security review, functional bug fixes, and targeted UI refinement completed
+- Account Recovery: Public forgot-password / reset-password flow with hashed tokens, cooldown, and email delivery
+- Google Sign-In: Patient Google Identity Services sign-in (web client ID only; no client secret)
+- Notifications and Account Security: In-app notifications, preference controls, and session/password management
 - Design System: Official MBPHA TeleHealth Design System and colour palette applied through a shared theme layer
 - Branding: Official MBPHA TeleHealth logo applied across shared layouts, public pages, and dashboards
 
@@ -410,6 +414,21 @@ Authorized, read-only PDF downloads sit on top of the Week 7 finalized record an
 - Shared public intro, hero, workflow, and CTA partials
 - Login and registration stylesheets split for the same MBPHA visual language
 
+### Week 9 Testing, Security, and Refinement
+
+Week 9 stabilizes the completed MVP. It does not replace the MVC architecture or add out-of-scope modules.
+
+- Full HTTP integration test of the official path: register → login → availability → book → admin approve → join video → complete → record → prescription → PDF download
+- Access-control checks: patients, doctors, and administrators cannot open another role’s workspace or another user’s records, rooms, or PDFs
+- Security checks: CSRF on state-changing actions, session regeneration on login, generic login errors, SQL-injection resistance, and XSS escaping
+- Required-field indicators aligned on login, registration, booking, availability, and doctor create/edit forms
+- Small dashboard spacing and tap-height consistency pass for phone-size tables and action buttons
+- Public forgot-password and reset-password pages at `/forgot-password` and `/reset-password`
+- Patient Google sign-in on the login page (`POST /auth/google`); staff continue to use email and password
+- Dashboard calendar widget, welcome banner, and doctor/patient availability timetables
+- In-app notifications inbox and account notification preferences
+- `WEEK9_REPORT.md` documents the official Week 9 quality gate
+
 ### Profile Enhancement
 
 - Direct profile picture uploads without a cropping step
@@ -433,6 +452,7 @@ Telehealth_Consultation_System/
 │   ├── Models/
 │   │   ├── ConsultationRoom.php
 │   │   ├── ConsultationRecord.php
+│   │   ├── PasswordResetToken.php
 │   │   └── Prescription.php
 │   ├── Services/
 │   │   ├── DailyService.php
@@ -441,11 +461,17 @@ Telehealth_Consultation_System/
 │   │   ├── DoctorPrescriptionService.php
 │   │   ├── PatientClinicalRecordService.php
 │   │   ├── ConsultationRecordPdfService.php
-│   │   └── PrescriptionPdfService.php
+│   │   ├── PrescriptionPdfService.php
+│   │   ├── PasswordResetService.php
+│   │   └── GoogleAuthService.php
 │   └── Views/
 │       ├── admin/
 │       │   └── consultation_requests/
 │       ├── auth/
+│       │   ├── login.php
+│       │   ├── register.php
+│       │   ├── forgot_password.php
+│       │   └── reset_password.php
 │       ├── documents/
 │       │   ├── consultation_record_pdf.php
 │       │   └── prescription_pdf.php
@@ -479,7 +505,17 @@ Telehealth_Consultation_System/
 │       ├── 011_add_phone_to_patient_table.sql
 │       ├── 015_alter_consultation_records_live_draft.sql
 │       ├── 016_consultation_completion_and_prescription_quantity.sql
-│       └── 017_drop_consultation_ai_reviews_table.sql
+│       ├── 017_drop_consultation_ai_reviews_table.sql
+│       ├── 018_create_notifications_table.sql
+│       ├── 019_upgrade_audit_logs_for_centralized_activity.sql
+│       ├── 020_allow_null_user_password_for_invitation.sql
+│       ├── 021_create_doctor_password_setup_tokens_table.sql
+│       ├── 022_add_sent_at_to_doctor_password_setup_tokens.sql
+│       ├── 023_ensure_consultation_records_and_prescriptions.sql
+│       ├── 024_account_management_status_sessions_preferences.sql
+│       ├── 025_add_google_identity_to_users.sql
+│       ├── 026_add_invitation_pending_to_users_status.sql
+│       └── 027_create_password_reset_tokens_table.sql
 ├── public/
 │   ├── css/
 │   │   ├── consultation-room.css
@@ -489,11 +525,15 @@ Telehealth_Consultation_System/
 │   │   ├── dashboard-ui.css
 │   │   ├── home.css
 │   │   ├── auth-login.css
-│   │   └── auth-register.css
+│   │   ├── auth-register.css
+│   │   ├── mbpha-calendar.css
+│   │   └── mbpha-schedule.css
 │   ├── js/
 │   │   ├── consultation-room.js
 │   │   ├── consultation-clinical-record.js
-│   │   └── consultation-prescription.js
+│   │   ├── consultation-prescription.js
+│   │   ├── google-auth.js
+│   │   └── mbpha-schedule.js
 │   └── index.php
 ├── routes/
 ├── bin/
@@ -508,7 +548,8 @@ Telehealth_Consultation_System/
 ├── WEEK5_REPORT.md
 ├── WEEK6_REPORT.md
 ├── WEEK7_REPORT.md
-└── WEEK8_REPORT.md
+├── WEEK8_REPORT.md
+└── WEEK9_REPORT.md
 ```
 
 ## Installation
@@ -530,6 +571,8 @@ copy .env.example .env
 
 4. Update `.env` with your local database credentials and application URL.
    - For typical XAMPP local setups, use `DB_HOST=localhost`.
+   - Optional: set `MAIL_*` values so forgot-password emails can be sent. Leave them empty to keep mail in the local log driver.
+   - Optional: set `GOOGLE_CLIENT_ID` (web client ID only) to enable patient Google sign-in. No Google client secret is used.
 5. **Configure Daily.co for the Week 6 video module (optional for Weeks 1-5):**
    - Create an account at `https://dashboard.daily.co/` and create a subdomain
    - Paste the API key + domain into `.env`:
@@ -553,6 +596,16 @@ mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
 mysql -u root -p < database/migrations/015_alter_consultation_records_live_draft.sql
 mysql -u root -p < database/migrations/016_consultation_completion_and_prescription_quantity.sql
 mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sql
+mysql -u root -p < database/migrations/018_create_notifications_table.sql
+mysql -u root -p < database/migrations/019_upgrade_audit_logs_for_centralized_activity.sql
+mysql -u root -p < database/migrations/020_allow_null_user_password_for_invitation.sql
+mysql -u root -p < database/migrations/021_create_doctor_password_setup_tokens_table.sql
+mysql -u root -p < database/migrations/022_add_sent_at_to_doctor_password_setup_tokens.sql
+mysql -u root -p < database/migrations/023_ensure_consultation_records_and_prescriptions.sql
+mysql -u root -p < database/migrations/024_account_management_status_sessions_preferences.sql
+mysql -u root -p < database/migrations/025_add_google_identity_to_users.sql
+mysql -u root -p < database/migrations/026_add_invitation_pending_to_users_status.sql
+mysql -u root -p < database/migrations/027_create_password_reset_tokens_table.sql
 ```
 
 8. Open the application using the configured `APP_URL`.
@@ -562,6 +615,8 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
 - Public entry point is the landing page.
 - Patients register through the public registration page.
 - Patients, doctors, and administrators use the shared login page.
+- Patients may also sign in with Google when `GOOGLE_CLIENT_ID` is set. Google sign-in is for patients only.
+- Forgot password is available at `/forgot-password`. Reset links expire and do not create a session or auto-login.
 - Successful login redirects each user to the correct role dashboard.
 - Logout is handled through a secure POST request with CSRF protection.
 - Default seeded administrator account after running the migration:
@@ -705,6 +760,10 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
   - `php bin/test_week8_day4.php` — 98 passed (authorization, draft/final gates, cross-user PDF rejection, history download labels)
   - Combined Week 7 + Week 8 QA pass: 329 passed, 0 failed
   - PDF generation does not insert or update `consultation_records` or `prescriptions`
+- Verified the Week 9 integration, access-control, and security suite:
+  - `php bin/test_week9_integration.php` — 152 passed (end-to-end HTTP path, role isolation, CSRF, injection, XSS)
+  - Week 7 and Week 8 suites were re-run and kept passing
+  - Combined Week 7 + Week 8 + Week 9 integration this QA pass: 488 passed, 0 failed
 
 ## Known Environment Requirements
 
@@ -725,7 +784,7 @@ mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sq
 - Week 6: Video consultation (Daily.co Prebuilt integration, idempotent rooms, join-window enforcement, role tokens, consultation-room UI, admin approval transaction consistency) — completed
 - Week 7: Consultation records and prescription module — completed
 - Week 8: Consultation history and PDF export — completed
-- Week 9: Testing, security review, bug fixing, and UI refinement
+- Week 9: Testing, security review, bug fixing, and UI refinement — completed
 - Week 10: Deployment, documentation, and final testing
 
 ## Repository Notes
