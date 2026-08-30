@@ -25,6 +25,3 @@ cache/
 
 public/uploads/**
 !public/uploads/.htaccess
-
-# Deployment archives can include a production .env. Never commit them.
-deployment/*.zip

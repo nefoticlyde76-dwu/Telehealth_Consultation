@@ -8,7 +8,7 @@
 
 ## Week 9 Objective
 
-The objective of Week 9 is to stabilize the completed MVP so that the system is tested, secure, and presentable before Week 10 deployment preparation.
+The objective of Week 9 is to stabilize the completed MVP so that the system is tested, secure, and presentable before Week 10 documentation and final testing.
 
 Week 9 has exactly four official requirements:
 
@@ -23,8 +23,7 @@ Week 9 is a testing, stabilization, security, and refinement phase. It does not 
 
 The following were intentionally not implemented in Week 9 (deferred per the approved proposal):
 
-- deployment, hosting, and production environment cutover (Week 10)
-- final user/admin documentation and handover pack (Week 10)
+- deployment, documentation, and final testing (Week 10)
 - electronic medical records beyond this consultation’s record
 - laboratory, billing, pharmacy inventory, or messaging modules
 
@@ -176,7 +175,7 @@ Week 7 and Week 8 scripts were not deleted or replaced.
 
 ### Remaining issues
 
-- Local `.env` still has `APP_DEBUG=true`. The production ErrorHandler path hides stack traces, but Week 10 deployment should set `APP_DEBUG=false`.
+- Local `.env` still has `APP_DEBUG=true`. The production ErrorHandler path hides stack traces, but a production `.env` should set `APP_DEBUG=false`.
 - `composer.lock` is slightly behind `composer.json`. No packages were added or updated in Week 9.
 - Phone/tablet/desktop layout rules were verified from CSS and HTTP-rendered markup. A live hardware-device browser pass was not available in this session.
 - Physical printer output was not re-checked. Week 8 A4 portrait PDF generation remains in place and passed live HTTP download tests.
@@ -187,10 +186,9 @@ Week 9 does not include Week 10 work.
 
 ### Week 10
 
-- Deployment preparation
-- Production configuration (`APP_DEBUG=false`, secrets only in environment)
-- Final documentation and handover
-- Final testing on the deployment target
+- Deployment
+- Documentation
+- Final testing
 
 ## Current Status
 
