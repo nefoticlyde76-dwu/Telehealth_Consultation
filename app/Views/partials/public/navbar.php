@@ -23,7 +23,9 @@ $isNavActive = static function (string $path) use ($currentPath): bool {
 $loginActive = $currentPath === '/login';
 $registerActive = $currentPath === '/register';
 $passwordSetupActive = str_starts_with($currentPath, '/doctor/setup-password');
-$isAuthPage = $loginActive || $registerActive || $passwordSetupActive;
+$forgotActive = $currentPath === '/forgot-password';
+$resetActive = str_starts_with($currentPath, '/reset-password');
+$isAuthPage = $loginActive || $registerActive || $passwordSetupActive || $forgotActive || $resetActive;
 ?>
 <?php if (!$isAuthPage): ?>
   <div class="public-agh-layer" aria-hidden="true"></div>

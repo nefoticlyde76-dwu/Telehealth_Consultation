@@ -470,13 +470,15 @@ try {
         'name' => 'Should Not Resurrect',
     ]);
     $deletedAuth = GoogleAuthService::authenticate($deletedToken);
-    $deletedAfter = User::findByGoogleSub($deletedSub);
-    expect_true($deletedAuth === null, 'Deleted Google identity is not resurrected');
-    expect_true(GoogleAuthService::lastFailureReason() === GoogleAuthService::REASON_ACCOUNT_DELETED, 'Deleted Google identity uses account_deleted');
-    expect_true($deletedAfter !== null && $deletedAfter->status === 'deleted', 'Deleted account status remains deleted');
-    expect_true($deletedAfter !== null && $deletedAfter->google_sub === $deletedSub, 'Deleted google_sub is left unchanged');
-    expect_true(User::findByEmail('reuse.deleted+' . $suffix . '@example.com') === null, 'Deleted google_sub does not create a replacement user');
-    expect_true(!AuthService::isAuthenticated(), 'Deleted Google identity does not create a session');
+    $deletedHolderAfter = User::findById((int) $deletedUser->id);
+    $replacement = User::findByGoogleSub($deletedSub);
+    expect_true($deletedHolderAfter !== null && $deletedHolderAfter->status === 'deleted', 'Deleted account status remains deleted');
+    expect_true($deletedHolderAfter !== null && $deletedHolderAfter->google_sub === null, 'Deleted google_sub is released so it can be reused');
+    expect_true($deletedAuth instanceof User && (int) $deletedAuth->id !== (int) $deletedUser->id, 'Same Google identity can register a new patient after deletion');
+    expect_true($replacement instanceof User && (int) $replacement->id === (int) $deletedAuth->id, 'Replacement patient owns the released google_sub');
+    expect_true($replacement !== null && $replacement->status === 'active' && $replacement->getRole() === 'patient', 'Replacement Google patient is an active patient');
+    track_user($deletedAuth);
+    forget_login();
 
     $suspended = AuthService::registerGooglePatient([
         'sub' => 'suspended-google-sub-' . $suffix,

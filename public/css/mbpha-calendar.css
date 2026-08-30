@@ -1,0 +1,310 @@
+/* ============================================================
+   MBPHA TeleHealth — Dashboard calendar widget
+   Scoped under .mbpha-cal. Tokens from theme.css.
+   ============================================================ */
+
+.mbpha-cal,
+.mbpha-cal *,
+.mbpha-cal *::before,
+.mbpha-cal *::after {
+  box-sizing: border-box;
+}
+
+.mbpha-cal {
+  --mbpha-cal-t: 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  padding: 16px 14px 14px;
+  border-radius: var(--ds-radius-lg);
+  background: var(--white);
+  border: 1px solid var(--medium-gray);
+  box-shadow: var(--ds-shadow-overlay);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .mbpha-cal {
+    background: var(--surface-glass);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border-color: rgba(var(--medium-gray-rgb), 0.85);
+    box-shadow: var(--ds-shadow-overlay), inset 0 1px 0 rgba(var(--white-rgb), 0.7);
+  }
+}
+
+.mbpha-cal__hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 8px;
+}
+
+.mbpha-cal__nav {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--ds-radius-sm);
+  background: var(--white);
+  color: var(--dark-navy);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--mbpha-cal-t), border-color var(--mbpha-cal-t), color var(--mbpha-cal-t);
+}
+
+.mbpha-cal__nav:hover {
+  background: var(--pale-blue);
+  border-color: var(--medical-blue);
+  color: var(--medical-blue);
+}
+
+.mbpha-cal__nav:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
+}
+
+.mbpha-cal__month-wrap {
+  text-align: center;
+  min-width: 0;
+}
+
+.mbpha-cal__month {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy-black);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.mbpha-cal__year {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dark-gray);
+}
+
+.mbpha-cal__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.mbpha-cal__weekdays span {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dark-gray);
+  letter-spacing: 0.02em;
+  padding: 4px 0;
+}
+
+.mbpha-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.mbpha-cal__cell {
+  aspect-ratio: 1;
+  min-height: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ds-radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dark-navy);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  position: relative;
+  padding: 0;
+  transition: background var(--mbpha-cal-t), color var(--mbpha-cal-t), box-shadow var(--mbpha-cal-t);
+}
+
+.mbpha-cal__cell:hover:not(:disabled) {
+  background: var(--pale-blue);
+  color: var(--medical-blue);
+}
+
+.mbpha-cal__cell:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
+}
+
+.mbpha-cal__cell.is-other {
+  color: var(--dark-gray);
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+}
+
+.mbpha-cal__cell.is-today {
+  color: var(--medical-blue);
+  box-shadow: 0 0 0 2px var(--medical-blue);
+}
+
+.mbpha-cal__cell.is-sel {
+  background: var(--pale-blue);
+  color: var(--navy-black);
+  box-shadow: 0 0 0 1px rgba(var(--medical-blue-rgb), 0.45);
+}
+
+.mbpha-cal__cell.is-today.is-sel {
+  background: rgba(var(--medical-blue-rgb), 0.12);
+  color: var(--medical-blue);
+  box-shadow: 0 0 0 2px var(--medical-blue);
+}
+
+.mbpha-cal__dot {
+  position: absolute;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--medical-blue);
+}
+
+.mbpha-cal__events-hd {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dark-gray);
+  margin-bottom: 8px;
+}
+
+.mbpha-cal__events {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-height: 56px;
+}
+
+.mbpha-cal__ev {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--ds-radius-md);
+  padding: 8px 10px;
+  border-left-width: 3px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+a.mbpha-cal__ev:hover {
+  background: var(--pale-blue);
+  border-color: rgba(var(--medical-blue-rgb), 0.28);
+}
+
+a.mbpha-cal__ev:focus-visible {
+  outline: 0;
+  box-shadow: var(--shadow-focus);
+}
+
+.mbpha-cal__ev-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dark-gray);
+  white-space: nowrap;
+  min-width: 42px;
+}
+
+.mbpha-cal__ev-body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mbpha-cal__ev-name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--navy-black);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mbpha-cal__ev-status {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dark-gray);
+  margin-top: 1px;
+}
+
+.mbpha-cal__ev-none {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--dark-gray);
+  text-align: center;
+  padding: 10px 0 4px;
+}
+
+.dashboard-layout .rightbar-section--calendar,
+.rightbar-section--calendar {
+  flex: 0 0 auto;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+/* Existing .rightbar-section > div:first-child rule is a horizontal toolbar.
+   The calendar widget must stay a vertical stack. */
+.rightbar-section.rightbar-section--calendar > div:first-child.mbpha-cal {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  margin-bottom: 0;
+  flex: 0 0 auto;
+}
+
+.dashboard-layout .dashboard-rightbar-offcanvas .offcanvas-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dashboard-layout .dashboard-rightbar-offcanvas .offcanvas-body > .rightbar-section {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 575.98px) {
+  .mbpha-cal {
+    padding: 14px 12px 12px;
+  }
+
+  .mbpha-cal__cell {
+    min-height: 32px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbpha-cal__cell,
+  .mbpha-cal__nav,
+  a.mbpha-cal__ev {
+    transition: none;
+  }
+}

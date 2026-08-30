@@ -22,6 +22,7 @@ foreach ($stats as $statItem) {
 
 $attentionText = 'No pending consultation requests right now.';
 $attentionIcon = 'bi-check-circle';
+$attentionTone = 'success';
 $attentionAction = [
     'label' => 'View Queue',
     'url' => '/admin/consultation-requests',
@@ -32,6 +33,7 @@ if ($adminPending > 0) {
         ? '1 consultation request is waiting for review.'
         : $adminPending . ' consultation requests are waiting for review.';
     $attentionIcon = 'bi-hourglass-split';
+    $attentionTone = 'warning';
     $attentionAction = [
         'label' => 'Review Pending Requests',
         'url' => Status::filteredListUrl('/admin/consultation-requests', Status::PENDING),
@@ -42,6 +44,7 @@ if ($adminPending > 0) {
         ? 'You have 1 unread notification.'
         : 'You have ' . $unreadCount . ' unread notifications.';
     $attentionIcon = 'bi-bell';
+    $attentionTone = 'info';
     $attentionAction = ['label' => 'View Notifications', 'url' => '/notifications?read_state=unread', 'icon' => 'bi-bell'];
 }
 
@@ -100,10 +103,23 @@ foreach ($recentNotifications as $item) {
         'unread' => !empty($item['unread']),
     ];
 }
+
+$welcomePills = [
+    [
+        'icon' => 'bi-hourglass-split',
+        'label' => $adminPending === 1 ? '1 pending request' : $adminPending . ' pending requests',
+    ],
+    [
+        'icon' => 'bi-bell',
+        'label' => $unreadCount === 1 ? '1 unread notification' : $unreadCount . ' unread notifications',
+    ],
+];
+$welcomeIcon = 'bi-shield-check';
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
+<?php require __DIR__ . '/../partials/dashboard/welcome_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/attention_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/action_cards.php'; ?>
@@ -111,13 +127,18 @@ foreach ($recentNotifications as $item) {
 <section class="mb-4">
   <div class="row g-4">
     <div class="col-xl-8">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Pending Consultation Requests</h2>
-            <p class="text-muted mb-0 small">Requests that need an administrator decision.</p>
-          </div>
-          <a href="<?= Helper::url(Status::filteredListUrl('/admin/consultation-requests', Status::PENDING)) ?>" class="btn btn-outline-primary btn-sm">View All Pending</a>
+          <?php
+          $sectionTitle = 'Pending Consultation Requests';
+          $sectionSubtitle = 'Requests that need an administrator decision.';
+          $sectionIcon = 'bi-clipboard2-check';
+          $sectionTone = 'pending';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url(Status::filteredListUrl('/admin/consultation-requests', Status::PENDING)) ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All Pending
+          </a>
         </div>
         <div class="ux-card__body">
           <?php if ($recentConsultationRequests === []): ?>
@@ -166,7 +187,9 @@ foreach ($recentNotifications as $item) {
                       <td><?= Helper::escape(Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
                       <td><?= ux_status_badge((string) ($request['status'] ?? Status::PENDING)) ?></td>
                       <td class="text-end">
-                        <a href="<?= Helper::url('/admin/consultation-requests/' . (int) ($request['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">Review</a>
+                        <a href="<?= Helper::url('/admin/consultation-requests/' . (int) ($request['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="bi bi-eye me-1" aria-hidden="true"></i>Review
+                        </a>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -179,21 +202,25 @@ foreach ($recentNotifications as $item) {
     </div>
 
     <div class="col-xl-4">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Notifications</h2>
-            <p class="text-muted mb-0 small">Recent updates that may need attention.</p>
-          </div>
-          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">View All</a>
+          <?php
+          $sectionTitle = 'Notifications';
+          $sectionSubtitle = 'Recent updates that may need attention.';
+          $sectionIcon = 'bi-bell';
+          $sectionTone = 'info';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All
+          </a>
         </div>
         <div class="ux-card__body">
           <?php
-          $activityItems = $notificationItems;
           $activityEmptyTitle = "You're all caught up";
           $activityEmptyText = "You don't have any notifications yet.";
           $activityEmptyIcon = 'bi-bell';
-          require __DIR__ . '/../partials/shared/activity_list.php';
+          require __DIR__ . '/../partials/shared/notification_preview_table.php';
           ?>
         </div>
       </div>
@@ -204,34 +231,78 @@ foreach ($recentNotifications as $item) {
 <section class="mb-4">
   <div class="row g-4">
     <div class="col-xl-8">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Recent Audit Activity</h2>
-            <p class="text-muted mb-0 small">A short record of recent accountable events.</p>
-          </div>
-          <a href="<?= Helper::url('/admin/audit-logs') ?>" class="btn btn-outline-primary btn-sm">View Audit Logs</a>
+          <?php
+          $sectionTitle = 'Recent Audit Activity';
+          $sectionSubtitle = 'A short record of recent accountable events.';
+          $sectionIcon = 'bi-journal-text';
+          $sectionTone = 'navy';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url('/admin/audit-logs') ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View Audit Logs
+          </a>
         </div>
         <div class="ux-card__body">
-          <?php
-          $activityItems = $recentAudit;
-          $activityEmptyTitle = 'No activity found';
-          $activityEmptyText = 'Audit records will appear here as the system is used.';
-          $activityEmptyIcon = 'bi-journal-text';
-          require __DIR__ . '/../partials/shared/activity_list.php';
-          ?>
+          <?php if ($recentAudit === []): ?>
+            <?php
+            $emptyIcon = 'bi-journal-text';
+            $emptyTitle = 'No activity found';
+            $emptyText = 'Audit records will appear here as the system is used.';
+            $emptyActions = '';
+            $emptyCompact = true;
+            require __DIR__ . '/../partials/shared/empty_state.php';
+            ?>
+          <?php else: ?>
+            <div class="ux-table-wrapper">
+              <table class="ux-table align-middle mb-0">
+                <caption class="visually-hidden">Recent audit events</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Event</th>
+                    <th scope="col">Detail</th>
+                    <th scope="col">When</th>
+                    <th scope="col" class="text-end">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($recentAudit as $auditItem): ?>
+                    <tr>
+                      <td><?= Helper::escape((string) ($auditItem['title'] ?? 'Activity')) ?></td>
+                      <td class="text-muted"><?= Helper::escape((string) ($auditItem['description'] ?? '')) ?></td>
+                      <td class="text-muted small text-nowrap"><?= Helper::escape((string) ($auditItem['meta'] ?? '')) ?></td>
+                      <td class="text-end">
+                        <?php $auditUrl = trim((string) ($auditItem['url'] ?? '')); ?>
+                        <?php if ($auditUrl !== ''): ?>
+                          <a href="<?= Helper::url($auditUrl) ?>" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye me-1" aria-hidden="true"></i>View
+                          </a>
+                        <?php endif; ?>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
 
     <div class="col-xl-4">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Latest Users</h2>
-            <p class="text-muted mb-0 small">Recently registered accounts.</p>
-          </div>
-          <a href="<?= Helper::url('/admin/users') ?>" class="btn btn-outline-primary btn-sm">Manage Users</a>
+          <?php
+          $sectionTitle = 'Latest Users';
+          $sectionSubtitle = 'Recently registered accounts.';
+          $sectionIcon = 'bi-people';
+          $sectionTone = 'navy';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url('/admin/users') ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-people me-1" aria-hidden="true"></i>Manage Users
+          </a>
         </div>
         <div class="ux-card__body">
           <?php if ($latestUsers === []): ?>
@@ -244,22 +315,34 @@ foreach ($recentNotifications as $item) {
             require __DIR__ . '/../partials/shared/empty_state.php';
             ?>
           <?php else: ?>
-            <div class="ux-list">
-              <?php foreach ($latestUsers as $latestUser): ?>
-                <div class="ux-list__item d-flex justify-content-between align-items-center gap-3">
-                  <?php
-                  $personName = (string) ($latestUser['full_name'] ?? 'User');
-                  $personPhoto = $latestUser['profile_photo_path'] ?? null;
-                  $personMeta = (string) ($latestUser['email'] ?? '');
-                  $personSize = 'sm';
-                  require __DIR__ . '/../partials/shared/person_row.php';
-                  ?>
-                  <div class="text-end">
-                    <?= ux_status_badge((string) ($latestUser['status'] ?? ''), Status::DOMAIN_USER, ['class' => 'mb-2']) ?>
-                    <span class="d-block small text-muted"><?= Helper::escape(ucfirst((string) ($latestUser['role_name'] ?? 'user'))) ?></span>
-                  </div>
-                </div>
-              <?php endforeach; ?>
+            <div class="ux-table-wrapper">
+              <table class="ux-table align-middle mb-0">
+                <caption class="visually-hidden">Recently registered user accounts</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">User</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($latestUsers as $latestUser): ?>
+                    <tr>
+                      <td>
+                        <?php
+                        $personName = (string) ($latestUser['full_name'] ?? 'User');
+                        $personPhoto = $latestUser['profile_photo_path'] ?? null;
+                        $personMeta = (string) ($latestUser['email'] ?? '');
+                        $personSize = 'sm';
+                        require __DIR__ . '/../partials/shared/person_row.php';
+                        ?>
+                      </td>
+                      <td class="text-muted"><?= Helper::escape(ucfirst((string) ($latestUser['role_name'] ?? 'user'))) ?></td>
+                      <td><?= ux_status_badge((string) ($latestUser['status'] ?? ''), Status::DOMAIN_USER) ?></td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
             </div>
           <?php endif; ?>
         </div>

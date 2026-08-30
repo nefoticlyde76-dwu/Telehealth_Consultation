@@ -35,6 +35,7 @@ class AuditLogService
             'availability_created' => ['label' => 'Availability Created', 'category' => 'availability', 'severity' => 'info'],
             'availability_updated' => ['label' => 'Availability Updated', 'category' => 'availability', 'severity' => 'info'],
             'availability_deleted' => ['label' => 'Availability Deleted', 'category' => 'availability', 'severity' => 'warning'],
+            'availability_week_saved' => ['label' => 'Weekly Availability Saved', 'category' => 'availability', 'severity' => 'info'],
             'doctor_account_created' => ['label' => 'Doctor Account Created', 'category' => 'administration', 'severity' => 'info'],
             'doctor_invitation_resent' => ['label' => 'Doctor Invitation Resent', 'category' => 'administration', 'severity' => 'info'],
             'doctor_password_setup_completed' => ['label' => 'Doctor Password Setup Completed', 'category' => 'authentication', 'severity' => 'info'],

@@ -8,7 +8,10 @@ $currentPage = max(1, (int) ($pagination['current_page'] ?? 1));
 
 if ($selectedRequest === null) {
     ?>
-    <div class="ux-card ux-queue-detail h-100">
+    <div class="ux-card ux-data-card ux-queue-detail h-100">
+      <div class="ux-card__header">
+        <h2 class="ux-data-card__title">Request details</h2>
+      </div>
       <?php
       $emptyIcon = 'bi-clipboard2-pulse';
       $emptyTitle = 'No request selected';
@@ -37,8 +40,8 @@ $workspaceFields = static function () use ($filters, $currentPage): void {
 };
 ?>
 
-<article class="ux-card ux-queue-detail">
-  <div class="ux-queue-detail__header">
+<article class="ux-card ux-data-card ux-queue-detail">
+  <div class="ux-card__header ux-queue-detail__header">
     <div>
       <?php
       $personName = (string) ($request['patient_name'] ?? 'Patient');
@@ -52,7 +55,8 @@ $workspaceFields = static function () use ($filters, $currentPage): void {
   </div>
 
   <div class="table-responsive ux-queue-detail__table-wrap">
-    <table class="table ux-table ux-queue-detail__table mb-0">
+    <table class="table ux-table ux-details-table ux-queue-detail__table mb-0">
+      <caption class="visually-hidden">Consultation request details</caption>
       <tbody>
         <tr>
           <th scope="row">Patient</th>

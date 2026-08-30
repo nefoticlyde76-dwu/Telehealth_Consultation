@@ -71,7 +71,12 @@ class GoogleAuthService
         try {
             $bySub = User::findByGoogleSub($sub);
             if ($bySub !== null) {
-                return self::authenticateExistingGoogleUser($bySub, $identity);
+                if (self::isDeletedAccount($bySub) && $bySub->id !== null) {
+                    User::releaseGoogleIdentityIfDeleted((int) $bySub->id);
+                    error_log('[GoogleAuthService] Released Google identity from deleted account id ' . (int) $bySub->id);
+                } else {
+                    return self::authenticateExistingGoogleUser($bySub, $identity);
+                }
             }
 
             $byEmail = User::findByEmail($email);

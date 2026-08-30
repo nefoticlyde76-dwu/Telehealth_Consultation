@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   initializeDashboardDateTime();
   initializeMiniCalendars();
+  initializeMbphaCalendars();
   initializeDashboardCharts();
   initializeAosAnimations();
   initializeConsultationQueueWorkspace();
@@ -127,6 +128,231 @@ function initializeDashboardDateTime() {
 
   render();
   window.setInterval(render, 60 * 1000);
+}
+
+const FULL_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function calendarDateKey(year, month, day) {
+  return `${year}-${pad2(month + 1)}-${pad2(day)}`;
+}
+
+function parseCalendarEvents(root) {
+  const raw = root.getAttribute("data-calendar-events") || "[]";
+
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function eventsByDate(events) {
+  return events.reduce((map, event) => {
+    const date = typeof event.date === "string" ? event.date : "";
+
+    if (date === "") {
+      return map;
+    }
+
+    if (!map[date]) {
+      map[date] = [];
+    }
+
+    map[date].push(event);
+    return map;
+  }, {});
+}
+
+function initializeMbphaCalendars() {
+  const widgets = document.querySelectorAll("[data-mbpha-calendar]");
+
+  if (widgets.length === 0) {
+    return;
+  }
+
+  widgets.forEach((root) => {
+    const grid = root.querySelector("[data-calendar-grid]");
+    const list = root.querySelector("[data-calendar-events-list]");
+    const monthEl = root.querySelector("[data-calendar-month]");
+    const yearEl = root.querySelector("[data-calendar-year]");
+    const prev = root.querySelector("[data-calendar-prev]");
+    const next = root.querySelector("[data-calendar-next]");
+
+    if (!grid || !list || !monthEl || !yearEl) {
+      return;
+    }
+
+    const now = getAppNow();
+    const today = { y: now.year, m: now.month - 1, d: now.day };
+    const view = { y: today.y, m: today.m };
+    const selected = { y: today.y, m: today.m, d: today.d };
+    const grouped = eventsByDate(parseCalendarEvents(root));
+
+    const renderEvents = () => {
+      const key = calendarDateKey(selected.y, selected.m, selected.d);
+      const dayEvents = grouped[key] || [];
+      list.replaceChildren();
+
+      if (dayEvents.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "mbpha-cal__ev-none";
+        empty.textContent = "No appointments scheduled for this day";
+        list.appendChild(empty);
+        return;
+      }
+
+      dayEvents.forEach((event) => {
+        const hasUrl = typeof event.url === "string" && event.url !== "";
+        const item = document.createElement(hasUrl ? "a" : "div");
+        item.className = "mbpha-cal__ev";
+        item.style.borderLeftColor = typeof event.color === "string" && event.color !== "" ? event.color : "var(--medical-blue)";
+
+        if (hasUrl) {
+          item.href = event.url;
+        }
+
+        const time = document.createElement("span");
+        time.className = "mbpha-cal__ev-time";
+        time.textContent = event.time || "—";
+
+        const body = document.createElement("span");
+        body.className = "mbpha-cal__ev-body";
+
+        const name = document.createElement("span");
+        name.className = "mbpha-cal__ev-name";
+        name.textContent = event.name || "Consultation";
+
+        const status = document.createElement("span");
+        status.className = "mbpha-cal__ev-status";
+        status.textContent = event.status || "";
+
+        body.appendChild(name);
+        if (status.textContent !== "") {
+          body.appendChild(status);
+        }
+
+        item.appendChild(time);
+        item.appendChild(body);
+        list.appendChild(item);
+      });
+    };
+
+    const render = () => {
+      monthEl.textContent = FULL_MONTHS[view.m];
+      yearEl.textContent = String(view.y);
+      grid.replaceChildren();
+
+      const firstWeekday = new Date(view.y, view.m, 1).getDay();
+      const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+      const prevMonthDays = new Date(view.y, view.m, 0).getDate();
+
+      for (let i = 0; i < firstWeekday; i += 1) {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "mbpha-cal__cell is-other";
+        cell.disabled = true;
+        cell.tabIndex = -1;
+        cell.textContent = String(prevMonthDays - firstWeekday + 1 + i);
+        grid.appendChild(cell);
+      }
+
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "mbpha-cal__cell";
+        cell.textContent = String(day);
+        cell.setAttribute("aria-label", `${FULL_MONTHS[view.m]} ${day}, ${view.y}`);
+
+        if (view.y === today.y && view.m === today.m && day === today.d) {
+          cell.classList.add("is-today");
+          cell.setAttribute("aria-current", "date");
+        }
+
+        if (view.y === selected.y && view.m === selected.m && day === selected.d) {
+          cell.classList.add("is-sel");
+          cell.setAttribute("aria-pressed", "true");
+        } else {
+          cell.setAttribute("aria-pressed", "false");
+        }
+
+        const key = calendarDateKey(view.y, view.m, day);
+        const dayEvents = grouped[key];
+
+        if (dayEvents && dayEvents.length > 0) {
+          const dot = document.createElement("span");
+          dot.className = "mbpha-cal__dot";
+          dot.setAttribute("aria-hidden", "true");
+          if (dayEvents[0].color) {
+            dot.style.background = dayEvents[0].color;
+          }
+          cell.appendChild(dot);
+        }
+
+        cell.addEventListener("click", () => {
+          selected.y = view.y;
+          selected.m = view.m;
+          selected.d = day;
+          render();
+        });
+
+        grid.appendChild(cell);
+      }
+
+      const trailing = (7 - ((firstWeekday + daysInMonth) % 7)) % 7;
+
+      for (let i = 0; i < trailing; i += 1) {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "mbpha-cal__cell is-other";
+        cell.disabled = true;
+        cell.tabIndex = -1;
+        cell.textContent = String(i + 1);
+        grid.appendChild(cell);
+      }
+
+      renderEvents();
+    };
+
+    if (prev) {
+      prev.addEventListener("click", () => {
+        if (view.m === 0) {
+          view.m = 11;
+          view.y -= 1;
+        } else {
+          view.m -= 1;
+        }
+        render();
+      });
+    }
+
+    if (next) {
+      next.addEventListener("click", () => {
+        if (view.m === 11) {
+          view.m = 0;
+          view.y += 1;
+        } else {
+          view.m += 1;
+        }
+        render();
+      });
+    }
+
+    render();
+  });
 }
 
 function initializeMiniCalendars() {
@@ -399,18 +625,17 @@ function initializeDesktopSidebarToggle() {
       shell.classList.remove("dashboard-shell--sidebar-animating");
     }
     shell.classList.toggle("dashboard-shell--sidebar-collapsed", collapsed);
+    if (collapsed) {
+      shell.setAttribute("data-collapsed", "");
+    } else {
+      shell.removeAttribute("data-collapsed");
+    }
     toggles.forEach((toggle) => {
       toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
       toggle.setAttribute(
         "aria-label",
         collapsed ? "Expand dashboard navigation" : "Collapse dashboard navigation"
       );
-      if (toggle.hasAttribute("data-sidebar-rail-toggle")) {
-        const icon = toggle.querySelector("i");
-        if (icon) {
-          icon.className = collapsed ? "bi bi-chevron-bar-right" : "bi bi-chevron-bar-left";
-        }
-      }
     });
   };
 
@@ -425,9 +650,12 @@ function initializeDesktopSidebarToggle() {
   });
 
   shell.addEventListener("transitionend", (event) => {
+    const target = event.target;
+    const isSidebar = target instanceof HTMLElement && target.classList.contains("dashboard-sidebar");
     if (
+      event.propertyName === "flex-basis" ||
       event.propertyName === "--dash-sidebar-track" ||
-      (event.target.classList && event.target.classList.contains("dashboard-sidebar") && event.propertyName === "width")
+      (isSidebar && (event.propertyName === "width" || event.propertyName === "flex-basis"))
     ) {
       endSidebarAnimation();
     }

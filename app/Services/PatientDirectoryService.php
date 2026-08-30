@@ -139,6 +139,165 @@ class PatientDirectoryService
         ];
     }
 
+    /**
+     * Weekly timetable of bookable slots for the patient booking page.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getWeeklyBookingPageData(array $query): array
+    {
+        $filters = self::normalizeSlotFilters($query);
+        $weekHint = trim((string) ($query['week'] ?? ''));
+        if ($weekHint === '' && $filters['consultation_date'] !== '') {
+            $weekHint = $filters['consultation_date'];
+        }
+
+        $anchor = DoctorAvailabilityService::getWeekGridScaffold($weekHint);
+        $rangeFilters = $filters;
+        unset($rangeFilters['consultation_date']);
+        $slots = DoctorAvailability::findAvailableInDateRangeForPatients(
+            $rangeFilters,
+            (string) $anchor['weekStart'],
+            (string) $anchor['weekEnd']
+        );
+        $grid = DoctorAvailabilityService::getWeekGridScaffold($weekHint, $slots);
+        $cells = self::buildBookingCells(
+            $grid['days'],
+            $grid['intervals'],
+            $slots,
+            (string) $grid['todayDate'],
+            (string) $grid['nowHm']
+        );
+
+        $openCells = 0;
+        foreach ($cells as $cell) {
+            if (($cell['options'] ?? []) !== []) {
+                $openCells++;
+            }
+        }
+
+        return [
+            'filters' => $filters,
+            'weekStart' => $grid['weekStart'],
+            'weekEnd' => $grid['weekEnd'],
+            'weekLabel' => $grid['weekLabel'],
+            'isCurrentWeek' => $grid['isCurrentWeek'],
+            'prevWeek' => $grid['prevWeek'],
+            'nextWeek' => $grid['nextWeek'],
+            'thisWeek' => $grid['thisWeek'],
+            'days' => $grid['days'],
+            'intervals' => $grid['intervals'],
+            'cells' => $cells,
+            'gridStart' => $grid['gridStart'],
+            'gridEnd' => $grid['gridEnd'],
+            'openCells' => $openCells,
+            'weekSlotCount' => count($slots),
+            'summary' => self::getBrowseSummary(),
+            'doctorOptions' => DoctorAvailability::getAvailableDoctorOptionsForPatients(),
+            'specializationOptions' => Doctor::getSpecializationOptionsForPatients(),
+            'timezoneLabel' => $grid['timezoneLabel'],
+        ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $days
+     * @param list<array<string, mixed>> $intervals
+     * @param list<array<string, mixed>> $slots
+     * @return array<string, array<string, mixed>>
+     */
+    private static function buildBookingCells(
+        array $days,
+        array $intervals,
+        array $slots,
+        string $todayDate,
+        string $nowHm
+    ): array {
+        $cells = [];
+
+        foreach ($days as $day) {
+            $date = (string) ($day['date'] ?? '');
+            foreach ($intervals as $interval) {
+                $start = (string) ($interval['start'] ?? '');
+                $end = (string) ($interval['end'] ?? '');
+                $key = $date . '|' . $start;
+                $isPast = $date < $todayDate || ($date === $todayDate && $start < $nowHm);
+                $options = [];
+
+                if (!$isPast) {
+                    foreach ($slots as $slot) {
+                        if (!self::slotCoversInterval($slot, $date, $start, $end)) {
+                            continue;
+                        }
+
+                        $slotId = (int) ($slot['id'] ?? 0);
+                        if ($slotId <= 0) {
+                            continue;
+                        }
+
+                        $options[] = [
+                            'id' => $slotId,
+                            'doctor_id' => (int) ($slot['doctor_id'] ?? 0),
+                            'full_name' => (string) ($slot['full_name'] ?? 'Doctor'),
+                            'specialization' => (string) ($slot['specialization'] ?? 'General Practice'),
+                            'start_label' => self::formatClock((string) ($slot['start_time'] ?? $start)),
+                            'end_label' => self::formatClock((string) ($slot['end_time'] ?? $end)),
+                        ];
+                    }
+                }
+
+                $cells[$key] = [
+                    'date' => $date,
+                    'start' => $start,
+                    'end' => $end,
+                    'past' => $isPast,
+                    'options' => $options,
+                ];
+            }
+        }
+
+        return $cells;
+    }
+
+    /**
+     * @param array<string, mixed> $slot
+     */
+    private static function slotCoversInterval(array $slot, string $date, string $startHm, string $endHm): bool
+    {
+        if ((string) ($slot['consultation_date'] ?? '') !== $date) {
+            return false;
+        }
+
+        $slotStart = self::clockKey((string) ($slot['start_time'] ?? ''));
+        $slotEnd = self::clockKey((string) ($slot['end_time'] ?? ''));
+
+        return $slotStart !== '' && $slotEnd !== '' && $slotStart < $endHm && $slotEnd > $startHm;
+    }
+
+    private static function clockKey(string $time): string
+    {
+        $time = trim($time);
+        if ($time === '') {
+            return '';
+        }
+
+        return substr($time, 0, 5);
+    }
+
+    private static function formatClock(string $time): string
+    {
+        $time = trim($time);
+        if ($time === '') {
+            return '';
+        }
+
+        $parsed = \DateTimeImmutable::createFromFormat('H:i:s', $time);
+        if ($parsed === false) {
+            $parsed = \DateTimeImmutable::createFromFormat('H:i', substr($time, 0, 5));
+        }
+
+        return $parsed instanceof \DateTimeImmutable ? $parsed->format('g:i A') : $time;
+    }
+
     private static function isValidDate(string $date): bool
     {
         $parsed = \DateTime::createFromFormat('Y-m-d', $date);

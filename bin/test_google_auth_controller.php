@@ -323,7 +323,7 @@ try {
     expect_true($reachesService['status'] === 401, 'Valid JSON with a credential reaches GoogleAuthService');
     expect_true(GoogleAuthService::lastFailureReason() === GoogleAuthService::REASON_INVALID_GOOGLE_IDENTITY, 'Controller delegates token validation to GoogleAuthService');
     expect_true(($reachesService['json']['success'] ?? true) === false, 'Google service failure produces a controlled failure response');
-    expect_true(($reachesService['json']['message'] ?? '') === 'Google sign-in could not be completed.', 'Authentication failure uses a generic patient-facing message');
+    expect_true(($reachesService['json']['message'] ?? '') === 'Google sign-in could not be verified. Please try again.', 'Authentication failure uses a patient-facing verification message');
     expect_true(!str_contains($reachesService['raw'], 'invalid_google_identity'), 'Internal reason codes do not leak to the client');
     expect_true(!str_contains($reachesService['raw'], 'Stack trace') && !str_contains($reachesService['raw'], 'GoogleIdTokenException'), 'Stack traces do not leak to the client');
     expect_true(!str_contains($reachesService['raw'], $garbageCredential), 'Google token is not returned in the failure response');
@@ -413,6 +413,7 @@ try {
     ]);
     $doctorAfter = User::findByEmail($collisionEmail);
     expect_true($collision['status'] === 401, 'Doctor email collision is a controlled authentication failure');
+    expect_true(($collision['json']['message'] ?? '') === 'Google sign-in is for patients only. Please sign in with your email and password.', 'Staff Google emails receive a patients-only sign-in message');
     expect_true(!str_contains($collision['raw'], 'email_collision') && !str_contains($collision['raw'], 'admin'), 'Collision responses do not expose account classification');
     expect_true($doctorAfter !== null && $doctorAfter->google_sub === null, 'Doctor collision does not link Google identity');
     expect_true(!AuthService::isAuthenticated(), 'Collision failure does not leave a logged-in user');

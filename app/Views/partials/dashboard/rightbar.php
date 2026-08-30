@@ -5,23 +5,22 @@ $rightbar = $rightbar ?? [];
 $upcomingTitle = (string) ($rightbar['upcomingTitle'] ?? 'Upcoming');
 $upcomingItems = is_array($rightbar['upcomingItems'] ?? null) ? $rightbar['upcomingItems'] : [];
 $quickActions = is_array($rightbar['quickActions'] ?? null) ? $rightbar['quickActions'] : [];
+$calendarEvents = is_array($rightbar['calendarEvents'] ?? null) ? $rightbar['calendarEvents'] : [];
+$calendarTitle = (string) ($rightbar['calendarTitle'] ?? 'Upcoming Appointments');
+$showUpcomingList = !empty($rightbar['showUpcomingList']);
 
-$renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems, $quickActions): void {
+$renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems, $quickActions, $calendarEvents, $calendarTitle, $showUpcomingList): void {
     ?>
     <div class="rightbar-section rightbar-section--calendar">
-      <div class="rightbar-calendar-toolbar">
-        <h2 class="h6 mb-0" data-calendar-month-label>Calendar</h2>
-        <div class="rightbar-calendar-nav">
-          <button type="button" data-calendar-prev aria-label="Previous month"><i class="bi bi-chevron-left"></i></button>
-          <button type="button" data-calendar-next aria-label="Next month"><i class="bi bi-chevron-right"></i></button>
-        </div>
-      </div>
-      <div class="rightbar-calendar" data-mini-calendar></div>
+      <?php require __DIR__ . '/calendar_widget.php'; ?>
     </div>
 
+    <?php if ($showUpcomingList): ?>
     <div class="rightbar-section">
       <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-        <h2 class="h6 mb-0"><?= \App\Helpers\Helper::escape($upcomingTitle) ?></h2>
+        <h2 class="h6 mb-0">
+          <i class="bi bi-clock-history me-1" aria-hidden="true"></i><?= \App\Helpers\Helper::escape($upcomingTitle) ?>
+        </h2>
         <span class="rightbar-count"><?= \App\Helpers\Helper::escape((string) count($upcomingItems)) ?></span>
       </div>
 
@@ -49,11 +48,14 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
         </div>
       <?php endif; ?>
     </div>
+    <?php endif; ?>
 
     <?php if ($quickActions !== []): ?>
       <div class="rightbar-section">
         <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-          <h2 class="h6 mb-0">Quick Actions</h2>
+          <h2 class="h6 mb-0">
+            <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Quick Actions
+          </h2>
         </div>
         <div class="d-grid gap-2">
           <?php foreach ($quickActions as $action): ?>

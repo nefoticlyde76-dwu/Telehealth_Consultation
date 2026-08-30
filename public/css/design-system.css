@@ -16,11 +16,6 @@
 .dashboard-layout .dashboard-shell,
 .dashboard-layout .dashboard-shell--with-rightbar {
   background: var(--ds-canvas);
-  grid-template-columns: var(--ds-sidebar-width) minmax(0, 1fr);
-}
-
-.dashboard-layout .dashboard-shell--with-rightbar {
-  grid-template-columns: var(--ds-sidebar-width) minmax(0, 1fr) 360px;
 }
 
 .dashboard-layout .dashboard-content {
@@ -36,8 +31,6 @@
 /* ---------- Sidebar (navy chrome, identical across roles) ---------- */
 .dashboard-layout .dashboard-sidebar,
 .dashboard-layout .dashboard-offcanvas {
-  width: var(--ds-sidebar-width);
-  max-width: var(--ds-sidebar-width);
   background: var(--dark-navy) !important;
   background-image: none !important;
   border-radius: 0;
@@ -714,7 +707,7 @@
 .dashboard-layout .ux-welcome--admin,
 .dashboard-layout .ux-welcome--doctor,
 .dashboard-layout .ux-welcome--patient {
-  background: var(--ds-card) !important;
+  background: var(--pale-blue) !important;
   background-image: none !important;
   border: 1px solid var(--ds-border) !important;
   border-radius: var(--ds-radius-lg) !important;
@@ -964,24 +957,7 @@
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1399.98px) {
-  .dashboard-layout .dashboard-shell--with-rightbar {
-    grid-template-columns: var(--ds-sidebar-width) minmax(0, 1fr) 320px;
-  }
-}
-
-@media (max-width: 1199.98px) {
-  .dashboard-layout .dashboard-shell,
-  .dashboard-layout .dashboard-shell--with-rightbar {
-    grid-template-columns: var(--ds-sidebar-width) minmax(0, 1fr);
-  }
-}
-
 @media (max-width: 991.98px) {
-  .dashboard-layout .dashboard-shell,
-  .dashboard-layout .dashboard-shell--with-rightbar {
-    grid-template-columns: minmax(0, 1fr);
-  }
 
   .dashboard-layout .dashboard-content {
     padding: 16px;

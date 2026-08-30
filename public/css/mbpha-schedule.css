@@ -1,0 +1,463 @@
+/* ============================================================
+   MBPHA TeleHealth — Doctor weekly availability timetable
+   Scoped under .mbpha-avail. Tokens from theme.css.
+   ============================================================ */
+
+.mbpha-avail,
+.mbpha-avail *,
+.mbpha-avail *::before,
+.mbpha-avail *::after {
+  box-sizing: border-box;
+}
+
+.mbpha-avail {
+  --avail-cell-h: 52px;
+  min-width: 0;
+}
+
+.mbpha-avail__card {
+  background: var(--white);
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--ds-radius-lg, 12px);
+  box-shadow: var(--ds-shadow-card, 0 8px 24px rgba(15, 23, 42, 0.06));
+  overflow: hidden;
+}
+
+.mbpha-avail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 20px 12px;
+}
+
+.mbpha-avail__title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark, #212529);
+}
+
+.mbpha-avail__hint {
+  max-width: 46rem;
+  font-size: 0.875rem;
+  color: var(--text-muted, #6c757d);
+}
+
+.mbpha-avail__week-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mbpha-avail__week-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--medium-gray);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--medical-blue);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mbpha-avail__week-btn:hover,
+.mbpha-avail__week-btn:focus-visible {
+  background: var(--pale-blue);
+  border-color: rgba(var(--medical-blue-rgb), 0.35);
+  color: var(--medical-blue-hover, #085a94);
+}
+
+.mbpha-avail__week-label {
+  min-width: 11rem;
+  padding: 6px 12px;
+  border: 1px solid var(--medium-gray);
+  border-radius: 8px;
+  background: var(--pale-blue);
+  color: var(--medical-blue);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.mbpha-avail__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding: 0 20px 12px;
+}
+
+.mbpha-avail__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #6c757d);
+}
+
+.mbpha-avail__legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--medium-gray);
+  background: var(--white);
+}
+
+.mbpha-avail__legend-swatch.is-available {
+  background: var(--pale-blue);
+  border-color: var(--medical-blue);
+}
+
+.mbpha-avail__legend-swatch.is-dirty {
+  background: rgba(var(--medical-blue-rgb), 0.18);
+  border-style: dashed;
+  border-color: var(--medical-blue);
+}
+
+.mbpha-avail__legend-swatch.is-booked {
+  background: #fff4d6;
+  border-color: #d39e00;
+}
+
+.mbpha-avail__legend-swatch.is-custom {
+  background: var(--mint-green);
+  border-color: #1b8a5a;
+}
+
+.mbpha-avail__legend-swatch.is-empty {
+  background: #f8f9fa;
+}
+
+.mbpha-avail__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 0 20px 16px;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.mbpha-avail__tool {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mbpha-avail__tool-label,
+.mbpha-avail__tool-sep {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted, #6c757d);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mbpha-avail__tool .form-select {
+  width: auto;
+  min-width: 7.5rem;
+}
+
+.mbpha-avail__scroller {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  user-select: none;
+}
+
+.mbpha-avail__table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+}
+
+.mbpha-avail__table thead th {
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted, #6c757d);
+  border-bottom: 2px solid var(--medium-gray);
+  background: var(--white);
+}
+
+.mbpha-avail__table thead th:first-child,
+.mbpha-avail__table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  width: 78px;
+  min-width: 78px;
+  text-align: left;
+  background: #f3f6f9;
+  border-right: 1px solid var(--medium-gray);
+}
+
+.mbpha-avail__table thead th:first-child {
+  z-index: 4;
+}
+
+.mbpha-avail__day-name {
+  display: block;
+  color: var(--text-dark, #212529);
+  font-size: 0.8125rem;
+}
+
+.mbpha-avail__day-date {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.mbpha-avail__table thead th.is-today {
+  background: rgba(var(--medical-blue-rgb), 0.08);
+  color: var(--medical-blue);
+  border-radius: 8px 8px 0 0;
+}
+
+.mbpha-avail__table thead th.is-today::after {
+  content: "Today";
+  display: block;
+  margin-top: 2px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--medical-blue);
+}
+
+.mbpha-avail__table tbody th {
+  padding: 0 10px;
+  vertical-align: middle;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-muted, #6c757d);
+}
+
+.mbpha-avail__time-end {
+  display: block;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.mbpha-avail__table tbody td {
+  padding: 3px;
+  height: var(--avail-cell-h);
+  min-width: 92px;
+  vertical-align: stretch;
+  border-bottom: 1px solid rgba(var(--medium-gray-rgb, 222, 226, 230), 0.8);
+}
+
+.mbpha-avail__table tbody td.is-today-col {
+  background: rgba(var(--medical-blue-rgb), 0.035);
+}
+
+.mbpha-avail__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  min-height: 40px;
+  padding: 4px 6px;
+  border: 1px dashed rgba(var(--medium-gray-rgb, 222, 226, 230), 1);
+  border-radius: 8px;
+  background: transparent;
+  color: transparent;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.mbpha-avail__cell:hover:not(:disabled),
+.mbpha-avail__cell:focus-visible {
+  background: rgba(var(--medical-blue-rgb), 0.06);
+  border-color: rgba(var(--medical-blue-rgb), 0.45);
+  color: var(--medical-blue);
+  outline: none;
+  box-shadow: var(--shadow-focus, 0 0 0 0.2rem rgba(10, 111, 182, 0.16));
+}
+
+.mbpha-avail__cell.is-available {
+  background: var(--pale-blue);
+  border: 1px solid rgba(var(--medical-blue-rgb), 0.35);
+  border-left: 3px solid var(--medical-blue);
+  color: var(--medical-blue);
+}
+
+.mbpha-avail__cell.is-available.is-dirty,
+.mbpha-avail__cell.is-empty.is-dirty {
+  border-style: dashed;
+  box-shadow: inset 0 0 0 1px rgba(var(--medical-blue-rgb), 0.2);
+}
+
+.mbpha-avail__cell.is-empty.is-dirty {
+  background: rgba(var(--medical-blue-rgb), 0.04);
+  color: var(--text-muted, #6c757d);
+}
+
+.mbpha-avail__cell.is-booked {
+  background: #fff4d6;
+  border: 1px solid #e0b400;
+  border-left: 3px solid #d39e00;
+  color: #8a6d00;
+  cursor: not-allowed;
+}
+
+.mbpha-avail__cell.is-custom {
+  background: var(--mint-green);
+  border: 1px solid #86c8a8;
+  border-left: 3px solid #1b8a5a;
+  color: #146c46;
+  cursor: not-allowed;
+}
+
+.mbpha-avail__cell.is-past {
+  opacity: 0.48;
+}
+
+.mbpha-avail__cell:disabled {
+  cursor: not-allowed;
+}
+
+.mbpha-avail__cell.is-paint {
+  outline: 2px solid rgba(var(--medical-blue-rgb), 0.35);
+}
+
+.mbpha-avail__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--medium-gray);
+  background: #fbfcfe;
+}
+
+.mbpha-avail__apply {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+}
+
+.mbpha-avail__apply .form-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted, #6c757d);
+}
+
+.mbpha-avail__apply .form-select {
+  width: auto;
+  min-width: 13rem;
+}
+
+.mbpha-avail--book {
+  --avail-cell-h: 64px;
+}
+
+.mbpha-avail--book .mbpha-avail__tools {
+  border-bottom: 0;
+  padding-bottom: 8px;
+}
+
+.mbpha-avail--book .mbpha-avail__cell {
+  text-decoration: none;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 56px;
+}
+
+.mbpha-avail--book a.mbpha-avail__cell.is-available:hover,
+.mbpha-avail--book a.mbpha-avail__cell.is-available:focus-visible {
+  transform: none;
+  background: rgba(var(--medical-blue-rgb), 0.16);
+  color: var(--medical-blue-hover, #085a94);
+}
+
+.mbpha-avail--book .mbpha-avail__cell.is-empty {
+  cursor: default;
+}
+
+.mbpha-avail--book .mbpha-avail__book-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+}
+
+.mbpha-avail--book .mbpha-avail__book-time,
+.mbpha-avail--book .mbpha-avail__book-name,
+.mbpha-avail--book .mbpha-avail__book-cta {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mbpha-avail--book .mbpha-avail__book-time {
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.mbpha-avail--book .mbpha-avail__book-name {
+  font-size: 0.625rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.mbpha-avail--book .mbpha-avail__book-cta {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 767.98px) {
+  .mbpha-avail {
+    --avail-cell-h: 52px;
+  }
+
+  .mbpha-avail__header,
+  .mbpha-avail__legend,
+  .mbpha-avail__tools,
+  .mbpha-avail__footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .mbpha-avail__table tbody td {
+    min-width: 104px;
+  }
+
+  .mbpha-avail__cell {
+    min-height: 44px;
+  }
+
+  .mbpha-avail__apply {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .mbpha-avail__apply .form-select,
+  .mbpha-avail__footer .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbpha-avail__cell {
+    transition: none;
+  }
+}

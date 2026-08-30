@@ -111,9 +111,11 @@ class GoogleAuthController extends Controller
                     'actor_role' => 'guest',
                 ]
             );
+            $reason = GoogleAuthService::lastFailureReason();
+            error_log('[GoogleAuthController] Google authentication failed reason=' . ($reason ?? 'unknown'));
             $this->jsonResponse([
                 'success' => false,
-                'message' => 'Google sign-in could not be completed.',
+                'message' => self::patientFacingFailureMessage($reason),
             ], 401);
             return;
         }
@@ -130,6 +132,33 @@ class GoogleAuthController extends Controller
             'success' => true,
             'redirect' => self::approvedRedirectPath((string) $role),
         ], 200);
+    }
+
+    /**
+     * Safe copy for the login/register Google button. Never includes reason
+     * codes or whether the matching account is a doctor or administrator.
+     */
+    private static function patientFacingFailureMessage(?string $reason): string
+    {
+        if (
+            $reason === GoogleAuthService::REASON_EMAIL_COLLISION
+            || $reason === GoogleAuthService::REASON_GOOGLE_USER_NOT_ALLOWED
+        ) {
+            return 'Google sign-in is for patients only. Please sign in with your email and password.';
+        }
+
+        if (
+            $reason === GoogleAuthService::REASON_ACCOUNT_DISABLED
+            || $reason === GoogleAuthService::REASON_ACCOUNT_DELETED
+        ) {
+            return 'This Google account cannot sign in right now. Please contact MBPHA TeleHealth administration if you need access restored.';
+        }
+
+        if ($reason === GoogleAuthService::REASON_INVALID_GOOGLE_IDENTITY) {
+            return 'Google sign-in could not be verified. Please try again.';
+        }
+
+        return 'Google sign-in could not be completed. Please try again, or create an account with email and password.';
     }
 
     /**

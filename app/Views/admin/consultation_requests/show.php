@@ -37,95 +37,93 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm rounded-4 mb-4">
-    <div class="card-body p-4">
-      <div class="row g-4 mb-4">
-        <div class="col-xl-4">
-          <div class="admin-summary-card h-100">
-            <span class="admin-summary-label">Patient</span>
-            <?php
-            $personName = (string) ($request['patient_name'] ?? 'Patient');
-            $personPhoto = $request['patient_photo_path'] ?? null;
-            $personMeta = 'Patient ID #' . (string) ((int) ($request['patient_id'] ?? 0));
-            $personSize = 'lg';
-            require __DIR__ . '/../../partials/shared/person_row.php';
-            ?>
-          </div>
-        </div>
-        <div class="col-xl-4">
-          <div class="admin-summary-card h-100">
-            <span class="admin-summary-label">Doctor</span>
-            <?php
-            $personName = (string) ($request['doctor_name'] ?? 'Doctor');
-            $personPhoto = $request['doctor_photo_path'] ?? null;
-            $personMeta = trim((string) ($request['doctor_title'] ?? 'Medical Practitioner') . ' · ' . (string) ($request['specialization'] ?? 'General Practice'));
-            $personSize = 'lg';
-            require __DIR__ . '/../../partials/shared/person_row.php';
-            ?>
-          </div>
-        </div>
-        <div class="col-xl-4">
-          <div class="admin-summary-card h-100">
-            <span class="admin-summary-label">Consultation Slot</span>
-            <strong class="admin-summary-value"><?= \App\Helpers\Helper::escape((string) $dateLabel) ?></strong>
-            <span class="admin-summary-meta"><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></span>
-          </div>
-        </div>
-      </div>
-
-      <div class="dashboard-inline-callout mb-4">
-        <span class="dashboard-info-label">Chief Complaint</span>
-        <p class="text-muted mb-0"><?= nl2br(\App\Helpers\Helper::escape((string) ($request['reason'] ?? ''))) ?></p>
-      </div>
-
-      <div class="row g-3 mb-4">
-        <div class="col-md-6">
-          <div class="widget-mini-stat h-100">
-            <span class="widget-mini-stat-label">Date Submitted</span>
-            <strong><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['request_date'] ?? ''), 'd M Y', 'Not available')) ?></strong>
-            <span class="admin-summary-meta"><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['request_date'] ?? ''), 'H:i', '')) ?></span>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="widget-mini-stat h-100">
-            <span class="widget-mini-stat-label">Availability Status</span>
-            <strong><?= \App\Helpers\Helper::escape((string) ($request['availability_status'] ?? 'Not available')) ?></strong>
-            <span class="admin-summary-meta">Reserved slots remain unavailable for other patients</span>
-          </div>
-        </div>
-      </div>
-
+  <div class="ux-card ux-data-card ux-queue-detail mb-4">
+    <div class="ux-card__header">
+      <h2 class="ux-data-card__title">Request details</h2>
+      <?= ux_status_badge($status, \App\Helpers\Status::DOMAIN_CONSULTATION) ?>
+    </div>
+    <div class="table-responsive ux-queue-detail__table-wrap">
+      <table class="table ux-table ux-details-table ux-queue-detail__table mb-0">
+        <caption class="visually-hidden">Consultation request details</caption>
+        <tbody>
+          <tr>
+            <th scope="row">Patient</th>
+            <td>
+              <?php
+              $personName = (string) ($request['patient_name'] ?? 'Patient');
+              $personPhoto = $request['patient_photo_path'] ?? null;
+              $personMeta = 'Patient ID #' . (string) ((int) ($request['patient_id'] ?? 0));
+              $personSize = 'sm';
+              require __DIR__ . '/../../partials/shared/person_row.php';
+              ?>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Doctor</th>
+            <td>
+              <?php
+              $personName = (string) ($request['doctor_name'] ?? 'Doctor');
+              $personPhoto = $request['doctor_photo_path'] ?? null;
+              $personMeta = trim((string) ($request['doctor_title'] ?? 'Medical Practitioner') . ' · ' . (string) ($request['specialization'] ?? 'General Practice'));
+              $personSize = 'sm';
+              require __DIR__ . '/../../partials/shared/person_row.php';
+              ?>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Consultation date</th>
+            <td><?= \App\Helpers\Helper::escape((string) $dateLabel) ?></td>
+          </tr>
+          <tr>
+            <th scope="row">Time</th>
+            <td><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></td>
+          </tr>
+          <tr>
+            <th scope="row">Date submitted</th>
+            <td><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['request_date'] ?? ''), 'd M Y H:i', 'Not available')) ?></td>
+          </tr>
+          <tr>
+            <th scope="row">Availability status</th>
+            <td><?= \App\Helpers\Helper::escape((string) ($request['availability_status'] ?? 'Not available')) ?></td>
+          </tr>
+          <tr>
+            <th scope="row">Current status</th>
+            <td><?= ux_status_badge($status, \App\Helpers\Status::DOMAIN_CONSULTATION) ?></td>
+          </tr>
+          <tr>
+            <th scope="row">Chief complaint</th>
+            <td><?= nl2br(\App\Helpers\Helper::escape((string) ($request['reason'] ?? ''))) ?></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="ux-queue-detail__actions">
       <?php if ($status === 'Pending' || $status === 'Approved'): ?>
-        <div class="d-flex flex-wrap gap-2 justify-content-end">
-          <?php if ($status === 'Pending'): ?>
-            <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/reject') ?>">
-              <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-              <button type="submit" class="btn btn-outline-danger btn-sm">
-                <i class="bi bi-x-circle me-2"></i>
-                Reject Request
-              </button>
-            </form>
-            <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/approve') ?>">
-              <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-              <button type="submit" class="btn btn-primary btn-sm">
-                <i class="bi bi-check2-circle me-2"></i>
-                Approve Request
-              </button>
-            </form>
-          <?php endif; ?>
-          <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/cancel') ?>">
+        <?php if ($status === 'Pending'): ?>
+          <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/reject') ?>">
             <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
-            <button type="submit" class="btn btn-outline-secondary btn-sm">
-              <i class="bi bi-slash-circle me-2"></i>
-              Cancel Request
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-x-circle me-1"></i>
+              Reject Request
             </button>
           </form>
-        </div>
+          <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/approve') ?>">
+            <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-check2-circle me-1"></i>
+              Approve Request
+            </button>
+          </form>
+        <?php endif; ?>
+        <form method="POST" action="<?= \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/cancel') ?>">
+          <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+          <button type="submit" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-slash-circle me-1"></i>
+            Cancel Request
+          </button>
+        </form>
       <?php else: ?>
-        <div class="dashboard-inline-callout">
-          <span class="dashboard-info-label">Approval Decision</span>
-          <p class="text-muted small mb-0">This consultation request is no longer pending, so no further approval actions are available.</p>
-        </div>
+        <p class="text-muted small mb-0">This consultation request is no longer pending, so no further approval actions are available.</p>
       <?php endif; ?>
     </div>
   </div>

@@ -21,8 +21,8 @@ $renderNavGroup = static function (array $items, string $currentPath, array $all
         ?>
         <a href="<?= Helper::url($itemPath) ?>"
            class="sidebar-link<?= $isActive ? ' active' : '' ?>"
+           data-label="<?= Helper::escape($itemLabel) ?>"
            data-tooltip="<?= Helper::escape($itemLabel) ?>"
-           title="<?= Helper::escape($itemLabel) ?>"
            <?= $isActive ? ' aria-current="page"' : '' ?>>
             <span class="sidebar-link-icon" aria-hidden="true"><i class="bi <?= Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
             <span class="sidebar-link-label"><?= Helper::escape($itemLabel) ?></span>
@@ -44,18 +44,6 @@ $renderSidebarBody = static function (
     $idPrefix = $forOffcanvas ? 'offcanvas-' : 'rail-';
     ?>
     <div class="sidebar-rail-top<?= $forOffcanvas ? ' sidebar-rail-top--offcanvas' : '' ?>">
-      <?php if (!$forOffcanvas): ?>
-        <button
-          type="button"
-          class="sidebar-expand-btn"
-          data-desktop-sidebar-toggle
-          data-sidebar-rail-toggle
-          aria-expanded="true"
-          aria-label="Collapse dashboard navigation"
-        >
-          <i class="bi bi-chevron-bar-left" aria-hidden="true"></i>
-        </button>
-      <?php endif; ?>
       <div class="dashboard-brand">
         <?php
         $brandVariant = $forOffcanvas ? 'offcanvas' : 'sidebar';
@@ -95,7 +83,7 @@ $renderSidebarBody = static function (
           <?php $renderNavGroup($accountItems, $currentPath, $allNavItems); ?>
           <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
             <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(Csrf::generate()) ?>">
-            <button type="submit" class="sidebar-link sidebar-logout-btn" data-tooltip="Logout" title="Logout">
+            <button type="submit" class="sidebar-link sidebar-logout-btn" data-label="Logout" data-tooltip="Logout">
               <span class="sidebar-link-icon" aria-hidden="true"><i class="bi bi-box-arrow-left"></i></span>
               <span class="sidebar-link-label">Logout</span>
             </button>
@@ -104,7 +92,7 @@ $renderSidebarBody = static function (
       </div>
     </div>
 
-    <div class="sidebar-user-footer" data-tooltip="<?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?>" title="<?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?>">
+    <div class="sidebar-user-footer" data-label="<?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?>" data-tooltip="<?= \App\Helpers\Helper::escape($user->full_name ?? 'User') ?>">
       <div class="sidebar-avatar-wrap">
         <div class="sidebar-user-avatar">
           <?php
@@ -125,7 +113,7 @@ $renderSidebarBody = static function (
 };
 ?>
 
-<aside class="dashboard-sidebar d-none d-lg-flex flex-column" aria-label="<?= \App\Helpers\Helper::escape($roleFooterLabel) ?> navigation">
+<aside class="dashboard-sidebar d-none d-lg-flex flex-column" id="dashboardDesktopNav" aria-label="<?= \App\Helpers\Helper::escape($roleFooterLabel) ?> navigation">
   <?php $renderSidebarBody($navGroups, $accountItems, $allNavItems, $currentPath, $user, $roleFooterLabel, $homePath, false); ?>
 </aside>
 

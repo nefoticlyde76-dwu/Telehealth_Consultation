@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/style.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/design-system.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/dashboard-ui.css') ?>">
+  <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/mbpha-calendar.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/wallet-heroes.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/user-profile.css') ?>">
   <?= $pageStyles ?? '' ?>
@@ -38,23 +39,25 @@
         try {
           if (window.localStorage.getItem("mbpha-dashboard-sidebar-collapsed") === "1") {
             shell.classList.add("dashboard-shell--sidebar-collapsed");
+            shell.setAttribute("data-collapsed", "");
           }
         } catch (e) {}
       })();
     </script>
-    <?php require __DIR__ . '/../partials/dashboard/sidebar.php'; ?>
+    <?php require __DIR__ . '/../partials/dashboard/topbar.php'; ?>
+    <div class="dashboard-body">
+      <?php require __DIR__ . '/../partials/dashboard/sidebar.php'; ?>
 
-    <div class="dashboard-main">
-      <?php require __DIR__ . '/../partials/dashboard/topbar.php'; ?>
+      <div class="dashboard-main">
+        <main class="dashboard-content" id="dashboard-main-content">
+          <?= $content ?>
+        </main>
+      </div>
 
-      <main class="dashboard-content" id="dashboard-main-content">
-        <?= $content ?>
-      </main>
+      <?php if ($showRightbar): ?>
+        <?php require __DIR__ . '/../partials/dashboard/rightbar.php'; ?>
+      <?php endif; ?>
     </div>
-
-    <?php if ($showRightbar): ?>
-      <?php require __DIR__ . '/../partials/dashboard/rightbar.php'; ?>
-    <?php endif; ?>
   </div>
 
   <?php require __DIR__ . '/../partials/dashboard/notification_toasts.php'; ?>

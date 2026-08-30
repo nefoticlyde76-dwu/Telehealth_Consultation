@@ -28,10 +28,12 @@ foreach ($recentRequests as $requestRow) {
 
 $attentionText = 'Book a consultation when you are ready.';
 $attentionIcon = 'bi-calendar2-heart';
+$attentionTone = 'info';
 $attentionAction = ['label' => 'Book a Consultation', 'url' => '/patient/available-slots', 'icon' => 'bi-calendar2-plus'];
 if ($latestStatus === Status::APPROVED) {
     $attentionText = 'Your next consultation is approved.';
     $attentionIcon = 'bi-calendar2-check';
+    $attentionTone = 'success';
     $attentionAction = [
         'label' => 'View Consultation',
         'url' => '/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0),
@@ -40,6 +42,7 @@ if ($latestStatus === Status::APPROVED) {
 } elseif ($latestStatus === Status::PENDING) {
     $attentionText = 'Your request is awaiting administrator review.';
     $attentionIcon = 'bi-clock';
+    $attentionTone = 'warning';
     $attentionAction = [
         'label' => 'Track Request',
         'url' => '/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0),
@@ -50,10 +53,12 @@ if ($latestStatus === Status::APPROVED) {
         ? 'You have 1 unread notification.'
         : 'You have ' . $unreadCount . ' unread notifications.';
     $attentionIcon = 'bi-bell';
+    $attentionTone = 'info';
     $attentionAction = ['label' => 'View Notifications', 'url' => '/notifications?read_state=unread', 'icon' => 'bi-bell'];
 } elseif ($hasPrescription) {
     $attentionText = 'A prescription is available from a completed consultation.';
     $attentionIcon = 'bi-capsule';
+    $attentionTone = 'success';
     $attentionAction = ['label' => 'View Consultations', 'url' => '/patient/consultation-requests?status=' . urlencode(Status::COMPLETED), 'icon' => 'bi-journal-medical'];
 }
 
@@ -114,21 +119,72 @@ foreach ($recentNotifications as $item) {
         'unread' => !empty($item['unread']),
     ];
 }
+
+$welcomePills = [
+    [
+        'icon' => 'bi-calendar2-check',
+        'label' => $upcomingCount === 1 ? '1 upcoming consultation' : $upcomingCount . ' upcoming consultations',
+    ],
+    [
+        'icon' => 'bi-hourglass-split',
+        'label' => $pendingCount === 1 ? '1 pending request' : $pendingCount . ' pending requests',
+    ],
+];
+$welcomeIcon = 'bi-calendar2-heart';
+
+$actionCards = [
+    [
+        'title' => 'Book a Consultation',
+        'description' => 'Choose an available slot and submit a booking request.',
+        'url' => '/patient/available-slots',
+        'icon' => 'bi-calendar2-plus',
+        'action_label' => 'Book',
+        'emphasis' => 'primary',
+    ],
+    [
+        'title' => 'My Consultations',
+        'description' => 'Track request status and open approved appointments.',
+        'url' => '/patient/consultation-requests',
+        'icon' => 'bi-clipboard2-check',
+        'action_label' => 'Open',
+    ],
+    [
+        'title' => 'Doctor Directory',
+        'description' => 'Browse doctors and their specializations.',
+        'url' => '/patient/doctors',
+        'icon' => 'bi-person-badge',
+        'action_label' => 'Browse',
+    ],
+    [
+        'title' => 'Notifications',
+        'description' => 'Review updates about your consultations.',
+        'url' => '/notifications',
+        'icon' => 'bi-bell',
+        'action_label' => 'Open',
+    ],
+];
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
+<?php require __DIR__ . '/../partials/dashboard/welcome_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/attention_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
+<?php require __DIR__ . '/../partials/dashboard/action_cards.php'; ?>
 
 <section class="mb-4">
   <div class="ux-card">
     <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-      <div>
-        <h2 class="h5 mb-1">Your Next Consultation</h2>
-        <p class="text-muted mb-0 small">The appointment or request that needs your attention first.</p>
-      </div>
-      <a href="<?= Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">My Consultations</a>
+      <?php
+          $sectionTitle = 'Your Next Consultation';
+          $sectionSubtitle = 'The appointment or request that needs your attention first.';
+          $sectionIcon = 'bi-calendar2-event';
+          $sectionTone = 'pending';
+      require __DIR__ . '/../partials/dashboard/section_heading.php';
+      ?>
+      <a href="<?= Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-clipboard2-check me-1" aria-hidden="true"></i>My Consultations
+      </a>
     </div>
     <div class="ux-card__body">
       <?php if ($latestRequest !== null): ?>
@@ -191,16 +247,27 @@ foreach ($recentNotifications as $item) {
         </div>
         <div class="d-flex flex-wrap gap-2">
           <?php if ($latestStatus === Status::PENDING): ?>
-            <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">Track Request</a>
-            <a href="<?= Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">All Requests</a>
+            <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">
+              <i class="bi bi-eye me-1" aria-hidden="true"></i>Track Request
+            </a>
+            <a href="<?= Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-list-ul me-1" aria-hidden="true"></i>All Requests
+            </a>
           <?php elseif ($latestStatus === Status::APPROVED): ?>
-            <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">View Details</a>
-            <a href="<?= Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">Book Another</a>
+            <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">
+              <i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>View Details
+            </a>
+            <a href="<?= Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-calendar2-plus me-1" aria-hidden="true"></i>Book Another
+            </a>
           <?php else: ?>
             <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">
+              <i class="bi <?= $latestStatus === Status::COMPLETED ? 'bi-file-earmark-text' : 'bi-eye' ?> me-1" aria-hidden="true"></i>
               <?= $latestStatus === Status::COMPLETED ? 'View Record' : 'View Details' ?>
             </a>
-            <a href="<?= Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">Book Consultation</a>
+            <a href="<?= Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-calendar2-plus me-1" aria-hidden="true"></i>Book Consultation
+            </a>
           <?php endif; ?>
         </div>
       <?php else: ?>
@@ -220,13 +287,18 @@ foreach ($recentNotifications as $item) {
 <section class="mb-4">
   <div class="row g-4">
     <div class="col-xl-7">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Recent Consultations</h2>
-            <p class="text-muted mb-0 small">Your latest requests and their status.</p>
-          </div>
-          <a href="<?= Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">View All</a>
+          <?php
+          $sectionTitle = 'Recent Consultations';
+          $sectionSubtitle = 'Your latest requests and their status.';
+          $sectionIcon = 'bi-clock-history';
+          $sectionTone = 'navy';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All
+          </a>
         </div>
         <div class="ux-card__body">
           <?php if ($recentRequests === []): ?>
@@ -266,6 +338,7 @@ foreach ($recentNotifications as $item) {
                       <td><?= ux_status_badge($status) ?></td>
                       <td class="text-end">
                         <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($request['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="bi <?= $status === Status::COMPLETED ? 'bi-file-earmark-text' : 'bi-eye' ?> me-1" aria-hidden="true"></i>
                           <?= $status === Status::COMPLETED ? 'View Record' : 'View Details' ?>
                         </a>
                       </td>
@@ -280,29 +353,38 @@ foreach ($recentNotifications as $item) {
     </div>
 
     <div class="col-xl-5">
-      <div class="ux-card h-100 mb-4">
+      <div class="ux-card ux-data-card h-100 mb-4">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Notifications</h2>
-            <p class="text-muted mb-0 small">Updates about your consultations.</p>
-          </div>
-          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">View All</a>
+          <?php
+          $sectionTitle = 'Notifications';
+          $sectionSubtitle = 'Updates about your consultations.';
+          $sectionIcon = 'bi-bell';
+          $sectionTone = 'info';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All
+          </a>
         </div>
         <div class="ux-card__body">
           <?php
-          $activityItems = $notificationItems;
           $activityEmptyTitle = "You're all caught up";
           $activityEmptyText = "You don't have any notifications yet.";
           $activityEmptyIcon = 'bi-bell';
-          require __DIR__ . '/../partials/shared/activity_list.php';
+          require __DIR__ . '/../partials/shared/notification_preview_table.php';
           ?>
         </div>
       </div>
 
       <div class="ux-card">
         <div class="ux-card__header mb-3">
-          <h2 class="h5 mb-1">Next Available Slots</h2>
-          <p class="text-muted mb-0 small"><?= Helper::escape((string) count($slotPreview)) ?> upcoming times you can book</p>
+          <?php
+          $sectionTitle = 'Next Available Slots';
+          $sectionSubtitle = (string) count($slotPreview) . ' upcoming times you can book';
+          $sectionIcon = 'bi-calendar2-plus';
+          $sectionTone = 'success';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
         </div>
         <div class="ux-card__body">
           <?php if ($slotPreview === []): ?>
@@ -328,7 +410,9 @@ foreach ($recentNotifications as $item) {
                   <strong class="d-block"><?= Helper::escape(Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M', '')) ?></strong>
                   <span class="small text-muted"><?= Helper::escape(substr((string) ($slot['start_time'] ?? ''), 0, 5)) ?></span>
                 </div>
-                <a href="<?= Helper::url('/patient/consultation-requests/book/' . (int) ($slot['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">Book</a>
+                <a href="<?= Helper::url('/patient/consultation-requests/book/' . (int) ($slot['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">
+                  <i class="bi bi-calendar2-plus me-1" aria-hidden="true"></i>Book
+                </a>
               </div>
             <?php endforeach; ?>
           <?php endif; ?>

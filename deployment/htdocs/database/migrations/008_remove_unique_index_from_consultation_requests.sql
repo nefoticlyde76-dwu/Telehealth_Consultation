@@ -1,0 +1,3 @@
+CREATE INDEX idx_consultation_requests_availability_id ON consultation_requests (availability_id);
+
+DROP INDEX uq_consultation_requests_availability_id ON consultation_requests;

@@ -129,7 +129,10 @@ $filterForm = [
     </div>
   </div>
 
-  <div class="ux-card">
+  <div class="ux-card ux-data-card">
+    <div class="ux-card__header">
+      <h2 class="ux-data-card__title">User accounts</h2>
+    </div>
     <?php if ($users !== []): ?>
       <div class="user-bulk-bar">
         <label class="user-bulk-bar__select-all">

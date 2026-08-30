@@ -236,7 +236,15 @@ class MailService
 
         $code = (int) substr($response, 0, 3);
         if (!in_array($code, $accepted, true)) {
-            throw new \RuntimeException('The mail server rejected the message.');
+            $reply = trim(preg_replace('/\s+/', ' ', $response) ?? $response);
+            if ($reply === '') {
+                $reply = 'empty reply';
+            }
+            if (strlen($reply) > 300) {
+                $reply = substr($reply, 0, 300) . '...';
+            }
+
+            throw new \RuntimeException('SMTP ' . $code . ': ' . $reply);
         }
     }
 
@@ -289,7 +297,7 @@ class MailService
             return $host;
         }
 
-        return 'mbpha-telehealth.wuaze.com';
+        return 'localhost';
     }
 
     private static function sendFailure(string $message): bool

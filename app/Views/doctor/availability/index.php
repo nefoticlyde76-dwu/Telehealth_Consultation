@@ -68,7 +68,8 @@ $filterForm = [
             ],
         ],
     ],
-    'clear_url' => \App\Helpers\Helper::url('/doctor/availability'),
+    'clear_url' => \App\Helpers\Helper::url('/doctor/availability?view=list'),
+    'hidden' => ['view' => 'list'],
 ];
 ?>
 
@@ -80,13 +81,17 @@ $filterForm = [
         <li class="active">Availability</li>
       </ol>
       <h2 class="ux-page-header__title">My Availability Schedule</h2>
-      <p class="ux-page-header__subtitle">Manage consultation slots patients can book. Edit future windows and remove or lock booked appointments.</p>
+      <p class="ux-page-header__subtitle">Review saved slots, booked appointments, and one-off entries. Use the weekly schedule to set 30-minute times in bulk.</p>
     </div>
     <div class="ux-page-header__right">
       <span class="ux-chip ux-badge--dotless">
         <i class="bi bi-calendar-week"></i>
         <span><?= $totalItems ?> slots visible</span>
       </span>
+      <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-outline-primary">
+        <i class="bi bi-calendar3 me-2"></i>
+        Weekly Schedule
+      </a>
       <a href="<?= \App\Helpers\Helper::url('/doctor/availability/create') ?>" class="btn btn-primary btn-primary-xl">
         <i class="bi bi-calendar-plus me-2"></i>
         Create Availability
@@ -145,7 +150,10 @@ $filterForm = [
     </div>
   </div>
 
-  <div class="ux-card">
+  <div class="ux-card ux-data-card">
+    <div class="ux-card__header">
+      <h2 class="ux-data-card__title">Availability slots</h2>
+    </div>
     <div class="ux-table-wrapper border-0">
       <div class="table-responsive">
         <table class="ux-table">
@@ -261,7 +269,7 @@ $filterForm = [
     <div class="card-footer border-0 bg-transparent pt-4 pb-0">
       <?php
       $paginationPath = '/doctor/availability';
-      $paginationFilters = $filters;
+      $paginationFilters = $filters + ['view' => 'list'];
       $paginationLabel = 'slots';
       $paginationAria = 'Doctor availability pagination';
       $paginationShowCount = true;

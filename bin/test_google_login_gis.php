@@ -80,7 +80,8 @@ expect_true(str_contains($googleAuthController, 'approvedRedirectPath'), 'Google
 
 expect_true(str_contains($gisJs, 'status === 419'), 'Backend 419 is handled as a CSRF failure');
 expect_true(str_contains($gisJs, 'session security token is invalid'), '419 uses the existing CSRF message');
-expect_true(str_contains($gisJs, 'Google sign-in could not be completed.'), 'Backend 400/401 use a generic authentication error');
+expect_true(str_contains($gisJs, 'data.message'), 'Backend 400/401 prefer the server-supplied message');
+expect_true(str_contains($gisJs, 'Google sign-in could not be completed.'), 'Missing backend messages fall back to a generic authentication error');
 expect_true(str_contains($gisJs, 'temporarily unavailable'), 'Backend 500 is displayed generically');
 expect_true(str_contains($gisJs, '.catch(function ()'), 'Network failure is handled');
 expect_true(!str_contains($gisJs, 'alertBox.innerHTML'), 'Raw server bodies are not injected into the page');
@@ -93,7 +94,8 @@ expect_true(!str_contains($gisJs, 'platform.js'), 'Deprecated Google Sign-In pla
 
 expect_true(str_contains($loginView, 'name="email"') && str_contains($loginView, 'name="password"'), 'Password login fields remain on the login page');
 expect_true(str_contains($loginView, "Helper::url('/login')"), 'Password login still posts to /login');
-expect_true(str_contains($loginView, "Helper::url('/register')"), 'Registration link remains on the login page');
+$authTabs = (string) file_get_contents($root . '/app/Views/partials/auth/tabs.php');
+expect_true(str_contains($loginView, 'auth/tabs.php') && str_contains($authTabs, "Helper::url('/register')"), 'Registration tab remains available from the login page');
 expect_true(str_contains($authController, 'AuthService::authenticate($email, $password)'), 'Password login controller path remains unchanged');
 expect_true(str_contains($authController, "render('auth/register'"), 'Registration controller path remains unchanged');
 expect_true(str_contains($loginView, 'js/google-auth.js'), 'Login page loads the shared Google authentication script');

@@ -48,7 +48,10 @@ $filterForm = [
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
   <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
-  <div class="ux-card">
+  <div class="ux-card ux-data-card">
+    <div class="ux-card__header">
+      <h2 class="ux-data-card__title">Activity log</h2>
+    </div>
     <div class="ux-table-wrapper border-0">
       <div class="table-responsive">
         <table class="ux-table">

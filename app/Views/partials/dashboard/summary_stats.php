@@ -69,6 +69,12 @@ $cardToneMap = [
           <?php if ($statDescription !== ''): ?>
             <p class="text-muted mb-0 small"><?= Helper::escape($statDescription) ?></p>
           <?php endif; ?>
+          <?php if ($statUrl !== ''): ?>
+            <span class="ux-stat__cta">
+              View details
+              <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </span>
+          <?php endif; ?>
         </<?= $statTag ?>>
       </div>
     <?php endforeach; ?>

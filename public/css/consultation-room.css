@@ -27,7 +27,7 @@
  * ------------------------------ */
 .vc-room-wrapper {
   width: 100%;
-  background: var(--dark-navy);
+  background: var(--navy-black);
   border-radius: var(--vc-radius);
   overflow: hidden;
   position: relative;

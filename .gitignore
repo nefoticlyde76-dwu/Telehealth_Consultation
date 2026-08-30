@@ -6,11 +6,9 @@ vendor/
 .env.local
 
 logs/*
-!logs/.htaccess
 *.log
 
 tmp/*
-!tmp/.htaccess
 tmp/sessions/*
 tmp/mail/*
 
@@ -28,4 +26,5 @@ cache/
 public/uploads/**
 !public/uploads/.htaccess
 
-TeleHealth-PNG-production.zip
+# Deployment archives can include a production .env. Never commit them.
+deployment/*.zip

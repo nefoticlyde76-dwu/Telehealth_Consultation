@@ -1008,6 +1008,68 @@ class ConsultationRequest
     }
 
     /**
+     * Scheduled consultations in a date range for the dashboard calendar.
+     * Doctor and patient rows are scoped to that user. Admin sees all scheduled requests.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function findForCalendar(string $role, int $userId, string $fromDate, string $toDate): array
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $toDate)) {
+            return [];
+        }
+
+        $scopeSql = '';
+        $parameters = [
+            ':from_date' => $fromDate,
+            ':to_date' => $toDate,
+        ];
+
+        if ($role === 'doctor') {
+            if ($userId <= 0) {
+                return [];
+            }
+            $scopeSql = 'AND consultation_requests.doctor_id = :user_id';
+            $parameters[':user_id'] = $userId;
+        } elseif ($role === 'patient') {
+            if ($userId <= 0) {
+                return [];
+            }
+            $scopeSql = 'AND consultation_requests.patient_id = :user_id';
+            $parameters[':user_id'] = $userId;
+        } elseif ($role !== 'admin') {
+            return [];
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_requests.id,
+                consultation_requests.status,
+                patient_user.full_name AS patient_name,
+                doctor_user.full_name AS doctor_name,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
+            INNER JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE doctor_availability.consultation_date BETWEEN :from_date AND :to_date
+              {$scopeSql}
+            ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, consultation_requests.id ASC
+            LIMIT 400"
+        );
+
+        foreach ($parameters as $key => $value) {
+            $stmt->bindValue($key, $value, $key === ':user_id' ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    /**
      * Approved consultations whose scheduled start is within the next N minutes.
      * Used for opportunistic in-app upcoming reminders (no background scheduler).
      *

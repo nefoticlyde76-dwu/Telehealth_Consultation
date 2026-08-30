@@ -8,6 +8,7 @@
 use App\Helpers\Helper;
 
 $actionCards = is_array($actionCards ?? null) ? $actionCards : [];
+$actionColClass = count($actionCards) >= 4 ? 'col-md-6 col-xl-3' : 'col-md-6 col-xl-4';
 ?>
 
 <?php if ($actionCards !== []): ?>
@@ -22,12 +23,13 @@ $actionCards = is_array($actionCards ?? null) ? $actionCards : [];
       $actionLabel = (string) ($action['action_label'] ?? 'Open');
       $actionEmphasis = (string) ($action['emphasis'] ?? 'secondary');
       $buttonClass = $actionEmphasis === 'primary' ? 'btn btn-primary btn-sm' : 'btn btn-outline-primary btn-sm';
+      $cardClass = $actionEmphasis === 'primary' ? 'ux-action-card ux-action-card--primary h-100' : 'ux-action-card h-100';
       if ($actionUrl === '') {
           continue;
       }
       ?>
-      <div class="col-md-6 col-xl-4">
-        <div class="ux-action-card h-100">
+      <div class="<?= $actionColClass ?>">
+        <div class="<?= $cardClass ?>">
           <div class="ux-action-card__icon" aria-hidden="true">
             <i class="bi <?= Helper::escape($actionIcon) ?>"></i>
           </div>
@@ -39,6 +41,7 @@ $actionCards = is_array($actionCards ?? null) ? $actionCards : [];
           </div>
           <a href="<?= Helper::url($actionUrl) ?>" class="<?= $buttonClass ?>">
             <?= Helper::escape($actionLabel) ?>
+            <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
           </a>
         </div>
       </div>

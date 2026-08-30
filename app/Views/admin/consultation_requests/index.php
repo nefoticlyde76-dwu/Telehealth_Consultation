@@ -164,10 +164,33 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
   <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="ux-review-workspace__grid">
-    <aside class="ux-card ux-queue" aria-label="Consultation request queue">
-      <div class="ux-queue__header">
-        <h3 class="h6 mb-0">Queue</h3>
-        <span class="text-muted small"><?= (int) $totalItems ?></span>
+    <aside class="ux-card ux-data-card ux-queue" aria-label="Consultation request queue">
+      <div class="ux-card__header ux-queue__header">
+        <h2 class="ux-data-card__title">Queue</h2>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <div class="ux-table-filters" role="group" aria-label="Filter queue by status">
+            <?php
+            $queueStatusTabs = array_merge(
+                [['value' => '', 'label' => 'All']],
+                $statusFieldOptions
+            );
+            $currentQueueStatus = (string) ($filters['status'] ?? '');
+            ?>
+            <?php foreach ($queueStatusTabs as $tab): ?>
+              <?php
+              $tabValue = (string) ($tab['value'] ?? '');
+              $tabLabel = (string) ($tab['label'] ?? 'All');
+              $tabActive = $currentQueueStatus === $tabValue;
+              ?>
+              <a
+                href="<?= $buildQueueUrl(['status' => $tabValue, 'selected' => 0, 'page' => 1]) ?>"
+                class="<?= $tabActive ? 'is-active' : '' ?>"
+                <?= $tabActive ? 'aria-current="page"' : '' ?>
+              ><?= \App\Helpers\Helper::escape($tabLabel) ?></a>
+            <?php endforeach; ?>
+          </div>
+          <span class="text-muted small"><?= (int) $totalItems ?></span>
+        </div>
       </div>
       <?php if ($requests === []): ?>
         <?php
@@ -176,46 +199,60 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
         require __DIR__ . '/../../partials/shared/empty_state.php';
         ?>
       <?php else: ?>
-        <ul class="ux-queue__list">
-          <?php foreach ($requests as $request): ?>
-            <?php
-            $requestId = (int) ($request['id'] ?? 0);
-            $isActive = $requestId === $selectedId;
-            $status = (string) ($request['status'] ?? 'Pending');
-            $dateLabel = \App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Date TBD');
-            $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5);
-            ?>
-            <li>
-              <a class="ux-queue__item<?= $isActive ? ' is-active' : '' ?>"
-                 href="<?= $buildQueueUrl(['selected' => $requestId, 'page' => (int) ($pagination['current_page'] ?? 1)]) ?>"
-                 <?= $isActive ? 'aria-current="true"' : '' ?>>
-                <div class="d-flex justify-content-between gap-2 align-items-start">
-                  <?php
-                  $personName = (string) ($request['patient_name'] ?? 'Patient');
-                  $personPhoto = $request['patient_photo_path'] ?? null;
-                  $personMeta = '';
-                  $personSize = 'sm';
-                  require __DIR__ . '/../../partials/shared/person_row.php';
-                  ?>
-                  <span class="ux-badge <?= ux_status_badge_class($status) ?>"><?= \App\Helpers\Helper::escape(ux_status_label($status)) ?></span>
-                </div>
-                <div class="ux-queue__meta d-flex align-items-center gap-2">
-                  <?php
-                  $personName = (string) ($request['doctor_name'] ?? 'Doctor');
-                  $personPhoto = $request['doctor_photo_path'] ?? null;
-                  $personMeta = (string) ($request['specialization'] ?? 'General');
-                  $personSize = 'xs';
-                  require __DIR__ . '/../../partials/shared/person_row.php';
-                  ?>
-                </div>
-                <div class="ux-queue__meta">
-                  <?= \App\Helpers\Helper::escape($dateLabel) ?>
-                  <?= $timeLabel !== '' ? ' · ' . \App\Helpers\Helper::escape($timeLabel) : '' ?>
-                </div>
-              </a>
-            </li>
-          <?php endforeach; ?>
-        </ul>
+        <div class="ux-table-wrapper">
+          <table class="ux-table ux-queue-table align-middle mb-0">
+            <caption class="visually-hidden">Consultation request queue</caption>
+            <thead>
+              <tr>
+                <th scope="col">Patient</th>
+                <th scope="col">Doctor</th>
+                <th scope="col">Date</th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($requests as $request): ?>
+                <?php
+                $requestId = (int) ($request['id'] ?? 0);
+                $isActive = $requestId === $selectedId;
+                $status = (string) ($request['status'] ?? 'Pending');
+                $dateLabel = \App\Helpers\Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Date TBD');
+                $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5);
+                $selectUrl = $buildQueueUrl(['selected' => $requestId, 'page' => (int) ($pagination['current_page'] ?? 1)]);
+                ?>
+                <tr class="ux-queue__row position-relative<?= $isActive ? ' is-active' : '' ?>">
+                  <td>
+                    <a class="stretched-link text-decoration-none text-reset" href="<?= $selectUrl ?>" <?= $isActive ? 'aria-current="true"' : '' ?>>
+                      <?php
+                      $personName = (string) ($request['patient_name'] ?? 'Patient');
+                      $personPhoto = $request['patient_photo_path'] ?? null;
+                      $personMeta = '';
+                      $personSize = 'sm';
+                      require __DIR__ . '/../../partials/shared/person_row.php';
+                      ?>
+                    </a>
+                  </td>
+                  <td>
+                    <?php
+                    $personName = (string) ($request['doctor_name'] ?? 'Doctor');
+                    $personPhoto = $request['doctor_photo_path'] ?? null;
+                    $personMeta = (string) ($request['specialization'] ?? 'General');
+                    $personSize = 'xs';
+                    require __DIR__ . '/../../partials/shared/person_row.php';
+                    ?>
+                  </td>
+                  <td class="text-muted small text-nowrap">
+                    <?= \App\Helpers\Helper::escape($dateLabel) ?>
+                    <?php if ($timeLabel !== ''): ?>
+                      <span class="d-block"><?= \App\Helpers\Helper::escape($timeLabel) ?></span>
+                    <?php endif; ?>
+                  </td>
+                  <td><?= ux_status_badge($status) ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
       <?php endif; ?>
 
       <?php

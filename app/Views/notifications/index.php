@@ -63,6 +63,25 @@ $filterForm = [
     ],
 ];
 
+$buildNotificationUrl = static function (array $overrides = []) use ($filters): string {
+    $merged = array_merge($filters, $overrides);
+    $query = [];
+    foreach (['search', 'type', 'read_state'] as $key) {
+        $value = trim((string) ($merged[$key] ?? ''));
+        if ($value !== '') {
+            $query[$key] = $value;
+        }
+    }
+
+    $path = '/notifications';
+    return Helper::url($query === [] ? $path : $path . '?' . http_build_query($query));
+};
+
+$readStateTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    $readStateOptions
+);
+
 $renderRow = static function (array $item) use ($csrfToken): void {
     $itemId = (int) ($item['id'] ?? 0);
     $itemUnread = !empty($item['unread']);
@@ -74,41 +93,66 @@ $renderRow = static function (array $item) use ($csrfToken): void {
     $itemType = (string) ($item['type'] ?? '');
     $itemTypeLabel = $itemType !== '' ? NotificationService::typeTitle($itemType) : $itemTitle;
     ?>
-    <li class="notification-inbox__item<?= $itemUnread ? ' is-unread' : '' ?>">
-      <label class="notification-inbox__select">
-        <input type="checkbox" name="notification_ids[]" value="<?= $itemId ?>" form="notificationBulkForm" <?= $itemId > 0 ? '' : 'disabled' ?>>
-        <span class="visually-hidden">Select <?= Helper::escape($itemTitle) ?></span>
-      </label>
-      <span class="notification-inbox__icon" aria-hidden="true"><i class="bi <?= Helper::escape($itemIcon) ?>"></i></span>
-      <div class="notification-inbox__body">
-        <div class="d-flex flex-wrap align-items-center gap-2">
-          <strong><?= Helper::escape($itemTitle) ?></strong>
-          <span class="ux-badge <?= $itemUnread ? 'ux-badge--info' : 'ux-badge--neutral' ?>"><?= $itemUnread ? 'Unread' : 'Read' ?></span>
-          <span class="small text-muted"><?= Helper::escape($itemTypeLabel) ?></span>
-        </div>
+    <tr<?= $itemUnread ? ' class="is-unread"' : '' ?>>
+      <td class="ux-table__chk">
+        <label class="notification-table__select">
+          <input type="checkbox" name="notification_ids[]" value="<?= $itemId ?>" form="notificationBulkForm" <?= $itemId > 0 ? '' : 'disabled' ?>>
+          <span class="visually-hidden">Select <?= Helper::escape($itemTitle) ?></span>
+        </label>
+      </td>
+      <td>
+        <strong class="d-block"><?= Helper::escape($itemTitle) ?></strong>
         <?php if ($itemMessage !== ''): ?>
-          <p class="text-muted small mb-1"><?= Helper::escape($itemMessage) ?></p>
+          <span class="small text-muted"><?= Helper::escape($itemMessage) ?></span>
         <?php endif; ?>
-        <span class="small text-muted"><?= Helper::escape($itemTime !== '' ? $itemTime : '') ?></span>
-      </div>
-      <div class="notification-inbox__actions">
-        <a href="<?= $itemUrl ?>" class="btn btn-outline-primary btn-sm">View</a>
-        <?php if ($itemId > 0): ?>
-          <form method="POST" action="<?= Helper::url('/notifications/' . $itemId . '/' . ($itemUnread ? 'read' : 'unread')) ?>">
-            <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
-            <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
-            <button type="submit" class="btn btn-outline-secondary btn-sm"><?= $itemUnread ? 'Mark read' : 'Mark unread' ?></button>
-          </form>
-          <form method="POST" action="<?= Helper::url('/notifications/' . $itemId . '/delete') ?>" data-confirm-title="Delete notification?" data-confirm-body="This removes the notice from your inbox. System audit records are not affected.">
-            <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
-            <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
-            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-          </form>
-        <?php endif; ?>
-      </div>
-    </li>
+      </td>
+      <td>
+        <span class="notification-table__type">
+          <i class="bi <?= Helper::escape($itemIcon) ?>" aria-hidden="true"></i>
+          <?= Helper::escape($itemTypeLabel) ?>
+        </span>
+      </td>
+      <td>
+        <span class="ux-badge <?= $itemUnread ? 'ux-badge--info' : 'ux-badge--neutral' ?>">
+          <?= $itemUnread ? 'Unread' : 'Read' ?>
+        </span>
+      </td>
+      <td class="text-muted small text-nowrap"><?= Helper::escape($itemTime) ?></td>
+      <td class="text-end">
+        <div class="ux-table__actions">
+          <a href="<?= $itemUrl ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-eye me-1" aria-hidden="true"></i>View
+          </a>
+          <?php if ($itemId > 0): ?>
+            <form method="POST" action="<?= Helper::url('/notifications/' . $itemId . '/' . ($itemUnread ? 'read' : 'unread')) ?>">
+              <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
+              <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
+              <button type="submit" class="btn btn-outline-secondary btn-sm">
+                <i class="bi <?= $itemUnread ? 'bi-envelope-open' : 'bi-envelope' ?> me-1" aria-hidden="true"></i>
+                <?= $itemUnread ? 'Mark read' : 'Mark unread' ?>
+              </button>
+            </form>
+            <form method="POST" action="<?= Helper::url('/notifications/' . $itemId . '/delete') ?>" data-confirm-title="Delete notification?" data-confirm-body="This removes the notice from your inbox. System audit records are not affected.">
+              <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
+              <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
+              <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-trash me-1" aria-hidden="true"></i>Delete
+              </button>
+            </form>
+          <?php endif; ?>
+        </div>
+      </td>
+    </tr>
     <?php
 };
+
+$tableRows = [];
+if ($unreadItems !== [] && $readState !== 'read') {
+    $tableRows = array_merge($tableRows, $unreadItems);
+}
+if ($readItems !== [] && $readState !== 'unread') {
+    $tableRows = array_merge($tableRows, $readItems);
+}
 ?>
 
 <section class="mb-4">
@@ -146,34 +190,61 @@ $renderRow = static function (array $item) use ($csrfToken): void {
     <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
     <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
 
-    <div class="ux-card notification-page">
-      <?php if ($notifications === []): ?>
-        <?php
-        $emptyIcon = $filterActive ? 'bi-funnel' : 'bi-bell';
-        $emptyTitle = $emptyTitle;
-        $emptyText = $emptyText;
-        $emptyActions = '';
-        $emptyCompact = false;
-        $emptyPositive = !$filterActive;
-        require __DIR__ . '/../partials/shared/empty_state.php';
-        ?>
-      <?php else: ?>
-        <?php if ($unreadItems !== [] && $readState !== 'read'): ?>
-          <h3 class="notification-inbox__heading">Unread</h3>
-          <ul class="notification-inbox">
-            <?php foreach ($unreadItems as $item) { $renderRow($item); } ?>
-          </ul>
-        <?php endif; ?>
-        <?php if ($readItems !== [] && $readState !== 'unread'): ?>
-          <h3 class="notification-inbox__heading">Read</h3>
-          <ul class="notification-inbox">
-            <?php foreach ($readItems as $item) { $renderRow($item); } ?>
-          </ul>
-        <?php endif; ?>
-        <div class="notification-inbox__bulk">
-          <button type="submit" class="btn btn-outline-danger btn-sm" data-bulk-submit disabled>Delete selected</button>
+    <div class="ux-card ux-data-card notification-page">
+      <div class="ux-card__header">
+        <h2 class="ux-data-card__title">Notifications</h2>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <div class="ux-table-filters" role="group" aria-label="Filter by read state">
+            <?php foreach ($readStateTabs as $tab): ?>
+              <?php
+              $tabValue = (string) ($tab['value'] ?? '');
+              $tabLabel = (string) ($tab['label'] ?? 'All');
+              $tabActive = $readState === $tabValue;
+              ?>
+              <a
+                href="<?= Helper::escape($buildNotificationUrl(['read_state' => $tabValue])) ?>"
+                class="<?= $tabActive ? 'is-active' : '' ?>"
+                <?= $tabActive ? 'aria-current="page"' : '' ?>
+              ><?= Helper::escape($tabLabel) ?></a>
+            <?php endforeach; ?>
+          </div>
+          <?php if ($notifications !== []): ?>
+            <button type="submit" class="btn btn-outline-danger btn-sm" data-bulk-submit disabled>
+              <i class="bi bi-trash me-1" aria-hidden="true"></i>Delete selected
+            </button>
+          <?php endif; ?>
         </div>
-      <?php endif; ?>
+      </div>
+      <div class="ux-card__body">
+        <?php if ($tableRows === []): ?>
+          <?php
+          $emptyIcon = $filterActive ? 'bi-funnel' : 'bi-bell';
+          $emptyActions = '';
+          $emptyCompact = false;
+          $emptyPositive = !$filterActive;
+          require __DIR__ . '/../partials/shared/empty_state.php';
+          ?>
+        <?php else: ?>
+          <div class="ux-table-wrapper">
+            <table class="ux-table notification-table align-middle mb-0">
+              <caption class="visually-hidden">Inbox notifications with status and actions</caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="ux-table__chk"><span class="visually-hidden">Select</span></th>
+                  <th scope="col">Notification</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">When</th>
+                  <th scope="col" class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($tableRows as $item) { $renderRow($item); } ?>
+              </tbody>
+            </table>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
   </form>
 

@@ -89,6 +89,8 @@ class DoctorController extends Controller
             'headerNotifications' => $headerNotifications,
             'recentNotifications' => array_slice($headerNotifications['recent'] ?? [], 0, 5),
             'rightbar' => [
+                'calendarTitle' => 'Upcoming Appointments',
+                'calendarEvents' => \App\Helpers\DashboardCalendar::eventsForDashboard('doctor', (int) $user->id),
                 'upcomingTitle' => 'Upcoming Consultations',
                 'upcomingItems' => array_map(static function (array $appointment): array {
                     $date = \App\Helpers\Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled');
@@ -267,32 +269,100 @@ class DoctorController extends Controller
             return;
         }
 
-        $pageData = DoctorAvailabilityService::getAvailabilityPageData((int) $user->id, $_GET);
+        $sidebarItems = [
+            ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+            ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
+            ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
+            ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
+        ];
 
-        $this->render('doctor/availability/index', [
+        if (strtolower(trim((string) ($_GET['view'] ?? ''))) === 'list') {
+            $pageData = DoctorAvailabilityService::getAvailabilityPageData((int) $user->id, $_GET);
+
+            $this->render('doctor/availability/index', [
+                'title' => 'Doctor Availability | MBPHA TeleHealth Consultation System',
+                'user' => $user,
+                'dashboardRole' => 'doctor',
+                'dashboardRoleLabel' => 'Doctor Dashboard',
+                'dashboardTitle' => 'Availability',
+                'dashboardDescription' => 'Create, review, update, and remove consultation availability slots securely.',
+                'sidebarItems' => $sidebarItems,
+                'filters' => $pageData['filters'],
+                'availability' => $pageData['availability'],
+                'summary' => $pageData['summary'],
+                'filterActive' => (bool) ($pageData['filterActive'] ?? false),
+                'pagination' => $pageData['pagination'],
+                'statusOptions' => $pageData['statusOptions'],
+                'dateOptions' => $pageData['dateOptions'] ?? [],
+                'sortOptions' => $pageData['sortOptions'] ?? [],
+                'statusMessage' => Session::getFlash('status'),
+                'csrfToken' => Csrf::generate(),
+            ], 'layouts/dashboard');
+            return;
+        }
+
+        $weekData = DoctorAvailabilityService::getWeeklySchedulePageData((int) $user->id, $_GET);
+
+        $this->render('doctor/availability/timetable', [
             'title' => 'Doctor Availability | MBPHA TeleHealth Consultation System',
             'user' => $user,
             'dashboardRole' => 'doctor',
             'dashboardRoleLabel' => 'Doctor Dashboard',
             'dashboardTitle' => 'Availability',
-            'dashboardDescription' => 'Create, review, update, and remove consultation availability slots securely.',
-            'sidebarItems' => [
-                ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
-                ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
-                ['path' => '/doctor/availability', 'label' => 'Availability', 'icon' => 'bi-calendar-week'],
-                ['path' => '/doctor/profile', 'label' => 'My Profile', 'icon' => 'bi-person-vcard'],
-            ],
-            'filters' => $pageData['filters'],
-            'availability' => $pageData['availability'],
-            'summary' => $pageData['summary'],
-            'filterActive' => (bool) ($pageData['filterActive'] ?? false),
-            'pagination' => $pageData['pagination'],
-            'statusOptions' => $pageData['statusOptions'],
-            'dateOptions' => $pageData['dateOptions'] ?? [],
-            'sortOptions' => $pageData['sortOptions'] ?? [],
+            'dashboardDescription' => 'Set the 30-minute times patients can book each week.',
+            'sidebarItems' => $sidebarItems,
+            'weekStart' => $weekData['weekStart'],
+            'weekEnd' => $weekData['weekEnd'],
+            'weekLabel' => $weekData['weekLabel'],
+            'isCurrentWeek' => $weekData['isCurrentWeek'],
+            'prevWeek' => $weekData['prevWeek'],
+            'nextWeek' => $weekData['nextWeek'],
+            'thisWeek' => $weekData['thisWeek'],
+            'days' => $weekData['days'],
+            'intervals' => $weekData['intervals'],
+            'cells' => $weekData['cells'],
+            'gridStart' => $weekData['gridStart'],
+            'gridEnd' => $weekData['gridEnd'],
+            'timeOptions' => $weekData['timeOptions'],
+            'applyWeekOptions' => $weekData['applyWeekOptions'],
+            'counts' => $weekData['counts'],
+            'summary' => $weekData['summary'],
+            'timezoneLabel' => $weekData['timezoneLabel'],
             'statusMessage' => Session::getFlash('status'),
             'csrfToken' => Csrf::generate(),
+            'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/mbpha-schedule.css') . '">',
+            'pageScripts' => '<script src="' . Helper::asset('js/mbpha-schedule.js') . '"></script>',
         ], 'layouts/dashboard');
+    }
+
+    public function saveWeeklyAvailability(): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $result = DoctorAvailabilityService::saveWeeklySchedule((int) $user->id, $_POST);
+        $weekStart = (string) ($result['weekStart'] ?? '');
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? (($result['success'] ?? false) ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Availability request completed.',
+        ]);
+
+        $redirect = '/doctor/availability';
+        if ($weekStart !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekStart) === 1) {
+            $redirect .= '?week=' . rawurlencode($weekStart);
+        }
+
+        Helper::redirect($redirect);
     }
 
     public function createAvailability(): void

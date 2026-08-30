@@ -23,22 +23,26 @@ $todaysAppointments = array_values(array_filter($upcomingApprovedAppointments, s
 
 $attentionText = 'No consultations are scheduled for today.';
 $attentionIcon = 'bi-calendar2-week';
+$attentionTone = 'info';
 $attentionAction = ['label' => 'Manage Availability', 'url' => '/doctor/availability', 'icon' => 'bi-calendar-week'];
 if ($bookedToday > 0) {
     $attentionText = $bookedToday === 1
         ? 'You have 1 consultation booked today.'
         : 'You have ' . $bookedToday . ' consultations booked today.';
     $attentionIcon = 'bi-calendar2-check';
+    $attentionTone = 'success';
     $attentionAction = ['label' => "View Today's Consultations", 'url' => '/doctor/consultations?date=today', 'icon' => 'bi-calendar2-check'];
 } elseif ($unreadCount > 0) {
     $attentionText = $unreadCount === 1
         ? 'You have 1 unread notification.'
         : 'You have ' . $unreadCount . ' unread notifications.';
     $attentionIcon = 'bi-bell';
+    $attentionTone = 'info';
     $attentionAction = ['label' => 'View Notifications', 'url' => '/notifications?read_state=unread', 'icon' => 'bi-bell'];
 } elseif ($openToday === 0) {
     $attentionText = 'No open slots remain today. Add availability if patients should be able to book you.';
     $attentionIcon = 'bi-calendar-plus';
+    $attentionTone = 'warning';
 }
 
 $pageHeaderTitle = 'Doctor Dashboard';
@@ -64,10 +68,23 @@ foreach ($recentNotifications as $item) {
         'unread' => !empty($item['unread']),
     ];
 }
+
+$welcomePills = [
+    [
+        'icon' => 'bi-calendar2-check',
+        'label' => $bookedToday === 1 ? '1 booked today' : $bookedToday . ' booked today',
+    ],
+    [
+        'icon' => 'bi-calendar2-plus',
+        'label' => $openToday === 1 ? '1 open slot' : $openToday . ' open slots',
+    ],
+];
+$welcomeIcon = 'bi-heart-pulse';
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
+<?php require __DIR__ . '/../partials/dashboard/welcome_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/attention_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/action_cards.php'; ?>
@@ -75,13 +92,18 @@ foreach ($recentNotifications as $item) {
 <section class="mb-4">
   <div class="row g-4">
     <div class="col-xl-8">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Today's Schedule</h2>
-            <p class="text-muted mb-0 small"><?= Helper::escape((string) $bookedToday) ?> booked · <?= Helper::escape((string) $openToday) ?> open slots</p>
-          </div>
-          <a href="<?= Helper::url('/doctor/consultations?date=today') ?>" class="btn btn-outline-primary btn-sm">View Today</a>
+          <?php
+          $sectionTitle = "Today's Schedule";
+          $sectionSubtitle = (string) $bookedToday . ' booked · ' . (string) $openToday . ' open slots';
+          $sectionIcon = 'bi-calendar2-week';
+          $sectionTone = 'pending';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url('/doctor/consultations?date=today') ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>View Today
+          </a>
         </div>
         <div class="ux-card__body">
           <?php if ($todaysAppointments === []): ?>
@@ -119,7 +141,9 @@ foreach ($recentNotifications as $item) {
                       </td>
                       <td><?= ux_status_badge(Status::APPROVED) ?></td>
                       <td class="text-end">
-                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">Open</a>
+                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Open
+                        </a>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -132,21 +156,25 @@ foreach ($recentNotifications as $item) {
     </div>
 
     <div class="col-xl-4">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Notifications</h2>
-            <p class="text-muted mb-0 small">Recent consultation updates.</p>
-          </div>
-          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">View All</a>
+          <?php
+          $sectionTitle = 'Notifications';
+          $sectionSubtitle = 'Recent consultation updates.';
+          $sectionIcon = 'bi-bell';
+          $sectionTone = 'info';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All
+          </a>
         </div>
         <div class="ux-card__body">
           <?php
-          $activityItems = $notificationItems;
           $activityEmptyTitle = "You're all caught up";
           $activityEmptyText = "You don't have any notifications yet.";
           $activityEmptyIcon = 'bi-bell';
-          require __DIR__ . '/../partials/shared/activity_list.php';
+          require __DIR__ . '/../partials/shared/notification_preview_table.php';
           ?>
         </div>
       </div>
@@ -157,13 +185,18 @@ foreach ($recentNotifications as $item) {
 <section class="mb-4">
   <div class="row g-4">
     <div class="col-xl-7">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Upcoming Consultations</h2>
-            <p class="text-muted mb-0 small">Approved consultations from today forward.</p>
-          </div>
-          <a href="<?= Helper::url(Status::filteredListUrl('/doctor/consultations', Status::APPROVED)) ?>" class="btn btn-outline-primary btn-sm">View Upcoming</a>
+          <?php
+          $sectionTitle = 'Upcoming Consultations';
+          $sectionSubtitle = 'Approved consultations from today forward.';
+          $sectionIcon = 'bi-calendar2-check';
+          $sectionTone = 'success';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url(Status::filteredListUrl('/doctor/consultations', Status::APPROVED)) ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View Upcoming
+          </a>
         </div>
         <div class="ux-card__body">
           <?php if ($upcomingApprovedAppointments === []): ?>
@@ -201,7 +234,9 @@ foreach ($recentNotifications as $item) {
                       <td><?= Helper::escape(Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
                       <td class="text-muted small"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
                       <td class="text-end">
-                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">Open</a>
+                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Open
+                        </a>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -214,13 +249,18 @@ foreach ($recentNotifications as $item) {
     </div>
 
     <div class="col-xl-5">
-      <div class="ux-card h-100">
+      <div class="ux-card ux-data-card h-100">
         <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <div>
-            <h2 class="h5 mb-1">Recent Consultations</h2>
-            <p class="text-muted mb-0 small">Recently completed visits.</p>
-          </div>
-          <a href="<?= Helper::url(Status::filteredListUrl('/doctor/consultations', Status::COMPLETED)) ?>" class="btn btn-outline-primary btn-sm">View History</a>
+          <?php
+          $sectionTitle = 'Recent Consultations';
+          $sectionSubtitle = 'Recently completed visits.';
+          $sectionIcon = 'bi-journal-medical';
+          $sectionTone = 'navy';
+          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          ?>
+          <a href="<?= Helper::url(Status::filteredListUrl('/doctor/consultations', Status::COMPLETED)) ?>" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-clock-history me-1" aria-hidden="true"></i>View History
+          </a>
         </div>
         <div class="ux-card__body">
           <?php if ($recentCompletedConsultations === []): ?>
@@ -256,7 +296,9 @@ foreach ($recentNotifications as $item) {
                       </td>
                       <td><?= Helper::escape(Helper::formatDate((string) ($consultation['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
                       <td class="text-end">
-                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($consultation['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">View Record</a>
+                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($consultation['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
+                          <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>View Record
+                        </a>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -276,8 +318,13 @@ foreach ($recentNotifications as $item) {
 <section class="mb-0" aria-label="Availability coverage">
   <div class="ux-card ux-card--quiet">
     <div class="ux-card__header mb-3">
-      <h2 class="h5 mb-1">Availability Coverage</h2>
-      <p class="text-muted mb-0 small">Slots for the next 7 days</p>
+      <?php
+      $sectionTitle = 'Availability Coverage';
+      $sectionSubtitle = 'Slots for the next 7 days';
+      $sectionIcon = 'bi-graph-up';
+      $sectionTone = 'info';
+      require __DIR__ . '/../partials/dashboard/section_heading.php';
+      ?>
     </div>
     <div class="ux-card__body">
       <canvas height="220" data-chart="<?= Helper::escape((string) json_encode($availabilityChart, JSON_UNESCAPED_SLASHES)) ?>"></canvas>

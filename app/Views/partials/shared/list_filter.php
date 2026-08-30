@@ -22,6 +22,7 @@ $filterFields = is_array($filterForm['fields'] ?? null) ? $filterForm['fields'] 
 $filterClearUrl = (string) ($filterForm['clear_url'] ?? $filterAction);
 $filterApplyLabel = (string) ($filterForm['apply_label'] ?? 'Apply Filters');
 $filterClearLabel = (string) ($filterForm['clear_label'] ?? 'Clear Filters');
+$filterHidden = is_array($filterForm['hidden'] ?? null) ? $filterForm['hidden'] : [];
 
 $dateRangeFrom = '';
 $dateRangeTo = '';
@@ -53,6 +54,13 @@ foreach ($filterFields as $field) {
     data-list-filter
     novalidate
   >
+    <?php foreach ($filterHidden as $hiddenName => $hiddenValue): ?>
+      <input
+        type="hidden"
+        name="<?= \App\Helpers\Helper::escape((string) $hiddenName) ?>"
+        value="<?= \App\Helpers\Helper::escape((string) $hiddenValue) ?>"
+      >
+    <?php endforeach; ?>
     <?php if ($filterSearch !== null): ?>
       <?php
       $searchName = (string) ($filterSearch['name'] ?? 'search');

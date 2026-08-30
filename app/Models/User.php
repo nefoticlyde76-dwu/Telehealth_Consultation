@@ -343,6 +343,32 @@ class User
         ]) && $stmt->rowCount() > 0;
     }
 
+    /**
+     * Drop Google identity keys from a permanently deleted row so the same
+     * Google account can register as a new patient. Never touches live users.
+     */
+    public static function releaseGoogleIdentityIfDeleted(int $userId): bool
+    {
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "UPDATE users
+            SET google_sub = NULL,
+                google_email = NULL,
+                auth_provider = :auth_provider
+            WHERE id = :id
+              AND status = 'deleted'"
+        );
+
+        return $stmt->execute([
+            ':auth_provider' => self::AUTH_PROVIDER_LOCAL,
+            ':id' => $userId,
+        ]) && $stmt->rowCount() > 0;
+    }
+
     public function getRole(): ?string
     {
         if ($this->role_id === null) {

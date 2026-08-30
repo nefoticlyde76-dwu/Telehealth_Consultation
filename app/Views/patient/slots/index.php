@@ -13,6 +13,7 @@ require __DIR__ . '/../../partials/shared/status_helper.php';
 $totalItems = (int) ($pagination['total_items'] ?? 0);
 $buildPageUrl = static function (int $page) use ($filters): string {
     $query = array_filter([
+        'view' => 'list',
         'doctor_id' => (int) ($filters['doctor_id'] ?? 0),
         'specialization' => $filters['specialization'] ?? '',
         'consultation_date' => $filters['consultation_date'] ?? '',
@@ -42,6 +43,10 @@ $buildPageUrl = static function (int $page) use ($filters): string {
         <i class="bi bi-calendar2-week-fill"></i>
         <span><?= $totalItems ?> slots visible</span>
       </span>
+      <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-calendar3 me-1"></i>
+        Weekly schedule
+      </a>
       <a href="<?= \App\Helpers\Helper::url('/patient/doctors') ?>" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-person-badge me-1"></i>
         Browse Doctors
@@ -61,6 +66,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
       </h3>
     </div>
     <form method="GET" action="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="user-filter-form">
+      <input type="hidden" name="view" value="list">
       <div class="row g-3 align-items-end">
         <div class="col-md-4">
           <label for="doctor_id" class="form-label">Doctor</label>
@@ -104,7 +110,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               <i class="bi bi-funnel-fill me-1"></i>
               Apply Filters
             </button>
-            <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">
+            <a href="<?= \App\Helpers\Helper::url('/patient/available-slots?view=list') ?>" class="btn btn-outline-primary btn-sm">
               Reset
             </a>
           </div>
@@ -149,7 +155,10 @@ $buildPageUrl = static function (int $page) use ($filters): string {
     </div>
   </div>
 
-  <div class="ux-card">
+  <div class="ux-card ux-data-card">
+    <div class="ux-card__header">
+      <h2 class="ux-data-card__title">Available slots</h2>
+    </div>
     <div class="ux-table-wrapper border-0">
       <div class="table-responsive">
         <table class="ux-table">

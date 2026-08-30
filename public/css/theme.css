@@ -1,52 +1,3 @@
-@view-transition {
-  navigation: auto;
-}
-
-@keyframes ux-vt-fade-out {
-  to { opacity: 0; }
-}
-
-@keyframes ux-vt-fade-in {
-  from { opacity: 0; }
-}
-
-::view-transition-old(root) {
-  animation: 180ms ease-out both ux-vt-fade-out;
-}
-
-::view-transition-new(root) {
-  animation: 220ms ease-in both ux-vt-fade-in;
-}
-
-::view-transition-old(dash-sidebar),
-::view-transition-new(dash-sidebar),
-::view-transition-old(dash-topbar),
-::view-transition-new(dash-topbar),
-::view-transition-old(public-nav),
-::view-transition-new(public-nav),
-::view-transition-old(public-agh),
-::view-transition-new(public-agh),
-::view-transition-old(auth-visual),
-::view-transition-new(auth-visual) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-::view-transition-group(dash-sidebar) {
-  z-index: 6;
-}
-
-::view-transition-group(dash-topbar),
-::view-transition-group(public-nav) {
-  z-index: 5;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  @view-transition {
-    navigation: none;
-  }
-}
-
 :root {
   /* ============================================================
      MBPHA TeleHealth design tokens — official color palette
@@ -67,15 +18,13 @@
   --royal-blue: #1565C0;
   --mint-green: #D8F3E8;
   --pale-blue: #E3F2FD;
-
   --medical-blue-hover: #085A94;
   --emerald-green-hover: #147A45;
   --danger: #DC3545;
   --warning: #F59E0B;
   --success-dark: #147A45;
   --success-text: #147A45;
-
-  --medical-blue-rgb: 10, 111, 182;
+    --medical-blue-rgb: 10, 111, 182;
   --emerald-green-rgb: 24, 165, 88;
   --dark-navy-rgb: 23, 55, 94;
   --soft-cyan-rgb: 64, 196, 255;
@@ -256,7 +205,6 @@
   --bs-border-radius-lg: var(--ds-radius-lg);
   --bs-border-radius-xl: 16px;
 }
-
 html {
   scroll-behavior: smooth;
   margin: 0;
@@ -280,7 +228,6 @@ h6 {
   color: var(--dark-navy);
   letter-spacing: -0.02em;
 }
-
 a {
   transition: color 0.2s ease, opacity 0.2s ease;
 }
@@ -675,7 +622,7 @@ textarea.form-control {
 .ux-card__footer {
   padding: 16px 24px;
   border-top: 1px solid rgba(217, 226, 236, 0.95);
-  background: rgba(245, 247, 250, 0.6);
+  background: var(--light-gray);
   border-radius: 0 0 16px 16px;
 }
 
@@ -1204,7 +1151,7 @@ textarea.form-control {
   letter-spacing: 0.005em;
   border: 1px solid rgba(var(--medium-gray-rgb), 1);
   background: #fff;
-  color: var(--dark-navy);
+  color: var(--navy-black);
   white-space: nowrap;
 }
 
@@ -2709,7 +2656,7 @@ textarea.form-control {
   letter-spacing: 0.01em;
 }
 .dashboard-layout .btn-outline-primary {
-  background: var(--white);
+  background: #fff;
   border-color: var(--medical-blue);
   color: var(--medical-blue);
 }
@@ -2954,7 +2901,7 @@ button.is-loading::after,
 }
 .ux-table tbody tr:last-child td { border-bottom: 0; }
 .ux-table tbody tr:hover td {
-  background: #F8FBFE;
+  background: rgba(227, 242, 253, 0.25);
 }
 .ux-table tbody strong {
   font-size: 0.87rem;
@@ -3160,7 +3107,7 @@ button.is-loading::after,
   border-radius: 13px;
   padding: 0.7rem 1rem;
   border: 1px solid rgba(10, 111, 182, 0.18);
-  background: var(--white);
+  background: #fff;
   color: var(--medical-blue);
   font-weight: 600;
   display: inline-flex;
@@ -3263,7 +3210,7 @@ button.is-loading::after,
 .dashboard-layout .form-select {
   border-radius: 12px;
   border: 1px solid var(--medium-gray);
-  background: var(--white);
+  background: #fff;
   padding: 0.58rem 0.85rem;
   font-size: 0.87rem;
   color: var(--navy-black);

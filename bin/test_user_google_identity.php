@@ -174,6 +174,10 @@ try {
     expect_true($linkedAfterSave !== null && $linkedAfterSave->password === $originalLocalPassword, 'save() does not change the linked password hash');
     expect_true($linkedAfterSave !== null && $linkedAfterSave->email === $originalLocalEmail, 'save() does not change the linked users.email');
 
+    expect_true(User::releaseGoogleIdentityIfDeleted((int) $googleUser->id) === false, 'releaseGoogleIdentityIfDeleted does not clear a live Google user');
+    $liveAfterReleaseAttempt = User::findById((int) $googleUser->id);
+    expect_true($liveAfterReleaseAttempt !== null && $liveAfterReleaseAttempt->google_sub === $googleSub, 'Live google_sub is unchanged by a deleted-only release');
+
     $existingAfter = User::findById(1);
     expect_true($existingAfter !== null && $existingAfter->google_sub === $existingGoogleSub, 'Existing user google_sub remains unchanged');
     expect_true($existingAfter !== null && $existingAfter->google_email === $existingGoogleEmail, 'Existing user google_email remains unchanged');

@@ -113,6 +113,10 @@ class PatientController extends Controller
             'headerNotifications' => $headerNotifications,
             'recentNotifications' => array_slice($headerNotifications['recent'] ?? [], 0, 5),
             'rightbar' => [
+                'calendarTitle' => 'Upcoming Appointments',
+                'calendarEvents' => $user !== null && $user->id !== null
+                    ? \App\Helpers\DashboardCalendar::eventsForDashboard('patient', (int) $user->id)
+                    : [],
                 'upcomingTitle' => 'Upcoming Consultation',
                 'upcomingItems' => $nextAppointment !== null
                     ? [
@@ -190,29 +194,67 @@ class PatientController extends Controller
             return;
         }
 
-        $pageData = PatientDirectoryService::getAvailableSlotsPageData($_GET);
+        $sidebarItems = [
+            ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+            ['path' => '/patient/consultation-requests', 'label' => 'Consultation History', 'icon' => 'bi-clipboard2-check'],
+            ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
+            ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
+            ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
+        ];
 
-        $this->render('patient/slots/index', [
+        if (strtolower(trim((string) ($_GET['view'] ?? ''))) === 'list') {
+            $pageData = PatientDirectoryService::getAvailableSlotsPageData($_GET);
+
+            $this->render('patient/slots/index', [
+                'title' => 'Available Consultation Slots | MBPHA TeleHealth Consultation System',
+                'user' => $user,
+                'dashboardRole' => 'patient',
+                'dashboardRoleLabel' => 'Patient Dashboard',
+                'dashboardTitle' => 'Available Consultation Slots',
+                'dashboardDescription' => 'Review available consultation slots and submit a booking request for a selected slot.',
+                'sidebarItems' => $sidebarItems,
+                'filters' => $pageData['filters'],
+                'slots' => $pageData['slots'],
+                'summary' => $pageData['summary'],
+                'pagination' => $pageData['pagination'],
+                'doctorOptions' => $pageData['doctorOptions'],
+                'specializationOptions' => $pageData['specializationOptions'],
+                'statusMessage' => Session::getFlash('status'),
+            ], 'layouts/dashboard');
+            return;
+        }
+
+        $weekData = PatientDirectoryService::getWeeklyBookingPageData($_GET);
+
+        $this->render('patient/slots/timetable', [
             'title' => 'Available Consultation Slots | MBPHA TeleHealth Consultation System',
             'user' => $user,
             'dashboardRole' => 'patient',
             'dashboardRoleLabel' => 'Patient Dashboard',
             'dashboardTitle' => 'Available Consultation Slots',
-            'dashboardDescription' => 'Review available consultation slots and submit a booking request for a selected slot.',
-            'sidebarItems' => [
-                ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
-                ['path' => '/patient/consultation-requests', 'label' => 'Consultation History', 'icon' => 'bi-clipboard2-check'],
-                ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
-                ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
-                ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
-            ],
-            'filters' => $pageData['filters'],
-            'slots' => $pageData['slots'],
-            'summary' => $pageData['summary'],
-            'pagination' => $pageData['pagination'],
-            'doctorOptions' => $pageData['doctorOptions'],
-            'specializationOptions' => $pageData['specializationOptions'],
+            'dashboardDescription' => 'Choose an open 30-minute slot on the weekly schedule and book that consultation.',
+            'sidebarItems' => $sidebarItems,
+            'filters' => $weekData['filters'],
+            'weekStart' => $weekData['weekStart'],
+            'weekEnd' => $weekData['weekEnd'],
+            'weekLabel' => $weekData['weekLabel'],
+            'isCurrentWeek' => $weekData['isCurrentWeek'],
+            'prevWeek' => $weekData['prevWeek'],
+            'nextWeek' => $weekData['nextWeek'],
+            'thisWeek' => $weekData['thisWeek'],
+            'days' => $weekData['days'],
+            'intervals' => $weekData['intervals'],
+            'cells' => $weekData['cells'],
+            'gridStart' => $weekData['gridStart'],
+            'gridEnd' => $weekData['gridEnd'],
+            'openCells' => $weekData['openCells'],
+            'weekSlotCount' => $weekData['weekSlotCount'],
+            'summary' => $weekData['summary'],
+            'doctorOptions' => $weekData['doctorOptions'],
+            'specializationOptions' => $weekData['specializationOptions'],
+            'timezoneLabel' => $weekData['timezoneLabel'],
             'statusMessage' => Session::getFlash('status'),
+            'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/mbpha-schedule.css') . '">',
         ], 'layouts/dashboard');
     }
 

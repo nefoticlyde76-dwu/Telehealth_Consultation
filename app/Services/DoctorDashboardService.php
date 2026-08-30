@@ -85,6 +85,13 @@ class DoctorDashboardService
                     'url' => Status::filteredListUrl('/doctor/consultations', Status::COMPLETED),
                     'action_label' => 'Open',
                 ],
+                [
+                    'title' => 'Notifications',
+                    'description' => 'Review consultation updates that may need attention.',
+                    'icon' => 'bi-bell',
+                    'url' => '/notifications',
+                    'action_label' => 'Open',
+                ],
             ],
             'recentActivity' => [
                 [

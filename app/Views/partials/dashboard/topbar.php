@@ -22,7 +22,7 @@ $settingsIsDistinct = $settingsPath !== '' && $settingsPath !== '#' && $settings
       <button class="btn topbar-toggle d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardSidebar" aria-controls="dashboardSidebar" aria-label="Open dashboard navigation">
         <i class="bi bi-list" aria-hidden="true"></i>
       </button>
-      <button class="btn topbar-toggle d-none d-lg-inline-flex" type="button" data-desktop-sidebar-toggle aria-expanded="true" aria-label="Collapse dashboard navigation">
+      <button class="btn topbar-toggle d-none d-lg-inline-flex" type="button" data-desktop-sidebar-toggle aria-expanded="true" aria-controls="dashboardDesktopNav" aria-label="Collapse dashboard navigation">
         <i class="bi bi-list" aria-hidden="true"></i>
       </button>
 
@@ -32,10 +32,17 @@ $settingsIsDistinct = $settingsPath !== '' && $settingsPath !== '#' && $settings
         </button>
       <?php endif; ?>
 
-      <a href="<?= Helper::url($homePath) ?>" class="topbar-brand">
-        <span class="topbar-brand__name">MBPHA TeleHealth</span>
-        <span class="topbar-brand__role"><?= Helper::escape($roleChip) ?></span>
-      </a>
+      <div class="topbar-brand-wrap d-none d-lg-flex">
+        <?php
+        $brandVariant = 'navbar';
+        $brandSubtitle = '';
+        $brandRoleLabel = '';
+        $brandShowTitle = false;
+        $brandShowWordmark = false;
+        $brandLink = Helper::url($homePath !== '' ? $homePath : '/');
+        require __DIR__ . '/../shared/brand_logo.php';
+        ?>
+      </div>
     </div>
 
     <div class="topbar-right">

@@ -70,6 +70,9 @@ class AdminController extends Controller
                 'recentNotifications' => array_slice($headerNotifications['recent'] ?? [], 0, 5),
                 'recentAudit' => $recentAudit,
                 'rightbar' => [
+                    'calendarTitle' => 'Upcoming Appointments',
+                    'calendarEvents' => \App\Helpers\DashboardCalendar::eventsForDashboard('admin', (int) $user->id),
+                    'showUpcomingList' => true,
                     'upcomingTitle' => 'Recent Audit Activity',
                     'upcomingItems' => array_map(static function (array $activity): array {
                         return [

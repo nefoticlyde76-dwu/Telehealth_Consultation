@@ -79,7 +79,10 @@ $buildPageUrl = static function (int $page): string {
     </div>
   </div>
 
-  <div class="ux-card">
+  <div class="ux-card ux-data-card">
+    <div class="ux-card__header">
+      <h2 class="ux-data-card__title">Doctors</h2>
+    </div>
     <div class="ux-table-wrapper border-0">
       <div class="table-responsive">
         <table class="ux-table">

@@ -159,6 +159,23 @@ class DoctorAvailability
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Load every slot for a doctor between two inclusive dates.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function findInDateRangeForDoctor(int $doctorId, string $fromDate, string $toDate): array
+    {
+        if ($doctorId <= 0 || $fromDate === '' || $toDate === '') {
+            return [];
+        }
+
+        return self::findForDoctor($doctorId, [
+            'date_range' => ['from' => $fromDate, 'to' => $toDate],
+            'sort' => 'earliest',
+        ], 500, 0);
+    }
+
     public static function getSummaryForDoctor(int $doctorId): array
     {
         $db = Database::getInstance();
@@ -386,6 +403,61 @@ class DoctorAvailability
         self::bindPatientParameters($stmt, $parameters);
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    /**
+     * Future Available slots for patients within an inclusive date range.
+     *
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public static function findAvailableInDateRangeForPatients(array $filters, string $fromDate, string $toDate): array
+    {
+        if ($fromDate === '' || $toDate === '') {
+            return [];
+        }
+
+        unset($filters['consultation_date']);
+
+        $db = Database::getInstance();
+        $sql = "SELECT
+                doctor_availability.id,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time,
+                doctor_availability.notes,
+                doctor_availability.status,
+                doctor.user_id AS doctor_id,
+                doctor.professional_title,
+                doctor.specialization,
+                doctor.profile_photo_path,
+                users.full_name
+            FROM doctor_availability
+            INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id";
+        $conditions = [
+            "roles.name = 'doctor'",
+            "users.status = 'active'",
+            "doctor_availability.status = 'Available'",
+            'doctor_availability.consultation_date >= CURDATE()',
+            'doctor_availability.consultation_date BETWEEN :range_from AND :range_to',
+        ];
+        $parameters = [
+            ':range_from' => $fromDate,
+            ':range_to' => $toDate,
+        ];
+
+        self::appendPatientFilters($filters, $conditions, $parameters);
+
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        $sql .= ' ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, users.full_name ASC LIMIT 500';
+
+        $stmt = $db->prepare($sql);
+        self::bindPatientParameters($stmt, $parameters);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];

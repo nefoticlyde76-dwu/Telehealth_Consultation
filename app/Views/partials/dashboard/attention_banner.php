@@ -12,10 +12,14 @@ use App\Helpers\Helper;
 $attentionText = trim((string) ($attentionText ?? ''));
 $attentionIcon = (string) ($attentionIcon ?? 'bi-info-circle');
 $attentionAction = is_array($attentionAction ?? null) ? $attentionAction : null;
+$attentionTone = (string) ($attentionTone ?? 'info');
+if (!in_array($attentionTone, ['info', 'success', 'warning', 'pending'], true)) {
+    $attentionTone = 'info';
+}
 ?>
 
 <?php if ($attentionText !== ''): ?>
-  <div class="ux-attention mb-4" role="status">
+  <div class="ux-attention ux-attention--<?= Helper::escape($attentionTone) ?> mb-4" role="status">
     <span class="ux-attention__icon" aria-hidden="true">
       <i class="bi <?= Helper::escape($attentionIcon) ?>"></i>
     </span>

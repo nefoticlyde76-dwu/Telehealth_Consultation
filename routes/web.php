@@ -21,6 +21,10 @@ $router->get('/login', [AuthController::class, 'login']);
 $router->post('/login', [AuthController::class, 'login']);
 $router->get('/register', [AuthController::class, 'register']);
 $router->post('/register', [AuthController::class, 'register']);
+$router->get('/forgot-password', [AuthController::class, 'forgotPassword']);
+$router->post('/forgot-password', [AuthController::class, 'forgotPassword']);
+$router->get('/reset-password', [AuthController::class, 'resetPassword']);
+$router->post('/reset-password', [AuthController::class, 'resetPassword']);
 $router->post('/logout', [AuthController::class, 'logout']);
 $router->post('/auth/google', [GoogleAuthController::class, 'authenticate']);
 $router->get('/auth/google', [GoogleAuthController::class, 'methodNotAllowed']);
@@ -148,6 +152,10 @@ $router->get('/doctor/consultations/{id}/download-prescription', [DoctorControll
 ]);
 
 $router->get('/doctor/availability', [DoctorController::class, 'availability'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->post('/doctor/availability/week', [DoctorController::class, 'saveWeeklyAvailability'], [
     new RoleMiddleware(['doctor']),
 ]);
 

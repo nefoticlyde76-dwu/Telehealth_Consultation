@@ -160,7 +160,10 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
 
   <?php if ($grouped): ?>
     <?php if (!$hasAny): ?>
-      <div class="ux-card">
+      <div class="ux-card ux-data-card">
+        <div class="ux-card__header">
+          <h2 class="ux-data-card__title">Consultations</h2>
+        </div>
         <?php
         $historyRows = [];
         $emptyTitle = $filterActive ? 'No matching consultations' : 'No consultations yet';
@@ -172,7 +175,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
         ?>
       </div>
     <?php else: ?>
-      <div class="ux-card ux-history-card mb-4">
+      <div class="ux-card ux-data-card ux-history-card mb-4">
         <div class="ux-card__header d-flex justify-content-between align-items-baseline gap-3">
           <div>
             <h3 class="h6 mb-1">Upcoming and active</h3>
@@ -189,7 +192,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
         ?>
       </div>
 
-      <div class="ux-card ux-history-card mb-4">
+      <div class="ux-card ux-data-card ux-history-card mb-4">
         <div class="ux-card__header d-flex justify-content-between align-items-baseline gap-3">
           <div>
             <h3 class="h6 mb-1">Completed consultations</h3>
@@ -210,7 +213,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
       </div>
 
       <?php if ($closedRows !== []): ?>
-        <div class="ux-card ux-history-card">
+        <div class="ux-card ux-data-card ux-history-card">
           <div class="ux-card__header d-flex justify-content-between align-items-baseline gap-3">
             <div>
               <h3 class="h6 mb-1">Closed consultations</h3>
@@ -229,7 +232,10 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
       <?php endif; ?>
     <?php endif; ?>
   <?php else: ?>
-    <div class="ux-card">
+    <div class="ux-card ux-data-card">
+      <div class="ux-card__header">
+        <h2 class="ux-data-card__title">Consultations</h2>
+      </div>
       <?php
       $historyRows = $consultations;
       $emptyTitle = $filterActive ? 'No matching consultations' : 'No consultations yet';
