@@ -9,7 +9,7 @@ $filters = $filters ?? [
     'date_to' => '',
     'sort' => 'date_asc',
 ];
-$pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0, 'per_page' => 20, 'from' => 0, 'to' => 0];
+$pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0, 'per_page' => 8, 'from' => 0, 'to' => 0];
 $summary = $summary ?? [];
 $requests = $requests ?? [];
 $statusOptions = $statusOptions ?? [];
@@ -50,6 +50,7 @@ $statusFieldOptions = \App\Helpers\Status::filterOptions(
 $filterForm = [
     'action' => \App\Helpers\Helper::url('/admin/consultation-requests'),
     'title' => 'Filter queue',
+    'clear_url' => \App\Helpers\Helper::url('/admin/consultation-requests'),
     'search' => [
         'label' => 'Search',
         'placeholder' => 'Patient, email, doctor, or request ID',
@@ -91,8 +92,16 @@ $filterForm = [
             'options' => $sortOptions,
         ],
     ],
-    'clear_url' => \App\Helpers\Helper::url('/admin/consultation-requests'),
 ];
+$filterTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    $statusFieldOptions
+);
+$filterTabCurrent = (string) ($filters['status'] ?? '');
+$filterTabAria = 'Filter queue by status';
+$filterTabUrl = static function (string $value) use ($buildQueueUrl): string {
+    return $buildQueueUrl(['status' => $value, 'selected' => 0, 'page' => 1]);
+};
 
 $queueNoun = ((string) ($filters['status'] ?? '')) === 'Pending'
     ? 'pending requests'
@@ -167,41 +176,17 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
     <aside class="ux-card ux-data-card ux-queue" aria-label="Consultation request queue">
       <div class="ux-card__header ux-queue__header">
         <h2 class="ux-data-card__title">Queue</h2>
-        <div class="d-flex flex-wrap align-items-center gap-2">
-          <div class="ux-table-filters" role="group" aria-label="Filter queue by status">
-            <?php
-            $queueStatusTabs = array_merge(
-                [['value' => '', 'label' => 'All']],
-                $statusFieldOptions
-            );
-            $currentQueueStatus = (string) ($filters['status'] ?? '');
-            ?>
-            <?php foreach ($queueStatusTabs as $tab): ?>
-              <?php
-              $tabValue = (string) ($tab['value'] ?? '');
-              $tabLabel = (string) ($tab['label'] ?? 'All');
-              $tabActive = $currentQueueStatus === $tabValue;
-              ?>
-              <a
-                href="<?= $buildQueueUrl(['status' => $tabValue, 'selected' => 0, 'page' => 1]) ?>"
-                class="<?= $tabActive ? 'is-active' : '' ?>"
-                <?= $tabActive ? 'aria-current="page"' : '' ?>
-              ><?= \App\Helpers\Helper::escape($tabLabel) ?></a>
-            <?php endforeach; ?>
-          </div>
-          <span class="text-muted small"><?= (int) $totalItems ?></span>
-        </div>
+        <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
       </div>
-      <?php if ($requests === []): ?>
-        <?php
-        $emptyIcon = 'bi-clipboard2-check';
-        $emptyCompact = true;
-        require __DIR__ . '/../../partials/shared/empty_state.php';
-        ?>
-      <?php else: ?>
-        <div class="ux-table-wrapper">
+      <div class="ux-table-wrapper">
           <table class="ux-table ux-queue-table align-middle mb-0">
             <caption class="visually-hidden">Consultation request queue</caption>
+            <colgroup>
+              <col>
+              <col>
+              <col>
+              <col>
+            </colgroup>
             <thead>
               <tr>
                 <th scope="col">Patient</th>
@@ -211,6 +196,17 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
               </tr>
             </thead>
             <tbody>
+              <?php if ($requests === []): ?>
+                <tr>
+                  <td colspan="4" class="ux-table__empty-state">
+                    <?php
+                    $emptyIcon = 'bi-clipboard2-check';
+                    $emptyCompact = true;
+                    require __DIR__ . '/../../partials/shared/empty_state.php';
+                    ?>
+                  </td>
+                </tr>
+              <?php else: ?>
               <?php foreach ($requests as $request): ?>
                 <?php
                 $requestId = (int) ($request['id'] ?? 0);
@@ -241,7 +237,7 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
                     require __DIR__ . '/../../partials/shared/person_row.php';
                     ?>
                   </td>
-                  <td class="text-muted small text-nowrap">
+                  <td class="text-muted small">
                     <?= \App\Helpers\Helper::escape($dateLabel) ?>
                     <?php if ($timeLabel !== ''): ?>
                       <span class="d-block"><?= \App\Helpers\Helper::escape($timeLabel) ?></span>
@@ -250,10 +246,10 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
                   <td><?= ux_status_badge($status) ?></td>
                 </tr>
               <?php endforeach; ?>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
-      <?php endif; ?>
 
       <?php
       $paginationPath = '/admin/consultation-requests';

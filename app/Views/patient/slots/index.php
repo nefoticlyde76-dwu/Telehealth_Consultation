@@ -1,5 +1,8 @@
 <?php
 
+use App\Helpers\Helper;
+use App\Helpers\ListFilter;
+
 $filters = $filters ?? ['doctor_id' => 0, 'specialization' => '', 'consultation_date' => ''];
 $slots = $slots ?? [];
 $summary = $summary ?? [];
@@ -22,7 +25,56 @@ $buildPageUrl = static function (int $page) use ($filters): string {
 
     $queryString = http_build_query($query);
 
-    return \App\Helpers\Helper::url('/patient/available-slots') . ($queryString !== '' ? '?' . $queryString : '');
+    return Helper::url('/patient/available-slots') . ($queryString !== '' ? '?' . $queryString : '');
+};
+
+$filterForm = [
+    'action' => Helper::url('/patient/available-slots'),
+    'title' => 'Filter slots',
+    'clear_url' => Helper::url('/patient/available-slots?view=list'),
+    'hidden' => ['view' => 'list'],
+    'fields' => [
+        [
+            'type' => 'select',
+            'name' => 'doctor_id',
+            'label' => 'Doctor',
+            'value' => (string) ((int) ($filters['doctor_id'] ?? 0) ?: ''),
+            'empty_label' => 'All doctors',
+            'options' => array_map(static fn (array $doctorOption): array => [
+                'value' => (string) ((int) ($doctorOption['doctor_id'] ?? 0)),
+                'label' => (string) ($doctorOption['full_name'] ?? 'Doctor'),
+            ], $doctorOptions),
+        ],
+        [
+            'type' => 'select',
+            'name' => 'specialization',
+            'label' => 'Specialization',
+            'value' => (string) ($filters['specialization'] ?? ''),
+            'empty_label' => 'All specializations',
+            'options' => array_map(static fn (string $option): array => [
+                'value' => $option,
+                'label' => $option,
+            ], $specializationOptions),
+        ],
+        [
+            'type' => 'date',
+            'name' => 'consultation_date',
+            'label' => 'Consultation Date',
+            'value' => (string) ($filters['consultation_date'] ?? ''),
+        ],
+    ],
+];
+$filterTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    array_map(static fn (string $option): array => [
+        'value' => $option,
+        'label' => $option,
+    ], $specializationOptions)
+);
+$filterTabCurrent = (string) ($filters['specialization'] ?? '');
+$filterTabAria = 'Filter slots by specialization';
+$filterTabUrl = static function (string $value) use ($filters): string {
+    return ListFilter::url('/patient/available-slots', $filters + ['view' => 'list'], ['specialization' => $value, 'page' => 1]);
 };
 ?>
 
@@ -58,66 +110,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
     </div>
   </div>
 
-  <div class="ux-card ux-filter">
-    <div class="card-header">
-      <h3 class="h6">
-        <i class="bi bi-funnel-fill ux-filter__header-icon"></i>
-        Filter slots
-      </h3>
-    </div>
-    <form method="GET" action="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="user-filter-form">
-      <input type="hidden" name="view" value="list">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label for="doctor_id" class="form-label">Doctor</label>
-          <select class="form-select" id="doctor_id" name="doctor_id" aria-label="Filter by doctor">
-            <option value="">All doctors</option>
-            <?php foreach ($doctorOptions as $doctorOption): ?>
-              <?php $optionDoctorId = (int) ($doctorOption['doctor_id'] ?? 0); ?>
-              <option value="<?= \App\Helpers\Helper::escape((string) $optionDoctorId) ?>" <?= (int) ($filters['doctor_id'] ?? 0) === $optionDoctorId ? 'selected' : '' ?>>
-                <?= \App\Helpers\Helper::escape((string) ($doctorOption['full_name'] ?? 'Doctor')) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <div class="col-md-4">
-          <label for="specialization" class="form-label">Specialization</label>
-          <select class="form-select" id="specialization" name="specialization" aria-label="Filter by specialization">
-            <option value="">All specializations</option>
-            <?php foreach ($specializationOptions as $specializationOption): ?>
-              <option value="<?= \App\Helpers\Helper::escape((string) $specializationOption) ?>" <?= ($filters['specialization'] ?? '') === $specializationOption ? 'selected' : '' ?>>
-                <?= \App\Helpers\Helper::escape((string) $specializationOption) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <div class="col-md-4">
-          <label for="consultation_date" class="form-label">Consultation Date</label>
-          <input
-            type="date"
-            class="form-control"
-            id="consultation_date"
-            name="consultation_date"
-            value="<?= \App\Helpers\Helper::escape((string) ($filters['consultation_date'] ?? '')) ?>"
-          >
-        </div>
-
-        <div class="col-12">
-          <div class="ux-filter__actions">
-            <button type="submit" class="btn btn-primary btn-sm">
-              <i class="bi bi-funnel-fill me-1"></i>
-              Apply Filters
-            </button>
-            <a href="<?= \App\Helpers\Helper::url('/patient/available-slots?view=list') ?>" class="btn btn-outline-primary btn-sm">
-              Reset
-            </a>
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
+  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-4">
@@ -158,6 +151,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
   <div class="ux-card ux-data-card">
     <div class="ux-card__header">
       <h2 class="ux-data-card__title">Available slots</h2>
+      <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
     </div>
     <div class="ux-table-wrapper border-0">
       <div class="table-responsive">
@@ -197,8 +191,12 @@ $buildPageUrl = static function (int $page) use ($filters): string {
               <?php foreach ($slots as $slot): ?>
                 <?php
                 $slotId = (int) ($slot['id'] ?? 0);
+                $slotExpiresAt = \App\Helpers\Helper::combineDateTimeIso(
+                    (string) ($slot['consultation_date'] ?? ''),
+                    (string) ($slot['end_time'] ?? '')
+                );
                 ?>
-                <tr>
+                <tr<?= $slotExpiresAt !== '' ? ' data-slot-expires-at="' . \App\Helpers\Helper::escape($slotExpiresAt) . '"' : '' ?>>
                   <td>
                     <?php
                     $personName = (string) ($slot['full_name'] ?? 'Doctor');

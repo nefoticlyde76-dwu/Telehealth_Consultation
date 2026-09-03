@@ -265,6 +265,63 @@ class Helper
         return sprintf('Local Time (UTC%s)', $offset);
     }
 
+    /**
+     * Application "now" in the pinned MBPHA timezone.
+     * Use this instead of the browser clock or MySQL NOW() when comparing slots.
+     */
+    public static function now(): \DateTimeImmutable
+    {
+        $name = trim((string) (Environment::get('APP_TIMEZONE') ?? ''));
+        if ($name === '') {
+            $name = 'Pacific/Port_Moresby';
+        }
+
+        try {
+            return new \DateTimeImmutable('now', new \DateTimeZone($name));
+        } catch (\Throwable) {
+            return new \DateTimeImmutable('now', new \DateTimeZone('Pacific/Port_Moresby'));
+        }
+    }
+
+    public static function nowDatetime(): string
+    {
+        return self::now()->format('Y-m-d H:i:s');
+    }
+
+    public static function nowIso(): string
+    {
+        return self::now()->format('c');
+    }
+
+    /**
+     * Combine a DATE + TIME into an ISO-8601 string in the application timezone.
+     */
+    public static function combineDateTimeIso(string $date, string $time): string
+    {
+        $date = trim($date);
+        $time = trim($time);
+
+        if ($date === '' || $time === '') {
+            return '';
+        }
+
+        if (preg_match('/^\d{2}:\d{2}$/', $time) === 1) {
+            $time .= ':00';
+        }
+
+        try {
+            $parsed = \DateTimeImmutable::createFromFormat(
+                'Y-m-d H:i:s',
+                $date . ' ' . $time,
+                self::now()->getTimezone()
+            );
+        } catch (\Throwable) {
+            return '';
+        }
+
+        return $parsed instanceof \DateTimeImmutable ? $parsed->format('c') : '';
+    }
+
     public static function initials(?string $name): string
     {
         $name = trim((string) $name);

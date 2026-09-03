@@ -91,6 +91,10 @@ $router->get('/patient/consultation-requests/{id}/download-prescription', [Patie
     new RoleMiddleware(['patient']),
 ]);
 
+$router->get('/patient/consultation-requests/{id}/complaint-image', [PatientController::class, 'showComplaintImage'], [
+    new RoleMiddleware(['patient']),
+]);
+
 $router->post('/patient/consultations/{id}/join-token', [PatientController::class, 'joinConsultation'], [
     new RoleMiddleware(['patient']),
 ]);
@@ -148,6 +152,10 @@ $router->get('/doctor/consultations/{id}/download-record', [DoctorController::cl
 ]);
 
 $router->get('/doctor/consultations/{id}/download-prescription', [DoctorController::class, 'downloadPrescription'], [
+    new RoleMiddleware(['doctor']),
+]);
+
+$router->get('/doctor/consultations/{id}/complaint-image', [DoctorController::class, 'showComplaintImage'], [
     new RoleMiddleware(['doctor']),
 ]);
 
@@ -248,6 +256,10 @@ $router->get('/admin/consultation-requests', [AdminController::class, 'consultat
 ]);
 
 $router->get('/admin/consultation-requests/{id}', [AdminController::class, 'showConsultationRequest'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->get('/admin/consultation-requests/{id}/complaint-image', [AdminController::class, 'showComplaintImage'], [
     new RoleMiddleware(['admin']),
 ]);
 

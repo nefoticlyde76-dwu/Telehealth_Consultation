@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Core\Database;
+use App\Helpers\Helper;
+use App\Helpers\ListFilter;
 use PDO;
 
 class Doctor
@@ -322,21 +324,23 @@ class Doctor
     public static function countForPatientDirectory(): int
     {
         $db = Database::getInstance();
-        $stmt = $db->query(
+        $stmt = $db->prepare(
             "SELECT COUNT(*)
             FROM doctor
             INNER JOIN users ON users.id = doctor.user_id
             INNER JOIN roles ON roles.id = users.role_id
+            CROSS JOIN (SELECT CAST(:slot_now AS DATETIME) AS slot_now) AS slot_clock
             WHERE roles.name = 'doctor'
               AND users.status = 'active'
               AND EXISTS (
                   SELECT 1
                   FROM doctor_availability
                   WHERE doctor_availability.doctor_id = doctor.user_id
-                    AND doctor_availability.status = 'Available'
-                    AND doctor_availability.consultation_date >= CURDATE()
+                    AND " . DoctorAvailability::stillBookableSql('doctor_availability', 'slot_clock.slot_now') . "
               )"
         );
+        $stmt->bindValue(':slot_now', Helper::nowDatetime());
+        $stmt->execute();
 
         return (int) $stmt->fetchColumn();
     }
@@ -356,31 +360,30 @@ class Doctor
                     SELECT COUNT(*)
                     FROM doctor_availability
                     WHERE doctor_availability.doctor_id = doctor.user_id
-                      AND doctor_availability.status = 'Available'
-                      AND doctor_availability.consultation_date >= CURDATE()
+                      AND " . DoctorAvailability::stillBookableSql('doctor_availability', 'slot_clock.slot_now') . "
                 ) AS available_slot_count,
                 (
                     SELECT MIN(doctor_availability.consultation_date)
                     FROM doctor_availability
                     WHERE doctor_availability.doctor_id = doctor.user_id
-                      AND doctor_availability.status = 'Available'
-                      AND doctor_availability.consultation_date >= CURDATE()
+                      AND " . DoctorAvailability::stillBookableSql('doctor_availability', 'slot_clock.slot_now') . "
                 ) AS next_available_date
             FROM doctor
             INNER JOIN users ON users.id = doctor.user_id
             INNER JOIN roles ON roles.id = users.role_id
+            CROSS JOIN (SELECT CAST(:slot_now AS DATETIME) AS slot_now) AS slot_clock
             WHERE roles.name = 'doctor'
               AND users.status = 'active'
               AND EXISTS (
                   SELECT 1
                   FROM doctor_availability
                   WHERE doctor_availability.doctor_id = doctor.user_id
-                    AND doctor_availability.status = 'Available'
-                    AND doctor_availability.consultation_date >= CURDATE()
+                    AND " . DoctorAvailability::stillBookableSql('doctor_availability', 'slot_clock.slot_now') . "
               )
             ORDER BY next_available_date ASC, users.full_name ASC
             LIMIT :limit OFFSET :offset"
         );
+        $stmt->bindValue(':slot_now', Helper::nowDatetime());
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -391,7 +394,7 @@ class Doctor
     public static function getSpecializationOptionsForPatients(): array
     {
         $db = Database::getInstance();
-        $stmt = $db->query(
+        $stmt = $db->prepare(
             "SELECT DISTINCT doctor.specialization
             FROM doctor
             INNER JOIN users ON users.id = doctor.user_id
@@ -401,10 +404,11 @@ class Doctor
               AND users.status = 'active'
               AND doctor.specialization IS NOT NULL
               AND doctor.specialization != ''
-              AND doctor_availability.status = 'Available'
-              AND doctor_availability.consultation_date >= CURDATE()
+              AND " . DoctorAvailability::stillBookableSql('doctor_availability') . "
             ORDER BY doctor.specialization ASC"
         );
+        $stmt->bindValue(':slot_now', Helper::nowDatetime());
+        $stmt->execute();
 
         return array_map(
             static fn (array $row): string => (string) $row['specialization'],

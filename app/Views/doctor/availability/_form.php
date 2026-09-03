@@ -4,7 +4,12 @@ $formData = $formData ?? [];
 $fieldErrors = $fieldErrors ?? [];
 $showStatus = $showStatus ?? true;
 $disabled = $disabled ?? false;
+$returnWeek = (string) ($returnWeek ?? '');
 ?>
+
+<?php if ($returnWeek !== ''): ?>
+  <input type="hidden" name="return_week" value="<?= \App\Helpers\Helper::escape($returnWeek) ?>">
+<?php endif; ?>
 
 <div class="row g-3">
   <div class="col-md-6">
@@ -28,6 +33,7 @@ $disabled = $disabled ?? false;
       class="form-control <?= isset($fieldErrors['start_time']) ? 'is-invalid' : '' ?>"
       id="start_time"
       name="start_time"
+      step="60"
       value="<?= \App\Helpers\Helper::escape((string) ($formData['start_time'] ?? '')) ?>"
       <?= $disabled ? 'disabled' : '' ?>
       required
@@ -42,6 +48,7 @@ $disabled = $disabled ?? false;
       class="form-control <?= isset($fieldErrors['end_time']) ? 'is-invalid' : '' ?>"
       id="end_time"
       name="end_time"
+      step="60"
       value="<?= \App\Helpers\Helper::escape((string) ($formData['end_time'] ?? '')) ?>"
       <?= $disabled ? 'disabled' : '' ?>
       required

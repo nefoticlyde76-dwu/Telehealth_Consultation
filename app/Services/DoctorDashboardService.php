@@ -13,6 +13,7 @@ class DoctorDashboardService
 {
     public static function getDashboardData(int $userId): array
     {
+        SlotExpirationService::sweep();
         $user = User::findById($userId);
         $doctor = Doctor::findProfileDetailByUserId($userId);
         $availabilitySummary = DoctorAvailability::getSummaryForDoctor($userId);
@@ -60,37 +61,6 @@ class DoctorDashboardService
                     'description' => 'Consultations you have completed.',
                     'tone' => 'navy',
                     'url' => Status::filteredListUrl('/doctor/consultations', Status::COMPLETED),
-                ],
-            ],
-            'quickActions' => [
-                [
-                    'title' => 'Manage Availability',
-                    'description' => 'Create and update consultation slots patients can book.',
-                    'icon' => 'bi-calendar-week',
-                    'url' => '/doctor/availability',
-                    'action_label' => 'Open',
-                    'emphasis' => 'primary',
-                ],
-                [
-                    'title' => 'View Upcoming Consultations',
-                    'description' => 'Review approved consultations assigned to you.',
-                    'icon' => 'bi-calendar2-check',
-                    'url' => Status::filteredListUrl('/doctor/consultations', Status::APPROVED),
-                    'action_label' => 'Open',
-                ],
-                [
-                    'title' => 'Consultation History',
-                    'description' => 'Open completed records and prescriptions.',
-                    'icon' => 'bi-journal-medical',
-                    'url' => Status::filteredListUrl('/doctor/consultations', Status::COMPLETED),
-                    'action_label' => 'Open',
-                ],
-                [
-                    'title' => 'Notifications',
-                    'description' => 'Review consultation updates that may need attention.',
-                    'icon' => 'bi-bell',
-                    'url' => '/notifications',
-                    'action_label' => 'Open',
                 ],
             ],
             'recentActivity' => [

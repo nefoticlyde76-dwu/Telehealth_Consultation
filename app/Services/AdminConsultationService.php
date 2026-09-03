@@ -10,7 +10,7 @@ use App\Models\ConsultationRequest;
 
 class AdminConsultationService
 {
-    public const PER_PAGE = 20;
+    public const PER_PAGE = 8;
 
     public static function getDashboardSummary(int $unreadNotifications = 0): array
     {

@@ -32,6 +32,7 @@ $statusFieldOptions = \App\Helpers\Status::filterOptions(
 $filterForm = [
     'action' => \App\Helpers\Helper::url('/doctor/consultations'),
     'title' => 'Filter consultations',
+    'clear_url' => \App\Helpers\Helper::url('/doctor/consultations'),
     'search' => [
         'label' => 'Search',
         'placeholder' => 'Search by patient name',
@@ -77,8 +78,16 @@ $filterForm = [
             ],
         ],
     ],
-    'clear_url' => \App\Helpers\Helper::url('/doctor/consultations'),
 ];
+$filterTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    $statusFieldOptions
+);
+$filterTabCurrent = (string) ($filters['status'] ?? '');
+$filterTabAria = 'Filter consultations by status';
+$filterTabUrl = static function (string $value) use ($filters): string {
+    return \App\Helpers\ListFilter::url('/doctor/consultations', $filters, ['status' => $value, 'page' => 1]);
+};
 
 $paginationPath = '/doctor/consultations';
 $paginationFilters = $filters;
@@ -163,6 +172,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
       <div class="ux-card ux-data-card">
         <div class="ux-card__header">
           <h2 class="ux-data-card__title">Consultations</h2>
+          <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
         </div>
         <?php
         $historyRows = [];
@@ -176,12 +186,12 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
       </div>
     <?php else: ?>
       <div class="ux-card ux-data-card ux-history-card mb-4">
-        <div class="ux-card__header d-flex justify-content-between align-items-baseline gap-3">
+        <div class="ux-card__header">
           <div>
-            <h3 class="h6 mb-1">Upcoming and active</h3>
+            <h3 class="ux-data-card__title mb-1">Upcoming and active</h3>
             <p class="text-muted small mb-0">Approved consultations use Join Consultation when the session is open. Review and complete stays in the consultation room.</p>
           </div>
-          <span class="text-muted small"><?= count($activeRows) ?></span>
+          <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
         </div>
         <?php
         $historyRows = $activeRows;
@@ -235,6 +245,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
     <div class="ux-card ux-data-card">
       <div class="ux-card__header">
         <h2 class="ux-data-card__title">Consultations</h2>
+        <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
       </div>
       <?php
       $historyRows = $consultations;

@@ -15,12 +15,15 @@ class DoctorAvailabilityService
 {
     public const PER_PAGE = 10;
     public const SLOT_MINUTES = 30;
+    public const GRID_STEP_MINUTES = 30;
     public const GRID_START = '08:00';
-    public const GRID_END = '16:00';
+    public const GRID_END = '22:00';
+    public const GRID_LAST_START = '21:00';
     public const MAX_APPLY_WEEKS = 8;
 
     public static function getAvailabilityPageData(int $doctorId, array $query): array
     {
+        SlotExpirationService::sweep();
         $filters = self::normalizeFilters($query);
         $perPage = (int) ($filters['per_page'] ?? self::PER_PAGE);
         $totalItems = DoctorAvailability::countForDoctor($doctorId, $filters);
@@ -48,20 +51,150 @@ class DoctorAvailabilityService
         return DoctorAvailability::findByIdForDoctor($availabilityId, $doctorId);
     }
 
-    public static function getAvailabilityFormData(?array $availability = null): array
+    public static function getAvailabilityFormData(?array $availability = null, array $query = []): array
     {
+        $date = (string) ($availability['consultation_date'] ?? $query['date'] ?? $query['consultation_date'] ?? '');
+        $start = (string) ($availability['start_time'] ?? $query['start'] ?? $query['start_time'] ?? '');
+        $end = (string) ($availability['end_time'] ?? $query['end'] ?? $query['end_time'] ?? '');
+
         return [
             '_token' => '',
-            'consultation_date' => (string) ($availability['consultation_date'] ?? ''),
-            'start_time' => self::normalizeTimeForForm((string) ($availability['start_time'] ?? '')),
-            'end_time' => self::normalizeTimeForForm((string) ($availability['end_time'] ?? '')),
-            'notes' => (string) ($availability['notes'] ?? ''),
+            'consultation_date' => $date,
+            'start_time' => self::normalizeTimeForForm($start),
+            'end_time' => self::normalizeTimeForForm($end),
+            'notes' => (string) ($availability['notes'] ?? $query['notes'] ?? ''),
             'status' => (string) ($availability['status'] ?? 'Available'),
         ];
     }
 
+    public static function weekQueryUrl(string $week = ''): string
+    {
+        if ($week !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $week) === 1) {
+            return '/doctor/availability?week=' . rawurlencode($week);
+        }
+
+        return '/doctor/availability';
+    }
+
+    public static function formatClockLabel(string $time): string
+    {
+        $hm = self::normalizeTimeForForm($time);
+        if ($hm === '') {
+            return '';
+        }
+
+        $parsed = DateTimeImmutable::createFromFormat('H:i', $hm, self::appTimezone());
+
+        return $parsed instanceof DateTimeImmutable ? $parsed->format('g:i A') : $hm;
+    }
+
+    /**
+     * Position an availability period on the visual time scale.
+     *
+     * @return array{visible:bool,top_pct:float,height_pct:float,duration_minutes:int}
+     */
+    public static function layoutBlock(string $startHm, string $endHm): array
+    {
+        $start = self::minutesFromMidnight($startHm);
+        $end = self::minutesFromMidnight($endHm);
+        $gridStart = self::minutesFromMidnight(self::GRID_START);
+        $gridEnd = self::minutesFromMidnight(self::GRID_END);
+
+        if ($start === null || $end === null || $gridStart === null || $gridEnd === null || $end <= $start) {
+            return ['visible' => false, 'top_pct' => 0.0, 'height_pct' => 0.0, 'duration_minutes' => 0];
+        }
+
+        $span = max(1, $gridEnd - $gridStart);
+        $visStart = max($start, $gridStart);
+        $visEnd = min($end, $gridEnd);
+        if ($visEnd <= $visStart) {
+            return ['visible' => false, 'top_pct' => 0.0, 'height_pct' => 0.0, 'duration_minutes' => $end - $start];
+        }
+
+        $top = (($visStart - $gridStart) / $span) * 100;
+        $height = (($visEnd - $visStart) / $span) * 100;
+        $minHeight = (15 / $span) * 100;
+        if ($height < $minHeight) {
+            $height = $minHeight;
+        }
+        if ($top + $height > 100) {
+            $height = max($minHeight, 100 - $top);
+        }
+
+        return [
+            'visible' => true,
+            'top_pct' => round($top, 3),
+            'height_pct' => round($height, 3),
+            'duration_minutes' => $end - $start,
+        ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $days
+     * @param list<array<string, mixed>> $slots
+     * @return array<string, list<array<string, mixed>>>
+     */
+    public static function buildDayBlocks(array $days, array $slots, string $todayDate, string $nowHm): array
+    {
+        $grouped = [];
+        foreach ($days as $day) {
+            $date = (string) ($day['date'] ?? '');
+            if ($date !== '') {
+                $grouped[$date] = [];
+            }
+        }
+
+        foreach ($slots as $slot) {
+            $date = (string) ($slot['consultation_date'] ?? '');
+            if ($date === '' || !isset($grouped[$date])) {
+                continue;
+            }
+
+            $start = self::normalizeTimeForForm((string) ($slot['start_time'] ?? ''));
+            $end = self::normalizeTimeForForm((string) ($slot['end_time'] ?? ''));
+            $layout = self::layoutBlock($start, $end);
+            if (!$layout['visible']) {
+                continue;
+            }
+
+            $status = (string) ($slot['status'] ?? 'Available');
+            $isPast = $date < $todayDate || ($date === $todayDate && $end !== '' && $end <= $nowHm);
+            if ($status !== 'Booked' && $isPast) {
+                continue;
+            }
+            if ($status === 'Expired') {
+                continue;
+            }
+            $state = $status === 'Booked' ? 'booked' : 'available';
+
+            $grouped[$date][] = [
+                'id' => (int) ($slot['id'] ?? 0),
+                'date' => $date,
+                'start' => $start,
+                'end' => $end,
+                'start_label' => self::formatClockLabel($start),
+                'end_label' => self::formatClockLabel($end),
+                'range_label' => trim(self::formatClockLabel($start) . ' – ' . self::formatClockLabel($end), ' –'),
+                'status' => $status,
+                'state' => $state,
+                'notes' => (string) ($slot['notes'] ?? ''),
+                'locked' => $status === 'Booked',
+                'past' => $isPast,
+                'top_pct' => $layout['top_pct'],
+                'height_pct' => $layout['height_pct'],
+                'duration_minutes' => $layout['duration_minutes'],
+                'full_name' => (string) ($slot['full_name'] ?? ''),
+                'specialization' => (string) ($slot['specialization'] ?? ''),
+                'expires_at' => $status === 'Available' ? Helper::combineDateTimeIso($date, $end) : '',
+            ];
+        }
+
+        return $grouped;
+    }
+
     public static function createAvailability(int $doctorId, array $input): array
     {
+        SlotExpirationService::sweep();
         $formData = self::normalizeFormData($input);
         $formData['status'] = 'Available';
         [$errors, $fieldErrors] = self::validateAvailabilityForm($doctorId, $formData);
@@ -114,6 +247,7 @@ class DoctorAvailabilityService
 
     public static function updateAvailability(int $doctorId, int $availabilityId, array $input): array
     {
+        SlotExpirationService::sweep();
         $existingAvailability = self::getAvailabilityDetail($doctorId, $availabilityId);
 
         if ($existingAvailability === null) {
@@ -185,6 +319,7 @@ class DoctorAvailabilityService
 
     public static function deleteAvailability(int $doctorId, int $availabilityId, string $csrfToken): array
     {
+        SlotExpirationService::sweep();
         if (!Csrf::verify($csrfToken)) {
             return [
                 'success' => false,
@@ -327,8 +462,13 @@ class DoctorAvailabilityService
             $fieldErrors['consultation_date'] = 'Consultation date is required.';
         } elseif (!self::isValidDate($formData['consultation_date'])) {
             $fieldErrors['consultation_date'] = 'Please provide a valid consultation date.';
-        } elseif ($formData['consultation_date'] < date('Y-m-d')) {
+        } elseif ($formData['consultation_date'] < Helper::now()->format('Y-m-d')) {
             $fieldErrors['consultation_date'] = 'Past dates are not allowed for availability slots.';
+        } elseif (
+            $formData['end_time'] !== ''
+            && SlotExpirationService::hasEnded($formData['consultation_date'], $formData['end_time'])
+        ) {
+            $fieldErrors['end_time'] = 'This time window has already ended. Choose a future end time.';
         }
 
         if ($formData['start_time'] === '') {
@@ -432,8 +572,9 @@ class DoctorAvailabilityService
 
     /**
      * Shared Monday–Sunday grid used by doctor scheduling and patient booking.
+     * Hours are fixed: 30-minute rows from 08:00 to 22:00.
      *
-     * @param list<array<string, mixed>> $slots
+     * @param list<array<string, mixed>> $slots Kept for callers; no longer expands grid hours.
      * @return array<string, mixed>
      */
     public static function getWeekGridScaffold(string $week = '', array $slots = []): array
@@ -442,7 +583,8 @@ class DoctorAvailabilityService
         $today = new DateTimeImmutable('now', $timezone);
         $weekStart = self::resolveWeekMonday($week, $timezone);
         $weekEnd = $weekStart->modify('+6 days');
-        [$gridStart, $gridEnd] = self::resolveGridBounds($slots);
+        $gridStart = self::GRID_START;
+        $gridEnd = self::GRID_END;
         $thisWeek = self::resolveWeekMonday('', $timezone)->format('Y-m-d');
 
         return [
@@ -470,8 +612,7 @@ class DoctorAvailabilityService
      */
     public static function getWeeklySchedulePageData(int $doctorId, array $query): array
     {
-        $timezone = self::appTimezone();
-        $today = new DateTimeImmutable('now', $timezone);
+        SlotExpirationService::sweep();
         $weekHint = (string) ($query['week'] ?? '');
         $anchor = self::getWeekGridScaffold($weekHint);
         $slots = DoctorAvailability::findInDateRangeForDoctor(
@@ -480,19 +621,32 @@ class DoctorAvailabilityService
             (string) $anchor['weekEnd']
         );
         $grid = self::getWeekGridScaffold($weekHint, $slots);
-        $cells = self::buildWeekCells($grid['days'], $grid['intervals'], $slots, $today);
+        $blocks = self::buildDayBlocks(
+            $grid['days'],
+            $slots,
+            (string) $grid['todayDate'],
+            (string) $grid['nowHm']
+        );
 
         $availableCount = 0;
         $bookedCount = 0;
-        $customCount = 0;
-        foreach ($cells as $cell) {
-            if (($cell['state'] ?? '') === 'available') {
-                $availableCount++;
-            } elseif (($cell['state'] ?? '') === 'booked') {
+        $todayDate = (string) $grid['todayDate'];
+        $nowHm = (string) $grid['nowHm'];
+        foreach ($slots as $slot) {
+            $status = (string) ($slot['status'] ?? '');
+            if ($status === 'Booked') {
                 $bookedCount++;
-            } elseif (($cell['state'] ?? '') === 'custom') {
-                $customCount++;
+                continue;
             }
+            if ($status !== 'Available') {
+                continue;
+            }
+            $slotDate = (string) ($slot['consultation_date'] ?? '');
+            $slotEnd = self::normalizeTimeForForm((string) ($slot['end_time'] ?? ''));
+            if ($slotDate < $todayDate || ($slotDate === $todayDate && $slotEnd !== '' && $slotEnd <= $nowHm)) {
+                continue;
+            }
+            $availableCount++;
         }
 
         return [
@@ -505,16 +659,15 @@ class DoctorAvailabilityService
             'thisWeek' => $grid['thisWeek'],
             'days' => $grid['days'],
             'intervals' => $grid['intervals'],
-            'cells' => $cells,
+            'blocks' => $blocks,
             'slots' => $slots,
             'gridStart' => $grid['gridStart'],
             'gridEnd' => $grid['gridEnd'],
-            'timeOptions' => self::buildTimeSelectOptions($grid['intervals']),
-            'applyWeekOptions' => self::getApplyWeekOptions(),
+            'todayDate' => $grid['todayDate'],
+            'nowHm' => $grid['nowHm'],
             'counts' => [
                 'available' => $availableCount,
                 'booked' => $bookedCount,
-                'custom' => $customCount,
             ],
             'summary' => DoctorAvailability::getSummaryForDoctor($doctorId),
             'timezoneLabel' => $grid['timezoneLabel'],
@@ -522,9 +675,9 @@ class DoctorAvailabilityService
     }
 
     /**
-     * Persist one week's 30-minute selections onto existing date-specific rows.
+     * Persist one week's on-the-hour 30-minute selections onto existing date-specific rows.
      *
-     * Booked and non-30-minute slots are never deleted. Past dates are left untouched.
+     * Booked, custom-duration, and off-hour slots are never deleted. Past dates are left untouched.
      * Optional apply-forward only creates matching future-week cells.
      *
      * @param array<string, mixed> $input
@@ -532,6 +685,7 @@ class DoctorAvailabilityService
      */
     public static function saveWeeklySchedule(int $doctorId, array $input): array
     {
+        SlotExpirationService::sweep();
         $timezone = self::appTimezone();
         $weekStart = self::resolveWeekMonday((string) ($input['week_start'] ?? ''), $timezone);
         $weekKey = $weekStart->format('Y-m-d');
@@ -597,7 +751,7 @@ class DoctorAvailabilityService
                     continue;
                 }
 
-                if (!self::isExactThirtyMinuteSlot($slot)) {
+                if (!self::isCanonicalGridSlot($slot)) {
                     continue;
                 }
 
@@ -627,7 +781,7 @@ class DoctorAvailabilityService
                 $start = $cell['start'];
                 $end = $cell['end'];
 
-                if ($date < $todayDate || ($date === $todayDate && $start < $nowHm)) {
+                if ($date < $todayDate || ($date === $todayDate && $end !== '' && $end <= $nowHm)) {
                     continue;
                 }
 
@@ -761,30 +915,9 @@ class DoctorAvailabilityService
     }
 
     /**
-     * @param list<array<string, mixed>> $slots
-     * @return array{0:string,1:string}
-     */
-    private static function resolveGridBounds(array $slots): array
-    {
-        $start = self::GRID_START;
-        $end = self::GRID_END;
-
-        foreach ($slots as $slot) {
-            $slotStart = self::normalizeTimeForForm((string) ($slot['start_time'] ?? ''));
-            $slotEnd = self::normalizeTimeForForm((string) ($slot['end_time'] ?? ''));
-            if ($slotStart !== '' && $slotStart < $start) {
-                $start = $slotStart;
-            }
-            if ($slotEnd !== '' && $slotEnd > $end) {
-                $end = $slotEnd;
-            }
-        }
-
-        return [self::snapTimeDown($start), self::snapTimeUp($end)];
-    }
-
-    /**
-     * @return list<array{start:string,end:string,label:string,end_label:string}>
+     * Visual 30-minute markers from 08:00 to 22:00. These are a scale, not a restriction.
+     *
+     * @return list<array{start:string,end:string,label:string,end_label:string,range_label:string}>
      */
     private static function buildTimeIntervals(string $startHm, string $endHm, DateTimeZone $timezone): array
     {
@@ -797,24 +930,29 @@ class DoctorAvailabilityService
 
         $intervals = [];
         while ($cursor < $end) {
-            $next = $cursor->modify('+' . self::SLOT_MINUTES . ' minutes');
-            if ($next > $end) {
+            $slotEnd = $cursor->modify('+' . self::SLOT_MINUTES . ' minutes');
+            if (!$slotEnd instanceof DateTimeImmutable || $slotEnd > $end) {
                 break;
             }
+
+            $startLabel = $cursor->format('g:i A');
+            $endLabel = $slotEnd->format('g:i A');
             $intervals[] = [
                 'start' => $cursor->format('H:i'),
-                'end' => $next->format('H:i'),
-                'label' => $cursor->format('g:i A'),
-                'end_label' => $next->format('g:i A'),
+                'end' => $slotEnd->format('H:i'),
+                'label' => $startLabel,
+                'end_label' => $endLabel,
+                'range_label' => $startLabel . ' – ' . $endLabel,
             ];
-            $cursor = $next;
+
+            $cursor = $cursor->modify('+' . self::GRID_STEP_MINUTES . ' minutes');
         }
 
         return $intervals;
     }
 
     /**
-     * @return list<array{date:string,name:string,short:string,day_num:string,is_today:bool,is_past:bool}>
+     * @return list<array{date:string,name:string,short:string,day_num:string,is_today:bool,is_past:bool,is_weekend:bool}>
      */
     private static function buildWeekDays(DateTimeImmutable $weekStart, DateTimeImmutable $today): array
     {
@@ -832,6 +970,7 @@ class DoctorAvailabilityService
                 'month_short' => $day->format('M'),
                 'is_today' => $date === $todayDate,
                 'is_past' => $date < $todayDate,
+                'is_weekend' => (int) $day->format('N') >= 6,
             ];
         }
 
@@ -857,7 +996,7 @@ class DoctorAvailabilityService
                 $end = (string) $interval['end'];
                 $key = $date . '|' . $start;
                 $cover = self::coveringSlots($slots, $date, $start, $end);
-                $isPast = $date < $todayDate || ($date === $todayDate && $start < $nowHm);
+                $isPast = $date < $todayDate || ($date === $todayDate && $end !== '' && $end <= $nowHm);
                 $state = 'empty';
                 $locked = $isPast;
                 $slotId = null;
@@ -962,7 +1101,7 @@ class DoctorAvailabilityService
             $date = trim($date);
             $start = self::normalizeTimeForForm(trim($start));
 
-            if (!isset($weekDates[$date]) || $start === '') {
+            if (!isset($weekDates[$date]) || $start === '' || !self::isCanonicalGridStart($start)) {
                 return [
                     'keys' => [],
                     'slots' => [],
@@ -1158,6 +1297,38 @@ class DoctorAvailabilityService
         return $startAt->modify('+' . self::SLOT_MINUTES . ' minutes')->format('H:i') === $endAt->format('H:i');
     }
 
+    private static function minutesFromMidnight(string $time): ?int
+    {
+        $hm = self::normalizeTimeForForm($time);
+        if ($hm === '' || !preg_match('/^(\d{2}):(\d{2})$/', $hm, $parts)) {
+            return null;
+        }
+
+        return ((int) $parts[1] * 60) + (int) $parts[2];
+    }
+
+    private static function isCanonicalGridStart(string $startHm): bool
+    {
+        $start = self::normalizeTimeForForm($startHm);
+        if ($start === '' || !preg_match('/^\d{2}:00$/', $start)) {
+            return false;
+        }
+
+        return $start >= self::GRID_START && $start <= self::GRID_LAST_START;
+    }
+
+    /**
+     * @param array<string, mixed> $slot
+     */
+    private static function isCanonicalGridSlot(array $slot): bool
+    {
+        if (!self::isExactThirtyMinuteSlot($slot)) {
+            return false;
+        }
+
+        return self::isCanonicalGridStart(self::normalizeTimeForForm((string) ($slot['start_time'] ?? '')));
+    }
+
     private static function insertThirtyMinuteSlot(int $doctorId, string $date, string $startHm, string $endHm): bool
     {
         $availability = new DoctorAvailability();
@@ -1169,38 +1340,5 @@ class DoctorAvailabilityService
         $availability->status = 'Available';
 
         return $availability->save();
-    }
-
-    private static function snapTimeDown(string $timeHm): string
-    {
-        $parsed = DateTimeImmutable::createFromFormat('H:i', $timeHm, self::appTimezone());
-        if (!$parsed instanceof DateTimeImmutable) {
-            return self::GRID_START;
-        }
-
-        $minutes = (int) $parsed->format('i');
-        $snapped = $minutes >= 30 ? 30 : 0;
-
-        return $parsed->setTime((int) $parsed->format('H'), $snapped)->format('H:i');
-    }
-
-    private static function snapTimeUp(string $timeHm): string
-    {
-        $parsed = DateTimeImmutable::createFromFormat('H:i', $timeHm, self::appTimezone());
-        if (!$parsed instanceof DateTimeImmutable) {
-            return self::GRID_END;
-        }
-
-        $minutes = (int) $parsed->format('i');
-        if ($minutes === 0) {
-            return $parsed->format('H:i');
-        }
-        if ($minutes <= 30) {
-            return $parsed->setTime((int) $parsed->format('H'), 30)->format('H:i');
-        }
-
-        $nextHour = $parsed->modify('+1 hour');
-
-        return $nextHour->setTime((int) $nextHour->format('H'), 0)->format('H:i');
     }
 }

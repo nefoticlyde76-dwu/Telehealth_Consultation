@@ -359,6 +359,40 @@
   white-space: pre-line;
 }
 
+.cr-page .cr-complaint-image {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-bottom: var(--cr-section);
+}
+
+.cr-page .cr-complaint-image__body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cr-page .cr-complaint-image .complaint-image {
+  margin: 8px 0 0;
+}
+
+.cr-page .cr-complaint-image .complaint-image img {
+  display: block;
+  width: auto;
+  max-width: min(100%, 28rem);
+  max-height: 22rem;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid var(--cr-border);
+  background: var(--cr-bg);
+}
+
+.cr-page .cr-complaint-image .complaint-image__caption {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--cr-text-muted);
+}
+
 /* ---------- Main two-column area ---------- */
 .cr-page .cr-main {
   display: grid;

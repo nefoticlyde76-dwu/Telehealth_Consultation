@@ -91,6 +91,26 @@ $screenOnlyClass = $printType === 'record' ? '' : ' cr-print-hide';
   </div>
 </section>
 
+<?php
+$complaintImageUrl = '';
+if (\App\Services\ComplaintImageService::existsOnRequest($request) && $requestId > 0) {
+    $complaintImageUrl = \App\Services\ComplaintImageService::viewerUrl($viewerRole, $requestId);
+}
+if ($complaintImageUrl !== ''):
+?>
+<section class="cr-card cr-complaint-image<?= $screenOnlyClass ?>" aria-label="Complaint image">
+  <span class="cr-icon" aria-hidden="true"><i class="bi bi-image"></i></span>
+  <div class="cr-complaint-image__body">
+    <h2 class="cr-reason__label">Complaint Image</h2>
+    <?php
+    $complaintImageAlt = 'Patient complaint image for this consultation';
+    $complaintImageClass = 'cr-complaint-image__figure';
+    require __DIR__ . '/complaint_image.php';
+    ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <div class="cr-main<?= $screenOnlyClass ?>">
   <section class="cr-card cr-panel" id="patient-information">
     <div class="cr-panel__header">

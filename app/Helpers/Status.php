@@ -28,6 +28,7 @@ class Status
 
     public const SLOT_AVAILABLE = 'Available';
     public const SLOT_BOOKED = 'Booked';
+    public const SLOT_EXPIRED = 'Expired';
 
     public const USER_INVITATION_PENDING = 'invitation_pending';
     public const USER_ACTIVE = 'active';
@@ -120,6 +121,14 @@ class Status
                     'icon' => 'bi-calendar2-event-fill',
                     'chart' => Palette::MEDICAL_BLUE,
                     'description' => 'Reserved by a consultation request.',
+                ],
+                self::SLOT_EXPIRED => [
+                    'label' => 'Expired',
+                    'category' => 'expired',
+                    'badge' => 'ux-badge--neutral',
+                    'icon' => 'bi-calendar-x',
+                    'chart' => Palette::DARK_GRAY,
+                    'description' => 'Unbooked slot whose end time has passed. Hidden from active availability.',
                 ],
             ],
             self::DOMAIN_USER => [
@@ -230,6 +239,17 @@ class Status
      * @return list<string>
      */
     public static function slotKeys(): array
+    {
+        return [self::SLOT_AVAILABLE, self::SLOT_BOOKED];
+    }
+
+    /**
+     * Statuses shown on doctor/admin availability filters.
+     * Expired slots are processed automatically and are not listed.
+     *
+     * @return list<string>
+     */
+    public static function activeSlotKeys(): array
     {
         return [self::SLOT_AVAILABLE, self::SLOT_BOOKED];
     }
@@ -563,13 +583,14 @@ class Status
             'completed' => self::COMPLETED,
             'available' => self::SLOT_AVAILABLE,
             'booked' => self::SLOT_BOOKED,
+            'expired' => self::SLOT_EXPIRED,
             'draft' => self::RECORD_DRAFT,
             'final' => self::RECORD_FINAL,
         ];
 
         $lower = strtolower($value);
         if (isset($aliases[$lower])) {
-            if ($domain === self::DOMAIN_SLOT && in_array($aliases[$lower], [self::SLOT_AVAILABLE, self::SLOT_BOOKED], true)) {
+            if ($domain === self::DOMAIN_SLOT && in_array($aliases[$lower], [self::SLOT_AVAILABLE, self::SLOT_BOOKED, self::SLOT_EXPIRED], true)) {
                 return $aliases[$lower];
             }
             if ($domain === self::DOMAIN_RECORD && in_array($aliases[$lower], [self::RECORD_DRAFT, self::RECORD_FINAL], true)) {

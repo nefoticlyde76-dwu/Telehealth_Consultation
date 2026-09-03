@@ -15,6 +15,7 @@ use App\Services\AdminPatientService;
 use App\Services\AdminProfileService;
 use App\Services\AuditLogService;
 use App\Services\AuthService;
+use App\Services\ComplaintImageService;
 use App\Services\AdminUserService;
 use App\Services\NotificationService;
 
@@ -51,7 +52,6 @@ class AdminController extends Controller
                 'focusTitle' => 'What needs attention',
                 'focusDescription' => 'Start with pending consultation requests, then review doctor and patient accounts as needed.',
                 'stats' => $consultationDashboard['stats'] ?? $dashboardData['stats'],
-                'quickActions' => $dashboardData['quickActions'],
                 'recentActivity' => $consultationDashboard['recentActivity'] ?? $dashboardData['recentActivity'],
                 'statusMessage' => Session::getFlash('status'),
                 'emptyState' => [
@@ -81,11 +81,6 @@ class AdminController extends Controller
                             'meta' => (string) ($activity['meta'] ?? ''),
                         ];
                     }, $recentAudit),
-                    'quickActions' => [
-                        ['label' => 'Review Pending Requests', 'url' => \App\Helpers\Status::filteredListUrl('/admin/consultation-requests', \App\Helpers\Status::PENDING), 'icon' => 'bi-clipboard2-check'],
-                        ['label' => 'Consultation Queue', 'url' => '/admin/consultation-requests', 'icon' => 'bi-list-check'],
-                        ['label' => 'View Audit Activity', 'url' => '/admin/audit-logs', 'icon' => 'bi-journal-text'],
-                    ],
                     'summaryStats' => [
                         ['label' => 'Pending', 'value' => (string) ((int) ($consultationDashboard['summary']['pending_requests'] ?? 0))],
                         ['label' => 'Approved', 'value' => (string) ((int) ($consultationDashboard['summary']['approved_requests'] ?? 0))],
@@ -926,6 +921,17 @@ class AdminController extends Controller
                 'csrfToken'         => Csrf::generate(),
             ]
         ), 'layouts/dashboard');
+    }
+
+    public function showComplaintImage(string $id): void
+    {
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        ComplaintImageService::streamForCurrentUser((int) $id);
     }
 
     public function approveConsultationRequest(string $id): void

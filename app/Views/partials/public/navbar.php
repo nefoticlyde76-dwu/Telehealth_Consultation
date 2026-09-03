@@ -117,7 +117,6 @@ $isAuthPage = $loginActive || $registerActive || $passwordSetupActive || $forgot
         <a
           href="<?= \App\Helpers\Helper::url($item['path']) ?>"
           class="public-drawer-link<?= $active ? ' active' : '' ?>"
-          data-bs-dismiss="offcanvas"
           <?php if ($active): ?>aria-current="page"<?php endif; ?>
         >
           <span class="public-drawer-icon">
@@ -128,7 +127,7 @@ $isAuthPage = $loginActive || $registerActive || $passwordSetupActive || $forgot
       <?php endforeach; ?>
 
       <?php if ($currentUser && $currentRole): ?>
-        <a class="public-drawer-link" href="<?= \App\Helpers\Helper::url($dashboardUrl) ?>" data-bs-dismiss="offcanvas">
+        <a class="public-drawer-link" href="<?= \App\Helpers\Helper::url($dashboardUrl) ?>">
           <span class="public-drawer-icon"><i class="bi bi-speedometer2"></i></span>
           <span>Dashboard</span>
         </a>
@@ -136,7 +135,6 @@ $isAuthPage = $loginActive || $registerActive || $passwordSetupActive || $forgot
         <a
           href="<?= \App\Helpers\Helper::url('/login') ?>"
           class="public-drawer-link<?= $loginActive ? ' active' : '' ?>"
-          data-bs-dismiss="offcanvas"
           <?php if ($loginActive): ?>aria-current="page"<?php endif; ?>
         >
           <span class="public-drawer-icon"><i class="bi bi-box-arrow-in-right"></i></span>
@@ -145,7 +143,6 @@ $isAuthPage = $loginActive || $registerActive || $passwordSetupActive || $forgot
         <a
           href="<?= \App\Helpers\Helper::url('/register') ?>"
           class="public-drawer-link<?= $registerActive ? ' active' : '' ?>"
-          data-bs-dismiss="offcanvas"
           <?php if ($registerActive): ?>aria-current="page"<?php endif; ?>
         >
           <span class="public-drawer-icon"><i class="bi bi-person-plus"></i></span>

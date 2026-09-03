@@ -211,6 +211,7 @@ $pdfValue = static function (string $value, string $empty = 'Not recorded'): str
   </style>
 </head>
 <body>
+  <!-- Layout tables (letterhead / two-column fields). Not data tables — DomPDF document chrome. -->
   <table class="doc-header">
     <tr>
       <?php if ($logoSrc !== ''): ?>

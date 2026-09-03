@@ -93,7 +93,7 @@ CREATE TABLE doctor_availability (
     consultation_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    status ENUM('Available', 'Booked') DEFAULT 'Available',
+    status ENUM('Available', 'Booked', 'Expired') DEFAULT 'Available',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (doctor_id) REFERENCES doctor(user_id) ON DELETE CASCADE,

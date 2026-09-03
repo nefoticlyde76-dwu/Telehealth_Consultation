@@ -1,7 +1,10 @@
 <?php
 use App\Helpers\Helper;
+use App\Helpers\ListFilter;
 use App\Helpers\Status;
 use App\Services\AccountSecurityService;
+
+require_once __DIR__ . '/../../partials/profile/_helpers.php';
 
 $csrfToken = (string) ($csrfToken ?? '');
 $filters = is_array($filters ?? null) ? $filters : [];
@@ -23,30 +26,28 @@ require __DIR__ . '/../../partials/shared/status_helper.php';
 $filterForm = [
     'action' => Helper::url('/admin/users'),
     'title' => 'Filter users',
+    'clear_url' => Helper::url('/admin/users'),
     'search' => [
         'name' => 'search',
         'value' => $search,
         'placeholder' => 'Search by name or email',
         'label' => 'Search users',
     ],
-    'clear_url' => Helper::url('/admin/users'),
     'fields' => [
         [
             'type' => 'select',
             'name' => 'role',
-            'id' => 'role',
             'label' => 'Role',
             'value' => $role,
             'empty_label' => 'All roles',
             'options' => array_map(static fn (string $opt): array => [
                 'value' => $opt,
-                'label' => ucfirst($opt),
+                'label' => user_profile_role_label($opt),
             ], $roleOptions),
         ],
         [
             'type' => 'select',
             'name' => 'status',
-            'id' => 'status',
             'label' => 'Status',
             'value' => $status,
             'empty_label' => 'All statuses',
@@ -58,7 +59,6 @@ $filterForm = [
         [
             'type' => 'select',
             'name' => 'sort',
-            'id' => 'sort',
             'label' => 'Sort',
             'value' => $sort,
             'include_empty' => false,
@@ -66,6 +66,18 @@ $filterForm = [
         ],
     ],
 ];
+$filterTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    array_map(static fn (string $opt): array => [
+        'value' => $opt,
+        'label' => Status::label($opt, Status::DOMAIN_USER),
+    ], $statusOptions)
+);
+$filterTabCurrent = $status;
+$filterTabAria = 'Filter users by status';
+$filterTabUrl = static function (string $value) use ($filters): string {
+    return ListFilter::url('/admin/users', $filters, ['status' => $value, 'page' => 1]);
+};
 ?>
 
 <section class="mb-4">
@@ -87,7 +99,6 @@ $filterForm = [
   </div>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
-
   <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
@@ -132,6 +143,7 @@ $filterForm = [
   <div class="ux-card ux-data-card">
     <div class="ux-card__header">
       <h2 class="ux-data-card__title">User accounts</h2>
+      <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
     </div>
     <?php if ($users !== []): ?>
       <div class="user-bulk-bar">
@@ -235,7 +247,7 @@ $filterForm = [
                     ?>
                   </td>
                   <td><span class="text-muted"><?= Helper::escape($userEmail !== '' ? $userEmail : '—') ?></span></td>
-                  <td><span class="ux-badge ux-badge--neutral"><?= Helper::escape($userRole !== '' ? ucfirst($userRole) : '—') ?></span></td>
+                  <td><span class="ux-badge ux-badge--neutral"><?= Helper::escape($userRole !== '' ? user_profile_role_label($userRole) : '—') ?></span></td>
                   <td><?= ux_status_badge($userStatus, Status::DOMAIN_USER) ?></td>
                   <td>
                     <?php if ($lastLogin !== ''): ?>

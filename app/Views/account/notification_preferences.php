@@ -4,12 +4,7 @@ use App\Helpers\Helper;
 $csrfToken = (string) ($csrfToken ?? '');
 $preferences = is_array($preferences ?? null) ? $preferences : [];
 $dashboardRole = (string) ($dashboardRole ?? '');
-$dashboardHome = match ($dashboardRole) {
-    'admin' => '/admin/dashboard',
-    'doctor' => '/doctor/dashboard',
-    'patient' => '/patient/dashboard',
-    default => '/',
-};
+$dashboardHome = \App\Services\AuthService::getRoleRedirectUrl($dashboardRole);
 ?>
 
 <section class="mb-4">

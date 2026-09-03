@@ -11,7 +11,8 @@
 }
 
 .mbpha-avail {
-  --avail-cell-h: 52px;
+  --avail-cell-h: 44px;
+  --avail-row-h: 36px;
   min-width: 0;
 }
 
@@ -172,18 +173,18 @@
 
 .mbpha-avail__table {
   width: 100%;
-  min-width: 780px;
+  min-width: 720px;
   border-collapse: collapse;
 }
 
 .mbpha-avail__table thead th {
-  padding: 10px 6px;
+  padding: 7px 4px;
   text-align: center;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-muted, #6c757d);
-  border-bottom: 2px solid var(--medium-gray);
-  background: var(--white);
+  color: var(--table-header-color);
+  border-bottom: 1px solid var(--table-header-border);
+  background: var(--table-header-bg);
 }
 
 .mbpha-avail__table thead th:first-child,
@@ -191,20 +192,27 @@
   position: sticky;
   left: 0;
   z-index: 3;
-  width: 78px;
-  min-width: 78px;
+  width: 88px;
+  min-width: 88px;
   text-align: left;
-  background: #f3f6f9;
   border-right: 1px solid var(--medium-gray);
 }
 
 .mbpha-avail__table thead th:first-child {
   z-index: 4;
+  background: var(--table-header-bg);
+  color: var(--table-header-color);
+  border-right-color: rgba(var(--white-rgb), 0.18);
+}
+
+.mbpha-avail__table tbody th {
+  background: var(--table-row-header-bg);
+  color: var(--table-row-header-color);
 }
 
 .mbpha-avail__day-name {
   display: block;
-  color: var(--text-dark, #212529);
+  color: inherit;
   font-size: 0.8125rem;
 }
 
@@ -213,12 +221,24 @@
   margin-top: 2px;
   font-size: 0.6875rem;
   font-weight: 600;
+  color: inherit;
+  opacity: 0.88;
+}
+
+.mbpha-avail__table thead th.is-weekend {
+  background: var(--table-header-secondary-bg);
+  color: var(--table-header-secondary-color);
 }
 
 .mbpha-avail__table thead th.is-today {
-  background: rgba(var(--medical-blue-rgb), 0.08);
-  color: var(--medical-blue);
+  background: var(--royal-blue);
+  color: var(--white);
   border-radius: 8px 8px 0 0;
+}
+
+.mbpha-avail__table thead th.is-today .mbpha-avail__day-name,
+.mbpha-avail__table thead th.is-today .mbpha-avail__day-date {
+  color: var(--white);
 }
 
 .mbpha-avail__table thead th.is-today::after {
@@ -229,15 +249,23 @@
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--medical-blue);
+  color: var(--soft-cyan);
 }
 
 .mbpha-avail__table tbody th {
-  padding: 0 10px;
+  padding: 0 8px;
   vertical-align: middle;
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--text-muted, #6c757d);
+  color: var(--table-row-header-color);
+  background: var(--table-row-header-bg);
+}
+
+.mbpha-avail__time-range {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
 }
 
 .mbpha-avail__time-end {
@@ -246,16 +274,37 @@
   opacity: 0.7;
 }
 
+.mbpha-avail__time-end::before {
+  content: "– ";
+}
+
 .mbpha-avail__table tbody td {
-  padding: 3px;
+  padding: 2px;
   height: var(--avail-cell-h);
-  min-width: 92px;
+  min-width: 84px;
   vertical-align: stretch;
-  border-bottom: 1px solid rgba(var(--medium-gray-rgb, 222, 226, 230), 0.8);
+  background: var(--white);
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.mbpha-avail__table tbody tr:nth-child(even) td {
+  background: var(--light-gray);
+}
+
+.mbpha-avail__table tbody td.is-weekend-col {
+  background: rgba(var(--mint-green-rgb), 0.35);
+}
+
+.mbpha-avail__table tbody tr:nth-child(even) td.is-weekend-col {
+  background: rgba(var(--mint-green-rgb), 0.55);
 }
 
 .mbpha-avail__table tbody td.is-today-col {
-  background: rgba(var(--medical-blue-rgb), 0.035);
+  background: rgba(var(--pale-blue-rgb), 0.55);
+}
+
+.mbpha-avail__table tbody tr:nth-child(even) td.is-today-col {
+  background: var(--pale-blue);
 }
 
 .mbpha-avail__cell {
@@ -265,8 +314,8 @@
   gap: 4px;
   width: 100%;
   height: 100%;
-  min-height: 40px;
-  padding: 4px 6px;
+  min-height: 36px;
+  padding: 3px 5px;
   border: 1px dashed rgba(var(--medium-gray-rgb, 222, 226, 230), 1);
   border-radius: 8px;
   background: transparent;
@@ -363,7 +412,7 @@
 }
 
 .mbpha-avail--book {
-  --avail-cell-h: 64px;
+  --avail-cell-h: 56px;
 }
 
 .mbpha-avail--book .mbpha-avail__tools {
@@ -375,7 +424,7 @@
   text-decoration: none;
   flex-direction: column;
   gap: 2px;
-  min-height: 56px;
+  min-height: 48px;
 }
 
 .mbpha-avail--book a.mbpha-avail__cell.is-available:hover,
@@ -426,7 +475,7 @@
 
 @media (max-width: 767.98px) {
   .mbpha-avail {
-    --avail-cell-h: 52px;
+    --avail-cell-h: 44px;
   }
 
   .mbpha-avail__header,
@@ -438,11 +487,17 @@
   }
 
   .mbpha-avail__table tbody td {
-    min-width: 104px;
+    min-width: 92px;
+  }
+
+  .mbpha-avail__table thead th:first-child,
+  .mbpha-avail__table tbody th {
+    width: 84px;
+    min-width: 84px;
   }
 
   .mbpha-avail__cell {
-    min-height: 44px;
+    min-height: 38px;
   }
 
   .mbpha-avail__apply {
@@ -459,5 +514,209 @@
 @media (prefers-reduced-motion: reduce) {
   .mbpha-avail__cell {
     transition: none;
+  }
+}
+
+/* Flexible calendar time-grid */
+.mbpha-avail__cal {
+  min-width: 720px;
+}
+
+.mbpha-avail__cal-head,
+.mbpha-avail__cal-body {
+  display: grid;
+  grid-template-columns: 88px repeat(7, minmax(92px, 1fr));
+}
+
+.mbpha-avail__cal-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.mbpha-avail__cal-time-head,
+.mbpha-avail__cal-day-head {
+  padding: 7px 4px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--table-header-color);
+  background: var(--table-header-bg);
+  border-bottom: 1px solid var(--table-header-border);
+}
+
+.mbpha-avail__cal-time-head {
+  text-align: left;
+  padding-left: 8px;
+  border-right: 1px solid rgba(var(--white-rgb), 0.18);
+}
+
+.mbpha-avail__cal-day-head.is-weekend {
+  background: var(--table-header-secondary-bg);
+  color: var(--table-header-secondary-color);
+}
+
+.mbpha-avail__cal-day-head.is-today {
+  background: var(--royal-blue);
+  color: var(--white);
+}
+
+.mbpha-avail__cal-day-head.is-today .mbpha-avail__day-name,
+.mbpha-avail__cal-day-head.is-today .mbpha-avail__day-date {
+  color: var(--white);
+}
+
+.mbpha-avail__cal-day-head.is-today::after {
+  content: "Today";
+  display: block;
+  margin-top: 2px;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--soft-cyan);
+}
+
+.mbpha-avail__cal-body {
+  height: calc(var(--avail-rows, 28) * var(--avail-row-h));
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(var(--avail-row-h) - 1px),
+    var(--medium-gray) calc(var(--avail-row-h) - 1px),
+    var(--medium-gray) var(--avail-row-h)
+  );
+}
+
+.mbpha-avail__cal-times {
+  display: flex;
+  flex-direction: column;
+  background: var(--pale-blue);
+  border-right: 1px solid var(--medium-gray);
+}
+
+.mbpha-avail__cal-time {
+  height: var(--avail-row-h);
+  padding: 0 8px;
+  display: flex;
+  align-items: flex-start;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--dark-navy);
+  line-height: 1.2;
+}
+
+.mbpha-avail__cal-day {
+  position: relative;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.mbpha-avail__cal-day.is-weekend-col {
+  background: rgba(var(--mint-green-rgb), 0.28);
+}
+
+.mbpha-avail__cal-day.is-today-col {
+  background: rgba(var(--pale-blue-rgb), 0.55);
+}
+
+.mbpha-avail__cal-lanes {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+.mbpha-avail__cal-lane {
+  flex: 1 1 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mbpha-avail__cal-lane:hover:not(:disabled),
+.mbpha-avail__cal-lane:focus-visible {
+  background: rgba(var(--medical-blue-rgb), 0.08);
+  outline: none;
+}
+
+.mbpha-avail__cal-lane:disabled {
+  cursor: default;
+}
+
+.mbpha-avail__cal-blocks {
+  position: absolute;
+  inset: 2px 3px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mbpha-avail__block {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 3px 6px;
+  border: 1px solid rgba(var(--medical-blue-rgb), 0.35);
+  border-left: 3px solid var(--medical-blue);
+  border-radius: 8px;
+  background: var(--pale-blue);
+  color: var(--medical-blue);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.mbpha-avail__block strong,
+.mbpha-avail__block span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mbpha-avail__block.is-booked {
+  background: #fff8e1;
+  border-color: #e0b400;
+  border-left-color: var(--warning);
+  color: #8a6d00;
+}
+
+.mbpha-avail__block.is-past {
+  opacity: 0.62;
+}
+
+.mbpha-avail__block:hover,
+.mbpha-avail__block:focus-visible {
+  box-shadow: var(--shadow-focus, 0 0 0 0.2rem rgba(10, 111, 182, 0.16));
+  outline: none;
+  z-index: 3;
+}
+
+.mbpha-avail--book .mbpha-avail__block {
+  text-decoration: none;
+}
+
+.mbpha-avail--book .mbpha-avail__cal-lane {
+  cursor: default;
+}
+
+@media (max-width: 767.98px) {
+  .mbpha-avail__cal {
+    min-width: 680px;
+  }
+
+  .mbpha-avail {
+    --avail-row-h: 34px;
   }
 }

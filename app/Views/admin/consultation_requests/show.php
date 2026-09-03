@@ -43,11 +43,22 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
       <?= ux_status_badge($status, \App\Helpers\Status::DOMAIN_CONSULTATION) ?>
     </div>
     <div class="table-responsive ux-queue-detail__table-wrap">
-      <table class="table ux-table ux-details-table ux-queue-detail__table mb-0">
+      <table class="table ux-table ux-request-details-table mb-0">
         <caption class="visually-hidden">Consultation request details</caption>
+        <thead>
+          <tr>
+            <th scope="col">Patient</th>
+            <th scope="col">Doctor</th>
+            <th scope="col">Consultation date</th>
+            <th scope="col">Time</th>
+            <th scope="col">Date submitted</th>
+            <th scope="col">Availability status</th>
+            <th scope="col">Current status</th>
+            <th scope="col">Chief complaint</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
-            <th scope="row">Patient</th>
             <td>
               <?php
               $personName = (string) ($request['patient_name'] ?? 'Patient');
@@ -57,9 +68,6 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
               require __DIR__ . '/../../partials/shared/person_row.php';
               ?>
             </td>
-          </tr>
-          <tr>
-            <th scope="row">Doctor</th>
             <td>
               <?php
               $personName = (string) ($request['doctor_name'] ?? 'Doctor');
@@ -69,34 +77,32 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
               require __DIR__ . '/../../partials/shared/person_row.php';
               ?>
             </td>
-          </tr>
-          <tr>
-            <th scope="row">Consultation date</th>
-            <td><?= \App\Helpers\Helper::escape((string) $dateLabel) ?></td>
-          </tr>
-          <tr>
-            <th scope="row">Time</th>
-            <td><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></td>
-          </tr>
-          <tr>
-            <th scope="row">Date submitted</th>
-            <td><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['request_date'] ?? ''), 'd M Y H:i', 'Not available')) ?></td>
-          </tr>
-          <tr>
-            <th scope="row">Availability status</th>
+            <td class="text-nowrap"><?= \App\Helpers\Helper::escape((string) $dateLabel) ?></td>
+            <td class="text-nowrap"><?= \App\Helpers\Helper::escape((string) $timeLabel) ?></td>
+            <td class="text-nowrap"><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate((string) ($request['request_date'] ?? ''), 'd M Y H:i', 'Not available')) ?></td>
             <td><?= \App\Helpers\Helper::escape((string) ($request['availability_status'] ?? 'Not available')) ?></td>
-          </tr>
-          <tr>
-            <th scope="row">Current status</th>
             <td><?= ux_status_badge($status, \App\Helpers\Status::DOMAIN_CONSULTATION) ?></td>
-          </tr>
-          <tr>
-            <th scope="row">Chief complaint</th>
             <td><?= nl2br(\App\Helpers\Helper::escape((string) ($request['reason'] ?? ''))) ?></td>
           </tr>
         </tbody>
       </table>
     </div>
+    <?php
+    $complaintImageUrl = '';
+    if (\App\Services\ComplaintImageService::existsOnRequest($request) && $requestId > 0) {
+        $complaintImageUrl = \App\Services\ComplaintImageService::viewerUrl('admin', $requestId);
+    }
+    if ($complaintImageUrl !== ''):
+    ?>
+    <div class="ux-queue-detail__complaint">
+      <h4 class="h6 mb-2">Complaint Image</h4>
+      <?php
+      $complaintImageAlt = 'Patient complaint image for this consultation request';
+      $complaintImageClass = 'ux-complaint-image';
+      require __DIR__ . '/../../partials/shared/complaint_image.php';
+      ?>
+    </div>
+    <?php endif; ?>
     <div class="ux-queue-detail__actions">
       <?php if ($status === 'Pending' || $status === 'Approved'): ?>
         <?php if ($status === 'Pending'): ?>

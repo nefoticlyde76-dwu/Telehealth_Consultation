@@ -10,7 +10,191 @@ document.addEventListener("DOMContentLoaded", () => {
   initializePageTransitions();
   initializeStaggeredLists();
   initializePublicNavDrawer();
+  initializeSlotExpiration();
+  initializeComplaintImageUpload();
 });
+
+function initializeSlotExpiration() {
+  const serverNowRaw = document.body instanceof HTMLElement ? document.body.getAttribute("data-server-now") || "" : "";
+  const serverNowMs = Date.parse(serverNowRaw);
+  if (!Number.isFinite(serverNowMs)) {
+    return;
+  }
+
+  const startedAt = performance.now();
+  const currentServerMs = () => serverNowMs + (performance.now() - startedAt);
+
+  const expireElement = (el) => {
+    if (!(el instanceof HTMLElement)) {
+      return;
+    }
+
+    const endMs = Date.parse(el.getAttribute("data-slot-expires-at") || "");
+    if (!Number.isFinite(endMs) || currentServerMs() < endMs) {
+      return;
+    }
+
+    if (el.matches("form") || el.hasAttribute("data-slot-booking")) {
+      el.setAttribute("data-slot-expired", "1");
+      const submit = el.querySelector('[type="submit"]');
+      if (submit instanceof HTMLButtonElement) {
+        submit.disabled = true;
+      }
+      const note = el.querySelector("[data-slot-expired-note]");
+      if (note instanceof HTMLElement) {
+        note.classList.remove("d-none");
+      }
+      return;
+    }
+
+    el.remove();
+  };
+
+  const tick = () => {
+    document.querySelectorAll("[data-slot-expires-at]").forEach((el) => expireElement(el));
+  };
+
+  document.addEventListener("submit", (event) => {
+    const form = event.target;
+    if (form instanceof HTMLFormElement && form.getAttribute("data-slot-expired") === "1") {
+      event.preventDefault();
+    }
+  });
+
+  tick();
+  window.setInterval(tick, 15000);
+}
+
+function initializeComplaintImageUpload() {
+  const roots = document.querySelectorAll("[data-complaint-image-upload]");
+  if (!roots.length) {
+    return;
+  }
+
+  const allowedTypes = new Set(["image/jpeg", "image/png"]);
+  const allowedExtensions = new Set(["jpg", "jpeg", "png"]);
+
+  roots.forEach((root) => {
+    if (!(root instanceof HTMLElement)) {
+      return;
+    }
+
+    const input = root.querySelector("[data-complaint-image-input]");
+    const preview = root.querySelector("[data-complaint-image-preview]");
+    const thumb = root.querySelector("[data-complaint-image-thumb]");
+    const nameEl = root.querySelector("[data-complaint-image-name]");
+    const removeBtn = root.querySelector("[data-complaint-image-remove]");
+    const errorEl = root.querySelector("[data-complaint-image-error]");
+    const form = root.closest("form");
+    const maxBytes = Number.parseInt(root.getAttribute("data-max-bytes") || "5242880", 10);
+    let objectUrl = "";
+
+    if (!(input instanceof HTMLInputElement)) {
+      return;
+    }
+
+    const hidePreview = () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = "";
+      }
+      if (preview instanceof HTMLElement) {
+        preview.classList.add("d-none");
+      }
+      if (thumb instanceof HTMLImageElement) {
+        thumb.removeAttribute("src");
+      }
+      if (nameEl instanceof HTMLElement) {
+        nameEl.textContent = "";
+      }
+    };
+
+    const showError = (message) => {
+      input.classList.add("is-invalid");
+      if (errorEl instanceof HTMLElement && message) {
+        errorEl.textContent = message;
+      }
+    };
+
+    const clearError = () => {
+      input.classList.remove("is-invalid");
+    };
+
+    const validateFile = (file) => {
+      const type = String(file.type || "").toLowerCase();
+      const nameParts = String(file.name || "").split(".");
+      const extension = nameParts.length > 1 ? String(nameParts.pop()).toLowerCase() : "";
+      const typeOk = type === "" || allowedTypes.has(type);
+      if (!typeOk || !allowedExtensions.has(extension)) {
+        return "Only JPG, JPEG, or PNG complaint images are allowed.";
+      }
+      if (file.size <= 0) {
+        return "The selected complaint image is empty.";
+      }
+      if (Number.isFinite(maxBytes) && file.size > maxBytes) {
+        return "Complaint image must be 5 MB or smaller.";
+      }
+      return "";
+    };
+
+    input.addEventListener("change", () => {
+      const file = input.files && input.files[0] ? input.files[0] : null;
+      if (!file) {
+        hidePreview();
+        clearError();
+        return;
+      }
+
+      const message = validateFile(file);
+      if (message !== "") {
+        input.value = "";
+        hidePreview();
+        showError(message);
+        return;
+      }
+
+      clearError();
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      objectUrl = URL.createObjectURL(file);
+      if (thumb instanceof HTMLImageElement) {
+        thumb.src = objectUrl;
+      }
+      if (nameEl instanceof HTMLElement) {
+        nameEl.textContent = file.name;
+      }
+      if (preview instanceof HTMLElement) {
+        preview.classList.remove("d-none");
+      }
+    });
+
+    if (removeBtn instanceof HTMLElement) {
+      removeBtn.addEventListener("click", () => {
+        input.value = "";
+        hidePreview();
+        clearError();
+        input.focus();
+      });
+    }
+
+    if (form instanceof HTMLFormElement) {
+      form.addEventListener("submit", (event) => {
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) {
+          return;
+        }
+        const message = validateFile(file);
+        if (message !== "") {
+          event.preventDefault();
+          input.value = "";
+          hidePreview();
+          showError(message);
+        }
+      });
+    }
+  });
+}
 
 function initializeBootstrapValidation() {
   const forms = document.querySelectorAll(".needs-validation");
@@ -481,7 +665,7 @@ function initializePublicNavDrawer() {
 
   drawer.querySelectorAll("a[href]").forEach((link) => {
     link.addEventListener("click", (event) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
       }
 
@@ -499,24 +683,38 @@ function initializePublicNavDrawer() {
         return;
       }
 
-      if (destination.origin !== window.location.origin) {
-        return;
-      }
-
-      const samePage =
+      const sameDocument =
+        destination.origin === window.location.origin &&
         destination.pathname === window.location.pathname &&
         destination.search === window.location.search;
 
-      if (!samePage) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      let didNavigate = false;
+      const goToDestination = () => {
+        if (didNavigate || sameDocument) {
+          return;
+        }
+        didNavigate = true;
+        window.location.assign(destination.href);
+      };
+
+      if (typeof bootstrap === "undefined" || !bootstrap.Offcanvas) {
+        goToDestination();
         return;
       }
 
-      event.preventDefault();
+      const instance = bootstrap.Offcanvas.getInstance(drawer) || bootstrap.Offcanvas.getOrCreateInstance(drawer);
 
-      if (typeof bootstrap !== "undefined" && bootstrap.Offcanvas) {
-        const instance = bootstrap.Offcanvas.getInstance(drawer) || bootstrap.Offcanvas.getOrCreateInstance(drawer);
-        instance.hide();
+      if (!instance || !drawer.classList.contains("show")) {
+        goToDestination();
+        return;
       }
+
+      drawer.addEventListener("hidden.bs.offcanvas", goToDestination, { once: true });
+      instance.hide();
+      window.setTimeout(goToDestination, 400);
     });
   });
 }

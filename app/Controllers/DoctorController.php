@@ -8,6 +8,7 @@ use App\Core\Session;
 use App\Helpers\Helper;
 use App\Models\ConsultationRequest;
 use App\Services\AuthService;
+use App\Services\ComplaintImageService;
 use App\Services\ConsultationRecordPdfService;
 use App\Services\DoctorAvailabilityService;
 use App\Services\DoctorClinicalDocumentationService;
@@ -72,7 +73,6 @@ class DoctorController extends Controller
             'focusDescription' => 'Keep your phone number, specialization, profile photo, and signature up to date for future consultation records.',
             'statusMessage' => Session::getFlash('status'),
             'stats' => $stats,
-            'quickActions' => $dashboardData['quickActions'],
             'recentActivity' => $dashboardData['recentActivity'],
             'emptyState' => $dashboardData['emptyState'],
             'doctorProfile' => $dashboardData['doctor'],
@@ -309,7 +309,7 @@ class DoctorController extends Controller
             'dashboardRole' => 'doctor',
             'dashboardRoleLabel' => 'Doctor Dashboard',
             'dashboardTitle' => 'Availability',
-            'dashboardDescription' => 'Set the 30-minute times patients can book each week.',
+            'dashboardDescription' => 'Set any consultation hours patients can book this week.',
             'sidebarItems' => $sidebarItems,
             'weekStart' => $weekData['weekStart'],
             'weekEnd' => $weekData['weekEnd'],
@@ -320,11 +320,11 @@ class DoctorController extends Controller
             'thisWeek' => $weekData['thisWeek'],
             'days' => $weekData['days'],
             'intervals' => $weekData['intervals'],
-            'cells' => $weekData['cells'],
+            'blocks' => $weekData['blocks'],
             'gridStart' => $weekData['gridStart'],
             'gridEnd' => $weekData['gridEnd'],
-            'timeOptions' => $weekData['timeOptions'],
-            'applyWeekOptions' => $weekData['applyWeekOptions'],
+            'todayDate' => $weekData['todayDate'],
+            'nowHm' => $weekData['nowHm'],
             'counts' => $weekData['counts'],
             'summary' => $weekData['summary'],
             'timezoneLabel' => $weekData['timezoneLabel'],
@@ -357,12 +357,7 @@ class DoctorController extends Controller
             'message' => $result['message'] ?? 'Availability request completed.',
         ]);
 
-        $redirect = '/doctor/availability';
-        if ($weekStart !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekStart) === 1) {
-            $redirect .= '?week=' . rawurlencode($weekStart);
-        }
-
-        Helper::redirect($redirect);
+        Helper::redirect(DoctorAvailabilityService::weekQueryUrl($weekStart));
     }
 
     public function createAvailability(): void
@@ -381,7 +376,8 @@ class DoctorController extends Controller
 
         $errors = [];
         $fieldErrors = [];
-        $formData = DoctorAvailabilityService::getAvailabilityFormData();
+        $formData = DoctorAvailabilityService::getAvailabilityFormData(null, $_GET);
+        $returnWeek = trim((string) ($_POST['return_week'] ?? $_GET['week'] ?? ''));
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = DoctorAvailabilityService::createAvailability((int) $user->id, $_POST);
@@ -391,7 +387,7 @@ class DoctorController extends Controller
                     'type' => 'success',
                     'message' => $result['message'] ?? 'Availability slot created successfully.',
                 ]);
-                Helper::redirect('/doctor/availability');
+                Helper::redirect(DoctorAvailabilityService::weekQueryUrl($returnWeek));
                 return;
             }
 
@@ -419,6 +415,7 @@ class DoctorController extends Controller
             'statusOptions' => DoctorAvailabilityService::getStatusOptions(),
             'statusMessage' => Session::getFlash('status'),
             'csrfToken' => Csrf::generate(),
+            'returnWeek' => $returnWeek,
         ], 'layouts/dashboard');
     }
 
@@ -451,6 +448,7 @@ class DoctorController extends Controller
         $errors = [];
         $fieldErrors = [];
         $formData = DoctorAvailabilityService::getAvailabilityFormData($availability);
+        $returnWeek = trim((string) ($_POST['return_week'] ?? $_GET['week'] ?? ''));
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = DoctorAvailabilityService::updateAvailability((int) $user->id, $availabilityId, $_POST);
@@ -460,7 +458,7 @@ class DoctorController extends Controller
                     'type' => 'success',
                     'message' => $result['message'] ?? 'Availability slot updated successfully.',
                 ]);
-                Helper::redirect('/doctor/availability');
+                Helper::redirect(DoctorAvailabilityService::weekQueryUrl($returnWeek));
                 return;
             }
 
@@ -489,6 +487,7 @@ class DoctorController extends Controller
             'statusOptions' => DoctorAvailabilityService::getStatusOptions(),
             'statusMessage' => Session::getFlash('status'),
             'csrfToken' => Csrf::generate(),
+            'returnWeek' => $returnWeek,
         ], 'layouts/dashboard');
     }
 
@@ -513,7 +512,7 @@ class DoctorController extends Controller
             'message' => $result['message'] ?? 'Availability slot request completed.',
         ]);
 
-        Helper::redirect('/doctor/availability');
+        Helper::redirect(DoctorAvailabilityService::weekQueryUrl((string) ($_POST['return_week'] ?? '')));
     }
 
     public function consultations(): void
@@ -828,6 +827,9 @@ class DoctorController extends Controller
             'consultation_start_time'  => (string) ($request['start_time'] ?? ''),
             'consultation_end_time'    => (string) ($request['end_time'] ?? ''),
             'consultation_reason'      => (string) ($request['reason'] ?? ''),
+            'complaint_image_url'      => ComplaintImageService::existsOnRequest($request)
+                ? ComplaintImageService::viewerUrl('doctor', (int) $request['id'])
+                : '',
             'consultation_status'      => (string) ($request['status'] ?? 'Pending'),
             'join_token_endpoint'      => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/join-token'),
             'clinical_save_endpoint'   => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/clinical-record'),
@@ -1073,6 +1075,16 @@ class DoctorController extends Controller
     public function downloadPrescription(string $id): void
     {
         $this->streamPrescriptionPdf($id);
+    }
+
+    public function showComplaintImage(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        ComplaintImageService::streamForCurrentUser((int) $id);
     }
 
     /**

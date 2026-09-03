@@ -10,17 +10,18 @@ $nextWeek = (string) ($nextWeek ?? '');
 $thisWeek = (string) ($thisWeek ?? '');
 $days = is_array($days ?? null) ? $days : [];
 $intervals = is_array($intervals ?? null) ? $intervals : [];
-$cells = is_array($cells ?? null) ? $cells : [];
-$timeOptions = is_array($timeOptions ?? null) ? $timeOptions : [];
-$applyWeekOptions = is_array($applyWeekOptions ?? null) ? $applyWeekOptions : [];
+$blocks = is_array($blocks ?? null) ? $blocks : [];
 $counts = is_array($counts ?? null) ? $counts : [];
 $summary = is_array($summary ?? null) ? $summary : [];
 $timezoneLabel = (string) ($timezoneLabel ?? Helper::appTimezoneLabel());
 $csrfToken = (string) ($csrfToken ?? '');
-$gridStart = (string) ($gridStart ?? '06:00');
-$gridEnd = (string) ($gridEnd ?? '20:00');
+$gridStart = (string) ($gridStart ?? '08:00');
+$gridEnd = (string) ($gridEnd ?? '22:00');
+$todayDate = (string) ($todayDate ?? '');
+$nowHm = (string) ($nowHm ?? '');
+$intervalCount = max(1, count($intervals));
 
-$availUrl = static function (array $query = []) : string {
+$availUrl = static function (array $query = []): string {
     $path = '/doctor/availability';
     if ($query === []) {
         return Helper::url($path);
@@ -33,6 +34,8 @@ $formatGridTime = static function (string $hm): string {
     $parsed = DateTimeImmutable::createFromFormat('H:i', $hm);
     return $parsed instanceof DateTimeImmutable ? $parsed->format('g:i A') : $hm;
 };
+
+$createUrl = Helper::url('/doctor/availability/create' . ($weekStart !== '' ? '?week=' . rawurlencode($weekStart) : ''));
 ?>
 
 <section class="mb-4">
@@ -44,8 +47,8 @@ $formatGridTime = static function (string $hm): string {
       </ol>
       <h2 class="ux-page-header__title">Doctor Availability</h2>
       <p class="ux-page-header__subtitle">
-        Select the 30-minute time slots when patients can book consultations.
-        This is your weekly schedule. Existing appointments automatically override available slots.
+        Click a time on the grid for a quick start, or add any custom start and end time.
+        Saved hours are placed on the schedule from their actual times. Booked appointments stay locked.
       </p>
     </div>
     <div class="ux-page-header__right">
@@ -53,6 +56,10 @@ $formatGridTime = static function (string $hm): string {
         <i class="bi bi-clock"></i>
         <span><?= Helper::escape($timezoneLabel) ?></span>
       </span>
+      <button type="button" class="btn btn-primary" data-avail-add>
+        <i class="bi bi-plus-lg me-2"></i>
+        Add Availability
+      </button>
       <a href="<?= $availUrl(['view' => 'list']) ?>" class="btn btn-outline-primary">
         <i class="bi bi-list-ul me-2"></i>
         Slot list
@@ -63,40 +70,20 @@ $formatGridTime = static function (string $hm): string {
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 </section>
 
-<form
-  method="POST"
-  action="<?= Helper::url('/doctor/availability/week') ?>"
-  class="mbpha-avail"
-  data-mbpha-avail
-  novalidate
->
-  <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
-  <input type="hidden" name="week_start" value="<?= Helper::escape($weekStart) ?>">
-  <div data-avail-slots>
-    <?php foreach ($cells as $cell): ?>
-      <?php if (($cell['state'] ?? '') === 'available' || ($cell['state'] ?? '') === 'custom'): ?>
-        <input
-          type="hidden"
-          name="slots[]"
-          value="<?= Helper::escape((string) ($cell['date'] ?? '') . '|' . (string) ($cell['start'] ?? '')) ?>"
-        >
-      <?php endif; ?>
-    <?php endforeach; ?>
-  </div>
-
+<div class="mbpha-avail" data-mbpha-avail data-today="<?= Helper::escape($todayDate) ?>" data-now="<?= Helper::escape($nowHm) ?>">
   <div class="row g-3 mb-3">
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-sm-6 col-xl-4">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--navy">
           <i class="bi bi-calendar-check"></i>
         </div>
         <div>
-          <div class="ux-stat__value" data-avail-count="available"><?= (int) ($counts['available'] ?? 0) ?></div>
+          <div class="ux-stat__value"><?= (int) ($counts['available'] ?? 0) ?></div>
           <div class="ux-stat__label">Available this week</div>
         </div>
       </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-sm-6 col-xl-4">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--pending">
           <i class="bi bi-calendar2-event"></i>
@@ -107,7 +94,7 @@ $formatGridTime = static function (string $hm): string {
         </div>
       </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-sm-6 col-xl-4">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--success">
           <i class="bi bi-calendar3"></i>
@@ -118,17 +105,6 @@ $formatGridTime = static function (string $hm): string {
         </div>
       </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--info">
-          <i class="bi bi-hourglass-split"></i>
-        </div>
-        <div>
-          <div class="ux-stat__value" data-avail-dirty>Saved</div>
-          <div class="ux-stat__label">Schedule status</div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div class="mbpha-avail__card">
@@ -136,7 +112,7 @@ $formatGridTime = static function (string $hm): string {
       <div>
         <h3 class="mbpha-avail__title">Weekly Schedule</h3>
         <p class="mbpha-avail__hint mb-0">
-          Click a cell to toggle a 30-minute slot. Drag down a day to select a range.
+          The time labels are a guide only. Availability can start or end at any valid time.
           Hours shown: <?= Helper::escape($formatGridTime($gridStart)) ?> – <?= Helper::escape($formatGridTime($gridEnd)) ?>.
         </p>
       </div>
@@ -157,169 +133,171 @@ $formatGridTime = static function (string $hm): string {
 
     <div class="mbpha-avail__legend" aria-label="Schedule legend">
       <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-available"></span>Available</span>
-      <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-dirty"></span>Unsaved change</span>
       <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-booked"></span>Booked</span>
-      <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-custom"></span>Existing custom slot</span>
-      <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-empty"></span>Unavailable</span>
-    </div>
-
-    <div class="mbpha-avail__tools">
-      <div class="mbpha-avail__tool">
-        <span class="mbpha-avail__tool-label">Set working hours</span>
-        <label class="visually-hidden" for="avail-range-day">Day</label>
-        <select id="avail-range-day" class="form-select form-select-sm" data-avail-range-day>
-          <?php foreach ($days as $day): ?>
-            <option value="<?= Helper::escape((string) ($day['date'] ?? '')) ?>" <?= !empty($day['is_today']) ? 'selected' : '' ?>>
-              <?= Helper::escape((string) ($day['name'] ?? '')) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <label class="visually-hidden" for="avail-range-start">Start time</label>
-        <select id="avail-range-start" class="form-select form-select-sm" data-avail-range-start>
-          <?php foreach ($timeOptions as $option): ?>
-            <option value="<?= Helper::escape((string) ($option['value'] ?? '')) ?>" <?= (($option['value'] ?? '') === '08:00') ? 'selected' : '' ?>>
-              <?= Helper::escape((string) ($option['label'] ?? '')) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <label class="visually-hidden" for="avail-range-end">End time</label>
-        <select id="avail-range-end" class="form-select form-select-sm" data-avail-range-end>
-          <?php foreach ($timeOptions as $option): ?>
-            <option value="<?= Helper::escape((string) ($option['value'] ?? '')) ?>" <?= (($option['value'] ?? '') === '16:00') ? 'selected' : '' ?>>
-              <?= Helper::escape((string) ($option['label'] ?? '')) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <button type="button" class="btn btn-sm btn-outline-primary" data-avail-apply-range>Apply</button>
-      </div>
-
-      <div class="mbpha-avail__tool">
-        <span class="mbpha-avail__tool-label">Copy day</span>
-        <label class="visually-hidden" for="avail-copy-from">Copy from</label>
-        <select id="avail-copy-from" class="form-select form-select-sm" data-avail-copy-from>
-          <?php foreach ($days as $day): ?>
-            <option value="<?= Helper::escape((string) ($day['date'] ?? '')) ?>">
-              <?= Helper::escape((string) ($day['name'] ?? '')) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <span class="mbpha-avail__tool-sep">to</span>
-        <label class="visually-hidden" for="avail-copy-to">Copy to</label>
-        <select id="avail-copy-to" class="form-select form-select-sm" data-avail-copy-to>
-          <?php foreach ($days as $index => $day): ?>
-            <option value="<?= Helper::escape((string) ($day['date'] ?? '')) ?>" <?= $index === 1 ? 'selected' : '' ?>>
-              <?= Helper::escape((string) ($day['name'] ?? '')) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <button type="button" class="btn btn-sm btn-outline-primary" data-avail-copy-day>Copy</button>
-      </div>
-
-      <div class="mbpha-avail__tool">
-        <span class="mbpha-avail__tool-label">Clear</span>
-        <label class="visually-hidden" for="avail-clear-day">Clear day</label>
-        <select id="avail-clear-day" class="form-select form-select-sm" data-avail-clear-day>
-          <?php foreach ($days as $day): ?>
-            <option value="<?= Helper::escape((string) ($day['date'] ?? '')) ?>">
-              <?= Helper::escape((string) ($day['name'] ?? '')) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-avail-clear-one>Clear day</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" data-avail-clear-week>Clear week</button>
-      </div>
+      <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-empty"></span>Open time — click to add</span>
     </div>
 
     <div class="mbpha-avail__scroller">
-      <table class="mbpha-avail__table">
-        <thead>
-          <tr>
-            <th scope="col">Time</th>
-            <?php foreach ($days as $day): ?>
-              <th
-                scope="col"
-                class="<?= !empty($day['is_today']) ? 'is-today' : '' ?><?= !empty($day['is_past']) ? ' is-past' : '' ?>"
-              >
-                <span class="mbpha-avail__day-name"><?= Helper::escape((string) ($day['short'] ?? '')) ?></span>
-                <span class="mbpha-avail__day-date"><?= Helper::escape((string) ($day['day_num'] ?? '')) ?> <?= Helper::escape((string) ($day['month_short'] ?? '')) ?></span>
-              </th>
-            <?php endforeach; ?>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($intervals as $interval): ?>
-            <tr>
-              <th scope="row">
+      <div
+        class="mbpha-avail__cal"
+        style="--avail-rows: <?= (int) $intervalCount ?>;"
+      >
+        <div class="mbpha-avail__cal-head">
+          <div class="mbpha-avail__cal-time-head">Time</div>
+          <?php foreach ($days as $day): ?>
+            <div class="mbpha-avail__cal-day-head<?= !empty($day['is_today']) ? ' is-today' : '' ?><?= !empty($day['is_past']) ? ' is-past' : '' ?><?= !empty($day['is_weekend']) ? ' is-weekend' : '' ?>">
+              <span class="mbpha-avail__day-name"><?= Helper::escape((string) ($day['short'] ?? '')) ?></span>
+              <span class="mbpha-avail__day-date"><?= Helper::escape((string) ($day['day_num'] ?? '')) ?> <?= Helper::escape((string) ($day['month_short'] ?? '')) ?></span>
+            </div>
+          <?php endforeach; ?>
+        </div>
+
+        <div class="mbpha-avail__cal-body">
+          <div class="mbpha-avail__cal-times" aria-hidden="true">
+            <?php foreach ($intervals as $interval): ?>
+              <div class="mbpha-avail__cal-time">
                 <span><?= Helper::escape((string) ($interval['label'] ?? '')) ?></span>
-              </th>
-              <?php foreach ($days as $day): ?>
-                <?php
-                $cellKey = ((string) ($day['date'] ?? '')) . '|' . ((string) ($interval['start'] ?? ''));
-                $cell = $cells[$cellKey] ?? [];
-                $state = (string) ($cell['state'] ?? 'empty');
-                $locked = !empty($cell['locked']);
-                $isPast = !empty($cell['past']);
-                $dayName = (string) ($day['name'] ?? '');
-                $startLabel = (string) ($interval['label'] ?? '');
-                $endLabel = (string) ($interval['end_label'] ?? '');
-                $stateLabel = (string) ($cell['label'] ?? 'unavailable');
-                $ariaLabel = $dayName . ', ' . $startLabel . ' to ' . $endLabel . ', ' . $stateLabel;
-                $isTodayCol = !empty($day['is_today']);
-                $selected = $state === 'available';
-                ?>
-                <td class="<?= $isTodayCol ? 'is-today-col' : '' ?>">
+              </div>
+            <?php endforeach; ?>
+          </div>
+
+          <?php foreach ($days as $day): ?>
+            <?php
+            $date = (string) ($day['date'] ?? '');
+            $dayBlocks = is_array($blocks[$date] ?? null) ? $blocks[$date] : [];
+            $dayPast = !empty($day['is_past']);
+            $isTodayCol = !empty($day['is_today']);
+            $isWeekendCol = !empty($day['is_weekend']);
+            $dayName = (string) ($day['name'] ?? '');
+            ?>
+            <div class="mbpha-avail__cal-day<?= $isTodayCol ? ' is-today-col' : '' ?><?= $isWeekendCol ? ' is-weekend-col' : '' ?><?= $dayPast ? ' is-past' : '' ?>">
+              <div class="mbpha-avail__cal-lanes">
+                <?php foreach ($intervals as $interval): ?>
+                  <?php
+                  $laneStart = (string) ($interval['start'] ?? '');
+                  $laneEnd = (string) ($interval['end'] ?? '');
+                  $laneEnded = $isTodayCol && $laneEnd !== '' && $nowHm !== '' && $laneEnd <= $nowHm;
+                  $lanePast = $dayPast;
+                  ?>
                   <button
                     type="button"
-                    class="mbpha-avail__cell is-<?= Helper::escape($state) ?><?= $state === 'empty' ? ' is-empty' : '' ?><?= $isPast ? ' is-past' : '' ?>"
-                    data-avail-cell
-                    data-date="<?= Helper::escape((string) ($day['date'] ?? '')) ?>"
-                    data-start="<?= Helper::escape((string) ($interval['start'] ?? '')) ?>"
-                    data-end="<?= Helper::escape((string) ($interval['end'] ?? '')) ?>"
+                    class="mbpha-avail__cal-lane<?= $lanePast ? ' is-past' : '' ?>"
+                    data-avail-lane
+                    data-date="<?= Helper::escape($date) ?>"
+                    data-start="<?= Helper::escape($laneStart) ?>"
+                    data-end="<?= Helper::escape($laneEnd) ?>"
                     data-day="<?= Helper::escape($dayName) ?>"
-                    data-start-label="<?= Helper::escape($startLabel) ?>"
-                    data-end-label="<?= Helper::escape($endLabel) ?>"
-                    data-state="<?= Helper::escape($state) ?>"
-                    data-saved="<?= $selected ? '1' : '0' ?>"
-                    <?= $locked ? 'data-locked="1" disabled' : '' ?>
-                    aria-pressed="<?= $selected ? 'true' : 'false' ?>"
-                    aria-label="<?= Helper::escape($ariaLabel) ?>"
-                  >
-                    <?php if ($state === 'available'): ?>
-                      <i class="bi bi-check-lg" aria-hidden="true"></i>
-                      <span>Available</span>
-                    <?php elseif ($state === 'booked'): ?>
-                      <i class="bi bi-lock-fill" aria-hidden="true"></i>
-                      <span>Booked</span>
-                    <?php elseif ($state === 'custom'): ?>
-                      <i class="bi bi-slash-circle" aria-hidden="true"></i>
-                      <span>Custom</span>
-                    <?php else: ?>
-                      <span class="visually-hidden">Unavailable</span>
-                    <?php endif; ?>
-                  </button>
-                </td>
-              <?php endforeach; ?>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
+                    <?= $laneEnded ? 'data-ended="1"' : '' ?>
+                    <?= $lanePast ? 'disabled' : '' ?>
+                    aria-label="<?= Helper::escape('Add availability on ' . $dayName . ' from ' . (string) ($interval['label'] ?? '') . ' to ' . (string) ($interval['end_label'] ?? '')) ?>"
+                  ></button>
+                <?php endforeach; ?>
+              </div>
 
-    <div class="mbpha-avail__footer">
-      <div class="mbpha-avail__apply">
-        <label class="form-label mb-0" for="avail-apply-weeks">Also apply to</label>
-        <select id="avail-apply-weeks" name="apply_weeks" class="form-select form-select-sm">
-          <?php foreach ($applyWeekOptions as $option): ?>
-            <option value="<?= (int) ($option['value'] ?? 1) ?>">
-              <?= Helper::escape((string) ($option['label'] ?? '')) ?>
-            </option>
+              <div class="mbpha-avail__cal-blocks">
+                <?php foreach ($dayBlocks as $block): ?>
+                  <?php
+                  $blockId = (int) ($block['id'] ?? 0);
+                  $blockState = (string) ($block['state'] ?? 'available');
+                  $blockLocked = !empty($block['locked']);
+                  $blockPast = !empty($block['past']);
+                  ?>
+                  <button
+                    type="button"
+                    class="mbpha-avail__block is-<?= Helper::escape($blockState) ?><?= $blockPast ? ' is-past' : '' ?>"
+                    style="top: <?= Helper::escape((string) ($block['top_pct'] ?? 0)) ?>%; height: <?= Helper::escape((string) ($block['height_pct'] ?? 0)) ?>%;"
+                    data-avail-block
+                    data-id="<?= $blockId ?>"
+                    data-date="<?= Helper::escape((string) ($block['date'] ?? $date)) ?>"
+                    data-start="<?= Helper::escape((string) ($block['start'] ?? '')) ?>"
+                    data-end="<?= Helper::escape((string) ($block['end'] ?? '')) ?>"
+                    data-notes="<?= Helper::escape((string) ($block['notes'] ?? '')) ?>"
+                    data-status="<?= Helper::escape((string) ($block['status'] ?? 'Available')) ?>"
+                    data-locked="<?= $blockLocked ? '1' : '0' ?>"
+                    <?php if ($blockState === 'available' && (string) ($block['expires_at'] ?? '') !== ''): ?>
+                    data-slot-expires-at="<?= Helper::escape((string) $block['expires_at']) ?>"
+                    <?php endif; ?>
+                    aria-label="<?= Helper::escape((string) ($block['range_label'] ?? '') . ', ' . $blockState) ?>"
+                  >
+                    <strong><?= Helper::escape((string) ($block['range_label'] ?? '')) ?></strong>
+                    <span><?= $blockState === 'booked' ? 'Booked' : 'Available' ?></span>
+                  </button>
+                <?php endforeach; ?>
+              </div>
+            </div>
           <?php endforeach; ?>
-        </select>
+        </div>
       </div>
-      <button type="submit" class="btn btn-primary btn-primary-xl" data-avail-save>
-        <i class="bi bi-check2-circle me-2" aria-hidden="true"></i>
-        Save Availability
-      </button>
     </div>
   </div>
-</form>
+</div>
+
+<div class="modal fade" id="availEditorModal" tabindex="-1" aria-labelledby="availEditorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-3">
+      <form
+        method="POST"
+        action="<?= Helper::url('/doctor/availability/create') ?>"
+        data-avail-form
+        data-create-action="<?= Helper::url('/doctor/availability/create') ?>"
+        data-edit-action="<?= Helper::url('/doctor/availability/__ID__/edit') ?>"
+        data-delete-action="<?= Helper::url('/doctor/availability/__ID__/delete') ?>"
+      >
+        <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
+        <input type="hidden" name="return_week" value="<?= Helper::escape($weekStart) ?>">
+        <input type="hidden" name="status" value="Available">
+        <div class="modal-header border-bottom">
+          <h2 class="modal-title h5" id="availEditorModalLabel">Add Availability</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small mb-3" data-avail-modal-help>
+            Enter any start and end time. The schedule will place this block using those times.
+          </p>
+          <div class="alert alert-warning d-none mb-3" role="alert" data-avail-booked-note>
+            This time is booked and cannot be edited.
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="avail-modal-date">Date</label>
+            <input type="date" class="form-control" id="avail-modal-date" name="consultation_date" min="<?= Helper::escape($todayDate) ?>" required>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label" for="avail-modal-start">Start time</label>
+              <input type="time" class="form-control" id="avail-modal-start" name="start_time" step="60" required>
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="avail-modal-end">End time</label>
+              <input type="time" class="form-control" id="avail-modal-end" name="end_time" step="60" required>
+            </div>
+          </div>
+          <div class="mt-3">
+            <label class="form-label" for="avail-modal-notes">Notes (optional)</label>
+            <textarea class="form-control" id="avail-modal-notes" name="notes" rows="2" maxlength="1000"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer flex-wrap">
+          <button type="submit" form="avail-delete-form" class="btn btn-outline-danger me-auto d-none" data-avail-delete>
+            Delete
+          </button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <a class="btn btn-outline-primary d-none" data-avail-full-form href="<?= Helper::escape($createUrl) ?>" data-base-href="<?= Helper::escape($createUrl) ?>">Open full form</a>
+          <button type="submit" class="btn btn-primary" data-avail-save>Save Availability</button>
+        </div>
+      </form>
+      <form
+        id="avail-delete-form"
+        method="POST"
+        action="#"
+        class="d-none"
+        data-avail-delete-form
+        data-confirm-title="Delete availability"
+        data-confirm-body="Remove this availability from your schedule?"
+        data-confirm-action="Delete"
+      >
+        <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
+        <input type="hidden" name="return_week" value="<?= Helper::escape($weekStart) ?>">
+      </form>
+    </div>
+  </div>
+</div>

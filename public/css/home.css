@@ -160,12 +160,30 @@ body.public-layout .public-navbar {
   view-transition-name: public-nav;
 }
 
+body.public-layout:has(.public-nav-offcanvas.show),
+body.public-layout:has(.public-nav-offcanvas.showing) {
+  overflow: hidden;
+}
+
+html:has(body.public-layout .public-nav-offcanvas.show),
+html:has(body.public-layout .public-nav-offcanvas.showing) {
+  overflow: hidden;
+}
+
 body.public-layout .offcanvas-backdrop {
-  z-index: 1085;
+  z-index: 1085 !important;
 }
 
 body.public-layout .public-nav-offcanvas {
-  z-index: 1090;
+  z-index: 1090 !important;
+  pointer-events: auto;
+}
+
+body.public-layout .public-nav-offcanvas .offcanvas-body,
+body.public-layout .public-nav-offcanvas .public-drawer-link {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
 }
 
 body.public-layout .public-navbar > .container {

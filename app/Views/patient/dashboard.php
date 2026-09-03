@@ -18,50 +18,6 @@ $upcomingCount = (int) ($bookingSummary['upcoming_appointments'] ?? $approvedCou
 $unreadCount = (int) ($headerNotifications['unread_count'] ?? 0);
 $latestStatus = (string) ($latestRequest['status'] ?? '');
 
-$hasPrescription = false;
-foreach ($recentRequests as $requestRow) {
-    if ((int) ($requestRow['has_prescription'] ?? 0) === 1) {
-        $hasPrescription = true;
-        break;
-    }
-}
-
-$attentionText = 'Book a consultation when you are ready.';
-$attentionIcon = 'bi-calendar2-heart';
-$attentionTone = 'info';
-$attentionAction = ['label' => 'Book a Consultation', 'url' => '/patient/available-slots', 'icon' => 'bi-calendar2-plus'];
-if ($latestStatus === Status::APPROVED) {
-    $attentionText = 'Your next consultation is approved.';
-    $attentionIcon = 'bi-calendar2-check';
-    $attentionTone = 'success';
-    $attentionAction = [
-        'label' => 'View Consultation',
-        'url' => '/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0),
-        'icon' => 'bi-arrow-right',
-    ];
-} elseif ($latestStatus === Status::PENDING) {
-    $attentionText = 'Your request is awaiting administrator review.';
-    $attentionIcon = 'bi-clock';
-    $attentionTone = 'warning';
-    $attentionAction = [
-        'label' => 'Track Request',
-        'url' => '/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0),
-        'icon' => 'bi-eye',
-    ];
-} elseif ($unreadCount > 0) {
-    $attentionText = $unreadCount === 1
-        ? 'You have 1 unread notification.'
-        : 'You have ' . $unreadCount . ' unread notifications.';
-    $attentionIcon = 'bi-bell';
-    $attentionTone = 'info';
-    $attentionAction = ['label' => 'View Notifications', 'url' => '/notifications?read_state=unread', 'icon' => 'bi-bell'];
-} elseif ($hasPrescription) {
-    $attentionText = 'A prescription is available from a completed consultation.';
-    $attentionIcon = 'bi-capsule';
-    $attentionTone = 'success';
-    $attentionAction = ['label' => 'View Consultations', 'url' => '/patient/consultation-requests?status=' . urlencode(Status::COMPLETED), 'icon' => 'bi-journal-medical'];
-}
-
 $pageHeaderTitle = 'Patient Dashboard';
 $pageHeaderSubtitle = 'Check your next consultation, track request status, and book care when you need it.';
 $pageHeaderBreadcrumbs = [];
@@ -131,46 +87,12 @@ $welcomePills = [
     ],
 ];
 $welcomeIcon = 'bi-calendar2-heart';
-
-$actionCards = [
-    [
-        'title' => 'Book a Consultation',
-        'description' => 'Choose an available slot and submit a booking request.',
-        'url' => '/patient/available-slots',
-        'icon' => 'bi-calendar2-plus',
-        'action_label' => 'Book',
-        'emphasis' => 'primary',
-    ],
-    [
-        'title' => 'My Consultations',
-        'description' => 'Track request status and open approved appointments.',
-        'url' => '/patient/consultation-requests',
-        'icon' => 'bi-clipboard2-check',
-        'action_label' => 'Open',
-    ],
-    [
-        'title' => 'Doctor Directory',
-        'description' => 'Browse doctors and their specializations.',
-        'url' => '/patient/doctors',
-        'icon' => 'bi-person-badge',
-        'action_label' => 'Browse',
-    ],
-    [
-        'title' => 'Notifications',
-        'description' => 'Review updates about your consultations.',
-        'url' => '/notifications',
-        'icon' => 'bi-bell',
-        'action_label' => 'Open',
-    ],
-];
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/welcome_banner.php'; ?>
-<?php require __DIR__ . '/../partials/dashboard/attention_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
-<?php require __DIR__ . '/../partials/dashboard/action_cards.php'; ?>
 
 <section class="mb-4">
   <div class="ux-card">
@@ -203,11 +125,21 @@ $actionCards = [
             $nextStep = 'This consultation is complete. You can view the record and prescription when available.';
         }
         ?>
-        <div class="table-responsive ux-details-table-wrap">
-          <table class="table ux-table ux-details-table mb-0">
+        <div class="ux-table-wrapper mb-3">
+          <table class="ux-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Doctor</th>
+                <th scope="col">Specialization</th>
+                <th scope="col">Status</th>
+                <th scope="col">Consultation Date</th>
+                <th scope="col">Time</th>
+                <th scope="col">Reference</th>
+                <th scope="col">Next Step</th>
+              </tr>
+            </thead>
             <tbody>
               <tr>
-                <th scope="row">Doctor</th>
                 <td>
                   <?php
                   $personName = (string) ($latestRequest['doctor_name'] ?? 'Doctor');
@@ -217,29 +149,11 @@ $actionCards = [
                   require __DIR__ . '/../partials/shared/person_row.php';
                   ?>
                 </td>
-              </tr>
-              <tr>
-                <th scope="row">Specialization</th>
                 <td><?= Helper::escape((string) ($latestRequest['specialization'] ?? 'General Practice')) ?></td>
-              </tr>
-              <tr>
-                <th scope="row">Status</th>
                 <td><?= ux_status_badge($latestStatus) ?></td>
-              </tr>
-              <tr>
-                <th scope="row">Consultation date</th>
                 <td><?= Helper::escape(Helper::formatDate((string) ($latestRequest['consultation_date'] ?? ''), 'D, d M Y', 'Not scheduled')) ?></td>
-              </tr>
-              <tr>
-                <th scope="row">Time</th>
-                <td><?= Helper::escape($timeLabel) ?></td>
-              </tr>
-              <tr>
-                <th scope="row">Reference</th>
+                <td class="text-nowrap"><?= Helper::escape($timeLabel) ?></td>
                 <td class="font-monospace">#TH-<?= Helper::escape((string) ((int) ($latestRequest['id'] ?? 0))) ?></td>
-              </tr>
-              <tr>
-                <th scope="row">Next step</th>
                 <td><?= Helper::escape($nextStep) ?></td>
               </tr>
             </tbody>
@@ -398,7 +312,13 @@ $actionCards = [
             ?>
           <?php else: ?>
             <?php foreach (array_slice($slotPreview, 0, 4) as $slot): ?>
-              <div class="ux-slot-row">
+              <?php
+              $previewExpiresAt = Helper::combineDateTimeIso(
+                  (string) ($slot['consultation_date'] ?? ''),
+                  (string) ($slot['end_time'] ?? '')
+              );
+              ?>
+              <div class="ux-slot-row"<?= $previewExpiresAt !== '' ? ' data-slot-expires-at="' . Helper::escape($previewExpiresAt) . '"' : '' ?>>
                 <?php
                 $personName = (string) ($slot['full_name'] ?? 'Doctor');
                 $personPhoto = $slot['profile_photo_path'] ?? null;

@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <?php if (!empty($robotsNoIndex)): ?>
+  <meta name="robots" content="noindex, nofollow">
+  <?php endif; ?>
   <title><?= $title ?? 'MBPHA TeleHealth Consultation System' ?></title>
   <link rel="icon" type="image/png" href="<?= \App\Helpers\Helper::asset('images/LOGOS.png') ?>">
   <link rel="apple-touch-icon" href="<?= \App\Helpers\Helper::asset('images/LOGOS.png') ?>">
@@ -21,7 +24,8 @@
   <?= $pageStyles ?? '' ?>
 </head>
 <body class="dashboard-layout dashboard-layout--<?= \App\Helpers\Helper::escape((string) ($dashboardRole ?? 'default')) ?>"
-      data-app-timezone="<?= \App\Helpers\Helper::escape(\App\Helpers\Helper::appTimezone()) ?>">
+      data-app-timezone="<?= \App\Helpers\Helper::escape(\App\Helpers\Helper::appTimezone()) ?>"
+      data-server-now="<?= \App\Helpers\Helper::escape(\App\Helpers\Helper::nowIso()) ?>">
   <script>
     (function () {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -85,6 +89,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="<?= \App\Helpers\Helper::asset('js/app.js') ?>"></script>
   <script src="<?= \App\Helpers\Helper::asset('js/dashboard.js') ?>"></script>
+  <script src="<?= \App\Helpers\Helper::asset('js/table-filters.js') ?>"></script>
   <?= $pageScripts ?? '' ?>
 </body>
 </html>

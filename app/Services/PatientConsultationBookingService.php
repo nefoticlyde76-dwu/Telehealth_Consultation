@@ -282,6 +282,7 @@ class PatientConsultationBookingService
 
     public static function getBookingPageData(int $availabilityId, array $input = []): array
     {
+        SlotExpirationService::sweep();
         $slot = DoctorAvailability::findAvailableSlotForPatients($availabilityId);
 
         return [
@@ -292,7 +293,7 @@ class PatientConsultationBookingService
         ];
     }
 
-    public static function submitBooking(int $patientId, int $availabilityId, array $input): array
+    public static function submitBooking(int $patientId, int $availabilityId, array $input, array $files = []): array
     {
         $formData = [
             'reason' => trim((string) ($input['reason'] ?? '')),
@@ -330,7 +331,11 @@ class PatientConsultationBookingService
             ];
         }
 
+        SlotExpirationService::sweep();
+
         $db = Database::getInstance();
+        $storedImagePath = null;
+        $committed = false;
 
         try {
             $db->beginTransaction();
@@ -340,7 +345,8 @@ class PatientConsultationBookingService
                     doctor_availability.id,
                     doctor_availability.doctor_id,
                     doctor_availability.status,
-                    doctor_availability.consultation_date
+                    doctor_availability.consultation_date,
+                    doctor_availability.end_time
                 FROM doctor_availability
                 WHERE id = :id
                 FOR UPDATE"
@@ -362,13 +368,17 @@ class PatientConsultationBookingService
                 );
             }
 
-            if ((string) ($slotRow['consultation_date'] ?? '') < date('Y-m-d')) {
-                return self::failTransaction(
+            if (SlotExpirationService::slotHasEnded($slotRow)) {
+                $failed = self::failTransaction(
                     $db,
-                    'This consultation slot is no longer available.',
+                    'This consultation slot has ended and can no longer be booked.',
                     $availabilityId,
                     $formData
                 );
+                SlotExpirationService::resetRequestGuard();
+                SlotExpirationService::sweep();
+
+                return $failed;
             }
 
             if (ConsultationRequest::existsForPatientAndAvailability($patientId, $availabilityId)) {
@@ -395,7 +405,36 @@ class PatientConsultationBookingService
                 throw new \RuntimeException('Doctor id missing for slot.');
             }
 
-            $requestId = ConsultationRequest::createBooking($patientId, $doctorId, $availabilityId, $formData['reason'], 'Pending');
+            try {
+                $stored = ComplaintImageService::storeForPatient($patientId, $files);
+                $storedImagePath = is_array($stored) ? (string) ($stored['path'] ?? '') : null;
+                if ($storedImagePath === '') {
+                    $storedImagePath = null;
+                }
+            } catch (\RuntimeException $uploadException) {
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
+
+                return [
+                    'success' => false,
+                    'errors' => ['Please correct the highlighted booking fields.'],
+                    'fieldErrors' => [
+                        'complaint_image' => $uploadException->getMessage(),
+                    ],
+                    'formData' => $formData,
+                    'slot' => DoctorAvailability::findAvailableSlotForPatients($availabilityId),
+                ];
+            }
+
+            $requestId = ConsultationRequest::createBooking(
+                $patientId,
+                $doctorId,
+                $availabilityId,
+                $formData['reason'],
+                'Pending',
+                $storedImagePath
+            );
 
             if ($requestId <= 0) {
                 throw new \RuntimeException('Unable to create consultation request.');
@@ -406,6 +445,7 @@ class PatientConsultationBookingService
             $updateStmt->execute();
 
             $db->commit();
+            $committed = true;
 
             NotificationService::notifyConsultationRequestCreated($requestId);
             AuditLogService::record(
@@ -423,6 +463,10 @@ class PatientConsultationBookingService
         } catch (\Throwable $exception) {
             if ($db->inTransaction()) {
                 $db->rollBack();
+            }
+
+            if (!$committed && $storedImagePath !== null) {
+                ComplaintImageService::deleteStoredPath($storedImagePath);
             }
 
             error_log('Patient booking submission failed: ' . $exception->getMessage());

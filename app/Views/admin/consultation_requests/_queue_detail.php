@@ -54,7 +54,7 @@ $workspaceFields = static function () use ($filters, $currentPage): void {
     <?= ux_status_badge($status) ?>
   </div>
 
-  <div class="table-responsive ux-queue-detail__table-wrap">
+  <div class="ux-queue-detail__table-wrap">
     <table class="table ux-table ux-details-table ux-queue-detail__table mb-0">
       <caption class="visually-hidden">Consultation request details</caption>
       <tbody>
@@ -113,6 +113,20 @@ $workspaceFields = static function () use ($filters, $currentPage): void {
   <div class="ux-queue-detail__complaint">
     <h4 class="h6 mb-2">Chief complaint</h4>
     <p class="mb-0"><?= nl2br(\App\Helpers\Helper::escape((string) ($request['reason'] ?? ''))) ?></p>
+    <?php
+    $complaintImageUrl = '';
+    if (\App\Services\ComplaintImageService::existsOnRequest($request) && $requestId > 0) {
+        $complaintImageUrl = \App\Services\ComplaintImageService::viewerUrl('admin', $requestId);
+    }
+    if ($complaintImageUrl !== ''):
+    ?>
+    <h4 class="h6 mb-2 mt-3">Complaint Image</h4>
+    <?php
+    $complaintImageAlt = 'Patient complaint image for this consultation request';
+    $complaintImageClass = 'ux-complaint-image';
+    require __DIR__ . '/../../partials/shared/complaint_image.php';
+    endif;
+    ?>
   </div>
 
   <div class="ux-queue-detail__actions">

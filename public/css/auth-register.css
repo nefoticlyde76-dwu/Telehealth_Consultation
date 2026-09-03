@@ -5,7 +5,7 @@
 
 .auth-page-register .auth-login-shell,
 .auth-page-register .auth-login-card {
-  max-width: 480px;
+  max-width: 680px;
 }
 
 .auth-page-register.auth-page-login {
@@ -17,8 +17,8 @@
 
 .auth-page-register .auth-register-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
 
 .auth-page-register .auth-register-optional__fields.auth-register-grid {
@@ -113,16 +113,16 @@
 @media (max-width: 1199.98px) {
   .auth-page-register .auth-login-shell,
   .auth-page-register .auth-login-card {
-    max-width: 380px;
+    max-width: 600px;
   }
 
   .auth-page-register.auth-page-login {
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding-top: 20px;
+    padding-bottom: 20px;
   }
 
   .auth-page-register .auth-register-grid {
-    gap: 10px;
+    gap: 14px;
   }
 
   .auth-page-register .auth-register-optional {
@@ -146,25 +146,27 @@
 @media (max-width: 767.98px) {
   .auth-page-register .auth-login-shell,
   .auth-page-register .auth-login-card {
-    max-width: 320px;
+    max-width: 100%;
   }
 
   .auth-page-register.auth-page-login {
     align-items: flex-start;
-    padding: 14px 18px 12px;
+    padding: 20px 16px 24px;
     overflow: visible;
+  }
+
+  .auth-page-register .auth-register-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 575.98px) {
-  .auth-page-register .auth-register-optional__fields.auth-register-grid {
-    grid-template-columns: 1fr;
-  }
+.auth-page-register .auth-field-hint {
+  line-height: 1.4;
 }
 
 @media (max-width: 419.98px) {
   .auth-page-register .auth-login-shell,
   .auth-page-register .auth-login-card {
-    max-width: 300px;
+    max-width: 100%;
   }
 }

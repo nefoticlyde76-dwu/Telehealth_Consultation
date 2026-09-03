@@ -11,7 +11,8 @@ $nextWeek = (string) ($nextWeek ?? '');
 $thisWeek = (string) ($thisWeek ?? '');
 $days = is_array($days ?? null) ? $days : [];
 $intervals = is_array($intervals ?? null) ? $intervals : [];
-$cells = is_array($cells ?? null) ? $cells : [];
+$blocks = is_array($blocks ?? null) ? $blocks : [];
+$intervalCount = max(1, count($intervals));
 $doctorOptions = is_array($doctorOptions ?? null) ? $doctorOptions : [];
 $specializationOptions = is_array($specializationOptions ?? null) ? $specializationOptions : [];
 $summary = is_array($summary ?? null) ? $summary : [];
@@ -107,7 +108,7 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
     <div class="mbpha-avail__header">
       <div>
         <h3 class="mbpha-avail__title">Weekly schedule</h3>
-        <p class="mbpha-avail__hint mb-0">Filter by doctor if you already have a preference. Empty cells are not available.</p>
+        <p class="mbpha-avail__hint mb-0">Filter by doctor if you already have a preference. Each block shows the doctor’s actual available hours.</p>
       </div>
       <div class="mbpha-avail__week-nav" role="group" aria-label="Week navigation">
         <a class="mbpha-avail__week-btn" href="<?= $slotsUrl(['week' => $prevWeek]) ?>" aria-label="Previous week">
@@ -172,72 +173,57 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
     </div>
 
     <div class="mbpha-avail__scroller">
-      <table class="mbpha-avail__table">
-        <thead>
-          <tr>
-            <th scope="col">Time</th>
-            <?php foreach ($days as $day): ?>
-              <th
-                scope="col"
-                class="<?= !empty($day['is_today']) ? 'is-today' : '' ?><?= !empty($day['is_past']) ? ' is-past' : '' ?>"
-              >
-                <span class="mbpha-avail__day-name"><?= Helper::escape((string) ($day['short'] ?? '')) ?></span>
-                <span class="mbpha-avail__day-date"><?= Helper::escape((string) ($day['day_num'] ?? '')) ?> <?= Helper::escape((string) ($day['month_short'] ?? '')) ?></span>
-              </th>
-            <?php endforeach; ?>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($intervals as $interval): ?>
-            <tr>
-              <th scope="row">
-                <span><?= Helper::escape((string) ($interval['label'] ?? '')) ?></span>
-              </th>
-              <?php foreach ($days as $day): ?>
-                <?php
-                $cellKey = ((string) ($day['date'] ?? '')) . '|' . ((string) ($interval['start'] ?? ''));
-                $cell = $cells[$cellKey] ?? [];
-                $options = is_array($cell['options'] ?? null) ? $cell['options'] : [];
-                $isPast = !empty($cell['past']) || !empty($day['is_past']);
-                $isTodayCol = !empty($day['is_today']);
-                $dayName = (string) ($day['name'] ?? '');
-                $startLabel = (string) ($interval['label'] ?? '');
-                $endLabel = (string) ($interval['end_label'] ?? '');
-                ?>
-                <td class="<?= $isTodayCol ? 'is-today-col' : '' ?>">
-                  <?php if ($options === []): ?>
-                    <span
-                      class="mbpha-avail__cell is-empty<?= $isPast ? ' is-past' : '' ?>"
-                      aria-label="<?= Helper::escape($dayName . ', ' . $startLabel . ' to ' . $endLabel . ', unavailable') ?>"
-                    >
-                      <span class="visually-hidden">Unavailable</span>
-                    </span>
-                  <?php else: ?>
-                    <div class="mbpha-avail__book-stack">
-                      <?php foreach ($options as $option): ?>
-                        <?php
-                        $slotId = (int) ($option['id'] ?? 0);
-                        $doctorName = (string) ($option['full_name'] ?? 'Doctor');
-                        $bookLabel = $dayName . ', ' . (string) ($option['start_label'] ?? $startLabel) . ' to ' . (string) ($option['end_label'] ?? $endLabel) . ', available with ' . $doctorName;
-                        ?>
-                        <a
-                          class="mbpha-avail__cell is-available"
-                          href="<?= Helper::url('/patient/consultation-requests/book/' . $slotId) ?>"
-                          aria-label="<?= Helper::escape($bookLabel) ?>"
-                        >
-                          <span class="mbpha-avail__book-time"><?= Helper::escape((string) ($option['start_label'] ?? $startLabel)) ?></span>
-                          <span class="mbpha-avail__book-name"><?= Helper::escape($doctorName) ?></span>
-                          <span class="mbpha-avail__book-cta">Book</span>
-                        </a>
-                      <?php endforeach; ?>
-                    </div>
-                  <?php endif; ?>
-                </td>
-              <?php endforeach; ?>
-            </tr>
+      <div class="mbpha-avail__cal" style="--avail-rows: <?= (int) $intervalCount ?>;">
+        <div class="mbpha-avail__cal-head">
+          <div class="mbpha-avail__cal-time-head">Time</div>
+          <?php foreach ($days as $day): ?>
+            <div class="mbpha-avail__cal-day-head<?= !empty($day['is_today']) ? ' is-today' : '' ?><?= !empty($day['is_past']) ? ' is-past' : '' ?><?= !empty($day['is_weekend']) ? ' is-weekend' : '' ?>">
+              <span class="mbpha-avail__day-name"><?= Helper::escape((string) ($day['short'] ?? '')) ?></span>
+              <span class="mbpha-avail__day-date"><?= Helper::escape((string) ($day['day_num'] ?? '')) ?> <?= Helper::escape((string) ($day['month_short'] ?? '')) ?></span>
+            </div>
           <?php endforeach; ?>
-        </tbody>
-      </table>
+        </div>
+        <div class="mbpha-avail__cal-body">
+          <div class="mbpha-avail__cal-times" aria-hidden="true">
+            <?php foreach ($intervals as $interval): ?>
+              <div class="mbpha-avail__cal-time">
+                <span><?= Helper::escape((string) ($interval['label'] ?? '')) ?></span>
+              </div>
+            <?php endforeach; ?>
+          </div>
+          <?php foreach ($days as $day): ?>
+            <?php
+            $date = (string) ($day['date'] ?? '');
+            $dayBlocks = is_array($blocks[$date] ?? null) ? $blocks[$date] : [];
+            $dayName = (string) ($day['name'] ?? '');
+            ?>
+            <div class="mbpha-avail__cal-day<?= !empty($day['is_today']) ? ' is-today-col' : '' ?><?= !empty($day['is_weekend']) ? ' is-weekend-col' : '' ?>">
+              <div class="mbpha-avail__cal-blocks">
+                <?php foreach ($dayBlocks as $block): ?>
+                  <?php
+                  $slotId = (int) ($block['id'] ?? 0);
+                  $doctorName = (string) ($block['full_name'] ?? 'Doctor');
+                  $rangeLabel = (string) ($block['range_label'] ?? '');
+                  ?>
+                  <a
+                    class="mbpha-avail__block is-available"
+                    style="top: <?= Helper::escape((string) ($block['top_pct'] ?? 0)) ?>%; height: <?= Helper::escape((string) ($block['height_pct'] ?? 0)) ?>%;"
+                    href="<?= Helper::url('/patient/consultation-requests/book/' . $slotId) ?>"
+                    <?php if ((string) ($block['expires_at'] ?? '') !== ''): ?>
+                    data-slot-expires-at="<?= Helper::escape((string) $block['expires_at']) ?>"
+                    <?php endif; ?>
+                    aria-label="<?= Helper::escape($dayName . ', ' . $rangeLabel . ', available with ' . $doctorName) ?>"
+                  >
+                    <strong><?= Helper::escape($rangeLabel) ?></strong>
+                    <span><?= Helper::escape($doctorName) ?></span>
+                    <span>Book</span>
+                  </a>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
     </div>
   </div>
 </div>

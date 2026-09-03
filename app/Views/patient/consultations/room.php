@@ -209,6 +209,17 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
                     : '<em class="fst-italic text-body-tertiary">No reason recorded at time of booking.</em>'; ?>
                 </p>
               </div>
+              <?php
+              $complaintImageUrl = trim((string) ($context['complaint_image_url'] ?? ''));
+              if ($complaintImageUrl !== ''):
+              ?>
+              <h3 class="h6 mb-2 mt-4">Complaint Image</h3>
+              <?php
+              $complaintImageAlt = 'Patient complaint image for this consultation';
+              $complaintImageClass = 'vc-complaint-image';
+              require __DIR__ . '/../../partials/shared/complaint_image.php';
+              endif;
+              ?>
             </div>
           </div>
           <?php endif; ?>

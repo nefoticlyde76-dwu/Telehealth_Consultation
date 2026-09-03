@@ -1,5 +1,6 @@
 <?php
 use App\Helpers\Helper;
+use App\Helpers\ListFilter;
 
 $filters = is_array($filters ?? null) ? $filters : [];
 $logs = is_array($logs ?? null) ? $logs : [];
@@ -13,24 +14,31 @@ $userOptions = is_array($userOptions ?? null) ? $userOptions : [];
 $filterForm = [
     'action' => Helper::url('/admin/audit-logs'),
     'title' => 'Search and filter activity',
+    'clear_url' => Helper::url('/admin/audit-logs'),
     'search' => [
         'name' => 'search',
         'value' => (string) ($filters['search'] ?? ''),
         'placeholder' => 'Search activity...',
         'label' => 'Search',
     ],
-    'clear_url' => Helper::url('/admin/audit-logs'),
-    'apply_label' => 'Apply Filters',
-    'clear_label' => 'Clear Filters',
     'fields' => [
         ['type' => 'select', 'name' => 'action', 'label' => 'Action', 'value' => (string) ($filters['action'] ?? ''), 'empty_label' => 'All actions', 'options' => $actionOptions],
         ['type' => 'select', 'name' => 'role', 'label' => 'Role', 'value' => (string) ($filters['role'] ?? ''), 'empty_label' => 'All roles', 'options' => $roleOptions],
         ['type' => 'select', 'name' => 'user_id', 'label' => 'User', 'value' => (string) ((int) ($filters['user_id'] ?? 0) ?: ''), 'empty_label' => 'All users', 'options' => array_map(static fn (array $u): array => ['value' => (string) (int) ($u['id'] ?? 0), 'label' => (string) (($u['full_name'] ?? '') . ' (' . ($u['email'] ?? '') . ')')], $userOptions)],
         ['type' => 'date_preset', 'name' => 'date', 'label' => 'Date', 'value' => (string) ($filters['date'] ?? ''), 'empty_label' => 'All dates', 'options' => $dateOptions, 'from_value' => (string) ($filters['date_from'] ?? ''), 'to_value' => (string) ($filters['date_to'] ?? '')],
-        ['type' => 'select', 'name' => 'sort', 'label' => 'Sort', 'value' => (string) ($filters['sort'] ?? 'newest'), 'empty_label' => 'Newest first', 'include_empty' => false, 'options' => $sortOptions],
-        ['type' => 'select', 'name' => 'per_page', 'label' => 'Per page', 'value' => (string) ($filters['per_page'] ?? 25), 'empty_label' => '25', 'include_empty' => false, 'options' => [['value' => '25', 'label' => '25'], ['value' => '50', 'label' => '50'], ['value' => '100', 'label' => '100']]],
+        ['type' => 'select', 'name' => 'sort', 'label' => 'Sort', 'value' => (string) ($filters['sort'] ?? 'newest'), 'include_empty' => false, 'options' => $sortOptions],
+        ['type' => 'select', 'name' => 'per_page', 'label' => 'Per page', 'value' => (string) ($filters['per_page'] ?? 25), 'include_empty' => false, 'options' => [['value' => '25', 'label' => '25'], ['value' => '50', 'label' => '50'], ['value' => '100', 'label' => '100']]],
     ],
 ];
+$filterTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    ListFilter::selectOptions($roleOptions)
+);
+$filterTabCurrent = (string) ($filters['role'] ?? '');
+$filterTabAria = 'Filter activity by role';
+$filterTabUrl = static function (string $value) use ($filters): string {
+    return ListFilter::url('/admin/audit-logs', $filters, ['role' => $value, 'page' => 1]);
+};
 ?>
 
 <section class="mb-4">
@@ -51,6 +59,7 @@ $filterForm = [
   <div class="ux-card ux-data-card">
     <div class="ux-card__header">
       <h2 class="ux-data-card__title">Activity log</h2>
+      <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
     </div>
     <div class="ux-table-wrapper border-0">
       <div class="table-responsive">

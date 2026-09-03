@@ -23,6 +23,8 @@ $statusFieldOptions = \App\Helpers\Status::filterOptions(
 $filterForm = [
     'action' => \App\Helpers\Helper::url('/doctor/availability'),
     'title' => 'Filter slots',
+    'clear_url' => \App\Helpers\Helper::url('/doctor/availability?view=list'),
+    'hidden' => ['view' => 'list'],
     'search' => [
         'label' => 'Search',
         'placeholder' => 'Search by date, time, or notes',
@@ -68,9 +70,16 @@ $filterForm = [
             ],
         ],
     ],
-    'clear_url' => \App\Helpers\Helper::url('/doctor/availability?view=list'),
-    'hidden' => ['view' => 'list'],
 ];
+$filterTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    $statusFieldOptions
+);
+$filterTabCurrent = (string) ($filters['status'] ?? '');
+$filterTabAria = 'Filter slots by status';
+$filterTabUrl = static function (string $value) use ($filters): string {
+    return \App\Helpers\ListFilter::url('/doctor/availability', $filters + ['view' => 'list'], ['status' => $value, 'page' => 1]);
+};
 ?>
 
 <section class="mb-4">
@@ -100,7 +109,6 @@ $filterForm = [
   </div>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
-
   <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
@@ -153,6 +161,7 @@ $filterForm = [
   <div class="ux-card ux-data-card">
     <div class="ux-card__header">
       <h2 class="ux-data-card__title">Availability slots</h2>
+      <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
     </div>
     <div class="ux-table-wrapper border-0">
       <div class="table-responsive">
@@ -200,10 +209,13 @@ $filterForm = [
                 $badgeClass = ux_slot_status_badge_class($slotStatus, $isAvailable ? false : true);
                 $iconClass = ux_status_icon_class($slotStatus, $isAvailable ? 'bi-calendar2-check-fill' : 'bi-calendar2-event-fill');
                 $slotDate = (string) ($slot['consultation_date'] ?? '');
+                $slotExpiresAt = $isAvailable
+                    ? \App\Helpers\Helper::combineDateTimeIso($slotDate, (string) ($slot['end_time'] ?? ''))
+                    : '';
                 $editAriaLabel = 'Edit availability slot on ' . ($slotDate !== '' ? \App\Helpers\Helper::formatDate($slotDate, 'd M Y', 'selected date') : 'selected date');
                 $deleteAriaLabel = 'Delete availability slot on ' . ($slotDate !== '' ? \App\Helpers\Helper::formatDate($slotDate, 'd M Y', 'selected date') : 'selected date');
                 ?>
-                <tr>
+                <tr<?= $slotExpiresAt !== '' ? ' data-slot-expires-at="' . \App\Helpers\Helper::escape($slotExpiresAt) . '"' : '' ?>>
                   <td>
                     <div class="d-flex flex-column">
                       <strong><?= \App\Helpers\Helper::escape(\App\Helpers\Helper::formatDate($slotDate, 'd M Y', 'Not available')) ?></strong>

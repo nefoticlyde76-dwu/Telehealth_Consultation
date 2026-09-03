@@ -525,42 +525,43 @@ function initializeAosAnimations() {
  */
 function initializeConsultationQueueWorkspace() {
   const workspace = document.querySelector("[data-consultation-queue-workspace]");
-  if (!(workspace instanceof HTMLElement)) {
+  if (!(workspace instanceof HTMLElement) || workspace.dataset.queueBound === "1") {
     return;
   }
+  workspace.dataset.queueBound = "1";
 
-  const forms = workspace.querySelectorAll("form[data-queue-decision]");
-  const buttons = [];
   let submitting = false;
 
-  forms.forEach((form) => {
-    if (!(form instanceof HTMLFormElement)) {
+  const collectButtons = () => {
+    const buttons = [];
+    workspace.querySelectorAll("form[data-queue-decision] button[type='submit']").forEach((button) => {
+      if (button instanceof HTMLButtonElement) {
+        if (!button.dataset.originalHtml) {
+          button.dataset.originalHtml = button.innerHTML;
+        }
+        buttons.push(button);
+      }
+    });
+    return buttons;
+  };
+
+  workspace.addEventListener("submit", (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement) || !form.hasAttribute("data-queue-decision")) {
       return;
     }
-
-    const button = form.querySelector('button[type="submit"]');
-    if (button instanceof HTMLButtonElement) {
-      if (!button.dataset.originalHtml) {
-        button.dataset.originalHtml = button.innerHTML;
-      }
-      buttons.push(button);
+    if (submitting) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
     }
-
-    form.addEventListener("submit", (event) => {
-      if (submitting) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        return;
-      }
-
-      submitting = true;
-      lockQueueDecisionButtons(buttons, form);
-    });
+    submitting = true;
+    lockQueueDecisionButtons(collectButtons(), form);
   });
 
   window.addEventListener("pageshow", () => {
     submitting = false;
-    unlockQueueDecisionButtons(buttons);
+    unlockQueueDecisionButtons(collectButtons());
   });
 
   if (window.matchMedia("(max-width: 991.98px)").matches) {
@@ -939,58 +940,88 @@ function initializePermanentDeleteModal() {
   });
 }
 
-function initializeUserBulkSelection() {
+function syncUserBulkSelection() {
   const boxes = Array.from(document.querySelectorAll(".user-select-box"));
   const selectAll = document.getElementById("userSelectAll");
   const bulkButton = document.getElementById("userBulkDeleteButton");
   const countEl = document.getElementById("userBulkCount");
-  if (boxes.length === 0 || !(bulkButton instanceof HTMLButtonElement)) {
+  if (!(bulkButton instanceof HTMLButtonElement)) {
     return;
   }
 
-  const sync = () => {
-    const selected = boxes.filter((box) => box instanceof HTMLInputElement && box.checked);
-    bulkButton.disabled = selected.length === 0;
-    if (countEl) {
-      countEl.textContent = selected.length === 1 ? "1 selected" : selected.length + " selected";
-    }
-    if (selectAll instanceof HTMLInputElement) {
-      const enabled = boxes.filter((box) => box instanceof HTMLInputElement && !box.disabled);
-      selectAll.checked = enabled.length > 0 && enabled.every((box) => box.checked);
-      selectAll.indeterminate = selected.length > 0 && !selectAll.checked;
-    }
-  };
-
-  boxes.forEach((box) => box.addEventListener("change", sync));
-  if (selectAll instanceof HTMLInputElement) {
-    selectAll.addEventListener("change", () => {
-      boxes.forEach((box) => {
-        if (box instanceof HTMLInputElement && !box.disabled) {
-          box.checked = selectAll.checked;
-        }
-      });
-      sync();
-    });
+  const selected = boxes.filter((box) => box instanceof HTMLInputElement && box.checked);
+  bulkButton.disabled = selected.length === 0;
+  if (countEl) {
+    countEl.textContent = selected.length === 1 ? "1 selected" : selected.length + " selected";
   }
-  sync();
+  if (selectAll instanceof HTMLInputElement) {
+    const enabled = boxes.filter((box) => box instanceof HTMLInputElement && !box.disabled);
+    selectAll.checked = enabled.length > 0 && enabled.every((box) => box.checked);
+    selectAll.indeterminate = selected.length > 0 && !selectAll.checked;
+  }
 }
 
-function initializeNotificationBulkSelection() {
+function initializeUserBulkSelection() {
+  if (document.body.dataset.userBulkBound === "1") {
+    syncUserBulkSelection();
+    return;
+  }
+  document.body.dataset.userBulkBound = "1";
+
+  document.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+    if (target.id === "userSelectAll") {
+      document.querySelectorAll(".user-select-box").forEach((box) => {
+        if (box instanceof HTMLInputElement && !box.disabled) {
+          box.checked = target.checked;
+        }
+      });
+      syncUserBulkSelection();
+      return;
+    }
+    if (target.classList.contains("user-select-box")) {
+      syncUserBulkSelection();
+    }
+  });
+
+  syncUserBulkSelection();
+}
+
+function syncNotificationBulkSelection() {
   const bulkForm = document.getElementById("notificationBulkForm");
   if (!(bulkForm instanceof HTMLFormElement)) {
     return;
   }
-
   const submit = bulkForm.querySelector("[data-bulk-submit]");
   if (!(submit instanceof HTMLButtonElement)) {
     return;
   }
-
-  const sync = () => {
-    const selected = bulkForm.querySelectorAll('input[name="notification_ids[]"]:checked');
-    submit.disabled = selected.length === 0;
-  };
-
-  bulkForm.addEventListener("change", sync);
-  sync();
+  const selected = bulkForm.querySelectorAll('input[name="notification_ids[]"]:checked');
+  submit.disabled = selected.length === 0;
 }
+
+function initializeNotificationBulkSelection() {
+  if (document.body.dataset.notificationBulkBound === "1") {
+    syncNotificationBulkSelection();
+    return;
+  }
+  document.body.dataset.notificationBulkBound = "1";
+
+  document.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || target.name !== "notification_ids[]") {
+      return;
+    }
+    syncNotificationBulkSelection();
+  });
+
+  syncNotificationBulkSelection();
+}
+
+window.mbphaAfterTableFilterSwap = function () {
+  syncUserBulkSelection();
+  syncNotificationBulkSelection();
+};

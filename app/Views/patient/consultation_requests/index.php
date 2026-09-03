@@ -28,6 +28,7 @@ $statusFieldOptions = \App\Helpers\Status::filterOptions(
 $filterForm = [
     'action' => \App\Helpers\Helper::url('/patient/consultation-requests'),
     'title' => 'Find a consultation',
+    'clear_url' => \App\Helpers\Helper::url('/patient/consultation-requests'),
     'search' => [
         'label' => 'Search',
         'placeholder' => 'Search by doctor or medication name',
@@ -81,8 +82,16 @@ $filterForm = [
             ],
         ],
     ],
-    'clear_url' => \App\Helpers\Helper::url('/patient/consultation-requests'),
 ];
+$filterTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    $statusFieldOptions
+);
+$filterTabCurrent = (string) ($filters['status'] ?? '');
+$filterTabAria = 'Filter consultations by status';
+$filterTabUrl = static function (string $value) use ($filters): string {
+    return \App\Helpers\ListFilter::url('/patient/consultation-requests', $filters, ['status' => $value, 'page' => 1]);
+};
 
 $paginationPath = '/patient/consultation-requests';
 $paginationFilters = $filters;
@@ -170,6 +179,7 @@ $paginationBuildUrl = null;
       <div class="ux-card ux-data-card">
         <div class="ux-card__header">
           <h2 class="ux-data-card__title">Consultations</h2>
+          <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
         </div>
         <?php
         $historyRows = [];
@@ -183,12 +193,12 @@ $paginationBuildUrl = null;
       </div>
     <?php else: ?>
       <div class="ux-card ux-data-card ux-history-card mb-4">
-        <div class="ux-card__header d-flex justify-content-between align-items-baseline gap-3">
+        <div class="ux-card__header">
           <div>
-            <h3 class="h6 mb-1">Upcoming and active</h3>
+            <h3 class="ux-data-card__title mb-1">Upcoming and active</h3>
             <p class="text-muted small mb-0">Pending review or approved sessions. Join Consultation is available only while the session is open.</p>
           </div>
-          <span class="text-muted small"><?= count($activeRows) ?></span>
+          <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
         </div>
         <?php
         $historyRows = $activeRows;
@@ -244,6 +254,7 @@ $paginationBuildUrl = null;
     <div class="ux-card ux-data-card">
       <div class="ux-card__header">
         <h2 class="ux-data-card__title">Consultations</h2>
+        <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
       </div>
       <?php
       $historyRows = $requests;

@@ -10,12 +10,7 @@ $forcePasswordReset = !empty($forcePasswordReset);
 $lastLoginAt = $lastLoginAt ?? null;
 $accountStatus = (string) ($accountStatus ?? '');
 $dashboardRole = (string) ($dashboardRole ?? '');
-$dashboardHome = match ($dashboardRole) {
-    'admin' => '/admin/dashboard',
-    'doctor' => '/doctor/dashboard',
-    'patient' => '/patient/dashboard',
-    default => '/',
-};
+$dashboardHome = \App\Services\AuthService::getRoleRedirectUrl($dashboardRole);
 ?>
 
 <section class="mb-4">

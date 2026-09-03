@@ -32,6 +32,7 @@ $expiresLabel = $expiresMinutes === 1 ? '1 minute' : $expiresMinutes . ' minutes
   <title>Reset your MBPHA TeleHealth password</title>
 </head>
 <body style="margin:0;padding:0;background-color:#F8F9FA;font-family:Arial,Helvetica,sans-serif;color:#212529;">
+  <!-- Layout tables only (role=presentation). Not data tables — email clients require this structure. -->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F8F9FA;padding:24px 12px;">
     <tr>
       <td align="center">

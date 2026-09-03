@@ -45,6 +45,15 @@ final class Paths
         );
     }
 
+    /**
+     * Private application storage (outside the web root). Used for
+     * patient complaint images and other non-public files.
+     */
+    public static function storageRoot(): string
+    {
+        return self::projectRoot() . DIRECTORY_SEPARATOR . 'storage';
+    }
+
     private static function configuredPublicRoot(): ?string
     {
         $raw = $_ENV['PUBLIC_ROOT'] ?? $_SERVER['PUBLIC_ROOT'] ?? getenv('PUBLIC_ROOT');

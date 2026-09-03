@@ -28,7 +28,7 @@ $doctorSpecialization = (string) ($slot['specialization'] ?? 'General Practice')
         Book Consultation
       </span>
       <h2 class="ux-page-header__title h4 mb-2">Confirm your selected consultation slot</h2>
-      <p class="ux-page-header__subtitle text-muted mb-0">Review the doctor and slot details, then provide a brief reason for consultation.</p>
+      <p class="ux-page-header__subtitle text-muted mb-0">Review the doctor and slot details, provide a brief reason for consultation, and optionally attach a complaint image.</p>
     </div>
     <div class="ux-page-header__right d-flex flex-wrap gap-2">
       <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">
@@ -66,8 +66,23 @@ $doctorSpecialization = (string) ($slot['specialization'] ?? 'General Practice')
         </div>
       </div>
 
-      <form method="POST" action="<?= \App\Helpers\Helper::url('/patient/consultation-requests/book/' . (string) ((int) ($slot['id'] ?? 0))) ?>">
+      <?php
+      $slotExpiresAt = \App\Helpers\Helper::combineDateTimeIso(
+          (string) ($slot['consultation_date'] ?? ''),
+          (string) ($slot['end_time'] ?? '')
+      );
+      ?>
+      <form
+        method="POST"
+        action="<?= \App\Helpers\Helper::url('/patient/consultation-requests/book/' . (string) ((int) ($slot['id'] ?? 0))) ?>"
+        enctype="multipart/form-data"
+        data-slot-booking
+        <?= $slotExpiresAt !== '' ? 'data-slot-expires-at="' . \App\Helpers\Helper::escape($slotExpiresAt) . '"' : '' ?>
+      >
         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape((string) $csrfToken) ?>">
+        <div class="alert alert-warning d-none" role="alert" data-slot-expired-note>
+          This consultation slot has ended and can no longer be booked. Please choose another available time.
+        </div>
 
         <div class="mb-3">
           <label for="reason" class="form-label">Brief Reason for Consultation (Chief Complaint) <span class="text-danger">*</span></label>
@@ -82,6 +97,40 @@ $doctorSpecialization = (string) ($slot['specialization'] ?? 'General Practice')
           ><?= \App\Helpers\Helper::escape((string) ($formData['reason'] ?? '')) ?></textarea>
           <div class="invalid-feedback"><?= \App\Helpers\Helper::escape((string) ($fieldErrors['reason'] ?? 'Consultation reason is required.')) ?></div>
           <div class="form-text">Maximum 500 characters.</div>
+        </div>
+
+        <div
+          class="mb-4 complaint-image-upload"
+          data-complaint-image-upload
+          data-max-bytes="<?= (int) \App\Services\ComplaintImageService::MAX_BYTES ?>"
+        >
+          <label for="complaint_image" class="form-label">Upload Complaint Image (Optional)</label>
+          <p class="form-text mt-0 mb-2">
+            Attach a photo of your symptom or affected area if it helps the doctor understand your complaint.
+            JPG, JPEG, or PNG files up to <?= (int) \App\Services\ComplaintImageService::MAX_LABEL_BYTES ?> MB are accepted.
+          </p>
+          <input
+            type="file"
+            class="form-control <?= isset($fieldErrors['complaint_image']) ? 'is-invalid' : '' ?>"
+            id="complaint_image"
+            name="complaint_image"
+            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+            data-complaint-image-input
+          >
+          <div class="invalid-feedback" data-complaint-image-error><?= \App\Helpers\Helper::escape((string) ($fieldErrors['complaint_image'] ?? 'Please choose a JPG or PNG image of 5 MB or less.')) ?></div>
+          <div class="complaint-image-upload__preview d-none mt-3" data-complaint-image-preview>
+            <div class="dashboard-inline-callout d-flex flex-column flex-sm-row align-items-sm-center gap-3">
+              <img src="" alt="Selected complaint image preview" class="complaint-image-upload__thumb" data-complaint-image-thumb>
+              <div class="min-w-0 flex-grow-1">
+                <span class="dashboard-info-label">Selected image</span>
+                <strong class="d-block text-break" data-complaint-image-name></strong>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" data-complaint-image-remove>
+                  <i class="bi bi-x-circle me-1"></i>
+                  Remove image
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="d-flex flex-wrap justify-content-end gap-2">

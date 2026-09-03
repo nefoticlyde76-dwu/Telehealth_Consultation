@@ -2,6 +2,8 @@
 use App\Helpers\Helper;
 use App\Helpers\Status;
 
+require_once __DIR__ . '/../../partials/profile/_helpers.php';
+
 $managedUser = is_array($managedUser ?? null) ? $managedUser : [];
 $errors = is_array($errors ?? null) ? $errors : [];
 $fieldErrors = is_array($fieldErrors ?? null) ? $fieldErrors : [];
@@ -46,7 +48,7 @@ $userName = (string) ($managedUser['full_name'] ?? 'User');
           </div>
           <div class="user-detail-item">
             <span class="user-detail-label">Role</span>
-            <strong><?= Helper::escape(ucfirst((string) ($managedUser['role_name'] ?? ''))) ?></strong>
+            <strong><?= Helper::escape(user_profile_role_label((string) ($managedUser['role_name'] ?? ''))) ?></strong>
           </div>
           <div class="user-detail-item">
             <span class="user-detail-label">Status</span>

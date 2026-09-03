@@ -186,6 +186,7 @@ $additionalNotes = trim((string) ($clinicalRecord['additional_notes'] ?? ''));
   </style>
 </head>
 <body>
+  <!-- Layout tables (letterhead / two-column fields). Not data tables — DomPDF document chrome. -->
   <table class="doc-header">
     <tr>
       <?php if ($logoSrc !== ''): ?>

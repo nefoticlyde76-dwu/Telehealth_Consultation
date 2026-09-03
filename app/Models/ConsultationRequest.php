@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Core\Database;
 use App\Helpers\ListFilter;
 use App\Helpers\Status;
+use App\Services\SlotExpirationService;
 use PDO;
 
 class ConsultationRequest
@@ -331,8 +332,14 @@ class ConsultationRequest
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
-    public static function createBooking(int $patientId, int $doctorId, int $availabilityId, string $reason, string $status = 'Pending'): int
-    {
+    public static function createBooking(
+        int $patientId,
+        int $doctorId,
+        int $availabilityId,
+        string $reason,
+        string $status = 'Pending',
+        ?string $complaintImagePath = null
+    ): int {
         $db = Database::getInstance();
         $stmt = $db->prepare(
             "INSERT INTO consultation_requests (
@@ -340,12 +347,14 @@ class ConsultationRequest
                 doctor_id,
                 availability_id,
                 reason,
+                complaint_image_path,
                 status
             ) VALUES (
                 :patient_id,
                 :doctor_id,
                 :availability_id,
                 :reason,
+                :complaint_image_path,
                 :status
             )"
         );
@@ -353,6 +362,11 @@ class ConsultationRequest
         $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
         $stmt->bindValue(':availability_id', $availabilityId, PDO::PARAM_INT);
         $stmt->bindValue(':reason', $reason);
+        if ($complaintImagePath === null || $complaintImagePath === '') {
+            $stmt->bindValue(':complaint_image_path', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':complaint_image_path', $complaintImagePath);
+        }
         $stmt->bindValue(':status', $status);
         $stmt->execute();
 
@@ -569,6 +583,7 @@ class ConsultationRequest
                 consultation_requests.id,
                 consultation_requests.request_date,
                 consultation_requests.reason,
+                consultation_requests.complaint_image_path,
                 consultation_requests.status,
                 consultation_requests.patient_id,
                 consultation_requests.doctor_id,
@@ -807,7 +822,7 @@ class ConsultationRequest
 
             if ($availabilityId > 0) {
                 $slotStmt = $db->prepare(
-                    "SELECT id, status
+                    "SELECT id, status, consultation_date, end_time
                     FROM doctor_availability
                     WHERE id = :id
                     FOR UPDATE"
@@ -843,7 +858,12 @@ class ConsultationRequest
                 }
 
                 if (in_array($targetStatus, ['Rejected', 'Cancelled'], true) && $slotStatus === 'Booked') {
-                    $updateSlot = $db->prepare("UPDATE doctor_availability SET status = 'Available' WHERE id = :id");
+                    $releasedStatus = SlotExpirationService::hasEnded(
+                        (string) ($slotRow['consultation_date'] ?? ''),
+                        (string) ($slotRow['end_time'] ?? '')
+                    ) ? Status::SLOT_EXPIRED : Status::SLOT_AVAILABLE;
+                    $updateSlot = $db->prepare('UPDATE doctor_availability SET status = :status WHERE id = :id');
+                    $updateSlot->bindValue(':status', $releasedStatus);
                     $updateSlot->bindValue(':id', $availabilityId, PDO::PARAM_INT);
                     $updateSlot->execute();
                 }
@@ -908,6 +928,10 @@ class ConsultationRequest
             }
 
             $db->commit();
+
+            if (in_array($targetStatus, ['Rejected', 'Cancelled'], true)) {
+                SlotExpirationService::sweep();
+            }
 
             return [
                 'success' => true,

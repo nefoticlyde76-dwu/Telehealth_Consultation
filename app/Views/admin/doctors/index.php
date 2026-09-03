@@ -1,5 +1,9 @@
 <?php
 
+use App\Helpers\Helper;
+use App\Helpers\ListFilter;
+use App\Helpers\Status;
+
 $filters = $filters ?? ['search' => '', 'status' => ''];
 $pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0, 'per_page' => 10];
 $summary = $summary ?? [];
@@ -20,7 +24,44 @@ $buildPageUrl = static function (int $page) use ($filters): string {
 
     $queryString = http_build_query($query);
 
-    return \App\Helpers\Helper::url('/admin/doctors') . ($queryString !== '' ? '?' . $queryString : '');
+    return Helper::url('/admin/doctors') . ($queryString !== '' ? '?' . $queryString : '');
+};
+
+$filterForm = [
+    'action' => Helper::url('/admin/doctors'),
+    'title' => 'Filter clinicians',
+    'clear_url' => Helper::url('/admin/doctors'),
+    'search' => [
+        'name' => 'search',
+        'value' => (string) ($filters['search'] ?? ''),
+        'placeholder' => 'Search by full name, email, specialization, title, or employee ID',
+        'label' => 'Search doctors',
+    ],
+    'fields' => [
+        [
+            'type' => 'select',
+            'name' => 'status',
+            'label' => 'Status',
+            'value' => (string) ($filters['status'] ?? ''),
+            'empty_label' => 'All statuses',
+            'options' => array_map(static fn (string $opt): array => [
+                'value' => $opt,
+                'label' => Status::label($opt, Status::DOMAIN_USER),
+            ], $statusOptions),
+        ],
+    ],
+];
+$filterTabs = array_merge(
+    [['value' => '', 'label' => 'All']],
+    array_map(static fn (string $opt): array => [
+        'value' => $opt,
+        'label' => Status::label($opt, Status::DOMAIN_USER),
+    ], $statusOptions)
+);
+$filterTabCurrent = (string) ($filters['status'] ?? '');
+$filterTabAria = 'Filter doctors by status';
+$filterTabUrl = static function (string $value) use ($filters): string {
+    return ListFilter::url('/admin/doctors', $filters, ['status' => $value, 'page' => 1]);
 };
 ?>
 
@@ -48,53 +89,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
     </div>
   </div>
 
-  <div class="ux-card ux-filter">
-    <div class="card-header">
-      <h3 class="h6">
-        <i class="bi bi-funnel-fill ux-filter__header-icon"></i>
-        Filter clinicians
-      </h3>
-    </div>
-    <form method="GET" action="<?= \App\Helpers\Helper::url('/admin/doctors') ?>" class="user-filter-form">
-      <div class="row g-3 align-items-end">
-        <div class="col-lg-8">
-          <label for="search" class="form-label">Search doctors</label>
-          <input
-            type="text"
-            class="form-control"
-            id="search"
-            name="search"
-            value="<?= \App\Helpers\Helper::escape((string) ($filters['search'] ?? '')) ?>"
-            placeholder="Search by full name, email, specialization, title, or employee ID"
-          >
-        </div>
-
-        <div class="col-lg-2">
-          <label for="status" class="form-label">Status</label>
-          <select class="form-select" id="status" name="status" aria-label="Filter doctors by status">
-            <option value="">All statuses</option>
-            <?php foreach ($statusOptions as $statusOption): ?>
-              <option value="<?= \App\Helpers\Helper::escape($statusOption) ?>" <?= ($filters['status'] ?? '') === $statusOption ? 'selected' : '' ?>>
-                <?= \App\Helpers\Helper::escape(\App\Helpers\Status::label($statusOption, \App\Helpers\Status::DOMAIN_USER)) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-
-        <div class="col-lg-2">
-          <div class="ux-filter__actions">
-            <button type="submit" class="btn btn-primary btn-sm">
-              <i class="bi bi-funnel-fill me-1"></i>
-              Apply Filters
-            </button>
-            <a href="<?= \App\Helpers\Helper::url('/admin/doctors') ?>" class="btn btn-outline-primary btn-sm">
-              Reset
-            </a>
-          </div>
-        </div>
-      </div>
-    </form>
-  </div>
+  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
@@ -146,6 +141,7 @@ $buildPageUrl = static function (int $page) use ($filters): string {
   <div class="ux-card ux-data-card">
     <div class="ux-card__header">
       <h2 class="ux-data-card__title">Doctors</h2>
+      <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
     </div>
     <div class="ux-table-wrapper border-0">
       <div class="table-responsive">

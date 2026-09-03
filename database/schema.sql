@@ -10,6 +10,8 @@
 --   017 dropped consultation_ai_reviews (intentionally absent here)
 --   018–027 notifications, audit upgrade, invitations, sessions,
 --           Google identity, invitation_pending, password reset
+--   028 Expired availability status
+--   029 optional complaint image path on consultation_requests
 --
 -- Do not import database/migrations/001_initial_schema.sql onto a new
 -- production database. That file drops tables and seeds a local admin
@@ -162,7 +164,7 @@ CREATE TABLE IF NOT EXISTS doctor_availability (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     notes TEXT NULL,
-    status ENUM('Available', 'Booked') NOT NULL DEFAULT 'Available',
+    status ENUM('Available', 'Booked', 'Expired') NOT NULL DEFAULT 'Available',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_doctor_availability_doctor
@@ -182,6 +184,7 @@ CREATE TABLE IF NOT EXISTS consultation_requests (
     availability_id BIGINT NULL COMMENT 'Linked slot; SET NULL if the slot row is removed',
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NULL,
+    complaint_image_path VARCHAR(255) NULL DEFAULT NULL COMMENT 'Relative path under storage/ for optional patient symptom photo',
     status ENUM('Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed') NOT NULL DEFAULT 'Pending',
     completed_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

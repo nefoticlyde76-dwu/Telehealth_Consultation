@@ -9,6 +9,7 @@ use App\Helpers\Helper;
 use App\Models\ConsultationRequest;
 use App\Services\AuthService;
 use App\Services\ConsultationRecordPdfService;
+use App\Services\ComplaintImageService;
 use App\Services\PatientClinicalRecordService;
 use App\Services\PrescriptionPdfService;
 use App\Services\PatientConsultationBookingService;
@@ -83,13 +84,6 @@ class PatientController extends Controller
                 ['label' => 'Upcoming Consultation', 'value' => (string) ($bookingSummary['upcoming_appointments'] ?? 0), 'icon' => 'bi-calendar2-check', 'description' => 'Approved consultations scheduled for today or later.'],
                 ['label' => 'Consultation History', 'value' => (string) ($bookingSummary['consultation_history'] ?? 0), 'icon' => 'bi-clipboard2-data', 'description' => 'All consultation booking requests submitted from your patient account.'],
                 ['label' => 'Latest Consultation Status', 'value' => (string) ($bookingSummary['latest_status_display'] ?? 'No requests yet'), 'icon' => 'bi-activity', 'description' => 'The most recent consultation workflow status currently visible on your account.'],
-            ],
-            'quickActions' => [
-                ['title' => 'Browse Doctors', 'description' => 'Review doctor photos, titles, specializations, and the next available consultation slots.', 'icon' => 'bi-person-badge', 'status' => 'Available', 'url' => '/patient/doctors', 'action_label' => 'Open Directory'],
-                ['title' => 'View Available Slots', 'description' => 'See all available consultation slots and book from the slot list.', 'icon' => 'bi-calendar2-week', 'status' => 'Available', 'url' => '/patient/available-slots', 'action_label' => 'Browse Slots'],
-                ['title' => 'Consultation History', 'description' => 'View submitted consultation requests and track their current status.', 'icon' => 'bi-clipboard2-check', 'status' => 'Available', 'url' => '/patient/consultation-requests', 'action_label' => 'View Requests'],
-                ['title' => 'View My Profile', 'description' => 'Review your account details and profile photo.', 'icon' => 'bi-person-circle', 'status' => 'Available', 'url' => '/patient/profile', 'action_label' => 'Open Profile'],
-                ['title' => 'Change Profile Picture', 'description' => 'Upload a profile photo that appears on your dashboard after saving.', 'icon' => 'bi-camera', 'status' => 'Available', 'url' => '/patient/profile/edit', 'action_label' => 'Edit Photo'],
             ],
             'recentActivity' => [
                 [
@@ -232,7 +226,7 @@ class PatientController extends Controller
             'dashboardRole' => 'patient',
             'dashboardRoleLabel' => 'Patient Dashboard',
             'dashboardTitle' => 'Available Consultation Slots',
-            'dashboardDescription' => 'Choose an open 30-minute slot on the weekly schedule and book that consultation.',
+            'dashboardDescription' => 'Choose an open consultation time on the weekly schedule and book that visit.',
             'sidebarItems' => $sidebarItems,
             'filters' => $weekData['filters'],
             'weekStart' => $weekData['weekStart'],
@@ -244,7 +238,7 @@ class PatientController extends Controller
             'thisWeek' => $weekData['thisWeek'],
             'days' => $weekData['days'],
             'intervals' => $weekData['intervals'],
-            'cells' => $weekData['cells'],
+            'blocks' => $weekData['blocks'],
             'gridStart' => $weekData['gridStart'],
             'gridEnd' => $weekData['gridEnd'],
             'openCells' => $weekData['openCells'],
@@ -612,7 +606,7 @@ class PatientController extends Controller
         $slot = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $result = PatientConsultationBookingService::submitBooking((int) $user->id, $availabilityId, $_POST);
+            $result = PatientConsultationBookingService::submitBooking((int) $user->id, $availabilityId, $_POST, $_FILES);
 
             if ($result['success'] ?? false) {
                 Session::flash('status', [
@@ -785,6 +779,9 @@ class PatientController extends Controller
             'consultation_start_time'  => (string) ($request['start_time'] ?? ''),
             'consultation_end_time'    => (string) ($request['end_time'] ?? ''),
             'consultation_reason'      => (string) ($request['reason'] ?? ''),
+            'complaint_image_url'      => ComplaintImageService::existsOnRequest($request)
+                ? ComplaintImageService::viewerUrl('patient', (int) $request['id'])
+                : '',
             'consultation_status'      => (string) ($request['status'] ?? 'Pending'),
             'join_token_endpoint'      => Helper::url('/patient/consultations/' . (int) $request['id'] . '/join-token'),
             'csrf_token'               => Csrf::generate(),
@@ -821,6 +818,16 @@ class PatientController extends Controller
     public function downloadPrescription(string $id): void
     {
         $this->streamPrescriptionPdf($id);
+    }
+
+    public function showComplaintImage(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        ComplaintImageService::streamForCurrentUser((int) $id);
     }
 
     /**

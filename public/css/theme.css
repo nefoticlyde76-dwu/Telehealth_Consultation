@@ -204,6 +204,15 @@
   --bs-border-radius: var(--ds-radius-md);
   --bs-border-radius-lg: var(--ds-radius-lg);
   --bs-border-radius-xl: 16px;
+
+  /* Table headers — Medical Blue is the Arctic Ocean primary treatment */
+  --table-header-bg: var(--medical-blue);
+  --table-header-color: var(--white);
+  --table-header-border: rgba(var(--white-rgb), 0.16);
+  --table-header-secondary-bg: var(--dark-navy);
+  --table-header-secondary-color: var(--white);
+  --table-row-header-bg: var(--pale-blue);
+  --table-row-header-color: var(--dark-navy);
 }
 html {
   scroll-behavior: smooth;
@@ -432,11 +441,58 @@ textarea.form-control {
   margin-bottom: 0;
 }
 
-.table thead th {
-  color: var(--dark-navy);
+.table > thead {
+  --bs-table-bg: var(--table-header-bg);
+  --bs-table-color: var(--table-header-color);
+  --bs-table-border-color: var(--table-header-border);
+  --bs-table-accent-bg: transparent;
+}
+
+/* Primary data-table headers: Medical Blue (Arctic Ocean) + white text */
+.table thead th,
+.table > thead > tr > th,
+.ux-table thead th,
+.admin-user-table thead th {
+  background-color: var(--table-header-bg);
+  color: var(--table-header-color);
   font-weight: 700;
-  background-color: var(--surface-blue);
-  border-bottom: 1px solid rgba(var(--medical-blue-rgb), 0.08);
+  border-bottom: 1px solid var(--table-header-border);
+  box-shadow: none;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.table-header-secondary thead th {
+  background-color: var(--table-header-secondary-bg);
+  color: var(--table-header-secondary-color);
+}
+
+.table thead th a,
+.ux-table thead th a {
+  color: inherit;
+}
+
+.table thead th input[type="checkbox"],
+.ux-table thead th input[type="checkbox"] {
+  accent-color: var(--soft-cyan);
+}
+
+.ux-details-table tbody th,
+.ux-queue-detail__table tbody th {
+  background-color: var(--table-row-header-bg);
+  color: var(--table-row-header-color);
+}
+
+@media print {
+  .table thead th,
+  .ux-table thead th,
+  .admin-user-table thead th,
+  .vc-clinical-doc__table thead th {
+    background-color: var(--table-header-bg) !important;
+    color: var(--table-header-color) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 .table td,
@@ -878,14 +934,14 @@ textarea.form-control {
 }
 
 .ux-table thead th {
-  background: rgba(227, 242, 253, 0.6);
+  background: var(--table-header-bg);
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  color: var(--dark-navy);
+  color: var(--table-header-color);
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(217, 226, 236, 0.95);
+  border-bottom: 1px solid var(--table-header-border);
   border-top: none;
   text-align: left;
   white-space: nowrap;
@@ -2881,15 +2937,15 @@ button.is-loading::after,
   margin: 0 !important;
 }
 .ux-table thead th {
-  background: var(--light-gray);
-  color: var(--dark-gray);
+  background: var(--table-header-bg);
+  color: var(--table-header-color);
   font-size: 0.7rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   font-weight: 700;
   padding: 0.7rem 0.9rem;
   border-top: 0;
-  border-bottom: 1px solid var(--medium-gray);
+  border-bottom: 1px solid var(--table-header-border);
   white-space: nowrap;
 }
 .ux-table tbody td {

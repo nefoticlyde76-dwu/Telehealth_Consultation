@@ -45,48 +45,6 @@ class AdminUserService
                     'description' => 'Administrator accounts that manage users and consultation requests.',
                 ],
             ],
-            'quickActions' => [
-                [
-                    'title' => 'Manage Patient Accounts',
-                    'description' => 'Review patient registrations, search accounts, update profile information, and control access status.',
-                    'icon' => 'bi-people-fill',
-                    'status' => 'Available',
-                    'url' => '/admin/patients',
-                    'action_label' => 'Open Patient Management',
-                ],
-                [
-                    'title' => 'Review Consultation Requests',
-                    'description' => 'Approve or reject booked consultation requests, reserve slots, and monitor consultation statuses.',
-                    'icon' => 'bi-clipboard2-check',
-                    'status' => 'Active',
-                    'url' => '/admin/consultation-requests',
-                    'action_label' => 'Open Consultation Requests',
-                ],
-                [
-                    'title' => 'Open User Management',
-                    'description' => 'Review all platform accounts with search, role filters, and status filters.',
-                    'icon' => 'bi-diagram-3-fill',
-                    'status' => 'Available',
-                    'url' => '/admin/users',
-                    'action_label' => 'Open User Management',
-                ],
-                [
-                    'title' => 'Manage Doctor Accounts',
-                    'description' => 'Create doctor accounts, update clinician profiles, control status, and reset passwords.',
-                    'icon' => 'bi-person-badge-fill',
-                    'status' => 'Available',
-                    'url' => '/admin/doctors',
-                    'action_label' => 'Open Doctor Management',
-                ],
-                [
-                    'title' => 'Update Administrator Profile',
-                    'description' => 'Update administrator identity details and change the current administrator password.',
-                    'icon' => 'bi-person-gear',
-                    'status' => 'Available',
-                    'url' => '/admin/profile',
-                    'action_label' => 'Open Profile Settings',
-                ],
-            ],
             'recentActivity' => self::buildRecentActivity($latestUsers),
         ];
     }

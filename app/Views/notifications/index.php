@@ -9,20 +9,13 @@ $unreadItems = is_array($unreadItems ?? null) ? $unreadItems : [];
 $readItems = is_array($readItems ?? null) ? $readItems : [];
 $filters = is_array($filters ?? null) ? $filters : [];
 $pagination = is_array($pagination ?? null) ? $pagination : [];
-$typeOptions = is_array($typeOptions ?? null) ? $typeOptions : [];
 $readStateOptions = is_array($readStateOptions ?? null) ? $readStateOptions : [];
 $unreadCount = (int) ($unreadCount ?? 0);
 $totalCount = (int) ($totalCount ?? 0);
 $filterActive = (bool) ($filterActive ?? false);
 $readState = (string) ($filters['read_state'] ?? '');
-$typeFilter = (string) ($filters['type'] ?? '');
 $search = (string) ($filters['search'] ?? '');
-$dashboardHome = match ($dashboardRole) {
-    'admin' => '/admin/dashboard',
-    'doctor' => '/doctor/dashboard',
-    'patient' => '/patient/dashboard',
-    default => '/',
-};
+$dashboardHome = \App\Services\AuthService::getRoleRedirectUrl($dashboardRole);
 
 $emptyTitle = 'You\'re all caught up';
 $emptyText = 'You have no notifications to review.';
@@ -32,36 +25,19 @@ if ($notifications === [] && $filterActive) {
 }
 
 $filterForm = [
+    'id' => 'tf-notifications',
     'action' => Helper::url('/notifications'),
-    'title' => 'Filter notifications',
+    'clear_url' => Helper::url('/notifications'),
+    'active' => $filterActive,
+    'hidden' => $readState !== '' ? ['read_state' => $readState] : [],
     'search' => [
         'name' => 'search',
         'value' => $search,
         'placeholder' => 'Search title or message',
         'label' => 'Search',
     ],
-    'clear_url' => Helper::url('/notifications'),
-    'fields' => [
-        [
-            'type' => 'select',
-            'name' => 'read_state',
-            'id' => 'read_state',
-            'label' => 'Read state',
-            'value' => $readState,
-            'empty_label' => 'All',
-            'options' => $readStateOptions,
-        ],
-        [
-            'type' => 'select',
-            'name' => 'type',
-            'id' => 'notification_type',
-            'label' => 'Type',
-            'value' => $typeFilter,
-            'empty_label' => 'All types',
-            'options' => $typeOptions,
-        ],
-    ],
 ];
+$tableFilterId = 'tf-notifications';
 
 $buildNotificationUrl = static function (array $overrides = []) use ($filters): string {
     $merged = array_merge($filters, $overrides);
@@ -184,16 +160,17 @@ if ($readItems !== [] && $readState !== 'unread') {
   </div>
 
   <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
-  <?php require __DIR__ . '/../partials/shared/list_filter.php'; ?>
 
   <form method="POST" action="<?= Helper::url('/notifications/delete-selected') ?>" id="notificationBulkForm" data-confirm-title="Delete selected notifications?" data-confirm-body="Only the notices you selected will be removed from your inbox.">
     <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
     <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
 
-    <div class="ux-card ux-data-card notification-page">
+    <div class="ux-card ux-data-card notification-page" data-table-filter="tf-notifications">
+      <?php require __DIR__ . '/../partials/shared/table_filter_form.php'; ?>
       <div class="ux-card__header">
         <h2 class="ux-data-card__title">Notifications</h2>
         <div class="d-flex flex-wrap align-items-center gap-2">
+          <?php require __DIR__ . '/../partials/shared/table_toolbar.php'; ?>
           <div class="ux-table-filters" role="group" aria-label="Filter by read state">
             <?php foreach ($readStateTabs as $tab): ?>
               <?php
@@ -216,44 +193,49 @@ if ($readItems !== [] && $readState !== 'unread') {
         </div>
       </div>
       <div class="ux-card__body">
-        <?php if ($tableRows === []): ?>
-          <?php
-          $emptyIcon = $filterActive ? 'bi-funnel' : 'bi-bell';
-          $emptyActions = '';
-          $emptyCompact = false;
-          $emptyPositive = !$filterActive;
-          require __DIR__ . '/../partials/shared/empty_state.php';
-          ?>
-        <?php else: ?>
-          <div class="ux-table-wrapper">
+        <div class="ux-table-wrapper">
             <table class="ux-table notification-table align-middle mb-0">
               <caption class="visually-hidden">Inbox notifications with status and actions</caption>
               <thead>
                 <tr>
                   <th scope="col" class="ux-table__chk"><span class="visually-hidden">Select</span></th>
-                  <th scope="col">Notification</th>
-                  <th scope="col">Type</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">When</th>
-                  <th scope="col" class="text-end">Actions</th>
+                  <th scope="col"><?php $colLabel = 'Notification'; $colFilter = null; require __DIR__ . '/../partials/shared/table_col_filter.php'; ?></th>
+                  <th scope="col"><?php $colLabel = 'Type'; $colFilter = null; require __DIR__ . '/../partials/shared/table_col_filter.php'; ?></th>
+                  <th scope="col"><?php $colLabel = 'Status'; $colFilter = null; require __DIR__ . '/../partials/shared/table_col_filter.php'; ?></th>
+                  <th scope="col"><?php $colLabel = 'When'; $colFilter = null; require __DIR__ . '/../partials/shared/table_col_filter.php'; ?></th>
+                  <th scope="col" class="text-end"><?php $colLabel = 'Actions'; $colFilter = null; require __DIR__ . '/../partials/shared/table_col_filter.php'; ?></th>
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($tableRows as $item) { $renderRow($item); } ?>
+                <?php if ($tableRows === []): ?>
+                  <tr>
+                    <td colspan="6" class="ux-table__empty-state">
+                      <?php
+                      $emptyIcon = $filterActive ? 'bi-funnel' : 'bi-bell';
+                      $emptyActions = '';
+                      $emptyCompact = true;
+                      $emptyPositive = !$filterActive;
+                      require __DIR__ . '/../partials/shared/empty_state.php';
+                      ?>
+                    </td>
+                  </tr>
+                <?php else: ?>
+                  <?php foreach ($tableRows as $item) { $renderRow($item); } ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
-        <?php endif; ?>
+      </div>
+      <div class="card-footer border-0 bg-transparent">
+        <?php
+        $paginationPath = '/notifications';
+        $paginationFilters = $filters;
+        $paginationLabel = 'notifications';
+        $paginationAria = 'Notification pagination';
+        $paginationShowCount = true;
+        require __DIR__ . '/../partials/shared/list_pagination.php';
+        ?>
       </div>
     </div>
   </form>
-
-  <?php
-  $paginationPath = '/notifications';
-  $paginationFilters = $filters;
-  $paginationLabel = 'notifications';
-  $paginationAria = 'Notification pagination';
-  $paginationShowCount = true;
-  require __DIR__ . '/../partials/shared/list_pagination.php';
-  ?>
 </section>

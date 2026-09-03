@@ -150,11 +150,16 @@ $buildPageUrl = static function (int $page): string {
                           $slotDay = \App\Helpers\Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'D, d M Y', 'Not available');
                           $slotTime = substr((string) ($slot['start_time'] ?? ''), 0, 5) . ' - ' . substr((string) ($slot['end_time'] ?? ''), 0, 5);
                           $bookAriaLabel = 'Book consultation for ' . $slotDay . ' at ' . $slotTime . ' with ' . ($doctor['full_name'] ?? 'doctor');
+                          $slotExpiresAt = \App\Helpers\Helper::combineDateTimeIso(
+                              (string) ($slot['consultation_date'] ?? ''),
+                              (string) ($slot['end_time'] ?? '')
+                          );
                           ?>
                           <a
                             href="<?= \App\Helpers\Helper::url('/patient/consultation-requests/book/' . (string) $slotId) ?>"
                             class="btn btn-outline-primary btn-sm <?= $slotId <= 0 ? 'disabled' : '' ?>"
                             aria-label="<?= $slotId > 0 ? \App\Helpers\Helper::escape($bookAriaLabel) : '' ?>"
+                            <?= $slotExpiresAt !== '' ? 'data-slot-expires-at="' . \App\Helpers\Helper::escape($slotExpiresAt) . '"' : '' ?>
                           >
                             <i class="bi bi-calendar2-check me-1"></i>
                             <?= \App\Helpers\Helper::escape($slotDay) ?> · <?= \App\Helpers\Helper::escape($slotTime) ?>

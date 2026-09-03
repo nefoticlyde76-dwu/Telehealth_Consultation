@@ -10,7 +10,6 @@ $recentCompletedConsultations = is_array($recentCompletedConsultations ?? null) 
 $recentNotifications = is_array($recentNotifications ?? null) ? $recentNotifications : [];
 $todaySummary = is_array($todaySummary ?? null) ? $todaySummary : [];
 $headerNotifications = is_array($headerNotifications ?? null) ? $headerNotifications : [];
-$actionCards = is_array($quickActions ?? null) ? $quickActions : [];
 require_once __DIR__ . '/../partials/shared/status_helper.php';
 
 $bookedToday = (int) ($todaySummary['booked_today_slots'] ?? 0);
@@ -20,30 +19,6 @@ $todayDate = date('Y-m-d');
 $todaysAppointments = array_values(array_filter($upcomingApprovedAppointments, static function ($apt) use ($todayDate) {
     return ($apt['consultation_date'] ?? '') === $todayDate;
 }));
-
-$attentionText = 'No consultations are scheduled for today.';
-$attentionIcon = 'bi-calendar2-week';
-$attentionTone = 'info';
-$attentionAction = ['label' => 'Manage Availability', 'url' => '/doctor/availability', 'icon' => 'bi-calendar-week'];
-if ($bookedToday > 0) {
-    $attentionText = $bookedToday === 1
-        ? 'You have 1 consultation booked today.'
-        : 'You have ' . $bookedToday . ' consultations booked today.';
-    $attentionIcon = 'bi-calendar2-check';
-    $attentionTone = 'success';
-    $attentionAction = ['label' => "View Today's Consultations", 'url' => '/doctor/consultations?date=today', 'icon' => 'bi-calendar2-check'];
-} elseif ($unreadCount > 0) {
-    $attentionText = $unreadCount === 1
-        ? 'You have 1 unread notification.'
-        : 'You have ' . $unreadCount . ' unread notifications.';
-    $attentionIcon = 'bi-bell';
-    $attentionTone = 'info';
-    $attentionAction = ['label' => 'View Notifications', 'url' => '/notifications?read_state=unread', 'icon' => 'bi-bell'];
-} elseif ($openToday === 0) {
-    $attentionText = 'No open slots remain today. Add availability if patients should be able to book you.';
-    $attentionIcon = 'bi-calendar-plus';
-    $attentionTone = 'warning';
-}
 
 $pageHeaderTitle = 'Doctor Dashboard';
 $pageHeaderSubtitle = "See today's workload, upcoming consultations, and what needs your attention.";
@@ -85,9 +60,7 @@ $welcomeIcon = 'bi-heart-pulse';
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/welcome_banner.php'; ?>
-<?php require __DIR__ . '/../partials/dashboard/attention_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
-<?php require __DIR__ . '/../partials/dashboard/action_cards.php'; ?>
 
 <section class="mb-4">
   <div class="row g-4">

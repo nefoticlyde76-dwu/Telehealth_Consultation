@@ -13,6 +13,7 @@ class PatientDirectoryService
 
     public static function getBrowseSummary(): array
     {
+        SlotExpirationService::sweep();
         $doctorOptions = DoctorAvailability::getAvailableDoctorOptionsForPatients();
         $specializationOptions = Doctor::getSpecializationOptionsForPatients();
 
@@ -25,6 +26,7 @@ class PatientDirectoryService
 
     public static function getDoctorDirectoryPageData(array $query): array
     {
+        SlotExpirationService::sweep();
         $page = max(1, (int) ($query['page'] ?? 1));
         $totalItems = Doctor::countForPatientDirectory();
         $totalPages = max(1, (int) ceil($totalItems / self::DIRECTORY_PER_PAGE));
@@ -71,16 +73,19 @@ class PatientDirectoryService
 
     public static function getFeaturedDoctors(int $limit = 3): array
     {
+        SlotExpirationService::sweep();
         return Doctor::findForPatientDirectory($limit, 0);
     }
 
     public static function getUpcomingSlotPreview(int $limit = 4): array
     {
+        SlotExpirationService::sweep();
         return DoctorAvailability::findAvailableForPatients([], $limit, 0);
     }
 
     public static function getAvailableSlotsPageData(array $query): array
     {
+        SlotExpirationService::sweep();
         $page = max(1, (int) ($query['page'] ?? 1));
         $filters = self::normalizeSlotFilters($query);
         $totalItems = DoctorAvailability::countAvailableForPatients($filters);
@@ -146,6 +151,7 @@ class PatientDirectoryService
      */
     public static function getWeeklyBookingPageData(array $query): array
     {
+        SlotExpirationService::sweep();
         $filters = self::normalizeSlotFilters($query);
         $weekHint = trim((string) ($query['week'] ?? ''));
         if ($weekHint === '' && $filters['consultation_date'] !== '') {
@@ -161,19 +167,16 @@ class PatientDirectoryService
             (string) $anchor['weekEnd']
         );
         $grid = DoctorAvailabilityService::getWeekGridScaffold($weekHint, $slots);
-        $cells = self::buildBookingCells(
+        $blocks = DoctorAvailabilityService::buildDayBlocks(
             $grid['days'],
-            $grid['intervals'],
             $slots,
             (string) $grid['todayDate'],
             (string) $grid['nowHm']
         );
 
         $openCells = 0;
-        foreach ($cells as $cell) {
-            if (($cell['options'] ?? []) !== []) {
-                $openCells++;
-            }
+        foreach ($blocks as $dayBlocks) {
+            $openCells += count($dayBlocks);
         }
 
         return [
@@ -187,7 +190,7 @@ class PatientDirectoryService
             'thisWeek' => $grid['thisWeek'],
             'days' => $grid['days'],
             'intervals' => $grid['intervals'],
-            'cells' => $cells,
+            'blocks' => $blocks,
             'gridStart' => $grid['gridStart'],
             'gridEnd' => $grid['gridEnd'],
             'openCells' => $openCells,
@@ -220,7 +223,7 @@ class PatientDirectoryService
                 $start = (string) ($interval['start'] ?? '');
                 $end = (string) ($interval['end'] ?? '');
                 $key = $date . '|' . $start;
-                $isPast = $date < $todayDate || ($date === $todayDate && $start < $nowHm);
+                $isPast = $date < $todayDate || ($date === $todayDate && $end !== '' && $end <= $nowHm);
                 $options = [];
 
                 if (!$isPast) {

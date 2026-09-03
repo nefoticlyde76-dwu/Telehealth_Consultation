@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\Database;
+use App\Helpers\Helper;
 use App\Helpers\ListFilter;
 use PDO;
 
@@ -28,6 +29,45 @@ class DoctorAvailability
         $availability->status = $row['status'] ?? null;
 
         return $availability;
+    }
+
+    /**
+     * Available slots that have not reached their end datetime.
+     * $nowParam must be bound to the application clock (Y-m-d H:i:s).
+     */
+    public static function stillBookableSql(string $alias, string $nowParam = ':slot_now'): string
+    {
+        return "{$alias}.status = 'Available' AND TIMESTAMP({$alias}.consultation_date, {$alias}.end_time) > {$nowParam}";
+    }
+
+    /**
+     * Mark Available slots at or past their end datetime as Expired, then
+     * delete Expired rows that are not linked to a consultation request.
+     */
+    public static function expireUnbookedPastSlots(string $nowDatetime): int
+    {
+        $db = Database::getInstance();
+
+        $mark = $db->prepare(
+            "UPDATE doctor_availability
+            SET status = 'Expired'
+            WHERE status = 'Available'
+              AND TIMESTAMP(consultation_date, end_time) <= :slot_now"
+        );
+        $mark->bindValue(':slot_now', $nowDatetime);
+        $mark->execute();
+        $marked = $mark->rowCount();
+
+        $delete = $db->prepare(
+            "DELETE da
+            FROM doctor_availability da
+            LEFT JOIN consultation_requests cr ON cr.availability_id = da.id
+            WHERE da.status = 'Expired'
+              AND cr.id IS NULL"
+        );
+        $delete->execute();
+
+        return $marked;
     }
 
     public static function findByIdForDoctor(int $availabilityId, int $doctorId): ?array
@@ -125,7 +165,10 @@ class DoctorAvailability
     {
         $db = Database::getInstance();
         $sql = 'SELECT COUNT(*) FROM doctor_availability';
-        $conditions = ['doctor_id = :doctor_id'];
+        $conditions = [
+            'doctor_id = :doctor_id',
+            "status <> 'Expired'",
+        ];
         $parameters = [':doctor_id' => $doctorId];
 
         self::appendFilters($filters, $conditions, $parameters);
@@ -142,7 +185,10 @@ class DoctorAvailability
     {
         $db = Database::getInstance();
         $sql = 'SELECT * FROM doctor_availability';
-        $conditions = ['doctor_id = :doctor_id'];
+        $conditions = [
+            'doctor_id = :doctor_id',
+            "status <> 'Expired'",
+        ];
         $parameters = [':doctor_id' => $doctorId];
 
         self::appendFilters($filters, $conditions, $parameters);
@@ -179,18 +225,30 @@ class DoctorAvailability
     public static function getSummaryForDoctor(int $doctorId): array
     {
         $db = Database::getInstance();
+        $nowDatetime = Helper::nowDatetime();
+        $today = Helper::now()->format('Y-m-d');
         $stmt = $db->prepare(
             "SELECT
                 COUNT(*) AS total_slots,
-                SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS available_slots,
+                SUM(CASE WHEN status = 'Available' AND TIMESTAMP(consultation_date, end_time) > :slot_now THEN 1 ELSE 0 END) AS available_slots,
                 SUM(CASE WHEN status = 'Booked' THEN 1 ELSE 0 END) AS booked_slots,
-                SUM(CASE WHEN consultation_date >= CURDATE() THEN 1 ELSE 0 END) AS upcoming_slots,
-                SUM(CASE WHEN status = 'Booked' AND consultation_date >= CURDATE() THEN 1 ELSE 0 END) AS upcoming_consultations,
-                SUM(CASE WHEN status = 'Booked' AND consultation_date < CURDATE() THEN 1 ELSE 0 END) AS completed_consultations
+                SUM(CASE
+                    WHEN status = 'Booked' AND consultation_date >= :today THEN 1
+                    WHEN status = 'Available' AND TIMESTAMP(consultation_date, end_time) > :slot_now_upcoming THEN 1
+                    ELSE 0
+                END) AS upcoming_slots,
+                SUM(CASE WHEN status = 'Booked' AND consultation_date >= :today_booked THEN 1 ELSE 0 END) AS upcoming_consultations,
+                SUM(CASE WHEN status = 'Booked' AND consultation_date < :today_completed THEN 1 ELSE 0 END) AS completed_consultations
             FROM doctor_availability
-            WHERE doctor_id = :doctor_id"
+            WHERE doctor_id = :doctor_id
+              AND status <> 'Expired'"
         );
         $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':slot_now', $nowDatetime);
+        $stmt->bindValue(':today', $today);
+        $stmt->bindValue(':slot_now_upcoming', $nowDatetime);
+        $stmt->bindValue(':today_booked', $today);
+        $stmt->bindValue(':today_completed', $today);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
@@ -207,16 +265,21 @@ class DoctorAvailability
     public static function getTodaySummaryForDoctor(int $doctorId): array
     {
         $db = Database::getInstance();
+        $nowDatetime = Helper::nowDatetime();
+        $today = Helper::now()->format('Y-m-d');
         $stmt = $db->prepare(
             "SELECT
                 COUNT(*) AS total_today_slots,
-                SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS available_today_slots,
+                SUM(CASE WHEN status = 'Available' AND TIMESTAMP(consultation_date, end_time) > :slot_now THEN 1 ELSE 0 END) AS available_today_slots,
                 SUM(CASE WHEN status = 'Booked' THEN 1 ELSE 0 END) AS booked_today_slots
             FROM doctor_availability
             WHERE doctor_id = :doctor_id
-              AND consultation_date = CURDATE()"
+              AND consultation_date = :today
+              AND status <> 'Expired'"
         );
         $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':slot_now', $nowDatetime);
+        $stmt->bindValue(':today', $today);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
@@ -240,11 +303,17 @@ class DoctorAvailability
                 status
             FROM doctor_availability
             WHERE doctor_id = :doctor_id
-              AND consultation_date >= CURDATE()
+              AND status <> 'Expired'
+              AND (
+                    (status = 'Booked' AND consultation_date >= :today)
+                    OR (status = 'Available' AND TIMESTAMP(consultation_date, end_time) > :slot_now)
+              )
             ORDER BY consultation_date ASC, start_time ASC, id ASC
             LIMIT :limit"
         );
         $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':today', Helper::now()->format('Y-m-d'));
+        $stmt->bindValue(':slot_now', Helper::nowDatetime());
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -258,15 +327,20 @@ class DoctorAvailability
             "SELECT
                 consultation_date,
                 COUNT(*) AS total_slots,
-                SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS available_slots,
+                SUM(CASE WHEN status = 'Available' AND TIMESTAMP(consultation_date, end_time) > :slot_now THEN 1 ELSE 0 END) AS available_slots,
                 SUM(CASE WHEN status = 'Booked' THEN 1 ELSE 0 END) AS booked_slots
             FROM doctor_availability
             WHERE doctor_id = :doctor_id
-              AND consultation_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)
+              AND status <> 'Expired'
+              AND consultation_date BETWEEN :today AND DATE_ADD(:today_end, INTERVAL :days DAY)
             GROUP BY consultation_date
             ORDER BY consultation_date ASC"
         );
+        $today = Helper::now()->format('Y-m-d');
         $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':slot_now', Helper::nowDatetime());
+        $stmt->bindValue(':today', $today);
+        $stmt->bindValue(':today_end', $today);
         $stmt->bindValue(':days', $days - 1, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -286,7 +360,8 @@ class DoctorAvailability
             WHERE doctor_id = :doctor_id
               AND consultation_date = :consultation_date
               AND start_time = :start_time
-              AND end_time = :end_time";
+              AND end_time = :end_time
+              AND status IN ('Available', 'Booked')";
 
         if ($excludeId !== null) {
             $sql .= ' AND id != :exclude_id';
@@ -320,7 +395,8 @@ class DoctorAvailability
             WHERE doctor_id = :doctor_id
               AND consultation_date = :consultation_date
               AND start_time < :end_time
-              AND end_time > :start_time";
+              AND end_time > :start_time
+              AND status IN ('Available', 'Booked')";
 
         if ($excludeId !== null) {
             $sql .= ' AND id != :exclude_id';
@@ -352,10 +428,9 @@ class DoctorAvailability
         $conditions = [
             "roles.name = 'doctor'",
             "users.status = 'active'",
-            "doctor_availability.status = 'Available'",
-            'doctor_availability.consultation_date >= CURDATE()',
+            self::stillBookableSql('doctor_availability'),
         ];
-        $parameters = [];
+        $parameters = [':slot_now' => Helper::nowDatetime()];
 
         self::appendPatientFilters($filters, $conditions, $parameters);
 
@@ -389,10 +464,9 @@ class DoctorAvailability
         $conditions = [
             "roles.name = 'doctor'",
             "users.status = 'active'",
-            "doctor_availability.status = 'Available'",
-            'doctor_availability.consultation_date >= CURDATE()',
+            self::stillBookableSql('doctor_availability'),
         ];
-        $parameters = [];
+        $parameters = [':slot_now' => Helper::nowDatetime()];
 
         self::appendPatientFilters($filters, $conditions, $parameters);
 
@@ -442,11 +516,11 @@ class DoctorAvailability
         $conditions = [
             "roles.name = 'doctor'",
             "users.status = 'active'",
-            "doctor_availability.status = 'Available'",
-            'doctor_availability.consultation_date >= CURDATE()',
+            self::stillBookableSql('doctor_availability'),
             'doctor_availability.consultation_date BETWEEN :range_from AND :range_to',
         ];
         $parameters = [
+            ':slot_now' => Helper::nowDatetime(),
             ':range_from' => $fromDate,
             ':range_to' => $toDate,
         ];
@@ -466,7 +540,7 @@ class DoctorAvailability
     public static function getAvailableDoctorOptionsForPatients(): array
     {
         $db = Database::getInstance();
-        $stmt = $db->query(
+        $stmt = $db->prepare(
             "SELECT DISTINCT
                 doctor.user_id AS doctor_id,
                 users.full_name
@@ -476,10 +550,11 @@ class DoctorAvailability
             INNER JOIN roles ON roles.id = users.role_id
             WHERE roles.name = 'doctor'
               AND users.status = 'active'
-              AND doctor_availability.status = 'Available'
-              AND doctor_availability.consultation_date >= CURDATE()
+              AND " . self::stillBookableSql('doctor_availability') . "
             ORDER BY users.full_name ASC"
         );
+        $stmt->bindValue(':slot_now', Helper::nowDatetime());
+        $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
@@ -496,11 +571,12 @@ class DoctorAvailability
             FROM doctor_availability
             WHERE doctor_id = :doctor_id
               AND status = 'Available'
-              AND consultation_date >= CURDATE()
+              AND TIMESTAMP(consultation_date, end_time) > :slot_now
             ORDER BY consultation_date ASC, start_time ASC
             LIMIT :limit"
         );
         $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':slot_now', Helper::nowDatetime());
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -533,11 +609,11 @@ class DoctorAvailability
             WHERE doctor_availability.id = :id
               AND roles.name = 'doctor'
               AND users.status = 'active'
-              AND doctor_availability.status = 'Available'
-              AND doctor_availability.consultation_date >= CURDATE()
+              AND " . self::stillBookableSql('doctor_availability') . "
             LIMIT 1"
         );
         $stmt->bindValue(':id', $availabilityId, PDO::PARAM_INT);
+        $stmt->bindValue(':slot_now', Helper::nowDatetime());
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
