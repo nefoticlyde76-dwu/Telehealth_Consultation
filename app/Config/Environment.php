@@ -8,8 +8,10 @@ class Environment
 
     public static function load(string $path): void
     {
-        if (!file_exists($path)) {
-            throw new \RuntimeException('.env file not found.');
+        if (!is_file($path)) {
+            // DigitalOcean App Platform injects config as environment
+            // variables. A committed .env file must never be required.
+            return;
         }
 
         $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);

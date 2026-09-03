@@ -28,5 +28,11 @@
   "config": {
     "optimize-autoloader": true,
     "sort-packages": true
+  },
+  "extra": {
+    "heroku": {
+      "document-root": "public",
+      "index-document": "index.php"
+    }
   }
 }
