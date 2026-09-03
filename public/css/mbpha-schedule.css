@@ -578,7 +578,7 @@
 }
 
 .mbpha-avail__cal-body {
-  height: calc(var(--avail-rows, 28) * var(--avail-row-h));
+  height: calc(var(--avail-rows, 17) * var(--avail-row-h));
   background-image: repeating-linear-gradient(
     to bottom,
     transparent,

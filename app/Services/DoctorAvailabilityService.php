@@ -17,8 +17,8 @@ class DoctorAvailabilityService
     public const SLOT_MINUTES = 30;
     public const GRID_STEP_MINUTES = 30;
     public const GRID_START = '08:00';
-    public const GRID_END = '22:00';
-    public const GRID_LAST_START = '21:00';
+    public const GRID_END = '16:30';
+    public const GRID_LAST_START = '16:00';
     public const MAX_APPLY_WEEKS = 8;
 
     public static function getAvailabilityPageData(int $doctorId, array $query): array
@@ -572,7 +572,7 @@ class DoctorAvailabilityService
 
     /**
      * Shared Monday–Sunday grid used by doctor scheduling and patient booking.
-     * Hours are fixed: 30-minute rows from 08:00 to 22:00.
+     * Hours are fixed: 30-minute rows from 08:00 to 16:30.
      *
      * @param list<array<string, mixed>> $slots Kept for callers; no longer expands grid hours.
      * @return array<string, mixed>
@@ -915,7 +915,7 @@ class DoctorAvailabilityService
     }
 
     /**
-     * Visual 30-minute markers from 08:00 to 22:00. These are a scale, not a restriction.
+     * Visual 30-minute markers from 08:00 to 16:30. These are a scale, not a restriction.
      *
      * @return list<array{start:string,end:string,label:string,end_label:string,range_label:string}>
      */
