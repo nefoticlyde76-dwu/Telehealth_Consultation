@@ -1,0 +1,28 @@
+Options -Indexes
+
+<FilesMatch "^\.env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # These rules run only when Apache's document root is the repository
+    # root. That is DigitalOcean's default when the component Run Command
+    # is still "heroku-php-apache2" and overrides Procfile.
+    # When the document root is already public/, this file is not used.
+
+    RewriteRule ^public/ - [L]
+    RewriteRule ^$ public/index.php [QSA,L]
+
+    RewriteCond %{REQUEST_URI} !\.(?i:css|js|png|jpe?g|gif|ico|webp|svg|woff2?|ttf|eot|map)$
+    RewriteRule ^(.*)$ public/index.php [QSA,L]
+
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

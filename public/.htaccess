@@ -14,6 +14,11 @@ DirectoryIndex index.php
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # "/" is a real directory. Without this rule, RewriteCond !-d skips
+    # the front-controller rewrite and Options -Indexes returns 403 when
+    # DirectoryIndex is not applied.
+    RewriteRule ^$ index.php [QSA,L]
+
     # Uploaded files must never execute as PHP.
     RewriteRule ^uploads/.*\.(?i:php[0-9]?|phtml|phar)$ - [F,L]
 
