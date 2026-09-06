@@ -169,9 +169,8 @@ $createUrl = Helper::url('/doctor/availability/create' . ($weekStart !== '' ? '?
             $isTodayCol = !empty($day['is_today']);
             $isWeekendCol = !empty($day['is_weekend']);
             $dayName = (string) ($day['name'] ?? '');
-            $dayLabel = trim((string) ($day['short'] ?? $dayName) . ' ' . (string) ($day['day_num'] ?? '') . ' ' . (string) ($day['month_short'] ?? ''));
             ?>
-            <div class="mbpha-avail__cal-day<?= $isTodayCol ? ' is-today-col' : '' ?><?= $isWeekendCol ? ' is-weekend-col' : '' ?><?= $dayPast ? ' is-past' : '' ?>" data-day-label="<?= Helper::escape($dayLabel !== '' ? $dayLabel : $dayName) ?>">
+            <div class="mbpha-avail__cal-day<?= $isTodayCol ? ' is-today-col' : '' ?><?= $isWeekendCol ? ' is-weekend-col' : '' ?><?= $dayPast ? ' is-past' : '' ?>">
               <div class="mbpha-avail__cal-lanes">
                 <?php foreach ($intervals as $interval): ?>
                   <?php

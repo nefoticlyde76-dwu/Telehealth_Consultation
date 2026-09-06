@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeConsultationQueueWorkspace();
   initializeDesktopSidebarToggle();
   initializeMobileNavigation();
-  initializeResponsiveTables();
   initializeListFilterLoading();
   initializeNotificationToasts();
   initializeUxConfirmModal();
@@ -1067,86 +1066,7 @@ function initializeNotificationBulkSelection() {
   syncNotificationBulkSelection();
 }
 
-window.mbphaAfterTableFilterSwap = function (root) {
+window.mbphaAfterTableFilterSwap = function () {
   syncUserBulkSelection();
   syncNotificationBulkSelection();
-  initializeResponsiveTables(root instanceof HTMLElement ? root : document);
 };
-
-/**
- * Label data-table cells from their column headers so mobile CSS can
- * render each row as a stacked card without changing page markup.
- */
-function initializeResponsiveTables(scope) {
-  const root = scope instanceof HTMLElement ? scope : document;
-  const tables = root.querySelectorAll("table.ux-table, table.table");
-
-  tables.forEach((table) => {
-    if (!(table instanceof HTMLTableElement)) {
-      return;
-    }
-    if (
-      table.classList.contains("ux-details-table") ||
-      table.classList.contains("ux-queue-detail__table") ||
-      table.classList.contains("vc-clinical-doc__table") ||
-      table.classList.contains("mbpha-avail__table")
-    ) {
-      return;
-    }
-
-    const headers = Array.from(table.querySelectorAll("thead th")).map((th) => {
-      const label = th.querySelector(".ux-th__label");
-      const text = ((label ? label.textContent : th.textContent) || "").replace(/\s+/g, " ").trim();
-      return text;
-    });
-
-    if (headers.length === 0) {
-      return;
-    }
-
-    table.classList.add("ux-table--stackable");
-
-    table.querySelectorAll("tbody tr").forEach((row) => {
-      if (!(row instanceof HTMLTableRowElement)) {
-        return;
-      }
-      if (row.querySelector(".ux-table__empty-state")) {
-        row.classList.add("ux-table__row--empty");
-        return;
-      }
-
-      let markedPrimary = false;
-      Array.from(row.children).forEach((cell, index) => {
-        if (!(cell instanceof HTMLElement)) {
-          return;
-        }
-        if (cell.tagName !== "TD") {
-          return;
-        }
-
-        const header = headers[index] || "";
-        if (!cell.hasAttribute("data-label")) {
-          cell.setAttribute("data-label", header);
-        }
-
-        const isCheckbox =
-          cell.classList.contains("ux-table__chk") ||
-          cell.classList.contains("user-select-col") ||
-          header === "" ||
-          /^select$/i.test(header);
-        const isActions =
-          cell.classList.contains("ux-table__cell--actions") ||
-          cell.querySelector(".ux-table__actions") !== null ||
-          /^actions?$/i.test(header);
-
-        cell.classList.toggle("ux-table__cell--control", isCheckbox);
-        cell.classList.toggle("ux-table__cell--actions", isActions);
-
-        if (!isCheckbox && !isActions && !markedPrimary) {
-          cell.classList.add("ux-table__cell--primary");
-          markedPrimary = true;
-        }
-      });
-    });
-  });
-}
