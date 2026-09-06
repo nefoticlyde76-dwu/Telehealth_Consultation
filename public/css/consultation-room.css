@@ -374,15 +374,37 @@
 
 @media (max-width: 767.98px) {
   .vc-daily-frame-wrapper {
-    min-height: 58vh;
-    max-height: 62vh;
+    min-height: 52vh;
+    max-height: 58vh;
   }
   .vc-daily-frame-wrapper > iframe {
-    min-height: 58vh !important;
-    max-height: 62vh !important;
+    min-height: 52vh !important;
+    max-height: 58vh !important;
   }
   .vc-precall-state {
-    padding: 32px 16px;
+    padding: 28px 14px;
+  }
+
+  .vc-side-panel__header,
+  .vc-side-panel__body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .vc-clinical-panel .form-control,
+  .vc-clinical-panel .form-select,
+  .vc-clinical-panel textarea.form-control {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .vc-clinical-panel__status-group {
+    flex-wrap: wrap;
+  }
+
+  .vc-clinical-panel__complete .btn {
+    width: 100%;
+    min-height: 44px;
   }
 }
 

@@ -636,13 +636,38 @@
 }
 
 @media (max-width: 991.98px) {
+  .user-profile-page {
+    margin: -16px -14px -28px;
+    padding: 20px 16px 36px;
+  }
+
   .user-profile-layout,
   .user-profile-lower {
     grid-template-columns: 1fr;
   }
 
   .user-profile-page .user-profile-header__title {
-    font-size: 1.7rem;
+    font-size: 1.45rem;
+    line-height: 1.25;
+  }
+
+  .user-profile-page .user-profile-header__actions,
+  .user-profile-form-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .user-profile-page .user-profile-header__actions .btn,
+  .user-profile-form-actions .btn {
+    min-height: 44px;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .user-profile-page .form-control,
+  .user-profile-page .form-select {
+    font-size: 16px;
+    min-height: 44px;
   }
 }
 
@@ -658,13 +683,13 @@
 
 @media (max-width: 575.98px) {
   .user-profile-page {
-    margin: -16px -12px -28px;
-    padding: 20px 14px 36px;
+    margin: -14px -12px -24px;
+    padding: 18px 12px 32px;
     --up-gap: 16px;
   }
 
   .user-profile-card {
-    padding: 18px 16px;
+    padding: 16px 14px;
   }
 
   .user-profile-avatar,
@@ -680,7 +705,12 @@
   }
 
   .user-profile-history-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
+  }
+
+  .user-profile-page .user-profile-header__actions .btn,
+  .user-profile-form-actions .btn {
+    width: 100%;
   }
 }
 

@@ -1,56 +1,62 @@
 -- ──────────────────────────────────────────────────────────────────────────────
--- MBPHA TeleHealth PNG — final production schema
+-- MBPHA TeleHealth PNG — FINAL SYSTEM SCHEMA
 --
--- Authoritative CREATE script for a FRESH database. It consolidates every
--- table, column, index, unique key, and foreign key used by the running
--- application (Weeks 1–10), including:
---   001 initial schema
---   003–011 account, profile, availability, booking, audit, rooms, phone
---   015–016 clinical draft / completion / prescription quantity
---   017 dropped consultation_ai_reviews (intentionally absent here)
---   018–027 notifications, audit upgrade, invitations, sessions,
---           Google identity, invitation_pending, password reset
---   028 Expired availability status
---   029 optional complaint image path on consultation_requests
+-- Authoritative CREATE script for the complete application database.
+-- Import this file onto a FRESH MySQL 8 / MariaDB instance:
 --
--- Do not import database/migrations/001_initial_schema.sql onto a new
--- production database. That file drops tables and seeds a local admin
--- password. Existing environments should keep applying numbered migrations.
+--   mysql -u root -p < database/schema.sql
 --
--- This file seeds roles only. Create the first administrator with:
+-- It consolidates every table, column, index, unique key, and foreign key
+-- used by the running application after migrations 001–029:
+--
+--   Identity        roles, users, patient, doctor, admin
+--   Scheduling      doctor_availability, consultation_requests
+--   Clinical        consultation_records, prescriptions
+--   Video           consultation_rooms
+--   Operations      audit_logs, notifications, notification_preferences
+--   Security        user_sessions, doctor_password_setup_tokens,
+--                   password_reset_tokens
+--
+-- Intentionally absent
+--   consultation_ai_reviews          dropped by 017
+--   consultation_requests.specialization / attachment_*
+--     leftover local columns; the app joins doctor.specialization and stores
+--     symptom photos only on complaint_image_path under storage/
+--   doctor_availability status Cancelled
+--     leftover local enum; slots use Available | Booked | Expired
+--
+-- Do not import database/migrations/001_initial_schema.sql onto production.
+-- That file drops tables. Existing databases should keep applying numbered
+-- migrations.
+--
+-- This file seeds roles and one local administrator:
+--   Email     admin@telehealth.local
+--   Password  admin123
+-- Change that password before any production use. Additional administrators
+-- can still be created with:
 --   php bin/create_admin.php "Full Name" admin@example.com "StrongPassword"
 --
--- Permanent deletion policy (application-enforced):
+-- Permanent deletion policy (application-enforced)
 --   Do not DELETE FROM users. Clinical FKs cascade through patient/doctor
 --   stubs. UserDeletionService anonymizes the users row, keeps role stubs,
 --   and retains consultation records, prescriptions, and audit_logs.
--- ──────────────────────────────────────────────────────────────────────────────
 --
--- Entity-relationship overview (cardinality)
+-- Entity-relationship overview
 --
 --   roles 1──N users
---   users 1──0..1 patient | doctor | admin          (exactly one role profile)
+--   users 1──0..1 patient | doctor | admin
 --   doctor 1──N doctor_availability
 --   patient 1──N consultation_requests N──1 doctor
 --   doctor_availability 1──0..N consultation_requests   (SET NULL if slot removed)
---   consultation_requests 1──0..1 consultation_rooms    (Daily room on approve)
---   consultation_requests 1──0..1 consultation_records  (Draft then Final)
+--   consultation_requests 1──0..1 consultation_rooms
+--   consultation_requests 1──0..1 consultation_records
 --   consultation_records 1──N prescriptions
 --   users 1──N notifications
 --   users 1──N user_sessions
 --   users 1──0..1 notification_preferences
---   users 1──N doctor_password_setup_tokens             (doctor invite)
---   users 1──N password_reset_tokens                    (forgot-password)
+--   users 1──N doctor_password_setup_tokens
+--   users 1──N password_reset_tokens
 --   users 1──N audit_logs (actor_user_id, SET NULL)
---
--- Tables (16)
---   Identity:      roles, users, patient, doctor, admin
---   Scheduling:    doctor_availability, consultation_requests
---   Clinical:      consultation_records, prescriptions
---   Video:         consultation_rooms
---   Operations:    audit_logs, notifications, notification_preferences
---   Security:      user_sessions, doctor_password_setup_tokens,
---                  password_reset_tokens
 -- ──────────────────────────────────────────────────────────────────────────────
 
 CREATE DATABASE IF NOT EXISTS telehealth_db
@@ -173,6 +179,7 @@ CREATE TABLE IF NOT EXISTS doctor_availability (
     INDEX idx_doctor_availability_doctor_id (doctor_id),
     INDEX idx_doctor_availability_date (consultation_date),
     INDEX idx_doctor_availability_status (status),
+    INDEX idx_doctor_availability_status_date (status, consultation_date),
     INDEX idx_doctor_availability_doctor_date_status (doctor_id, consultation_date, status)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   COMMENT='Doctor-owned consultation slots. Booked when a request is approved.';
@@ -416,10 +423,25 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
   COMMENT='Self-service password-reset tokens. Hash only.';
 
 -- ══════════════════════════════════════════════════════════════════════════════
--- Seed data (roles only)
+-- Seed data (roles + local administrator only)
 -- ══════════════════════════════════════════════════════════════════════════════
 
 INSERT IGNORE INTO roles (name) VALUES
 ('admin'),
 ('doctor'),
 ('patient');
+
+-- Local development administrator. Password is admin123.
+-- Never leave this account unchanged in production.
+INSERT IGNORE INTO users (role_id, full_name, email, password, status)
+SELECT id, 'System Administrator', 'admin@telehealth.local',
+       '$2y$10$iCQxLpuu12uiBBNZWkiZi.aMA9K/VcbZsJrTANxUaamMdF5eq9PzK', 'active'
+  FROM roles
+ WHERE name = 'admin'
+ LIMIT 1;
+
+INSERT IGNORE INTO admin (user_id, employee_id)
+SELECT id, 'ADMIN-001'
+  FROM users
+ WHERE email = 'admin@telehealth.local'
+ LIMIT 1;

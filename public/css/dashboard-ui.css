@@ -2889,11 +2889,6 @@ html:has(body.dashboard-layout) {
 }
 
 @media (max-width: 991.98px) {
-  .dashboard-layout .topbar-brand-wrap,
-  .dashboard-layout .dashboard-topbar .brand-lockup-navbar {
-    display: none !important;
-  }
-
   .dashboard-layout .dashboard-sidebar {
     display: none !important;
     transition: none;
@@ -4259,6 +4254,652 @@ html:has(body.dashboard-layout) {
     height: auto;
     max-height: 16rem;
     object-fit: contain;
+  }
+}
+
+/* ============================================================
+   Mobile / tablet layout refinements
+   Desktop chrome stays unchanged. These rules only apply where
+   the sidebar collapses into the offcanvas (and smaller).
+   ============================================================ */
+
+.dashboard-layout .topbar-brand-wrap {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+@media (max-width: 991.98px) {
+  .dashboard-layout {
+    --dash-topbar: 60px;
+  }
+
+  .dashboard-layout.dashboard-nav-open,
+  .dashboard-layout.dashboard-nav-open .dashboard-shell,
+  .dashboard-layout.dashboard-nav-open .dashboard-content {
+    overflow: hidden !important;
+  }
+
+  /* Topbar becomes the same navigation chrome as the sidebar */
+  .dashboard-layout .dashboard-topbar {
+    background: var(--dash-sidebar-bg) !important;
+    background-image: none !important;
+    border-bottom: 1px solid var(--dash-sidebar-border) !important;
+    padding: 0 12px !important;
+    padding-left: max(12px, env(safe-area-inset-left)) !important;
+    padding-right: max(12px, env(safe-area-inset-right)) !important;
+  }
+
+  .dashboard-layout .dashboard-topbar-row {
+    gap: 8px;
+  }
+
+  .dashboard-layout .topbar-left {
+    gap: 6px;
+    flex: 1 1 auto;
+  }
+
+  .dashboard-layout .topbar-right {
+    gap: 6px;
+  }
+
+  .dashboard-layout .topbar-brand-wrap {
+    display: flex !important;
+  }
+
+  .dashboard-layout .topbar-brand-wrap .brand-logo-shell-navbar {
+    background: #fff;
+    border-radius: 8px;
+    padding: 3px 7px;
+    height: 36px;
+  }
+
+  .dashboard-layout .topbar-brand-wrap .brand-logo-image {
+    height: 30px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+  }
+
+  .dashboard-layout .topbar-toggle {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.10);
+    border-radius: 10px;
+  }
+
+  .dashboard-layout .topbar-toggle:hover,
+  .dashboard-layout .topbar-toggle:focus-visible {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    outline-color: rgba(255, 255, 255, 0.72);
+  }
+
+  .dashboard-layout .topbar-toggle i {
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  .dashboard-layout .notification-bell {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-color: transparent;
+  }
+
+  .dashboard-layout .notification-bell:hover,
+  .dashboard-layout .notification-bell:focus-visible {
+    background: rgba(255, 255, 255, 0.20);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.22);
+    outline-color: rgba(255, 255, 255, 0.72);
+  }
+
+  .dashboard-layout .notification-bell__count {
+    top: 3px;
+    right: 3px;
+    border: 1px solid var(--dash-sidebar-bg);
+  }
+
+  .dashboard-layout .profile-trigger {
+    height: 44px;
+    min-height: 44px;
+    padding: 3px 8px 3px 3px;
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.20);
+  }
+
+  .dashboard-layout .profile-trigger:hover,
+  .dashboard-layout .profile-trigger:focus-visible {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.32);
+    outline-color: rgba(255, 255, 255, 0.72);
+  }
+
+  .dashboard-layout .profile-trigger::after {
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .dashboard-layout .topbar-profile-meta strong,
+  .dashboard-layout .topbar-profile-meta small {
+    color: #fff;
+  }
+
+  .dashboard-layout .topbar-quick-action,
+  .dashboard-layout .btn.topbar-quick-action {
+    height: 40px;
+    background: var(--medical-blue) !important;
+    border-color: var(--medical-blue) !important;
+  }
+
+  /* Offcanvas navigation polish */
+  .dashboard-layout .dashboard-offcanvas {
+    width: min(300px, 86vw);
+    max-width: min(300px, 86vw);
+  }
+
+  .dashboard-layout .dashboard-offcanvas .offcanvas-header {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 5;
+    width: auto;
+    padding: 12px 12px 0 0;
+    background: transparent !important;
+    border: 0;
+  }
+
+  .dashboard-layout .dashboard-offcanvas .btn-close {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+    opacity: 0.92;
+    filter: invert(1) grayscale(1) brightness(2);
+  }
+
+  .dashboard-layout .dashboard-offcanvas .sidebar-rail-top--offcanvas {
+    padding-right: 48px;
+  }
+
+  .dashboard-layout .dashboard-rightbar-offcanvas {
+    width: min(360px, 92vw);
+    max-width: min(360px, 92vw);
+  }
+
+  .dashboard-layout .dashboard-shell,
+  .dashboard-layout .dashboard-body,
+  .dashboard-layout .dashboard-main {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dashboard-layout .dashboard-content {
+    padding: 16px 14px 28px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(28px, env(safe-area-inset-bottom));
+  }
+
+  .dashboard-layout .ux-page-header {
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+
+  .dashboard-layout .ux-page-header__title,
+  .dashboard-layout .ux-welcome__title {
+    font-size: 1.35rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-layout .ux-page-header__subtitle,
+  .dashboard-layout .ux-welcome__description {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .dashboard-layout .ux-page-header__right {
+    width: 100%;
+  }
+
+  .dashboard-layout .ux-page-header__right .btn {
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .dashboard-layout .ux-welcome,
+  .dashboard-layout .ux-welcome--admin,
+  .dashboard-layout .ux-welcome--doctor,
+  .dashboard-layout .ux-welcome--patient {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .dashboard-layout .ux-welcome__grid {
+    gap: 12px;
+  }
+
+  .dashboard-layout .ux-welcome__meta-pill-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .dashboard-layout .ux-welcome__meta-pill {
+    max-width: 100%;
+  }
+
+  .dashboard-layout .ux-stat {
+    min-width: 0;
+  }
+
+  .dashboard-layout .ux-stat__value {
+    font-size: 1.55rem;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-layout .ux-stat__label {
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-layout .ux-card,
+  .dashboard-layout .card,
+  .dashboard-layout .ux-filter {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dashboard-layout .ux-card {
+    padding: 16px;
+  }
+
+  .dashboard-layout .ux-data-card .ux-card__header,
+  .dashboard-layout .ux-card:has(.ux-table:not(.ux-details-table)) > .ux-card__header {
+    padding: 12px 14px;
+    align-items: stretch;
+  }
+
+  .dashboard-layout .ux-data-card .ux-card__header .btn,
+  .dashboard-layout .ux-card:has(.ux-table:not(.ux-details-table)) > .ux-card__header .btn {
+    min-height: 40px;
+  }
+
+  .dashboard-layout .form-control,
+  .dashboard-layout .form-select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .dashboard-layout .form-label {
+    font-size: 13.5px;
+  }
+
+  .dashboard-layout .invalid-feedback,
+  .dashboard-layout .form-text {
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-layout .ux-filter {
+    padding: 14px;
+  }
+
+  .dashboard-layout .ux-filter__actions {
+    width: 100%;
+  }
+
+  .dashboard-layout .ux-filter__actions .btn {
+    min-height: 44px;
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .dashboard-layout .ux-filter__grid > [class*="col-"] {
+    min-width: 0;
+  }
+
+  .dashboard-layout .btn:not(.btn-sm):not(.topbar-toggle):not(.notification-bell):not(.profile-trigger) {
+    min-height: 44px;
+  }
+
+  .dashboard-layout .btn-group {
+    flex-wrap: wrap;
+  }
+
+  .dashboard-layout .d-flex.gap-2:has(> .btn),
+  .dashboard-layout .d-flex.gap-3:has(> .btn) {
+    flex-wrap: wrap;
+  }
+
+  .dashboard-layout .ux-table-wrapper,
+  .dashboard-layout .table-responsive {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .dashboard-layout .ux-table-wrapper > .ux-table:not(.ux-details-table):not(.ux-queue-detail__table),
+  .dashboard-layout .table-responsive > .table,
+  .dashboard-layout .ux-table-wrapper > .table {
+    min-width: 36rem;
+  }
+
+  .dashboard-layout .ux-details-table,
+  .dashboard-layout .ux-queue-detail__table {
+    min-width: 0;
+  }
+
+  .dashboard-layout .ux-table thead th,
+  .dashboard-layout .table thead th {
+    padding: 10px 12px;
+  }
+
+  .dashboard-layout .ux-table tbody td,
+  .dashboard-layout .table tbody td {
+    padding: 12px;
+  }
+
+  .dashboard-layout .ux-table__actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .dashboard-layout .ux-table .btn,
+  .dashboard-layout .ux-table .btn-sm {
+    min-height: 36px;
+  }
+
+  .dashboard-layout .modal-dialog {
+    margin: 0.75rem;
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .dashboard-layout .modal-content {
+    max-height: calc(100dvh - 1.5rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .dashboard-layout .modal-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .dashboard-layout .modal-header,
+  .dashboard-layout .modal-footer {
+    flex-shrink: 0;
+  }
+
+  .dashboard-layout .modal-header .btn-close {
+    min-width: 44px;
+    min-height: 44px;
+    margin: 0;
+  }
+
+  .dashboard-layout .modal-footer {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .dashboard-layout .modal-footer .btn {
+    min-height: 44px;
+    flex: 1 1 auto;
+  }
+
+  .dashboard-layout .dropdown-menu.notification-panel {
+    width: min(100vw - 16px, 410px);
+    max-height: min(70dvh, 520px);
+  }
+
+  .dashboard-layout .dropdown-menu {
+    max-width: min(100vw - 16px, 22rem);
+  }
+
+  .dashboard-layout .alert {
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-layout canvas[data-chart] {
+    min-height: 180px;
+    max-width: 100%;
+  }
+
+  .dashboard-layout .ux-section-heading {
+    align-items: flex-start;
+  }
+
+  .dashboard-layout .ux-table-filters {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .dashboard-layout .ux-table-filters a {
+    min-height: 36px;
+    justify-content: center;
+    flex: 1 1 auto;
+  }
+
+  .dashboard-layout img,
+  .dashboard-layout svg,
+  .dashboard-layout video,
+  .dashboard-layout iframe {
+    max-width: 100%;
+  }
+
+  .dashboard-layout .brand-logo-image {
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .dashboard-layout .dashboard-content .row {
+    --bs-gutter-x: 12px;
+    --bs-gutter-y: 12px;
+  }
+
+  .dashboard-layout .ux-welcome__visual {
+    display: none !important;
+  }
+
+  .dashboard-layout .ux-card__header,
+  .dashboard-layout .ux-data-card .ux-card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-layout .ux-page-header__right .btn,
+  .dashboard-layout .ux-filter__actions .btn,
+  .dashboard-layout .user-profile-page .user-profile-header__actions .btn {
+    width: 100%;
+  }
+
+  .dashboard-layout .security-session-list__item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-layout .notification-inbox__bulk {
+    justify-content: stretch;
+  }
+
+  .dashboard-layout .notification-inbox__bulk .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .dashboard-layout .ux-queue-detail__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-layout .ux-queue-detail__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-layout .ux-queue-detail__actions .btn,
+  .dashboard-layout .ux-queue-detail__actions form,
+  .dashboard-layout .ux-queue-detail__actions form .btn {
+    width: 100%;
+  }
+
+  .dashboard-layout .ux-th-date__range {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .dashboard-layout {
+    --dash-topbar: 56px;
+  }
+
+  .dashboard-layout .dashboard-content {
+    padding: 14px 12px 24px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .dashboard-layout .dashboard-topbar {
+    padding: 0 10px !important;
+    padding-left: max(10px, env(safe-area-inset-left)) !important;
+    padding-right: max(10px, env(safe-area-inset-right)) !important;
+  }
+
+  .dashboard-layout .topbar-brand-wrap .brand-logo-image {
+    max-width: 96px;
+    height: 26px;
+  }
+
+  .dashboard-layout .topbar-brand-wrap .brand-logo-shell-navbar {
+    height: 32px;
+    padding: 2px 6px;
+  }
+
+  .dashboard-layout .ux-page-header__title,
+  .dashboard-layout .ux-welcome__title {
+    font-size: 1.2rem;
+  }
+
+  .dashboard-layout .ux-welcome {
+    padding: 14px;
+  }
+
+  .dashboard-layout .ux-card {
+    padding: 14px;
+  }
+
+  .dashboard-layout .ux-stat__value {
+    font-size: 1.4rem;
+  }
+
+  .dashboard-layout .ux-stat__icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .dashboard-layout .ux-badge,
+  .dashboard-layout .badge {
+    white-space: normal;
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .dashboard-layout .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+
+  .dashboard-layout .modal-content {
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .dashboard-layout .dropdown-menu.notification-panel {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+  }
+}
+
+@media (max-width: 374.98px) {
+  .dashboard-layout .topbar-toggle,
+  .dashboard-layout .notification-bell,
+  .dashboard-layout .profile-trigger {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .dashboard-layout .topbar-brand-wrap .brand-logo-image {
+    max-width: 72px;
+    height: 22px;
+  }
+
+  .dashboard-layout .ux-page-header__title,
+  .dashboard-layout .ux-welcome__title {
+    font-size: 1.1rem;
+  }
+
+  .dashboard-layout .dashboard-content {
+    padding: 12px 10px 22px;
+  }
+}
+
+/* Desktop lock — keep the established white topbar and control colors */
+@media (min-width: 992px) {
+  .dashboard-layout .dashboard-topbar {
+    background: #fff !important;
+    border-bottom: 1px solid var(--dash-border) !important;
+  }
+
+  .dashboard-layout .topbar-toggle {
+    color: var(--dash-slate);
+    background: transparent;
+  }
+
+  .dashboard-layout .topbar-toggle:hover,
+  .dashboard-layout .topbar-toggle:focus-visible {
+    background: var(--dash-canvas);
+    color: var(--dash-blue);
+  }
+
+  .dashboard-layout .notification-bell {
+    background: var(--pale-blue);
+    color: var(--medical-blue);
+    border-color: transparent;
+  }
+
+  .dashboard-layout .profile-trigger {
+    background: #fff;
+    border-color: var(--dash-border);
+  }
+
+  .dashboard-layout .topbar-profile-meta strong {
+    color: var(--dash-slate);
+  }
+
+  .dashboard-layout .topbar-profile-meta small {
+    color: var(--dash-muted);
+  }
+
+  .dashboard-layout .topbar-brand-wrap .brand-logo-shell-navbar {
+    background: transparent;
+    padding: 0;
+    height: auto;
+  }
+
+  .dashboard-layout .topbar-brand-wrap .brand-logo-image {
+    height: 48px;
+    max-width: none;
   }
 }
 

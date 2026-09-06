@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeAosAnimations();
   initializeConsultationQueueWorkspace();
   initializeDesktopSidebarToggle();
+  initializeMobileNavigation();
   initializeListFilterLoading();
   initializeNotificationToasts();
   initializeUxConfirmModal();
@@ -671,6 +672,50 @@ function initializeDesktopSidebarToggle() {
       } catch (error) {
         // Ignore storage failures in private browsing.
       }
+    });
+  });
+}
+
+/**
+ * Mobile offcanvas navigation: lock page scroll while open, and close
+ * the drawer after a sidebar destination is chosen.
+ */
+function initializeMobileNavigation() {
+  const body = document.body;
+  if (!(body instanceof HTMLElement) || !body.classList.contains("dashboard-layout")) {
+    return;
+  }
+
+  const drawers = ["dashboardSidebar", "dashboardRightbar"]
+    .map((id) => document.getElementById(id))
+    .filter((node) => node instanceof HTMLElement);
+
+  if (drawers.length === 0) {
+    return;
+  }
+
+  const syncNavOpen = () => {
+    const open = drawers.some((drawer) => drawer.classList.contains("show"));
+    body.classList.toggle("dashboard-nav-open", open);
+  };
+
+  drawers.forEach((drawer) => {
+    drawer.addEventListener("show.bs.offcanvas", () => {
+      body.classList.add("dashboard-nav-open");
+    });
+    drawer.addEventListener("shown.bs.offcanvas", syncNavOpen);
+    drawer.addEventListener("hidden.bs.offcanvas", syncNavOpen);
+
+    drawer.querySelectorAll("a.sidebar-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        if (!window.bootstrap || typeof window.bootstrap.Offcanvas !== "function") {
+          return;
+        }
+        const instance = window.bootstrap.Offcanvas.getInstance(drawer);
+        if (instance) {
+          instance.hide();
+        }
+      });
     });
   });
 }

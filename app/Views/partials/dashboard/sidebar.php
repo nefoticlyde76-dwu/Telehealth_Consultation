@@ -120,7 +120,7 @@ $renderSidebarBody = static function (
 <div class="offcanvas offcanvas-start dashboard-offcanvas" tabindex="-1" id="dashboardSidebar" aria-labelledby="dashboardSidebarLabel">
   <div class="offcanvas-header border-0 pb-0">
     <span class="visually-hidden" id="dashboardSidebarLabel">Dashboard navigation</span>
-    <button type="button" class="btn-close ms-auto" data-bs-dismiss="offcanvas" aria-label="Close navigation"></button>
+    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Close navigation"></button>
   </div>
   <div class="offcanvas-body d-flex flex-column p-0">
     <?php $renderSidebarBody($navGroups, $accountItems, $allNavItems, $currentPath, $user, $roleFooterLabel, $homePath, true); ?>

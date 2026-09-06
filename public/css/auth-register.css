@@ -8,6 +8,10 @@
   max-width: 680px;
 }
 
+.auth-page-register .auth-login-card {
+  min-height: min(800px, calc(100dvh - var(--login-header-height) - 48px));
+}
+
 .auth-page-register.auth-page-login {
   align-items: flex-start;
   align-items: safe center;
@@ -18,7 +22,7 @@
 .auth-page-register .auth-register-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 18px;
 }
 
 .auth-page-register .auth-register-optional__fields.auth-register-grid {
@@ -44,7 +48,7 @@
 }
 
 .auth-page-register .auth-register-optional {
-  margin: 16px 0 0;
+  margin: 20px 0 0;
   border: 1px solid var(--login-border);
   border-radius: var(--login-input-radius);
   background: var(--login-white);
@@ -98,7 +102,7 @@
 }
 
 .auth-page-register .auth-register-consent {
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 .auth-page-register .auth-register-consent__copy {
@@ -107,7 +111,8 @@
 }
 
 .auth-page-register .auth-login-actions {
-  margin-top: 16px;
+  margin-top: auto;
+  padding-top: 20px;
 }
 
 @media (max-width: 1199.98px) {
@@ -116,13 +121,17 @@
     max-width: 600px;
   }
 
+  .auth-page-register .auth-login-card {
+    min-height: min(700px, calc(100dvh - var(--login-header-height) - 48px));
+  }
+
   .auth-page-register.auth-page-login {
     padding-top: 20px;
     padding-bottom: 20px;
   }
 
   .auth-page-register .auth-register-grid {
-    gap: 14px;
+    gap: 16px;
   }
 
   .auth-page-register .auth-register-optional {
@@ -149,6 +158,10 @@
     max-width: 100%;
   }
 
+  .auth-page-register .auth-login-card {
+    min-height: 0;
+  }
+
   .auth-page-register.auth-page-login {
     align-items: flex-start;
     padding: 20px 16px 24px;
@@ -165,6 +178,12 @@
 }
 
 @media (max-width: 419.98px) {
+  .auth-page-register.auth-page-login {
+    padding: 16px 12px 20px;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
   .auth-page-register .auth-login-shell,
   .auth-page-register .auth-login-card {
     max-width: 100%;

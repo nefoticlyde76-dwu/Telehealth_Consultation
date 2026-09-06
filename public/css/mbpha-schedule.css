@@ -476,6 +476,11 @@
 @media (max-width: 767.98px) {
   .mbpha-avail {
     --avail-cell-h: 44px;
+    max-width: 100%;
+  }
+
+  .mbpha-avail__scroller {
+    max-width: 100%;
   }
 
   .mbpha-avail__header,

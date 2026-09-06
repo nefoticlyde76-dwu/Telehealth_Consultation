@@ -329,6 +329,12 @@
 @media (max-width: 991.98px) {
   .glz-05-group {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .glz-05a__card,
+  .glz-05b__card {
+    padding: 16px;
   }
 }
 

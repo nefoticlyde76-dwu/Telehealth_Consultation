@@ -32,7 +32,7 @@ $settingsIsDistinct = $settingsPath !== '' && $settingsPath !== '#' && $settings
         </button>
       <?php endif; ?>
 
-      <div class="topbar-brand-wrap d-none d-lg-flex">
+      <div class="topbar-brand-wrap">
         <?php
         $brandVariant = 'navbar';
         $brandSubtitle = '';

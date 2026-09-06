@@ -296,8 +296,16 @@ a.mbpha-cal__ev:focus-visible {
   }
 
   .mbpha-cal__cell {
-    min-height: 32px;
-    font-size: 12px;
+    min-height: 40px;
+    font-size: 13px;
+  }
+
+  .mbpha-cal__nav {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    flex-basis: 40px;
   }
 }
 

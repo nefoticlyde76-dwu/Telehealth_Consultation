@@ -492,30 +492,8 @@ Telehealth_Consultation_System/
 │           ├── consultations/room.php
 │           └── consultation_requests/_history_table.php
 ├── database/
+│   ├── schema.sql
 │   └── migrations/
-│       ├── 001_initial_schema.sql
-│       ├── 003_add_doctor_account_management_fields.sql
-│       ├── 004_add_doctor_profile_assets.sql
-│       ├── 005_add_profile_photo_fields_for_admin_and_patient.sql
-│       ├── 006_add_notes_to_doctor_availability.sql
-│       ├── 007_update_consultation_requests_for_booking.sql
-│       ├── 008_remove_unique_index_from_consultation_requests.sql
-│       ├── 009_create_audit_logs_table.sql
-│       ├── 010_create_consultation_rooms_table.sql
-│       ├── 011_add_phone_to_patient_table.sql
-│       ├── 015_alter_consultation_records_live_draft.sql
-│       ├── 016_consultation_completion_and_prescription_quantity.sql
-│       ├── 017_drop_consultation_ai_reviews_table.sql
-│       ├── 018_create_notifications_table.sql
-│       ├── 019_upgrade_audit_logs_for_centralized_activity.sql
-│       ├── 020_allow_null_user_password_for_invitation.sql
-│       ├── 021_create_doctor_password_setup_tokens_table.sql
-│       ├── 022_add_sent_at_to_doctor_password_setup_tokens.sql
-│       ├── 023_ensure_consultation_records_and_prescriptions.sql
-│       ├── 024_account_management_status_sessions_preferences.sql
-│       ├── 025_add_google_identity_to_users.sql
-│       ├── 026_add_invitation_pending_to_users_status.sql
-│       └── 027_create_password_reset_tokens_table.sql
 ├── public/
 │   ├── css/
 │   │   ├── consultation-room.css
@@ -580,33 +558,14 @@ copy .env.example .env
      - `DAILY_DOMAIN=` (your subdomain, e.g. `mbphatelehealth.daily.co` — protocol and trailing slashes are stripped by `DailyService`)
    - Note: Daily free tier may require a billing method on file at `dashboard.daily.co → Billing` before real camera/mic SFU sessions will connect. REST API (rooms, tokens) works immediately without a payment method.
 6. Ensure Apache and MySQL are running in XAMPP.
-7. Import the migration files:
+7. Create a fresh database from the final schema (roles only; no seeded admin password):
 
 ```bash
-mysql -u root -p < database/migrations/001_initial_schema.sql
-mysql -u root -p < database/migrations/003_add_doctor_account_management_fields.sql
-mysql -u root -p < database/migrations/004_add_doctor_profile_assets.sql
-mysql -u root -p < database/migrations/005_add_profile_photo_fields_for_admin_and_patient.sql
-mysql -u root -p < database/migrations/006_add_notes_to_doctor_availability.sql
-mysql -u root -p < database/migrations/007_update_consultation_requests_for_booking.sql
-mysql -u root -p < database/migrations/008_remove_unique_index_from_consultation_requests.sql
-mysql -u root -p < database/migrations/009_create_audit_logs_table.sql
-mysql -u root -p < database/migrations/010_create_consultation_rooms_table.sql
-mysql -u root -p < database/migrations/011_add_phone_to_patient_table.sql
-mysql -u root -p < database/migrations/015_alter_consultation_records_live_draft.sql
-mysql -u root -p < database/migrations/016_consultation_completion_and_prescription_quantity.sql
-mysql -u root -p < database/migrations/017_drop_consultation_ai_reviews_table.sql
-mysql -u root -p < database/migrations/018_create_notifications_table.sql
-mysql -u root -p < database/migrations/019_upgrade_audit_logs_for_centralized_activity.sql
-mysql -u root -p < database/migrations/020_allow_null_user_password_for_invitation.sql
-mysql -u root -p < database/migrations/021_create_doctor_password_setup_tokens_table.sql
-mysql -u root -p < database/migrations/022_add_sent_at_to_doctor_password_setup_tokens.sql
-mysql -u root -p < database/migrations/023_ensure_consultation_records_and_prescriptions.sql
-mysql -u root -p < database/migrations/024_account_management_status_sessions_preferences.sql
-mysql -u root -p < database/migrations/025_add_google_identity_to_users.sql
-mysql -u root -p < database/migrations/026_add_invitation_pending_to_users_status.sql
-mysql -u root -p < database/migrations/027_create_password_reset_tokens_table.sql
+mysql -u root -p < database/schema.sql
+php bin/create_admin.php "System Administrator" admin@example.com "YourStrongPassword"
 ```
+
+Existing local databases should keep applying numbered files in `database/migrations/` instead of re-importing `schema.sql`. Do not import `001_initial_schema.sql` onto production — it drops tables and seeds a local password.
 
 8. Open the application using the configured `APP_URL`.
 
@@ -619,9 +578,7 @@ mysql -u root -p < database/migrations/027_create_password_reset_tokens_table.sq
 - Forgot password is available at `/forgot-password`. Reset links expire and do not create a session or auto-login.
 - Successful login redirects each user to the correct role dashboard.
 - Logout is handled through a secure POST request with CSRF protection.
-- Default seeded administrator account after running the migration:
-  - Email: `admin@telehealth.local`
-  - Password: `admin123`
+- Create the first administrator with `php bin/create_admin.php` after importing `database/schema.sql`. Do not reuse the old local `admin@telehealth.local` / `admin123` seed on production.
 - Administrator-only user management is currently available at `/admin/users` after successful administrator login.
 - Administrator-only user management supports permanent deletion of patient and doctor accounts with confirmation, safeguards, and audit logging.
 - Administrator-only doctor account management is currently available at `/admin/doctors` after successful administrator login.
