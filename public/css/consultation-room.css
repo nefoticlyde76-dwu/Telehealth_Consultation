@@ -406,6 +406,42 @@
     width: 100%;
     min-height: 44px;
   }
+
+  .vc-clinical-panel .table-responsive.vc-clinical-doc {
+    overflow: visible;
+  }
+
+  .vc-clinical-doc__table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .vc-clinical-doc__table,
+  .vc-clinical-doc__table tbody,
+  .vc-clinical-doc__table tr,
+  .vc-clinical-doc__table th,
+  .vc-clinical-doc__table td {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .vc-clinical-doc__table th,
+  .vc-clinical-doc__table td {
+    padding: 8px 12px;
+  }
+
+  .vc-clinical-doc__table td {
+    padding-top: 0;
+    padding-bottom: 14px;
+  }
+
+  .vc-clinical-doc__table textarea.form-control {
+    width: 100%;
+  }
 }
 
 /* ------------------------------

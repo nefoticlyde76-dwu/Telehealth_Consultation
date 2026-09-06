@@ -196,8 +196,9 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
             $date = (string) ($day['date'] ?? '');
             $dayBlocks = is_array($blocks[$date] ?? null) ? $blocks[$date] : [];
             $dayName = (string) ($day['name'] ?? '');
+            $dayLabel = trim((string) ($day['short'] ?? $dayName) . ' ' . (string) ($day['day_num'] ?? '') . ' ' . (string) ($day['month_short'] ?? ''));
             ?>
-            <div class="mbpha-avail__cal-day<?= !empty($day['is_today']) ? ' is-today-col' : '' ?><?= !empty($day['is_weekend']) ? ' is-weekend-col' : '' ?>">
+            <div class="mbpha-avail__cal-day<?= !empty($day['is_today']) ? ' is-today-col' : '' ?><?= !empty($day['is_weekend']) ? ' is-weekend-col' : '' ?>" data-day-label="<?= Helper::escape($dayLabel !== '' ? $dayLabel : $dayName) ?>">
               <div class="mbpha-avail__cal-blocks">
                 <?php foreach ($dayBlocks as $block): ?>
                   <?php

@@ -2938,8 +2938,8 @@ html:has(body.dashboard-layout) {
 
   .dashboard-layout .ux-table-wrapper,
   .dashboard-layout .table-responsive {
-    margin-left: -4px;
-    margin-right: -4px;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .dashboard-layout .ux-page-header__right .btn,
@@ -3730,7 +3730,7 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .ux-table-wrapper {
-    overflow-x: auto;
+    overflow-x: hidden;
   }
 
   .dashboard-layout .notification-panel {
@@ -4577,41 +4577,9 @@ html:has(body.dashboard-layout) {
   .dashboard-layout .ux-table-wrapper,
   .dashboard-layout .table-responsive {
     max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
     margin-left: 0;
     margin-right: 0;
-  }
-
-  .dashboard-layout .ux-table-wrapper > .ux-table:not(.ux-details-table):not(.ux-queue-detail__table),
-  .dashboard-layout .table-responsive > .table,
-  .dashboard-layout .ux-table-wrapper > .table {
-    min-width: 36rem;
-  }
-
-  .dashboard-layout .ux-details-table,
-  .dashboard-layout .ux-queue-detail__table {
-    min-width: 0;
-  }
-
-  .dashboard-layout .ux-table thead th,
-  .dashboard-layout .table thead th {
-    padding: 10px 12px;
-  }
-
-  .dashboard-layout .ux-table tbody td,
-  .dashboard-layout .table tbody td {
-    padding: 12px;
-  }
-
-  .dashboard-layout .ux-table__actions {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .dashboard-layout .ux-table .btn,
-  .dashboard-layout .ux-table .btn-sm {
-    min-height: 36px;
   }
 
   .dashboard-layout .modal-dialog {
@@ -4851,6 +4819,282 @@ html:has(body.dashboard-layout) {
 
   .dashboard-layout .dashboard-content {
     padding: 12px 10px 22px;
+  }
+}
+
+/* ============================================================
+   Mobile tables → stacked cards
+   Desktop tables stay as columns. Phone/tablet rows become cards.
+   ============================================================ */
+@media (max-width: 991.98px) {
+  .dashboard-layout .ux-table-wrapper,
+  .dashboard-layout .table-responsive,
+  .dashboard-layout .ux-card .ux-table-wrapper,
+  .dashboard-layout .ux-data-card .ux-table-wrapper,
+  .dashboard-layout .card .table-responsive,
+  .dashboard-layout .ux-card.ux-queue-detail .table-responsive.ux-queue-detail__table-wrap,
+  .dashboard-layout .ux-card .table-responsive.ux-details-table-wrap {
+    overflow-x: hidden !important;
+    overflow-y: visible;
+    max-height: none;
+    max-width: 100%;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  .dashboard-layout .ux-request-details-table {
+    min-width: 0 !important;
+    table-layout: auto;
+  }
+
+  .dashboard-layout .ux-request-details-table tbody td,
+  .dashboard-layout .ux-request-details-table tbody td.text-nowrap,
+  .dashboard-layout .notification-table__type {
+    white-space: normal !important;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table),
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table).table {
+    min-width: 0 !important;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px;
+    font-size: clamp(0.875rem, 2.7vw, 0.9375rem);
+    line-height: 1.45;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr {
+    background: #fff;
+    border: 1px solid var(--dash-border);
+    border-radius: 12px;
+    padding: 4px 14px 12px;
+    margin-bottom: 12px;
+    box-shadow: var(--dash-shadow);
+    overflow: hidden;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr:nth-child(even) td,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr:hover td,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr:has(input:checked) td,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table).notification-table tbody tr.is-unread td {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr.is-unread,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr.is-active {
+    box-shadow: inset 3px 0 0 var(--medical-blue), var(--dash-shadow);
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td {
+    display: grid;
+    grid-template-columns: minmax(6.25rem, 32%) minmax(0, 1fr);
+    gap: 6px 12px;
+    align-items: start;
+    padding: 10px 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--dash-border) 72%, transparent);
+    background: transparent !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td::before {
+    content: attr(data-label);
+    font-size: clamp(0.6875rem, 2.2vw, 0.75rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--dash-muted);
+    line-height: 1.35;
+    padding-top: 0.15em;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__cell--primary {
+    padding-top: 12px;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__cell--primary::before {
+    padding-top: 0.45em;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__cell--control {
+    grid-template-columns: auto 1fr;
+    padding-top: 12px;
+    padding-bottom: 4px;
+    border-bottom: 0;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__cell--control::before {
+    display: none;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__cell--actions {
+    grid-template-columns: 1fr;
+    border-bottom: 0;
+    padding-top: 12px;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__cell--actions::before {
+    display: none;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__cell--actions .ux-table__actions,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-table__actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-table__actions .btn,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-table__actions .btn-sm,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__cell--actions .btn {
+    flex: 1 1 calc(50% - 8px);
+    min-height: 40px;
+    justify-content: center;
+    font-size: 0.8125rem !important;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .dropdown {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .dropdown .btn {
+    width: 100%;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-badge,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .badge {
+    white-space: normal;
+    max-width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    line-height: 1.3;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-person,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .text-nowrap {
+    white-space: normal !important;
+    max-width: 100%;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-person__copy {
+    overflow: visible;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-person__name,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-person__meta {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr.ux-table__row--empty,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody tr:has(.ux-table__empty-state) {
+    padding: 8px;
+    box-shadow: none;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__empty-state,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td:has(.ux-table__empty-state) {
+    display: block;
+    border-bottom: 0;
+    padding: 8px;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td.ux-table__empty-state::before,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td:has(.ux-table__empty-state)::before {
+    display: none;
+  }
+
+  .dashboard-layout .ux-details-table,
+  .dashboard-layout .ux-queue-detail__table {
+    min-width: 0 !important;
+    width: 100%;
+    font-size: clamp(0.875rem, 2.7vw, 0.9375rem);
+  }
+
+  .dashboard-layout .ux-details-table tbody tr,
+  .dashboard-layout .ux-queue-detail__table tbody tr {
+    display: block;
+    border-bottom: 1px solid var(--dash-border);
+  }
+
+  .dashboard-layout .ux-details-table tbody th,
+  .dashboard-layout .ux-queue-detail__table tbody th,
+  .dashboard-layout .ux-details-table tbody td,
+  .dashboard-layout .ux-queue-detail__table tbody td {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .dashboard-layout .ux-details-table tbody th,
+  .dashboard-layout .ux-queue-detail__table tbody th {
+    padding-bottom: 4px;
+    border-bottom: 0;
+  }
+
+  .dashboard-layout .ux-details-table tbody td,
+  .dashboard-layout .ux-queue-detail__table tbody td {
+    padding-top: 0;
+  }
+
+  .dashboard-layout .user-bulk-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-layout .user-bulk-bar .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) tbody td::before {
+    padding-top: 0;
+  }
+
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-table__actions .btn,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .ux-table__actions .btn-sm,
+  .dashboard-layout table.ux-table:not(.ux-details-table):not(.ux-queue-detail__table) .dropdown {
+    flex: 1 1 100%;
   }
 }
 
