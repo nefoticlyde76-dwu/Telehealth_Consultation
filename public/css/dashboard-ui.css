@@ -4304,7 +4304,7 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .topbar-brand-wrap {
-    display: flex !important;
+    display: none !important;
   }
 
   .dashboard-layout .topbar-brand-wrap .brand-logo-shell-navbar {
@@ -5133,6 +5133,10 @@ html:has(body.dashboard-layout) {
 
   .dashboard-layout .topbar-profile-meta small {
     color: var(--dash-muted);
+  }
+
+  .dashboard-layout .topbar-brand-wrap {
+    display: flex;
   }
 
   .dashboard-layout .topbar-brand-wrap .brand-logo-shell-navbar {
