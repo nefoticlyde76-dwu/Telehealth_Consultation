@@ -295,7 +295,8 @@ class DoctorInvitationService
                 'success' => false,
                 'invitationSent' => false,
                 'type' => 'warning',
-                'message' => 'The doctor\'s account is still pending, but the invitation email could not be sent. Please try Resend Invitation again.',
+                'message' => 'The doctor\'s account is still pending, but the invitation email could not be sent. Please try Resend Invitation again.'
+                    . MailService::adminFailureHint(),
             ];
         }
 

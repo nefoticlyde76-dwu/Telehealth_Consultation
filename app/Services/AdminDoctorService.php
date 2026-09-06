@@ -181,6 +181,11 @@ class AdminDoctorService
                     && (bool) ($sendResult['smtp_accepted'] ?? false);
             }
 
+            $failureMessage = 'Doctor account was created, but the invitation email could not be sent. Please use Resend Invitation.';
+            if (!$invitationSent) {
+                $failureMessage .= MailService::adminFailureHint();
+            }
+
             return [
                 'success' => true,
                 'accountCreated' => true,
@@ -188,7 +193,7 @@ class AdminDoctorService
                 'doctorId' => $user->id,
                 'message' => $invitationSent
                     ? 'Doctor account created successfully. A password setup invitation has been sent to the doctor\'s email.'
-                    : 'Doctor account was created, but the invitation email could not be sent. Please use Resend Invitation.',
+                    : $failureMessage,
             ];
         } catch (\Throwable $exception) {
             if ($db->inTransaction()) {

@@ -20,6 +20,37 @@ class MailService
         return self::$lastError;
     }
 
+    /**
+     * Short admin-facing hint derived from the last mail failure.
+     * Never includes credentials, tokens, or raw message bodies.
+     */
+    public static function adminFailureHint(): string
+    {
+        $error = strtolower(self::$lastError);
+        if ($error === '') {
+            return '';
+        }
+
+        if (
+            str_contains($error, '535')
+            || str_contains($error, 'username and password not accepted')
+            || str_contains($error, 'badcredentials')
+            || str_contains($error, 'authentication rejected')
+        ) {
+            return ' The mail server rejected the SMTP login. Update the Gmail App Password in the application environment, then try again.';
+        }
+
+        if (str_contains($error, 'mail_host is not configured')) {
+            return ' Outgoing mail is not configured.';
+        }
+
+        if (str_contains($error, 'unable to connect')) {
+            return ' The application could not connect to the mail server.';
+        }
+
+        return '';
+    }
+
     public static function resetTestState(): void
     {
         self::$outbox = [];
