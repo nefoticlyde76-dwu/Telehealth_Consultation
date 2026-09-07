@@ -120,7 +120,7 @@ final class Week9Http
         $this->url = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $this->contentType = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-        curl_close($ch);
+        unset($ch);
 
         if ($errno !== 0) {
             $this->headers = '';

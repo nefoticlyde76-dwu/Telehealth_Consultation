@@ -445,7 +445,8 @@ class GoogleIdTokenValidator
         $raw = curl_exec($ch);
         $errno = curl_errno($ch);
         $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        // Do not call curl_close(): it has had no effect since PHP 8.0 and is
+        // deprecated in PHP 8.5. CurlHandle objects are released automatically.
 
         if ($raw === false || $errno !== 0 || $http < 200 || $http >= 300 || !is_string($raw)) {
             error_log('[GoogleIdTokenValidator] JWKS fetch failed.');

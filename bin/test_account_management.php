@@ -210,7 +210,7 @@ final class AcctHttp
         $this->status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $this->url = (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $headerSize = (int) curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        unset($ch);
 
         if ($errno !== 0) {
             $this->headers = '';

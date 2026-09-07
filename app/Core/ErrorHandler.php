@@ -31,6 +31,13 @@ class ErrorHandler
             return false;
         }
 
+        // PHP upgrade deprecations must not abort business operations
+        // (e.g. Daily room creation during consultation approval).
+        if ($errno === E_DEPRECATED || $errno === E_USER_DEPRECATED) {
+            error_log(sprintf('Deprecated: %s in %s:%d', $errstr, $errfile, $errline));
+            return true;
+        }
+
         throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
     }
 

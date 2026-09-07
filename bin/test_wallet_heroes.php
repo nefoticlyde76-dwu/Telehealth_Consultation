@@ -126,7 +126,7 @@ $httpGet = static function (string $url, string $cookies, bool $post = false, ar
     }
     $body = (string) curl_exec($ch);
     $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    unset($ch);
     return ['status' => $status, 'body' => $body];
 };
 

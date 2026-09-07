@@ -335,7 +335,8 @@ class DailyService
         $errno = curl_errno($ch);
         $err   = curl_error($ch);
         $http  = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        // Do not call curl_close(): it has had no effect since PHP 8.0 and is
+        // deprecated in PHP 8.5. CurlHandle objects are released automatically.
 
         if ($raw === false || $errno !== 0) {
             error_log(sprintf('[DailyService] cURL error (%d): %s on %s %s', $errno, $err, $method, $endpoint));

@@ -107,7 +107,7 @@ if (function_exists('curl_init') && $registerUrl !== '/register') {
         ]);
         $fetched = curl_exec($ch);
         $registerHttp = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
         if (is_string($fetched)) {
             $registerHtml = $fetched;
         }

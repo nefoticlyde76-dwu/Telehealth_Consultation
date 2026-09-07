@@ -132,7 +132,7 @@ if (function_exists('curl_init') && $loginUrl !== '/login') {
         ]);
         $fetched = curl_exec($ch);
         $loginHttp = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        unset($ch);
         if (is_string($fetched)) {
             $loginHtml = $fetched;
         }
