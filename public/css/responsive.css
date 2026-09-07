@@ -1,0 +1,228 @@
+/* ============================================================
+   MBPHA TeleHealth — phone & tablet wording
+   Desktop copy stays as written. Smaller screens use shorter
+   headings and ledes only. Layout and sections stay visible.
+   ============================================================ */
+
+@media (max-width: 1199.98px) {
+  body.public-layout {
+    --lp-header-h: 60px;
+  }
+
+  body.public-layout .public-navbar {
+    height: var(--lp-header-h);
+    min-height: var(--lp-header-h);
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  body.public-layout .public-navbar > .container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: var(--lp-header-h);
+    min-height: var(--lp-header-h);
+    flex-wrap: nowrap;
+    gap: 10px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  body.public-layout .public-navbar .brand-lockup,
+  body.public-layout .public-navbar .brand-lockup-navbar {
+    flex: 1 1 auto;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: calc(100% - 50px);
+    gap: 8px;
+  }
+
+  body.public-layout .brand-logo-shell-navbar {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  body.public-layout .brand-logo-shell-navbar .brand-logo-image {
+    display: block;
+    height: 36px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: left center;
+  }
+
+  body.public-layout .public-navbar .navbar-toggler {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    margin-left: 0;
+  }
+
+  body.public-layout .public-navbar-cta {
+    flex: 0 0 auto;
+    min-width: 0;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 12px !important;
+    font-size: 13px;
+  }
+}
+
+body.home-landing-layout .lp-hero__lede--short,
+body.home-landing-layout .lp-hero__badge-short,
+body.home-landing-layout .lp-workflow__title-short,
+.pp-intro__lede--short,
+.pp-intro__badge-short,
+.pp-cta__title-short {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  body.home-landing-layout .lp-hero__lede--short,
+  body.home-landing-layout .lp-hero__badge-short,
+  body.home-landing-layout .lp-workflow__title-short,
+  .pp-intro__lede--short,
+  .pp-intro__badge-short,
+  .pp-cta__title-short {
+    display: none !important;
+  }
+}
+
+@media (max-width: 991.98px) {
+  body.home-landing-layout .lp-hero__lede--full,
+  body.home-landing-layout .lp-hero__badge-full,
+  .pp-intro__lede--full,
+  .pp-intro__badge-full {
+    display: none !important;
+  }
+
+  body.home-landing-layout .lp-hero__lede--short,
+  .pp-intro__lede--short {
+    display: block !important;
+  }
+
+  body.home-landing-layout .lp-hero__badge-short,
+  .pp-intro__badge-short {
+    display: inline !important;
+  }
+
+  body.home-landing-layout .lp-hero__title {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+
+  body.home-landing-layout .lp-hero__lede,
+  .pp-intro__lede {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  body.home-landing-layout .lp-workflow__title {
+    font-size: 1.5rem;
+  }
+
+  .pp-intro__title {
+    font-size: 1.65rem;
+  }
+
+  .pp-cta__copy h2 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  body.home-landing-layout .lp-workflow__title-full,
+  .pp-cta__title-full {
+    display: none !important;
+  }
+
+  body.home-landing-layout .lp-workflow__title-short,
+  .pp-cta__title-short {
+    display: revert !important;
+  }
+
+  body.home-landing-layout .lp-hero__title {
+    font-size: 1.45rem;
+  }
+
+  body.home-landing-layout .lp-hero__actions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  body.home-landing-layout .lp-hero__cta {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  body.home-landing-layout .lp-hero__cta-rest {
+    display: none;
+  }
+
+  body.home-landing-layout .lp-workflow__title,
+  .pp-intro__title {
+    font-size: 1.35rem;
+  }
+
+  .dashboard-layout .ux-page-header__title,
+  .dashboard-layout h1.ux-page-header__title {
+    font-size: 1.2rem;
+  }
+
+  .cr-page .cr-title {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+
+  .dashboard-layout .ux-summary-stats {
+    display: none !important;
+  }
+
+  .dashboard-layout .dropdown-menu.notification-panel,
+  .dashboard-layout .dropdown-menu.notification-panel.show {
+    position: fixed !important;
+    top: calc(var(--dash-topbar, 56px) + 8px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    margin: 0 !important;
+    inset-inline: 12px;
+  }
+
+  .dashboard-layout .notification-panel__head {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dashboard-layout .notification-panel__title {
+    font-size: 15px;
+  }
+
+  .dashboard-layout .notification-panel__row {
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 8px 10px 16px;
+  }
+
+  .dashboard-layout .notification-panel__sys {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .dashboard-layout .notification-panel__act {
+    opacity: 1;
+    translate: 0;
+    flex-shrink: 0;
+  }
+}

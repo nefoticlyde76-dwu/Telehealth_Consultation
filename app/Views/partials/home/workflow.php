@@ -11,7 +11,10 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                 <i class="bi bi-plus-circle" aria-hidden="true"></i>
                 What the platform provides
             </span>
-            <h2 id="services-title" class="lp-workflow__title">The complete telehealth consultation workflow.</h2>
+            <h2 id="services-title" class="lp-workflow__title">
+                <span class="lp-workflow__title-full">The complete telehealth consultation workflow.</span>
+                <span class="lp-workflow__title-short">How a consultation works</span>
+            </h2>
             <p class="lp-workflow__copy">
                 From finding an available doctor, through an approved consultation, to reading the record afterward.
             </p>

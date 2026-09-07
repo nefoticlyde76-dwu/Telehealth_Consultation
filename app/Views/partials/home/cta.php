@@ -6,7 +6,10 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
     <div class="pp-cta__panel">
       <div class="pp-cta__copy">
         <p class="pp-cta__kicker">Ready to begin</p>
-        <h2 id="cta-title">Request your first MBPHA TeleHealth consultation.</h2>
+        <h2 id="cta-title">
+          <span class="pp-cta__title-full">Request your first MBPHA TeleHealth consultation.</span>
+          <span class="pp-cta__title-short">Ready to book a consultation?</span>
+        </h2>
         <p>
           Patients can register and submit a consultation request. Returning patients,
           doctors, and administrators can sign in to their existing account.

@@ -14,7 +14,8 @@ $pageLedeHtml = $pageLedeHtml ?? \App\Helpers\Helper::escape($pageLede);
   <div class="pp-intro__inner">
     <span class="pp-intro__badge">
       <i class="bi bi-shield-check" aria-hidden="true"></i>
-      <?= \App\Helpers\Helper::escape($pageBadge) ?>
+      <span class="pp-intro__badge-full"><?= \App\Helpers\Helper::escape($pageBadge) ?></span>
+      <span class="pp-intro__badge-short">MBPHA</span>
     </span>
 
     <?php if ($pageKicker !== ''): ?>
@@ -22,7 +23,10 @@ $pageLedeHtml = $pageLedeHtml ?? \App\Helpers\Helper::escape($pageLede);
     <?php endif; ?>
     <h1 id="pp-intro-title" class="pp-intro__title"><?= $pageTitleHtml ?></h1>
     <?php if ($pageLedeHtml !== ''): ?>
-      <p class="pp-intro__lede"><?= $pageLedeHtml ?></p>
+      <p class="pp-intro__lede<?= !empty($pageLedeShortHtml) ? ' pp-intro__lede--full' : '' ?>"><?= $pageLedeHtml ?></p>
+    <?php endif; ?>
+    <?php if (!empty($pageLedeShortHtml)): ?>
+      <p class="pp-intro__lede pp-intro__lede--short"><?= $pageLedeShortHtml ?></p>
     <?php endif; ?>
   </div>
 </header>

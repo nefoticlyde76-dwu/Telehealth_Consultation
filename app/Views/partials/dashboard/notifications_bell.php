@@ -46,7 +46,6 @@ if ($headerUnread > 0) {
     type="button"
     id="notificationBellButton"
     data-bs-toggle="dropdown"
-    data-bs-display="static"
     data-bs-auto-close="outside"
     aria-expanded="false"
     aria-haspopup="true"

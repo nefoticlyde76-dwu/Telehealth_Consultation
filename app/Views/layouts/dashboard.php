@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/mbpha-calendar.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/wallet-heroes.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/user-profile.css') ?>">
+  <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/responsive.css') ?>">
   <?= $pageStyles ?? '' ?>
 </head>
 <body class="dashboard-layout dashboard-layout--<?= \App\Helpers\Helper::escape((string) ($dashboardRole ?? 'default')) ?>"

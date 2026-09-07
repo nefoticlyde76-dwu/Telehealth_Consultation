@@ -12,17 +12,21 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
             <div class="lp-hero__copy">
                 <span class="lp-hero__badge">
                     <i class="bi bi-shield-check" aria-hidden="true"></i>
-                    Milne Bay Provincial Health Authority
+                    <span class="lp-hero__badge-full">Milne Bay Provincial Health Authority</span>
+                    <span class="lp-hero__badge-short">MBPHA</span>
                 </span>
 
                 <h1 id="hero-title" class="lp-hero__title">
                     TeleHealth consultation with MBPHA doctors, <span class="lp-hero__emphasis">online.</span>
                 </h1>
 
-                <p class="lp-hero__lede">
+                <p class="lp-hero__lede lp-hero__lede--full">
                     A secure, simple way for patients in <span class="lp-hero__emphasis">Milne Bay Province</span> to request an appointment
                     with an <span class="lp-hero__emphasis">MBPHA doctor</span>, attend an approved online consultation, and access their
                     consultation records — without travelling into a health facility.
+                </p>
+                <p class="lp-hero__lede lp-hero__lede--short">
+                    Request a consultation with an MBPHA doctor without travelling to a facility.
                 </p>
 
                 <ul class="lp-hero__pills" aria-label="Platform features">
@@ -34,7 +38,7 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                 <div class="lp-hero__actions">
                     <a href="<?= $_u('/register') ?>" class="lp-hero__cta lp-hero__cta--primary">
                         <i class="bi bi-person-plus-fill" aria-hidden="true"></i>
-                        Register as a Patient
+                        Register<span class="lp-hero__cta-rest"> as a Patient</span>
                     </a>
                     <a href="<?= $_u('/login') ?>" class="lp-hero__cta lp-hero__cta--secondary">
                         <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>

@@ -923,6 +923,7 @@ html:has(body.dashboard-layout) {
   position: relative;
   top: 0;
   z-index: 40;
+  overflow: visible;
   flex: 0 0 auto;
   width: 100%;
   height: var(--dash-topbar);
@@ -3281,10 +3282,12 @@ html:has(body.dashboard-layout) {
 
 .dashboard-layout .dropdown-menu.notification-panel {
   --acc: var(--dash-blue);
-  width: min(410px, calc(100vw - 24px));
+  --bs-dropdown-min-width: 0;
+  width: 360px;
+  max-width: min(360px, calc(100vw - 24px));
   max-height: min(76vh, 560px);
   overflow: auto;
-  padding: 16px 14px 12px;
+  padding: 14px 14px 12px;
   border-radius: 12px;
   color: var(--dash-slate);
   background: var(--white);
@@ -3413,7 +3416,7 @@ html:has(body.dashboard-layout) {
   flex: 1;
   min-width: 0;
   position: relative;
-  padding-right: 52px;
+  padding-right: 0;
   text-decoration: none;
   color: inherit;
 }
@@ -3437,10 +3440,10 @@ html:has(body.dashboard-layout) {
 }
 
 .dashboard-layout .notification-panel__body time {
-  position: absolute;
-  right: 0;
-  top: 1px;
-  font-size: 10.5px;
+  display: block;
+  position: static;
+  margin-top: 4px;
+  font-size: 11px;
   color: var(--dash-muted);
 }
 
@@ -3734,7 +3737,7 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .notification-panel {
-    width: min(100vw - 16px, 410px);
+    width: auto;
   }
 
   .dashboard-layout .notification-toast-stack {
@@ -4654,7 +4657,6 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .dropdown-menu.notification-panel {
-    width: min(100vw - 16px, 410px);
     max-height: min(70dvh, 520px);
   }
 
@@ -4824,8 +4826,8 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .dropdown-menu.notification-panel {
-    width: calc(100vw - 12px);
-    max-width: calc(100vw - 12px);
+    width: auto;
+    max-width: none;
   }
 }
 

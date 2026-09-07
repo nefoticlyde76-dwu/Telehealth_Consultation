@@ -4,6 +4,7 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
 $pageKicker = 'Contact';
 $pageTitleHtml = 'Platform inquiries for <span class="pp-intro__emphasis">MBPHA TeleHealth.</span>';
 $pageLedeHtml = 'Use this page for general questions about the system. Consultation bookings are made after you <span class="pp-intro__emphasis">register or sign in</span> — this form is not a booking request.';
+$pageLedeShortHtml = 'General questions only. Book consultations after you register or sign in.';
 
 $old = $contactOldInput ?? [];
 $errors = $contactErrors ?? [];

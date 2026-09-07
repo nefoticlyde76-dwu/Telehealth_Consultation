@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/auth-login.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/auth-register.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/home.css') ?>">
+  <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/responsive.css') ?>">
 </head>
 <body class="<?= \App\Helpers\Helper::escape($bodyClass ?? 'public-layout') ?>">
   <script>

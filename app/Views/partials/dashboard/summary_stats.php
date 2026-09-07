@@ -35,7 +35,7 @@ $cardToneMap = [
 ?>
 
 <?php if ($summaryStats !== []): ?>
-<section class="mb-4" aria-label="Priority summary">
+<section class="mb-4 ux-summary-stats" aria-label="Priority summary">
   <div class="row g-3">
     <?php foreach ($summaryStats as $stat): ?>
       <?php

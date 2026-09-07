@@ -4,6 +4,7 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
 $pageKicker = 'About MBPHA TeleHealth';
 $pageTitleHtml = 'A provincial telehealth service for <span class="pp-intro__emphasis">Milne Bay.</span>';
 $pageLedeHtml = 'MBPHA TeleHealth is the <span class="pp-intro__emphasis">Milne Bay Provincial Health Authority</span> platform for requesting, attending, and reviewing online consultations with <span class="pp-intro__emphasis">MBPHA doctors</span>.';
+$pageLedeShortHtml = 'Official MBPHA platform for requesting and attending online consultations.';
 ?>
 <?php require __DIR__ . '/../partials/public/navbar.php'; ?>
 
