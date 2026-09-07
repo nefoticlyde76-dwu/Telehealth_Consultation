@@ -67,6 +67,7 @@ class DoctorPasswordSetupController extends Controller
     ): void {
         $this->render('doctor/setup_password', [
             'title' => 'Set Up Your Password | MBPHA TeleHealth Consultation System',
+            'robots' => 'noindex, nofollow',
             'bodyClass' => 'public-layout auth-login-layout',
             'linkValid' => $linkValid,
             'csrfFailed' => $csrfFailed,

@@ -67,6 +67,7 @@ class AuthController extends Controller
 
         $this->render('auth/login', [
             'title' => 'Login | MBPHA TeleHealth Consultation System',
+            'robots' => 'noindex, nofollow',
             'csrfToken' => Csrf::generate(),
             'errors' => $errors,
             'oldInput' => $oldInput,
@@ -127,6 +128,7 @@ class AuthController extends Controller
 
         $this->render('auth/register', [
             'title' => 'Register | MBPHA TeleHealth Consultation System',
+            'robots' => 'noindex, nofollow',
             'csrfToken' => Csrf::generate(),
             'errors' => $errors,
             'oldInput' => $oldInput,
@@ -169,6 +171,7 @@ class AuthController extends Controller
 
         $this->render('auth/forgot_password', [
             'title' => 'Forgot Password | MBPHA TeleHealth Consultation System',
+            'robots' => 'noindex, nofollow',
             'csrfToken' => Csrf::generate(),
             'errors' => $errors,
             'fieldErrors' => $fieldErrors,
@@ -234,6 +237,7 @@ class AuthController extends Controller
 
         $this->render('auth/reset_password', [
             'title' => 'Reset Password | MBPHA TeleHealth Consultation System',
+            'robots' => 'noindex, nofollow',
             'csrfToken' => Csrf::generate(),
             'resetToken' => $resetToken,
             'invalidLink' => $invalidLink,

@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <?php if (!empty($robotsNoIndex)): ?>
   <meta name="robots" content="noindex, nofollow">
-  <?php endif; ?>
   <title><?= $title ?? 'MBPHA TeleHealth Consultation System' ?></title>
   <link rel="icon" type="image/png" href="<?= \App\Helpers\Helper::asset('images/LOGOS.png') ?>">
   <link rel="apple-touch-icon" href="<?= \App\Helpers\Helper::asset('images/LOGOS.png') ?>">

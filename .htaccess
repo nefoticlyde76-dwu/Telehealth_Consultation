@@ -21,7 +21,7 @@ Options -Indexes
     RewriteRule ^public/ - [L]
     RewriteRule ^$ public/index.php [QSA,L]
 
-    RewriteCond %{REQUEST_URI} !\.(?i:css|js|png|jpe?g|gif|ico|webp|svg|woff2?|ttf|eot|map)$
+    RewriteCond %{REQUEST_URI} !\.(?i:css|js|png|jpe?g|gif|ico|webp|svg|woff2?|ttf|eot|map|txt|xml)$
     RewriteRule ^(.*)$ public/index.php [QSA,L]
 
     RewriteRule ^(.*)$ public/$1 [L]

@@ -256,6 +256,7 @@ class ComplaintImageService
         if (!headers_sent()) {
             header('Content-Type: ' . $mimeType);
             header('X-Content-Type-Options: nosniff');
+            header('X-Robots-Tag: noindex, nofollow');
             header('Content-Disposition: inline; filename="' . $filename . '"');
             header('Cache-Control: private, no-store, no-cache, must-revalidate');
             header('Pragma: no-cache');

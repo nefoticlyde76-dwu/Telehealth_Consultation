@@ -6,39 +6,37 @@ use App\Core\Controller;
 use App\Core\Csrf;
 use App\Core\Session;
 use App\Helpers\Helper;
+use App\Helpers\Seo;
 
 class HomeController extends Controller
 {
     public function index(): void
     {
-        $this->render('home/index', [
-            'title' => 'Home | MBPHA TeleHealth Consultation System',
+        $this->render('home/index', array_merge(Seo::viewData('/'), [
             'bodyClass' => 'public-layout home-landing-layout',
-        ]);
+        ]));
     }
 
     public function about(): void
     {
-        $this->render('home/about', [
-            'title' => 'About | MBPHA TeleHealth Consultation System',
+        $this->render('home/about', array_merge(Seo::viewData('/about'), [
             'bodyClass' => 'public-layout public-page-layout public-page-about',
-        ]);
+        ]));
     }
 
     public function howItWorks(): void
     {
-        $this->render('home/how_it_works', [
-            'title' => 'How It Works | MBPHA TeleHealth Consultation System',
+        $this->render('home/how_it_works', array_merge(Seo::viewData('/how-it-works'), [
             'bodyClass' => 'public-layout public-page-layout public-page-how',
-        ]);
+        ]));
     }
 
     public function showContact(): void
     {
         $this->render('home/contact', array_merge(
             $this->contactPageData(),
+            Seo::viewData('/contact'),
             [
-                'title' => 'Contact | MBPHA TeleHealth Consultation System',
                 'bodyClass' => 'public-layout public-page-layout public-page-contact',
             ]
         ));

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Authenticated healthcare and account areas are not for search engines.
+# Access is enforced by application authentication; these rules only guide crawlers.
+Disallow: /admin
+Disallow: /doctor
+Disallow: /patient
+Disallow: /account
+Disallow: /notifications
+Disallow: /auth/
+
+Sitemap: https://mbphatelehealth.com/sitemap.xml

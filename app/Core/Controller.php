@@ -2,6 +2,8 @@
 
 namespace App\Core;
 
+use App\Helpers\Seo;
+
 class Controller
 {
     protected function view(string $view, array $data = []): void
@@ -18,6 +20,8 @@ class Controller
 
     protected function render(string $view, array $data = [], string $layout = 'layouts/app'): void
     {
+        Seo::applyResponseHeaders($layout, $data);
+
         extract($data);
         ob_start();
         $this->view($view, $data);
