@@ -4,7 +4,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 
 ## Current Status
 
-- Current Week: Week 9
+- Current Week: Week 10
 - Architecture: Custom MVC (PHP 8.x)
 - Database: MySQL with PDO prepared statements
 - Frontend: HTML5, CSS3, Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
@@ -26,6 +26,7 @@ Production-quality MBPHA TeleHealth Consultation System for the Milne Bay Provin
 - Consultation Records and Prescriptions: Week 7 live clinical documentation, doctor-controlled completion, explicit prescription issuance, and read-only historical record views implemented
 - Consultation History and PDF Export: Week 8 authorized consultation-record and A4 portrait prescription PDF downloads, refined history actions, and supporting public/dashboard UI consistency implemented
 - Week 9 Stabilization: End-to-end integration testing, access-control and security review, functional bug fixes, and targeted UI refinement completed
+- Week 10 Deployment: Live at https://mbphatelehealth.com, final schema, production environment notes, documentation, and final testing completed
 - Account Recovery: Public forgot-password / reset-password flow with hashed tokens, cooldown, and email delivery
 - Google Sign-In: Patient Google Identity Services sign-in (web client ID only; no client secret)
 - Notifications and Account Security: In-app notifications, preference controls, and session/password management
@@ -429,6 +430,19 @@ Week 9 stabilizes the completed MVP. It does not replace the MVC architecture or
 - In-app notifications inbox and account notification preferences
 - `WEEK9_REPORT.md` documents the official Week 9 quality gate
 
+### Week 10 Deployment, Documentation, and Final Testing
+
+Week 10 closes the approved ten-week MVP. It does not replace the MVC architecture or add out-of-scope modules.
+
+- Production application is live at `https://mbphatelehealth.com`
+- Document root is `public/` (`Procfile` and Composer heroku extra)
+- Production environment uses `APP_ENV=production`, `APP_DEBUG=false`, and `APP_URL=https://mbphatelehealth.com`
+- `database/schema.sql` is the authoritative fresh-database CREATE script
+- First production administrator is created with `php bin/create_admin.php`
+- Public pages use production canonical URLs, Open Graph, JSON-LD, `robots.txt`, and `sitemap.xml`
+- Authenticated healthcare routes remain noindex and are excluded from the sitemap
+- `WEEK10_REPORT.md` documents deployment, documentation, and the final test pass
+
 ### Profile Enhancement
 
 - Direct profile picture uploads without a cropping step
@@ -527,7 +541,8 @@ Telehealth_Consultation_System/
 ├── WEEK6_REPORT.md
 ├── WEEK7_REPORT.md
 ├── WEEK8_REPORT.md
-└── WEEK9_REPORT.md
+├── WEEK9_REPORT.md
+└── WEEK10_REPORT.md
 ```
 
 ## Installation
@@ -721,6 +736,10 @@ Existing local databases should keep applying numbered files in `database/migrat
   - `php bin/test_week9_integration.php` — 152 passed (end-to-end HTTP path, role isolation, CSRF, injection, XSS)
   - Week 7 and Week 8 suites were re-run and kept passing
   - Combined Week 7 + Week 8 + Week 9 integration this QA pass: 488 passed, 0 failed
+- Verified the Week 10 deployment, documentation, and final-testing close-out:
+  - Live origin `https://mbphatelehealth.com` returns 200 for Home, About, How It Works, Contact, Login, `robots.txt`, and `sitemap.xml`
+  - Unauthenticated `/admin/dashboard` on production redirects away from the administrator workspace
+  - `php bin/test_seo.php` — 69 passed (production canonicals, noindex on private routes, sitemap limited to public pages)
 
 ## Known Environment Requirements
 
@@ -742,7 +761,7 @@ Existing local databases should keep applying numbered files in `database/migrat
 - Week 7: Consultation records and prescription module — completed
 - Week 8: Consultation history and PDF export — completed
 - Week 9: Testing, security review, bug fixing, and UI refinement — completed
-- Week 10: Deployment, documentation, and final testing
+- Week 10: Deployment, documentation, and final testing — completed (`https://mbphatelehealth.com`)
 
 ## Repository Notes
 
