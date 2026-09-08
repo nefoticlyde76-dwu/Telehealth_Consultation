@@ -77,6 +77,7 @@ $profilePage = [
     'subtitle' => 'Non-clinical account details. Consultation notes and prescriptions are not available here.',
     'back' => ['label' => 'Back to users', 'url' => '/admin/users'],
     'photo' => $managedUser['profile_photo_path'] ?? null,
+    'photo_user_id' => (int) ($managedUser['id'] ?? 0),
     'photo_edit_url' => $editUrl,
     'name' => $userName,
     'email' => (string) ($managedUser['email'] ?? ''),

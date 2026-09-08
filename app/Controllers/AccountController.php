@@ -10,6 +10,7 @@ use App\Helpers\Helper;
 use App\Helpers\Status;
 use App\Services\AccountSecurityService;
 use App\Services\AuthService;
+use App\Services\ProfilePhotoService;
 
 class AccountController extends Controller
 {
@@ -150,6 +151,15 @@ class AccountController extends Controller
         }
 
         return [$user, $role];
+    }
+
+    public function profilePhoto(string $id): void
+    {
+        if ($this->requireAuthenticatedUser() === null) {
+            return;
+        }
+
+        ProfilePhotoService::stream((int) $id);
     }
 
     /**

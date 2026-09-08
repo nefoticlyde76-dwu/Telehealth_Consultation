@@ -45,6 +45,7 @@ $router->post('/notifications/{id}/unread', [NotificationController::class, 'mar
 $router->post('/notifications/{id}/delete', [NotificationController::class, 'delete'], $authenticatedRoles);
 $router->get('/notifications/{id}', [NotificationController::class, 'open'], $authenticatedRoles);
 
+$router->get('/profile-photo/{id}', [AccountController::class, 'profilePhoto'], $authenticatedRoles);
 $router->get('/account/security', [AccountController::class, 'security'], $authenticatedRoles);
 $router->post('/account/password', [AccountController::class, 'changePassword'], $authenticatedRoles);
 $router->post('/account/sessions/logout-others', [AccountController::class, 'logoutOtherSessions'], $authenticatedRoles);

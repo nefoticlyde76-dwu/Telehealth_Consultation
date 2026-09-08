@@ -59,6 +59,7 @@ $settingsIsDistinct = $settingsPath !== '' && $settingsPath !== '#' && $settings
         <button class="btn profile-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Account menu">
           <?php
           $avatarPath = $user->profile_photo_path ?? null;
+          $avatarUserId = (int) ($user->id ?? 0);
           $fullName = $user->full_name ?? 'User';
           $avatarClass = 'user-avatar user-avatar--xs';
           require __DIR__ . '/../shared/user_avatar.php';

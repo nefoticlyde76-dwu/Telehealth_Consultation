@@ -243,6 +243,7 @@ class UserDeletionService
 
         SessionService::revokeAll($targetUserId);
         self::deleteStoredAssets($assetPaths);
+        ProfilePhotoService::clear($targetUserId);
 
         return [
             'success' => true,

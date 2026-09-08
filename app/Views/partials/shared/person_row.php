@@ -10,6 +10,7 @@ if (!in_array($personSize, $allowedSizes, true)) {
 }
 
 $avatarPath = $personPhoto;
+$avatarUserId = \App\Services\ProfilePhotoService::userIdFromPath(is_string($personPhoto) ? $personPhoto : '');
 $fullName = $personName;
 $avatarClass = 'user-avatar user-avatar--' . $personSize;
 ?>

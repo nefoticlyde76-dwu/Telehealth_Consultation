@@ -19,6 +19,7 @@ $profilePage = [
     'subtitle' => 'Review your account details. Clinical records are not managed on this page.',
     'back' => ['label' => 'Back to dashboard', 'url' => '/patient/dashboard'],
     'photo' => $profile['profile_photo_path'] ?? null,
+    'photo_user_id' => (int) ($profile['id'] ?? 0),
     'photo_edit_url' => '/patient/profile/edit',
     'name' => $userName,
     'email' => (string) ($profile['email'] ?? ''),

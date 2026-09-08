@@ -97,6 +97,7 @@ $renderSidebarBody = static function (
         <div class="sidebar-user-avatar">
           <?php
           $avatarPath = $user->profile_photo_path ?? null;
+          $avatarUserId = (int) ($user->id ?? 0);
           $fullName = $user->full_name ?? 'User';
           $avatarClass = 'user-avatar user-avatar--sm';
           require __DIR__ . '/../shared/user_avatar.php';

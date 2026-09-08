@@ -181,6 +181,7 @@ $profilePage = [
     'subtitle' => 'Update your profile information and change your password without affecting other administrative workflows.',
     'back' => ['label' => 'Back to dashboard', 'url' => '/admin/dashboard'],
     'photo' => $profile['profile_photo_path'] ?? null,
+    'photo_user_id' => (int) ($profile['id'] ?? 0),
     'photo_edit_url' => '/admin/profile#admin_profile_photo',
     'name' => $userName,
     'email' => (string) ($profile['email'] ?? $formData['email'] ?? ''),

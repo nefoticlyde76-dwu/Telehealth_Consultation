@@ -7,7 +7,7 @@
 --   mysql -u root -p < database/schema.sql
 --
 -- It consolidates every table, column, index, unique key, and foreign key
--- used by the running application after migrations 001–030:
+-- used by the running application after migrations 001–031:
 --
 --   Identity        roles, users, patient, doctor, admin
 --   Scheduling      doctor_availability, consultation_requests
@@ -160,6 +160,17 @@ CREATE TABLE IF NOT EXISTS admin (
         ON DELETE CASCADE
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   COMMENT='Administrator profile. PK is users.id.';
+
+CREATE TABLE IF NOT EXISTS profile_photos (
+    user_id BIGINT PRIMARY KEY,
+    mime VARCHAR(32) NOT NULL,
+    photo_blob MEDIUMBLOB NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_profile_photos_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  COMMENT='Persists profile photos across ephemeral deploys';
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- Scheduling and booking

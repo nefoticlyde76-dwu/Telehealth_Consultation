@@ -17,6 +17,7 @@ $overflowActions = is_array($profilePage['overflow_actions'] ?? null) ? $profile
   <div class="user-profile-avatar">
     <?php
     $avatarPath = $photo;
+    $avatarUserId = (int) ($profilePage['photo_user_id'] ?? 0);
     $fullName = $name;
     $avatarClass = 'user-avatar';
     require __DIR__ . '/../shared/user_avatar.php';

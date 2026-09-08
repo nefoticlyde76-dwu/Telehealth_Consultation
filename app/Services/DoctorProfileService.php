@@ -73,6 +73,7 @@ class DoctorProfileService
         $db = Database::getInstance();
         $uploadedPaths = [];
         DoctorSignatureService::ensureStorage();
+        ProfilePhotoService::ensureStorage();
 
         try {
             $db->beginTransaction();

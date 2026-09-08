@@ -29,6 +29,7 @@ if (($dashboardRole ?? '') === 'admin') {
       <div class="dashboard-banner-intro mb-3">
         <?php
         $avatarPath = $user->profile_photo_path ?? null;
+        $avatarUserId = (int) ($user->id ?? 0);
         $fullName = $user->full_name ?? 'User';
         $avatarClass = 'user-avatar user-avatar--lg';
         require __DIR__ . '/../shared/user_avatar.php';

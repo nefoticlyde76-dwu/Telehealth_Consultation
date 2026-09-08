@@ -41,6 +41,7 @@ $profilePage = [
     'subtitle' => 'Review your identity and uploaded assets as they will appear in clinical workflows.',
     'back' => ['label' => 'Back to dashboard', 'url' => '/doctor/dashboard'],
     'photo' => $profile['profile_photo_path'] ?? null,
+    'photo_user_id' => (int) ($profile['id'] ?? 0),
     'photo_edit_url' => '/doctor/profile/edit',
     'name' => $userName,
     'email' => (string) ($profile['email'] ?? ''),

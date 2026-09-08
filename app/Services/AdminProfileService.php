@@ -56,6 +56,7 @@ class AdminProfileService
 
         $db = Database::getInstance();
         $uploadedProfilePhotoPath = null;
+        ProfilePhotoService::ensureStorage();
 
         try {
             $db->beginTransaction();
