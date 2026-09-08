@@ -44,18 +44,18 @@ $welcomeTitle = $welcomeFirstName !== ''
 $welcomeDefaults = [
     'admin' => [
         'eyebrow' => 'Administrator',
-        'message' => 'Review consultation requests, manage doctor and patient accounts, and keep the service operating smoothly.',
-        'icon' => 'bi-heart-pulse',
+        'message' => 'Review pending requests, manage accounts, and monitor recent activity.',
+        'icon' => 'bi-shield-check',
     ],
     'doctor' => [
         'eyebrow' => 'Doctor',
-        'message' => "Here's your day at a glance. Stay on top of your consultations and keep making a difference.",
+        'message' => "See today's workload, upcoming consultations, and what needs your attention.",
         'icon' => 'bi-heart-pulse',
     ],
     'patient' => [
         'eyebrow' => 'Patient',
-        'message' => 'Your health matters. Book a consultation, manage your appointments, and stay on top of your care — all in one place.',
-        'icon' => 'bi-heart-pulse',
+        'message' => 'Check your next consultation, track request status, and book care when you need it.',
+        'icon' => 'bi-calendar2-heart',
     ],
 ];
 
@@ -75,22 +75,11 @@ if ($welcomeIcon === '') {
 }
 
 $welcomePills = is_array($welcomePills ?? null) ? $welcomePills : [];
-$welcomePhoto = Helper::asset('images/stethoscope-banner.jpg');
 ?>
 
-<section class="ux-welcome ux-welcome--hero ux-welcome--<?= Helper::escape($welcomeRole) ?>" aria-label="Welcome">
-  <div class="ux-welcome__media" aria-hidden="true">
-    <img
-      class="ux-welcome__photo"
-      src="<?= Helper::escape($welcomePhoto) ?>"
-      alt=""
-      width="1290"
-      height="861"
-      decoding="async"
-    >
-  </div>
+<section class="ux-welcome ux-welcome--<?= Helper::escape($welcomeRole) ?>" aria-label="Welcome">
   <div class="ux-welcome__grid">
-    <div class="ux-welcome__copy">
+    <div>
       <p class="ux-welcome__eyebrow"><?= Helper::escape($welcomeEyebrow) ?></p>
       <h2 class="ux-welcome__title"><?= Helper::escape($welcomeTitle) ?></h2>
       <p class="ux-welcome__description"><?= Helper::escape($welcomeDescription) ?></p>
@@ -115,12 +104,9 @@ $welcomePhoto = Helper::asset('images/stethoscope-banner.jpg');
       <?php endif; ?>
     </div>
     <div class="ux-welcome__visual" aria-hidden="true">
-      <div class="ux-welcome__lockup">
-        <p class="ux-welcome__motto">Better access.<br>Healthier communities.</p>
-        <svg class="ux-welcome__pulse" viewBox="0 0 132 28" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false">
-          <path d="M2 16 H36 L42 16 L48 6 L56 24 L64 10 L70 16 H130" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
+      <span class="ux-welcome__icon">
+        <i class="bi <?= Helper::escape($welcomeIcon) ?>"></i>
+      </span>
     </div>
   </div>
 </section>

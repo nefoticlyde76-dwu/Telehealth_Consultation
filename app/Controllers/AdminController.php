@@ -48,7 +48,7 @@ class AdminController extends Controller
                 'showRightbar' => true,
             ]),
             [
-                'welcomeMessage' => 'Review consultation requests, manage doctor and patient accounts, and keep the service operating smoothly.',
+                'welcomeMessage' => 'Review consultation requests, manage doctor and patient accounts, and keep the service operating.',
                 'focusTitle' => 'What needs attention',
                 'focusDescription' => 'Start with pending consultation requests, then review doctor and patient accounts as needed.',
                 'stats' => $consultationDashboard['stats'] ?? $dashboardData['stats'],

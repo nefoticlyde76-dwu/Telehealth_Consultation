@@ -68,7 +68,7 @@ class DoctorController extends Controller
                 ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/profile', 'label' => 'Profile', 'icon' => 'bi-person-vcard'],
             ],
-            'welcomeMessage' => "Here's your day at a glance. Stay on top of your consultations and keep making a difference.",
+            'welcomeMessage' => 'Keep your profile, availability, and consultations up to date.',
             'focusTitle' => 'Clinician profile readiness',
             'focusDescription' => 'Keep your phone number, specialization, profile photo, and signature up to date for future consultation records.',
             'statusMessage' => Session::getFlash('status'),

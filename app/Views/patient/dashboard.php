@@ -76,18 +76,17 @@ foreach ($recentNotifications as $item) {
     ];
 }
 
-$welcomeMessage = 'Your health matters. Book a consultation, manage your appointments, and stay on top of your care — all in one place.';
 $welcomePills = [
     [
         'icon' => 'bi-calendar2-check',
         'label' => $upcomingCount === 1 ? '1 upcoming consultation' : $upcomingCount . ' upcoming consultations',
     ],
     [
-        'icon' => 'bi-bell',
-        'label' => $unreadCount === 1 ? '1 unread notification' : $unreadCount . ' unread notifications',
+        'icon' => 'bi-hourglass-split',
+        'label' => $pendingCount === 1 ? '1 pending request' : $pendingCount . ' pending requests',
     ],
 ];
-$welcomeIcon = 'bi-heart-pulse';
+$welcomeIcon = 'bi-calendar2-heart';
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>

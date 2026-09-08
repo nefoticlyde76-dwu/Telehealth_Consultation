@@ -44,14 +44,13 @@ foreach ($recentNotifications as $item) {
     ];
 }
 
-$welcomeMessage = "Here's your day at a glance. Stay on top of your consultations and keep making a difference.";
 $welcomePills = [
     [
         'icon' => 'bi-calendar2-check',
         'label' => $bookedToday === 1 ? '1 booked today' : $bookedToday . ' booked today',
     ],
     [
-        'icon' => 'bi-calendar2-week',
+        'icon' => 'bi-calendar2-plus',
         'label' => $openToday === 1 ? '1 open slot' : $openToday . ' open slots',
     ],
 ];
