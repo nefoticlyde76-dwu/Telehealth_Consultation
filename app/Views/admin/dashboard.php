@@ -47,9 +47,10 @@ foreach ($recentNotifications as $item) {
     ];
 }
 
+$welcomeMessage = 'Review consultation requests, manage doctor and patient accounts, and keep the service operating smoothly.';
 $welcomePills = [
     [
-        'icon' => 'bi-hourglass-split',
+        'icon' => 'bi-clipboard2-check',
         'label' => $adminPending === 1 ? '1 pending request' : $adminPending . ' pending requests',
     ],
     [
@@ -57,7 +58,7 @@ $welcomePills = [
         'label' => $unreadCount === 1 ? '1 unread notification' : $unreadCount . ' unread notifications',
     ],
 ];
-$welcomeIcon = 'bi-shield-check';
+$welcomeIcon = 'bi-heart-pulse';
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>

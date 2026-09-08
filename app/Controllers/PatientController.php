@@ -75,7 +75,7 @@ class PatientController extends Controller
                 ['path' => '/patient/consultation-requests', 'label' => 'My Consultations', 'icon' => 'bi-clipboard2-check'],
                 ['path' => '/patient/profile', 'label' => 'Profile', 'icon' => 'bi-person-circle'],
             ],
-            'welcomeMessage' => 'Browse doctors, choose an available slot, and submit a consultation request.',
+            'welcomeMessage' => 'Your health matters. Book a consultation, manage your appointments, and stay on top of your care — all in one place.',
             'focusTitle' => 'Book a consultation slot',
             'focusDescription' => 'Choose a doctor, pick an available slot, and describe the reason for the visit.',
             'statusMessage' => Session::getFlash('status'),

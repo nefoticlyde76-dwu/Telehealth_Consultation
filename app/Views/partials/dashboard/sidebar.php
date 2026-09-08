@@ -84,7 +84,7 @@ $renderSidebarBody = static function (
           <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
             <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(Csrf::generate()) ?>">
             <button type="submit" class="sidebar-link sidebar-logout-btn" data-label="Logout" data-tooltip="Logout">
-              <span class="sidebar-link-icon" aria-hidden="true"><i class="bi bi-box-arrow-left"></i></span>
+              <span class="sidebar-link-icon" aria-hidden="true"><i class="bi bi-box-arrow-right"></i></span>
               <span class="sidebar-link-label">Logout</span>
             </button>
           </form>
