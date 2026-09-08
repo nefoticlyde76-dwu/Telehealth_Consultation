@@ -7,7 +7,7 @@
 --   mysql -u root -p < database/schema.sql
 --
 -- It consolidates every table, column, index, unique key, and foreign key
--- used by the running application after migrations 001–029:
+-- used by the running application after migrations 001–030:
 --
 --   Identity        roles, users, patient, doctor, admin
 --   Scheduling      doctor_availability, consultation_requests
@@ -136,6 +136,8 @@ CREATE TABLE IF NOT EXISTS doctor (
     clinic_address TEXT NULL,
     consultation_fee DECIMAL(10,2) NULL,
     signature_path VARCHAR(255) NULL COMMENT 'Relative path used on PDF exports',
+    signature_mime VARCHAR(32) NULL,
+    signature_blob MEDIUMBLOB NULL COMMENT 'Persists the signature across ephemeral deploys',
     consent_doc_path VARCHAR(255) NULL,
     profile_photo_path VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

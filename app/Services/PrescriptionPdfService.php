@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Config\Paths;
 use App\Helpers\Helper;
 use Dompdf\Dompdf;
 
@@ -70,7 +69,10 @@ class PrescriptionPdfService
         $request = is_array($page['request'] ?? null) ? $page['request'] : [];
         $prescriptions = is_array($page['prescriptions'] ?? null) ? $page['prescriptions'] : [];
         $logoSrc = PdfDocumentSupport::embedLetterheadLogo();
-        $signature = self::embedSignatureImage(self::signatureSrc($page));
+        $signature = self::embedSignatureImage(
+            (string) ($request['doctor_signature_path'] ?? ''),
+            (int) ($request['doctor_id'] ?? 0)
+        );
         $signatureSrc = $signature['src'];
         $signatureWidth = $signature['width'];
         $signatureHeight = $signature['height'];
@@ -98,37 +100,21 @@ class PrescriptionPdfService
             return '';
         }
 
-        $relative = str_replace('\\', '/', trim((string) ($request['doctor_signature_path'] ?? '')));
-        $expectedPrefix = 'uploads/doctors/' . $doctorId . '/';
-        if ($relative === ''
-            || str_contains($relative, '..')
-            || str_contains($relative, ':')
-            || !str_starts_with($relative, $expectedPrefix)
-        ) {
+        $relative = DoctorSignatureService::normalizeRelativePath((string) ($request['doctor_signature_path'] ?? ''));
+        if (!DoctorSignatureService::isSafeDoctorPath($doctorId, $relative)) {
             return '';
         }
 
-        $publicRoot = realpath(Paths::publicRoot());
-        if (!is_string($publicRoot) || $publicRoot === '') {
-            return '';
+        if (DoctorSignatureService::resolveAbsolute($doctorId, $relative) !== null) {
+            return $relative;
         }
 
-        $absolute = realpath($publicRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
-        if ($absolute === false || !is_file($absolute) || !str_starts_with($absolute, $publicRoot . DIRECTORY_SEPARATOR)) {
-            return '';
+        $embedded = DoctorSignatureService::embed($doctorId, $relative);
+        if (($embedded['src'] ?? '') !== '') {
+            return $relative;
         }
 
-        $size = filesize($absolute);
-        if ($size === false || $size <= 0 || $size > 2000000) {
-            return '';
-        }
-
-        $extension = strtolower((string) pathinfo($absolute, PATHINFO_EXTENSION));
-        if ($extension === 'png' && !extension_loaded('gd')) {
-            return '';
-        }
-
-        return $relative;
+        return '';
     }
 
     /**
@@ -138,78 +124,9 @@ class PrescriptionPdfService
      *
      * @return array{src:string,width:int,height:int}
      */
-    public static function embedSignatureImage(string $relative): array
+    public static function embedSignatureImage(string $relative, int $doctorId = 0): array
     {
-        $empty = ['src' => '', 'width' => 0, 'height' => 0];
-        $relative = str_replace('\\', '/', trim($relative));
-        if ($relative === '' || !extension_loaded('gd')) {
-            return $empty;
-        }
-
-        $publicRoot = realpath(Paths::publicRoot());
-        if (!is_string($publicRoot) || $publicRoot === '') {
-            return $empty;
-        }
-
-        $absolute = realpath($publicRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
-        if ($absolute === false || !is_file($absolute) || !is_readable($absolute)) {
-            return $empty;
-        }
-        if (!str_starts_with($absolute, $publicRoot . DIRECTORY_SEPARATOR)) {
-            return $empty;
-        }
-
-        $bytes = file_get_contents($absolute);
-        if (!is_string($bytes) || $bytes === '') {
-            return $empty;
-        }
-
-        $source = @imagecreatefromstring($bytes);
-        if ($source === false) {
-            return $empty;
-        }
-
-        $srcW = imagesx($source);
-        $srcH = imagesy($source);
-        if ($srcW < 1 || $srcH < 1) {
-            imagedestroy($source);
-            return $empty;
-        }
-
-        $maxW = 200;
-        $maxH = 140;
-        $scale = min($maxW / $srcW, $maxH / $srcH, 1.0);
-        $dstW = max(1, (int) round($srcW * $scale));
-        $dstH = max(1, (int) round($srcH * $scale));
-
-        $canvas = imagecreatetruecolor($dstW, $dstH);
-        if ($canvas === false) {
-            imagedestroy($source);
-            return $empty;
-        }
-
-        $white = imagecolorallocate($canvas, 255, 255, 255);
-        imagefilledrectangle($canvas, 0, 0, $dstW, $dstH, $white);
-        imagealphablending($canvas, true);
-        imagesavealpha($canvas, false);
-        imagecopyresampled($canvas, $source, 0, 0, 0, 0, $dstW, $dstH, $srcW, $srcH);
-        imagedestroy($source);
-
-        // JPEG avoids DomPDF's PNG alpha-mask path, which can paint a blank box.
-        ob_start();
-        imagejpeg($canvas, null, 90);
-        $jpeg = (string) ob_get_clean();
-        imagedestroy($canvas);
-
-        if ($jpeg === '') {
-            return $empty;
-        }
-
-        return [
-            'src' => 'data:image/jpeg;base64,' . base64_encode($jpeg),
-            'width' => $dstW,
-            'height' => $dstH,
-        ];
+        return DoctorSignatureService::embed($doctorId, $relative);
     }
 
     /**

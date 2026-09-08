@@ -4,7 +4,11 @@ use App\Helpers\Helper;
 
 $profile = is_array($profile ?? null) ? $profile : [];
 $statusMessage = $statusMessage ?? null;
-$signaturePath = $profile['signature_path'] ?? null;
+$signatureEmbed = \App\Services\DoctorSignatureService::embed(
+    (int) ($profile['id'] ?? 0),
+    (string) ($profile['signature_path'] ?? '')
+);
+$signatureSrc = (string) ($signatureEmbed['src'] ?? '');
 
 require __DIR__ . '/../../partials/profile/_helpers.php';
 
@@ -15,8 +19,8 @@ ob_start();
 ?>
 <div class="user-profile-signature">
   <h4 class="user-profile-signature__title">Digital signature</h4>
-  <?php if (!empty($signaturePath)): ?>
-    <img class="doctor-signature-preview" src="<?= Helper::asset((string) $signaturePath) ?>" alt="Doctor digital signature">
+  <?php if ($signatureSrc !== ''): ?>
+    <img class="doctor-signature-preview" src="<?= Helper::escape($signatureSrc) ?>" alt="Doctor digital signature">
   <?php else: ?>
     <div class="doctor-signature-placeholder">
       <i class="bi bi-pen" aria-hidden="true"></i>

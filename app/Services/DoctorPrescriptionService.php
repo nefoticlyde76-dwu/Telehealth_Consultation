@@ -31,13 +31,13 @@ class DoctorPrescriptionService
                 'request' => $request,
                 'record' => is_array($record) ? $record : [],
                 'prescriptions' => [],
-                'has_signature' => trim((string) ($request['doctor_signature_path'] ?? '')) !== '',
+                'has_signature' => self::hasRenderableSignature($doctorId, $request),
                 'can_create' => false,
             ];
         }
 
         $prescriptions = Prescription::findByRecordForDoctor((int) $record['id'], $doctorId);
-        $hasSignature = trim((string) ($request['doctor_signature_path'] ?? '')) !== '';
+        $hasSignature = self::hasRenderableSignature($doctorId, $request);
 
         return [
             'request' => $request,
@@ -100,8 +100,7 @@ class DoctorPrescriptionService
             ];
         }
 
-        $signature = trim((string) ($page['request']['doctor_signature_path'] ?? ''));
-        if ($signature === '') {
+        if (!self::hasRenderableSignature($doctorId, $page['request'])) {
             return [
                 'success' => false,
                 'message' => 'Upload your signature in My Profile before issuing a prescription.',
@@ -132,5 +131,18 @@ class DoctorPrescriptionService
         }
 
         return $result;
+    }
+
+    /**
+     * @param array<string, mixed> $request
+     */
+    private static function hasRenderableSignature(int $doctorId, array $request): bool
+    {
+        $embedded = DoctorSignatureService::embed(
+            $doctorId,
+            (string) ($request['doctor_signature_path'] ?? '')
+        );
+
+        return ($embedded['src'] ?? '') !== '';
     }
 }

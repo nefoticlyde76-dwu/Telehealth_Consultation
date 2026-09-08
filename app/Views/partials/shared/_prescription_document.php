@@ -11,14 +11,13 @@ $doctorName = trim((string) ($request['doctor_name'] ?? ''));
 $doctorTitle = trim((string) ($request['doctor_title'] ?? ''));
 $doctorSpecialization = trim((string) ($request['specialization'] ?? ''));
 $doctorClinic = trim((string) ($request['doctor_clinic_address'] ?? ''));
-$signaturePath = str_replace('\\', '/', trim((string) ($request['doctor_signature_path'] ?? '')));
-$signatureUrl = '';
-if ($signaturePath !== ''
-    && !str_contains($signaturePath, '..')
-    && str_starts_with($signaturePath, 'uploads/doctors/')
-) {
-    $signatureUrl = \App\Helpers\Helper::asset($signaturePath);
-}
+$signature = \App\Services\PrescriptionPdfService::embedSignatureImage(
+    (string) ($request['doctor_signature_path'] ?? ''),
+    (int) ($request['doctor_id'] ?? 0)
+);
+$signatureUrl = (string) ($signature['src'] ?? '');
+$signatureWidth = (int) ($signature['width'] ?? 0);
+$signatureHeight = (int) ($signature['height'] ?? 0);
 
 $issuedDate = '';
 if ($prescriptions !== []) {
@@ -157,8 +156,14 @@ $doctorLine = trim(implode(' · ', array_filter([
         </dl>
         <div class="rx-document__signature">
           <span class="rx-document__signature-label">Doctor's signature</span>
-          <?php if ($signatureUrl !== ''): ?>
-            <img src="<?= \App\Helpers\Helper::escape($signatureUrl) ?>" alt="Signature of <?= \App\Helpers\Helper::escape($doctorName !== '' ? $doctorName : 'the prescribing doctor') ?>" class="rx-document__signature-image">
+          <?php if ($signatureUrl !== '' && $signatureWidth > 0 && $signatureHeight > 0): ?>
+            <img
+              src="<?= \App\Helpers\Helper::escape($signatureUrl) ?>"
+              width="<?= $signatureWidth ?>"
+              height="<?= $signatureHeight ?>"
+              alt="Signature of <?= \App\Helpers\Helper::escape($doctorName !== '' ? $doctorName : 'the prescribing doctor') ?>"
+              class="rx-document__signature-image"
+            >
           <?php else: ?>
             <div class="rx-document__signature-missing">Signature not on file</div>
           <?php endif; ?>

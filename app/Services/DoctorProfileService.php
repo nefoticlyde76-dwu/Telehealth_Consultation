@@ -72,6 +72,7 @@ class DoctorProfileService
 
         $db = Database::getInstance();
         $uploadedPaths = [];
+        DoctorSignatureService::ensureStorage();
 
         try {
             $db->beginTransaction();
@@ -317,6 +318,14 @@ class DoctorProfileService
             ], $doctor->signature_path);
 
             $doctor->signature_path = $results['signature']['path'] ?? $doctor->signature_path;
+            $storedAbsolute = Paths::publicRoot()
+                . DIRECTORY_SEPARATOR
+                . str_replace('/', DIRECTORY_SEPARATOR, (string) ($results['signature']['path'] ?? ''));
+            DoctorSignatureService::persistFromAbsolutePath(
+                $userId,
+                $storedAbsolute,
+                (string) ($results['signature']['mime_type'] ?? 'image/png')
+            );
         }
 
         return $results;

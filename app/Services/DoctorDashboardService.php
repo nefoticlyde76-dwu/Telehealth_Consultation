@@ -32,7 +32,10 @@ class DoctorDashboardService
         ], 5, 0);
 
         $hasProfilePhoto = !empty($doctor['profile_photo_path'] ?? '');
-        $hasSignature = !empty($doctor['signature_path'] ?? '');
+        $hasSignature = (DoctorSignatureService::embed(
+            $userId,
+            (string) ($doctor['signature_path'] ?? '')
+        )['src'] ?? '') !== '';
 
         return [
             'user' => $user,

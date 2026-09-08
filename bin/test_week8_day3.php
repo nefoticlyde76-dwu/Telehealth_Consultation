@@ -208,6 +208,13 @@ expect_true(
     'PDF uses the stored signature from the authorized doctor profile'
 );
 
+$prefixedPage = $signedPage;
+$prefixedPage['request']['doctor_signature_path'] = 'public/uploads/doctors/22/signature_week8_day3.png';
+expect_true(
+    PrescriptionPdfService::signatureSrc($prefixedPage) === 'uploads/doctors/22/signature_week8_day3.png',
+    'PDF accepts a stored signature path that still includes the public/ prefix'
+);
+
 $wrongFolder = $completedPage;
 $wrongFolder['request']['doctor_signature_path'] = 'uploads/doctors/99/signature_week8_day3.png';
 expect_true(

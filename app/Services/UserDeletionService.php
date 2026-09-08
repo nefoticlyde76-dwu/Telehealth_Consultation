@@ -424,6 +424,7 @@ class UserDeletionService
             );
             $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
             $stmt->execute();
+            DoctorSignatureService::clear($userId);
             return;
         }
 
