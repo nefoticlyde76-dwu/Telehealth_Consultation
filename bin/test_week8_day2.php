@@ -140,6 +140,7 @@ expect_true(str_contains($html, ConsultationRecord::REQUIRED_FIELDS['clinical_fi
 expect_true(str_contains($html, 'Viral upper respiratory infection'), 'PDF includes the finalized diagnosis');
 expect_true(str_contains($html, 'Supportive care, oral fluids, paracetamol as needed.'), 'PDF includes treatment / medical advice');
 expect_true(str_contains($html, 'overflow-wrap: anywhere'), 'PDF CSS allows long clinical notes to wrap');
+expect_true(!str_contains($html, 'images/LOGOS.png'), 'Consultation-record PDF does not embed the full-resolution brand PNG');
 expect_true(!str_contains($html, 'dashboard-sidebar'), 'PDF does not include dashboard chrome');
 expect_true(!str_contains($html, 'bi-grid'), 'PDF does not copy dashboard icons');
 

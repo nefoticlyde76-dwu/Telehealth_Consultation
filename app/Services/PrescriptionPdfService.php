@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Config\Paths;
 use App\Helpers\Helper;
 use Dompdf\Dompdf;
-use Dompdf\Options;
 
 class PrescriptionPdfService
 {
@@ -31,33 +30,29 @@ class PrescriptionPdfService
             return null;
         }
 
-        $html = self::renderDocumentHtml($page);
-        $publicRoot = realpath(Paths::publicRoot());
+        try {
+            $html = self::renderDocumentHtml($page);
+            $publicRoot = PdfDocumentSupport::publicRoot();
+            $options = PdfDocumentSupport::createOptions();
 
-        $options = new Options();
-        $options->set('defaultFont', 'DejaVu Sans');
-        $options->set('isRemoteEnabled', false);
-        $options->set('isHtml5ParserEnabled', true);
-        $options->set('isFontSubsettingEnabled', true);
-        $options->set('dpi', 96);
-        if (is_string($publicRoot) && $publicRoot !== '') {
-            $options->setChroot($publicRoot);
+            $dompdf = new Dompdf($options);
+            if ($publicRoot !== null) {
+                $dompdf->setBasePath($publicRoot);
+            }
+
+            $dompdf->loadHtml($html, 'UTF-8');
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            PdfDocumentSupport::paintFooter($dompdf, 'MBPHA TeleHealth  ·  Confidential prescription');
+
+            return [
+                'binary' => (string) $dompdf->output(),
+                'filename' => self::filename($page),
+            ];
+        } catch (\Throwable $exception) {
+            error_log('Prescription PDF render failed: ' . $exception->getMessage());
+            return null;
         }
-
-        $dompdf = new Dompdf($options);
-        if (is_string($publicRoot) && $publicRoot !== '') {
-            $dompdf->setBasePath($publicRoot);
-        }
-
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-        self::paintFooter($dompdf);
-
-        return [
-            'binary' => (string) $dompdf->output(),
-            'filename' => self::filename($page),
-        ];
     }
 
     /**
@@ -74,7 +69,7 @@ class PrescriptionPdfService
     {
         $request = is_array($page['request'] ?? null) ? $page['request'] : [];
         $prescriptions = is_array($page['prescriptions'] ?? null) ? $page['prescriptions'] : [];
-        $logoSrc = self::logoSrc();
+        $logoSrc = PdfDocumentSupport::embedLetterheadLogo();
         $signature = self::embedSignatureImage(self::signatureSrc($page));
         $signatureSrc = $signature['src'];
         $signatureWidth = $signature['width'];
@@ -272,19 +267,6 @@ class PrescriptionPdfService
         return true;
     }
 
-    private static function paintFooter(Dompdf $dompdf): void
-    {
-        $canvas = $dompdf->getCanvas();
-        $font = $dompdf->getFontMetrics()->getFont('DejaVu Sans');
-        $width = $canvas->get_width();
-        $height = $canvas->get_height();
-        $y = $height - 24;
-        $color = [0.42, 0.45, 0.48];
-
-        $canvas->page_text(48, $y, 'MBPHA TeleHealth  ·  Confidential prescription', $font, 8, $color);
-        $canvas->page_text($width - 118, $y, 'Page {PAGE_NUM} of {PAGE_COUNT}', $font, 8, $color);
-    }
-
     /**
      * @param array{
      *   request?:array<string,mixed>,
@@ -325,22 +307,4 @@ class PrescriptionPdfService
         return $filename;
     }
 
-    private static function logoSrc(): string
-    {
-        $path = Paths::publicRoot() . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'LOGOS.png';
-        if (!is_file($path)) {
-            return '';
-        }
-
-        $size = filesize($path);
-        if ($size === false || $size > 400000) {
-            return '';
-        }
-
-        if (!extension_loaded('gd')) {
-            return '';
-        }
-
-        return 'images/LOGOS.png';
-    }
 }

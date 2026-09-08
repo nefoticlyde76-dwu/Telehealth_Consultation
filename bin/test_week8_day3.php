@@ -185,6 +185,7 @@ expect_true(str_contains($html, 'Complete the full course even if symptoms impro
 expect_true(str_contains($html, 'Dr John Tau'), 'PDF includes the doctor full name');
 expect_true(str_contains($html, 'Medical Officer'), 'PDF includes doctor professional information');
 expect_true(str_contains($html, 'overflow-wrap: anywhere'), 'PDF CSS allows long medication instructions to wrap');
+expect_true(!str_contains($html, 'images/LOGOS.png'), 'Prescription PDF does not embed the full-resolution brand PNG');
 expect_true(!str_contains($html, 'dashboard-sidebar'), 'PDF does not include dashboard chrome');
 expect_true(!str_contains($html, 'bi-grid'), 'PDF does not copy dashboard icons');
 expect_true(str_contains($html, 'does not create or change the prescription record'), 'PDF states that download is a read-only export');

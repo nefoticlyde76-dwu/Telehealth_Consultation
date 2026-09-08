@@ -1119,7 +1119,7 @@ class DoctorController extends Controller
         if ($built === null) {
             Session::flash('status', [
                 'type' => 'warning',
-                'message' => 'The consultation record is not available to download yet.',
+                'message' => 'The consultation record could not be downloaded. Please try again.',
             ]);
             Helper::redirect('/doctor/consultations/' . $requestId);
             return;
@@ -1162,7 +1162,7 @@ class DoctorController extends Controller
         if ($built === null) {
             Session::flash('status', [
                 'type' => 'warning',
-                'message' => 'No prescription is available to download for this consultation.',
+                'message' => 'The prescription could not be downloaded. Please try again.',
             ]);
             Helper::redirect('/doctor/consultations/' . $requestId . '/prescription');
             return;
