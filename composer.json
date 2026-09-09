@@ -31,7 +31,8 @@
     }
   },
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit",
+    "minify": "npm run minify"
   },
   "config": {
     "optimize-autoloader": true,

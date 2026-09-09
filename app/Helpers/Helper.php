@@ -137,8 +137,9 @@ class Helper
 
     public static function asset(string $path): string
     {
+        $path = self::preferMinifiedAsset(ltrim($path, '/'));
         $url = self::url($path);
-        $file = Paths::publicRoot() . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim($path, '/'));
+        $file = Paths::publicRoot() . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
         if (is_file($file)) {
             // App Platform (and similar hosts) stamp checkout files at 1980-01-01,
             // so filemtime() never changes between deploys and browsers keep stale CSS.
@@ -150,6 +151,25 @@ class Helper
         }
 
         return $url;
+    }
+
+    /**
+     * Serve the sibling .min.css / .min.js when a minify build has produced it.
+     * Layouts and controllers keep the source filename so local editing stays unchanged.
+     */
+    private static function preferMinifiedAsset(string $path): string
+    {
+        if (str_contains($path, '.min.') || !preg_match('/\.(css|js)$/', $path)) {
+            return $path;
+        }
+
+        $minPath = (string) preg_replace('/\.(css|js)$/', '.min.$1', $path);
+        $minFile = Paths::publicRoot() . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $minPath);
+        if (is_file($minFile)) {
+            return $minPath;
+        }
+
+        return $path;
     }
 
     public static function currentPath(): string

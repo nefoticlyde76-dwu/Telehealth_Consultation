@@ -142,7 +142,7 @@ if (function_exists('curl_init') && $loginUrl !== '/login') {
 if ($loginHttp >= 200 && $loginHttp < 400 && $loginHtml !== '') {
     expect_true(str_contains($loginHtml, 'accounts.google.com/gsi/client'), 'Rendered login page includes the official GIS script');
     expect_true(str_contains($loginHtml, 'mbphaGoogleSignInButton'), 'Rendered login page includes the Google button host');
-    expect_true(str_contains($loginHtml, 'google-auth.js'), 'Rendered login page includes the GIS callback script');
+    expect_true(str_contains($loginHtml, 'google-auth.min.js') || str_contains($loginHtml, 'google-auth.js'), 'Rendered login page includes the GIS callback script');
     expect_true(str_contains($loginHtml, 'name="email"') && str_contains($loginHtml, 'name="password"'), 'Rendered login page still includes email/password login');
     expect_true(str_contains($loginHtml, 'name="_token"'), 'Rendered login page still includes the CSRF token');
     expect_true(str_contains($loginHtml, '/auth/google'), 'Rendered login page posts Google credentials to /auth/google');

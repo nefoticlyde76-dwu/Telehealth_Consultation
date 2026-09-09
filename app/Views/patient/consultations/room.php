@@ -294,10 +294,10 @@ if ($consultationStart !== '' && $consultationEnd !== '') {
  * ────────────────────────────────────────────────────────────────── */
 ?>
 
-<script id="vc-daily-cdn"
-        crossorigin="anonymous"
-        src="https://cdn.jsdelivr.net/npm/@daily-co/daily-js@0.67.0/dist/daily-iframe.min.js"
-        onerror="(function(){window.__dailyJsLoadFailed=1;var e=new Event('daily-js-load-failed',{bubbles:true});document.dispatchEvent(e);})()"></script>
+<?= \App\Helpers\Cdn::script(\App\Helpers\Cdn::DAILY_JS, \App\Helpers\Cdn::DAILY_JS_INTEGRITY, [
+        'id' => 'vc-daily-cdn',
+        'onerror' => "(function(){window.__dailyJsLoadFailed=1;var e=new Event('daily-js-load-failed',{bubbles:true});document.dispatchEvent(e);})()",
+]) ?>
 
 <?php
 $roomScriptAssetEsc   = \App\Helpers\Helper::escape($roomScriptAsset);

@@ -8,8 +8,9 @@ use Dompdf\Options;
 
 /**
  * Shared DomPDF setup for clinical downloads.
- * Letterhead images must stay small: the public brand PNG is 10301x4301
- * and decoding it during a request exhausts typical production memory.
+ * Letterhead images must stay small: the public brand PNG (LOGOS.png) is
+ * sized for the navbar (~960x401) which still exceeds this decoder budget,
+ * so PDFs use images/pdf-logo.png (or favicon.png) instead.
  */
 class PdfDocumentSupport
 {

@@ -86,6 +86,7 @@ class DoctorController extends Controller
             'recentApprovedAppointmentCount' => $dashboardData['recentApprovedAppointmentCount'] ?? 0,
             'upcomingApprovedAppointmentCount' => $dashboardData['upcomingApprovedAppointmentCount'] ?? 0,
             'charts' => $dashboardData['charts'] ?? [],
+            'includeChartJs' => is_array($dashboardData['charts']['availability'] ?? null),
             'headerNotifications' => $headerNotifications,
             'recentNotifications' => array_slice($headerNotifications['recent'] ?? [], 0, 5),
             'rightbar' => [

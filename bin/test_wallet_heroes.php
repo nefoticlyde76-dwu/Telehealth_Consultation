@@ -147,7 +147,8 @@ $auth = $httpGet($baseUrl . '/login', $cookieFile, true, [
 $dash = $httpGet($baseUrl . '/admin/dashboard', $cookieFile);
 $onDashboard = $auth['status'] === 200 && $dash['status'] === 200 && !str_contains($dash['body'], 'name="password"');
 if ($onDashboard) {
-    expect_true(str_contains($dash['body'], 'wallet-heroes.css'), 'Admin dashboard loads wallet-heroes.css');
+    expect_true(str_contains($dash['body'], 'wallet-heroes.min.css') || str_contains($dash['body'], 'wallet-heroes.css'), 'Admin dashboard loads wallet-heroes.css');
+    expect_true(!str_contains($dash['body'], 'chart.js') && !str_contains($dash['body'], 'chart.umd'), 'Admin dashboard does not load Chart.js');
     expect_true(str_contains($dash['body'], 'glz-05a__card') && str_contains($dash['body'], 'glz-05b__ring'), 'Admin dashboard renders both hero cards');
     expect_true(str_contains($dash['body'], 'glz-05a__line') && str_contains($dash['body'], '--glz-05b-stops'), 'Sparkline path and status ring stops are in the HTML');
     expect_true(!str_contains($dash['body'], 'Bitcoin'), 'Hero cards are bound to consultation data, not crypto demo copy');

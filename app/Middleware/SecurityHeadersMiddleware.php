@@ -63,9 +63,9 @@ class SecurityHeadersMiddleware implements Middleware
             // Inline scripts: layout enter-animation, GIS onload, Daily onerror, print onclick.
             // GIS: accounts.google.com/gsi/client. Daily + Bootstrap + Chart.js: jsdelivr.
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://accounts.google.com",
-            // Google Fonts CSS, Bootstrap/Icons CSS, GIS injected button styles.
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://accounts.google.com",
-            "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
+            // Bootstrap/Icons CSS, GIS injected button styles. Inter/Poppins are self-hosted.
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://accounts.google.com",
+            "font-src 'self' https://cdn.jsdelivr.net data:",
             "img-src 'self' data: blob: https://www.gstatic.com https://*.googleusercontent.com https://cdn.jsdelivr.net",
             // Same-origin fetch (join-token, /auth/google). GIS and Daily signalling.
             "connect-src 'self' https://accounts.google.com https://www.googleapis.com https://*.daily.co wss://*.daily.co",

@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "minify": "node bin/minify-assets.mjs"
+  },
+  "devDependencies": {
+    "clean-css": "^5.3.3",
+    "terser": "^5.36.0"
+  }
+}

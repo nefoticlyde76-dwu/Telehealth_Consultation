@@ -117,7 +117,7 @@ if (function_exists('curl_init') && $registerUrl !== '/register') {
 if ($registerHttp >= 200 && $registerHttp < 400 && $registerHtml !== '') {
     expect_true(str_contains($registerHtml, 'accounts.google.com/gsi/client'), 'Rendered registration page includes the official GIS script');
     expect_true(str_contains($registerHtml, 'mbphaGoogleSignInButton'), 'Rendered registration page includes the Google button host');
-    expect_true(str_contains($registerHtml, 'google-auth.js'), 'Rendered registration page includes the shared GIS script');
+    expect_true(str_contains($registerHtml, 'google-auth.min.js') || str_contains($registerHtml, 'google-auth.js'), 'Rendered registration page includes the shared GIS script');
     expect_true(str_contains($registerHtml, 'name="password"') && str_contains($registerHtml, 'Create patient account'), 'Rendered registration page still includes normal registration');
     expect_true(str_contains($registerHtml, 'name="_token"'), 'Rendered registration page still includes CSRF');
     expect_true(str_contains($registerHtml, '/auth/google'), 'Rendered registration page posts Google credentials to /auth/google');
