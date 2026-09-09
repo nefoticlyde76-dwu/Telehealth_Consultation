@@ -90,6 +90,20 @@ $columnStmt = $db->prepare(
 $columnStmt->execute();
 expect_true((int) $columnStmt->fetchColumn() === 1, 'consultation_requests.complaint_image_path exists');
 
+$blobTableStmt = $db->prepare(
+    "SELECT COUNT(*) FROM information_schema.TABLES
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'complaint_images'"
+);
+$blobTableStmt->execute();
+$blobTableExists = (int) $blobTableStmt->fetchColumn();
+if ($blobTableExists === 0) {
+    ComplaintImageService::ensureStorage();
+    $blobTableStmt->execute();
+    $blobTableExists = (int) $blobTableStmt->fetchColumn();
+}
+expect_true($blobTableExists === 1, 'complaint_images table exists');
+
 $routes = (string) file_get_contents($root . '/routes/web.php');
 $bookView = (string) file_get_contents($root . '/app/Views/patient/consultation_requests/book.php');
 $details = (string) file_get_contents($root . '/app/Views/partials/shared/_consultation_record_details.php');
@@ -109,8 +123,11 @@ expect_true((bool) preg_match("/complaint-image'[\\s\\S]{0,160}RoleMiddleware\\(
 expect_true((bool) preg_match("/complaint-image'[\\s\\S]{0,160}RoleMiddleware\\(\\['doctor'\\]\\)/", $routes), 'Doctor complaint-image route is role-protected');
 expect_true((bool) preg_match("/complaint-image'[\\s\\S]{0,160}RoleMiddleware\\(\\['admin'\\]\\)/", $routes), 'Admin complaint-image route is role-protected');
 expect_true(str_contains($service, 'Paths::storageRoot()'), 'Complaint images are stored outside the public web root');
+expect_true(str_contains($service, 'TODO(complaint-image-disk)'), 'Disk path is marked for removal only after backfill confirmation');
+expect_true(str_contains($service, 'photo_blob'), 'Complaint images persist a MEDIUMBLOB copy');
 expect_true(!str_contains($service, 'public/uploads'), 'Complaint images are not written to public/uploads');
 expect_true(str_contains($bookingService, 'ComplaintImageService::storeForPatient'), 'Booking submission stores an uploaded complaint image');
+expect_true(str_contains($bookingService, 'ComplaintImageService::persistStoredUpload'), 'Booking submission copies the image into the MEDIUMBLOB column');
 expect_true(str_contains($bookingService, "array \$files = []"), 'Booking still works when no files array is supplied');
 
 expect_true(ComplaintImageService::userMayAccess('patient', 11, ['patient_id' => 11, 'doctor_id' => 22]), 'Patient can access their own complaint image');
@@ -290,11 +307,22 @@ $createdImagePaths[] = $storedBookingPath;
 expect_true($storedBookingPath !== '' && str_starts_with($storedBookingPath, 'complaint_images/' . $patientId . '/'), 'Uploaded JPEG is associated with the consultation request');
 $storedAbsolute = Paths::storageRoot() . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $storedBookingPath);
 expect_true(is_file($storedAbsolute), 'Associated complaint image file exists in private storage');
+expect_true(ComplaintImageService::hasBlob($withId), 'Uploaded JPEG is also stored as a MEDIUMBLOB');
 
 $owned = \App\Models\ConsultationRequest::findByIdForDoctor($withId, $doctorId);
 $foreign = \App\Models\ConsultationRequest::findByIdForDoctor($withId, $patientId);
 expect_true(is_array($owned) && ComplaintImageService::existsOnRequest($owned), 'Assigned doctor can load the consultation that includes the complaint image');
 expect_true($foreign === null, 'A non-assigned user id cannot load the doctor-scoped consultation');
+
+expect_true(ComplaintImageService::backfillFromStoredPath($withId, $storedBookingPath) === 'skipped_existing', 'Backfill skips rows that already have a blob');
+
+$db->prepare('DELETE FROM complaint_images WHERE request_id = :id')->execute([':id' => $withId]);
+expect_true(
+    ComplaintImageService::backfillFromStoredPath($withId, 'complaint_images/' . $patientId . '/complaint_' . str_repeat('ab', 16) . '.jpg') === 'skipped_missing',
+    'Backfill skips when the disk file is missing'
+);
+expect_true(ComplaintImageService::backfillFromStoredPath($withId, $storedBookingPath) === 'migrated', 'Backfill copies a remaining disk file into the blob column');
+expect_true(ComplaintImageService::hasBlob($withId), 'Backfilled blob is readable after the copy');
 
 $cleanup = static function () use ($db, &$createdRequestIds, &$createdSlotIds, &$createdUserIds, &$createdImagePaths): void {
     foreach ($createdImagePaths as $path) {
@@ -302,6 +330,7 @@ $cleanup = static function () use ($db, &$createdRequestIds, &$createdSlotIds, &
     }
     foreach ($createdRequestIds as $requestId) {
         if ($requestId > 0) {
+            $db->prepare('DELETE FROM complaint_images WHERE request_id = :id')->execute([':id' => $requestId]);
             $db->prepare('DELETE FROM notifications WHERE related_entity_id = :id')->execute([':id' => $requestId]);
             $db->prepare("DELETE FROM audit_logs WHERE entity_type = 'consultation_request' AND entity_id = :id")->execute([':id' => $requestId]);
             $db->prepare('DELETE FROM consultation_requests WHERE id = :id')->execute([':id' => $requestId]);

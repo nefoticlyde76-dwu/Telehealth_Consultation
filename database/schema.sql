@@ -7,10 +7,10 @@
 --   mysql -u root -p < database/schema.sql
 --
 -- It consolidates every table, column, index, unique key, and foreign key
--- used by the running application after migrations 001–032:
+-- used by the running application after migrations 001–033:
 --
 --   Identity        roles, users, patient, doctor, admin
---   Scheduling      doctor_availability, consultation_requests
+--   Scheduling      doctor_availability, consultation_requests, complaint_images
 --   Clinical        consultation_records, prescriptions
 --   Video           consultation_rooms
 --   Operations      audit_logs, notifications, notification_preferences
@@ -21,7 +21,7 @@
 --   consultation_ai_reviews          dropped by 017
 --   consultation_requests.specialization / attachment_*
 --     leftover local columns; the app joins doctor.specialization and stores
---     symptom photos only on complaint_image_path under storage/
+--     symptom photos on complaint_image_path plus complaint_images.photo_blob
 --   doctor_availability status Cancelled
 --     leftover local enum; slots use Available | Booked | Expired
 --
@@ -47,6 +47,7 @@
 --   users 1──0..1 patient | doctor | admin
 --   doctor 1──N doctor_availability
 --   patient 1──N consultation_requests N──1 doctor
+--   consultation_requests 1──0..1 complaint_images
 --   doctor_availability 1──0..N consultation_requests   (SET NULL if slot removed)
 --   consultation_requests 1──0..1 consultation_rooms
 --   consultation_requests 1──0..1 consultation_records
@@ -204,7 +205,7 @@ CREATE TABLE IF NOT EXISTS consultation_requests (
     availability_id BIGINT NULL COMMENT 'Linked slot; SET NULL if the slot row is removed',
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NULL,
-    complaint_image_path VARCHAR(255) NULL DEFAULT NULL COMMENT 'Relative path under storage/ for optional patient symptom photo',
+    complaint_image_path VARCHAR(255) NULL DEFAULT NULL COMMENT 'Relative path under storage/; blob copy lives in complaint_images',
     status ENUM('Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed') NOT NULL DEFAULT 'Pending',
     completed_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -226,6 +227,17 @@ CREATE TABLE IF NOT EXISTS consultation_requests (
     INDEX idx_consultation_requests_doctor_status (doctor_id, status)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   COMMENT='Patient booking. Approved rows are the appointment of record.';
+
+CREATE TABLE IF NOT EXISTS complaint_images (
+    request_id BIGINT PRIMARY KEY,
+    mime VARCHAR(32) NOT NULL,
+    photo_blob MEDIUMBLOB NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_complaint_images_request
+        FOREIGN KEY (request_id) REFERENCES consultation_requests(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  COMMENT='Persists complaint images across ephemeral deploys';
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- Clinical documentation

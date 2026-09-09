@@ -334,6 +334,7 @@ class PatientConsultationBookingService
         SlotExpirationService::sweep();
 
         $db = Database::getInstance();
+        $stored = null;
         $storedImagePath = null;
         $committed = false;
 
@@ -446,6 +447,10 @@ class PatientConsultationBookingService
 
             $db->commit();
             $committed = true;
+
+            if ($storedImagePath !== null && is_array($stored)) {
+                ComplaintImageService::persistStoredUpload($requestId, $stored);
+            }
 
             NotificationService::notifyConsultationRequestCreated($requestId);
             AuditLogService::record(
