@@ -28,6 +28,17 @@ class NotificationService
     public const TYPE_COMPLETED = 'consultation_completed';
     public const TYPE_PRESCRIPTION = 'prescription_created';
     public const TYPE_UPCOMING = 'upcoming_consultation';
+    public const TYPE_REMINDER_24H = 'appointment_reminder_24h';
+    public const TYPE_NO_SHOW = 'consultation_no_show';
+
+    public const REMINDER_24H_MINUTES = 1440;
+
+    private static bool $remindersDispatchedThisRequest = false;
+
+    public static function resetTestState(): void
+    {
+        self::$remindersDispatchedThisRequest = false;
+    }
 
     public const ENTITY_CONSULTATION_REQUEST = Notification::ENTITY_CONSULTATION_REQUEST;
 
@@ -102,8 +113,22 @@ class NotificationService
             self::TYPE_UPCOMING => [
                 'title' => 'Upcoming Consultation',
                 'icon' => 'bi-clock',
-                'audience' => ['doctor'],
+                'audience' => ['doctor', 'patient'],
                 'action' => 'Open',
+                'tone' => 'warn',
+            ],
+            self::TYPE_REMINDER_24H => [
+                'title' => 'Appointment reminder',
+                'icon' => 'bi-calendar2-event',
+                'audience' => ['doctor', 'patient'],
+                'action' => 'Open',
+                'tone' => 'info',
+            ],
+            self::TYPE_NO_SHOW => [
+                'title' => 'Consultation No-Show',
+                'icon' => 'bi-person-x',
+                'audience' => ['doctor', 'patient'],
+                'action' => 'View',
                 'tone' => 'warn',
             ],
         ];
@@ -349,6 +374,140 @@ class NotificationService
         });
     }
 
+    public static function notifyConsultationNoShow(int $requestId): void
+    {
+        self::safeRun(function () use ($requestId): void {
+            $context = self::requestContext($requestId);
+            if ($context === null) {
+                return;
+            }
+
+            $patientId = (int) ($context['patient_id'] ?? 0);
+            $doctorId = (int) ($context['doctor_id'] ?? 0);
+            $when = self::appointmentPhrase(
+                (string) ($context['consultation_date'] ?? ''),
+                (string) ($context['start_time'] ?? '')
+            );
+            $doctorName = self::clinicianName((string) ($context['doctor_name'] ?? ''));
+            $patientName = self::personName((string) ($context['patient_name'] ?? ''), 'a patient');
+            $whenSuffix = $when !== '' ? ' scheduled for ' . $when : '';
+
+            if ($patientId > 0) {
+                self::createForUser(
+                    $patientId,
+                    self::TYPE_NO_SHOW,
+                    self::typeTitle(self::TYPE_NO_SHOW),
+                    'Your consultation with ' . $doctorName . $whenSuffix . ' was marked as No-Show because it was not attended.',
+                    $requestId,
+                    false,
+                    (string) ($context['patient_email'] ?? '')
+                );
+            }
+
+            if ($doctorId > 0) {
+                self::createForUser(
+                    $doctorId,
+                    self::TYPE_NO_SHOW,
+                    self::typeTitle(self::TYPE_NO_SHOW),
+                    'The consultation with ' . $patientName . $whenSuffix . ' was marked as No-Show.',
+                    $requestId,
+                    false,
+                    (string) ($context['doctor_email'] ?? '')
+                );
+            }
+        });
+    }
+
+    /**
+     * Opportunistic 24-hour and 1-hour appointment reminders.
+     * There is no background scheduler, so this runs when any authenticated
+     * page loads the notification header. Unique notification keys prevent
+     * duplicates. Email is sent only the first time the in-app row is created.
+     */
+    public static function maybeDispatchAppointmentReminders(): void
+    {
+        if (self::$remindersDispatchedThisRequest) {
+            return;
+        }
+        self::$remindersDispatchedThisRequest = true;
+
+        self::safeRun(static function (): void {
+            $now = Helper::now();
+            $from = $now->format('Y-m-d H:i:s');
+            $in24h = $now->modify('+' . self::REMINDER_24H_MINUTES . ' minutes')->format('Y-m-d H:i:s');
+            $in1h = $now->modify('+' . self::UPCOMING_WINDOW_MINUTES . ' minutes')->format('Y-m-d H:i:s');
+
+            foreach (ConsultationRequest::findApprovedStartingBetween($from, $in24h) as $row) {
+                self::notifyAppointmentParties($row, self::TYPE_REMINDER_24H, 'in 24 hours');
+            }
+
+            foreach (ConsultationRequest::findApprovedStartingBetween($from, $in1h) as $row) {
+                self::notifyAppointmentParties($row, self::TYPE_UPCOMING, 'soon');
+            }
+        });
+    }
+
+    /**
+     * @deprecated Use maybeDispatchAppointmentReminders(). Kept for callers that
+     * still pass a doctor id; the sweep is global.
+     */
+    public static function maybeNotifyUpcomingForDoctor(int $doctorId): void
+    {
+        self::maybeDispatchAppointmentReminders();
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function notifyAppointmentParties(array $row, string $type, string $whenWord): void
+    {
+        $requestId = (int) ($row['id'] ?? 0);
+        if ($requestId <= 0) {
+            return;
+        }
+
+        $when = self::appointmentPhrase(
+            (string) ($row['consultation_date'] ?? ''),
+            (string) ($row['start_time'] ?? '')
+        );
+        $whenLabel = $when !== '' ? $when : $whenWord;
+        $patientName = self::personName((string) ($row['patient_name'] ?? ''), 'a patient');
+        $doctorName = self::clinicianName((string) ($row['doctor_name'] ?? ''));
+        $title = self::typeTitle($type);
+
+        $patientId = (int) ($row['patient_id'] ?? 0);
+        if ($patientId > 0) {
+            $patientMessage = $type === self::TYPE_REMINDER_24H
+                ? 'Reminder: your consultation with ' . $doctorName . ' is scheduled for ' . $whenLabel . '.'
+                : 'Your consultation with ' . $doctorName . ' begins soon' . ($when !== '' ? ' (' . $when . ')' : '') . '.';
+            self::createForUser(
+                $patientId,
+                $type,
+                $title,
+                $patientMessage,
+                $requestId,
+                false,
+                (string) ($row['patient_email'] ?? '')
+            );
+        }
+
+        $doctorId = (int) ($row['doctor_id'] ?? 0);
+        if ($doctorId > 0) {
+            $doctorMessage = $type === self::TYPE_REMINDER_24H
+                ? 'Reminder: your consultation with ' . $patientName . ' is scheduled for ' . $whenLabel . '.'
+                : 'Your consultation with ' . $patientName . ' begins soon.';
+            self::createForUser(
+                $doctorId,
+                $type,
+                $title,
+                $doctorMessage,
+                $requestId,
+                false,
+                (string) ($row['doctor_email'] ?? '')
+            );
+        }
+    }
+
     public static function notifyConsultationCompleted(int $requestId): void
     {
         self::safeRun(function () use ($requestId): void {
@@ -398,41 +557,6 @@ class NotificationService
     }
 
     /**
-     * Opportunistic upcoming reminder for doctors. There is no background
-     * scheduler in this PHP/XAMPP application, so this runs when a doctor
-     * loads an authenticated page. The unique notification key prevents duplicates.
-     */
-    public static function maybeNotifyUpcomingForDoctor(int $doctorId): void
-    {
-        if ($doctorId <= 0) {
-            return;
-        }
-
-        self::safeRun(function () use ($doctorId): void {
-            $upcoming = ConsultationRequest::findApprovedStartingSoonForDoctor(
-                $doctorId,
-                self::UPCOMING_WINDOW_MINUTES
-            );
-
-            foreach ($upcoming as $row) {
-                $requestId = (int) ($row['id'] ?? 0);
-                if ($requestId <= 0) {
-                    continue;
-                }
-
-                $patientName = self::personName((string) ($row['patient_name'] ?? ''), 'a patient');
-                self::createForUser(
-                    $doctorId,
-                    self::TYPE_UPCOMING,
-                    self::typeTitle(self::TYPE_UPCOMING),
-                    'Your consultation with ' . $patientName . ' begins soon.',
-                    $requestId
-                );
-            }
-        });
-    }
-
-    /**
      * @return array{unread_count:int,total_count:int,recent:list<array<string,mixed>>}
      */
     public static function getHeaderData(int $userId, string $role = ''): array
@@ -446,9 +570,7 @@ class NotificationService
         }
 
         try {
-            if ($role === 'doctor') {
-                self::maybeNotifyUpcomingForDoctor($userId);
-            }
+            self::maybeDispatchAppointmentReminders();
 
             $recent = Notification::findRecentForUser($userId, self::HEADER_LIMIT);
 
@@ -579,8 +701,12 @@ class NotificationService
             self::TYPE_REQUEST_CREATED => '/admin/consultation-requests?selected=' . $entityId,
             self::TYPE_APPROVED, self::TYPE_REJECTED, self::TYPE_COMPLETED, self::TYPE_PRESCRIPTION
                 => '/patient/consultation-requests/' . $entityId,
-            self::TYPE_ASSIGNED, self::TYPE_CANCELLED, self::TYPE_RESCHEDULED, self::TYPE_UPCOMING
+            self::TYPE_ASSIGNED, self::TYPE_CANCELLED, self::TYPE_RESCHEDULED
                 => '/doctor/consultations/' . $entityId,
+            self::TYPE_UPCOMING, self::TYPE_REMINDER_24H, self::TYPE_NO_SHOW
+                => $role === 'patient'
+                    ? '/patient/consultation-requests/' . $entityId
+                    : '/doctor/consultations/' . $entityId,
             default => '/notifications',
         };
     }
@@ -733,7 +859,8 @@ class NotificationService
         string $title,
         string $message,
         int $requestId,
-        bool $replace = false
+        bool $replace = false,
+        string $email = ''
     ): int {
         if (!self::userAllowsType($userId, $type)) {
             return 0;
@@ -748,9 +875,71 @@ class NotificationService
             'related_entity_id' => $requestId,
         ];
 
-        return $replace
+        $id = $replace
             ? Notification::createOrReplace($payload)
             : Notification::createOnce($payload);
+
+        if ($id > 0) {
+            self::maybeEmailNotification($userId, $email, $type, $title, $message);
+        }
+
+        return $id;
+    }
+
+    private static function maybeEmailNotification(
+        int $userId,
+        string $email,
+        string $type,
+        string $title,
+        string $message
+    ): void {
+        if (!in_array($type, [self::TYPE_UPCOMING, self::TYPE_REMINDER_24H, self::TYPE_NO_SHOW], true)) {
+            return;
+        }
+
+        $email = strtolower(trim($email));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        try {
+            $prefs = \App\Models\NotificationPreference::findOrDefault($userId);
+        } catch (\Throwable) {
+            $prefs = \App\Models\NotificationPreference::defaults($userId);
+        }
+
+        if ((int) ($prefs['email_enabled'] ?? 1) !== 1) {
+            return;
+        }
+
+        $html = self::renderEmailView('appointment_notice', [
+            'title' => $title,
+            'message' => $message,
+        ]);
+        $text = $title . "\n\n" . $message . "\n";
+
+        try {
+            MailService::send($email, 'MBPHA TeleHealth – ' . $title, $html, $text);
+        } catch (\Throwable $exception) {
+            error_log('[NotificationService] Reminder email failed: ' . $exception->getMessage());
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private static function renderEmailView(string $view, array $data): string
+    {
+        $path = dirname(__DIR__) . '/Views/emails/' . $view . '.php';
+        if (!is_file($path)) {
+            return '<p>' . Helper::escape((string) ($data['message'] ?? '')) . '</p>';
+        }
+
+        extract($data, EXTR_SKIP);
+        ob_start();
+        require $path;
+
+        return trim((string) ob_get_clean());
     }
 
     private static function userAllowsType(int $userId, string $type): bool
@@ -769,6 +958,8 @@ class NotificationService
             self::TYPE_RESCHEDULED,
             self::TYPE_REJECTED,
             self::TYPE_UPCOMING,
+            self::TYPE_REMINDER_24H,
+            self::TYPE_NO_SHOW,
         ];
         $consultationTypes = [
             self::TYPE_COMPLETED,

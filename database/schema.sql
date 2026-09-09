@@ -7,7 +7,7 @@
 --   mysql -u root -p < database/schema.sql
 --
 -- It consolidates every table, column, index, unique key, and foreign key
--- used by the running application after migrations 001–033:
+-- used by the running application after migrations 001–034:
 --
 --   Identity        roles, users, patient, doctor, admin
 --   Scheduling      doctor_availability, consultation_requests, complaint_images
@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS consultation_requests (
     request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reason TEXT NULL,
     complaint_image_path VARCHAR(255) NULL DEFAULT NULL COMMENT 'Relative path under storage/; blob copy lives in complaint_images',
-    status ENUM('Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed') NOT NULL DEFAULT 'Pending',
+    status ENUM('Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed', 'No-Show') NOT NULL DEFAULT 'Pending',
     completed_at TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

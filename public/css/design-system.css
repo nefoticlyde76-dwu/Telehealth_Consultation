@@ -626,6 +626,11 @@
   color: var(--ds-success-text);
 }
 
+.dashboard-layout .ux-badge--no-show {
+  background: rgba(255, 193, 7, 0.16);
+  color: #856404;
+}
+
 .dashboard-layout .ux-badge--active {
   background: var(--pale-blue);
   color: var(--medical-blue);

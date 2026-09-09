@@ -45,6 +45,7 @@ class DoctorConsultationService
         $pending = ConsultationRequest::findForDoctor($doctorId, $groupFilters + ['status' => 'Pending'], 20, 0);
         $rejected = ConsultationRequest::findForDoctor($doctorId, $groupFilters + ['status' => 'Rejected'], 20, 0);
         $cancelled = ConsultationRequest::findForDoctor($doctorId, $groupFilters + ['status' => 'Cancelled'], 20, 0);
+        $noShow = ConsultationRequest::findForDoctor($doctorId, $groupFilters + ['status' => Status::NO_SHOW], 20, 0);
 
         $completedFilters = $groupFilters + ['status' => 'Completed', 'order' => 'DESC'];
         $completedTotal = ConsultationRequest::countForDoctor($doctorId, $completedFilters);
@@ -52,7 +53,7 @@ class DoctorConsultationService
         $offset = ($pagination['current_page'] - 1) * $perPage;
         $completed = ConsultationRequest::findForDoctor($doctorId, $completedFilters, $perPage, $offset);
 
-        $consultations = array_merge($approved, $pending, $completed, $rejected, $cancelled);
+        $consultations = array_merge($approved, $pending, $completed, $rejected, $cancelled, $noShow);
 
         return [
             'filters' => $filters,
@@ -61,7 +62,7 @@ class DoctorConsultationService
             'groups' => [
                 'active' => array_merge($approved, $pending),
                 'completed' => $completed,
-                'closed' => array_merge($rejected, $cancelled),
+                'closed' => array_merge($rejected, $cancelled, $noShow),
             ],
             'filterActive' => ListFilter::isActive($filters, ['sort' => 'date_asc', 'per_page' => self::PER_PAGE]),
             'summary' => ConsultationRequest::getDoctorStatusSummary($doctorId),
@@ -88,9 +89,9 @@ class DoctorConsultationService
 
         foreach ($consultations as $row) {
             $status = (string) ($row['status'] ?? '');
-            if ($status === 'Completed') {
+            if (Status::isCompletedConsultation($status)) {
                 $completed[] = $row;
-            } elseif (in_array($status, ['Rejected', 'Cancelled'], true)) {
+            } elseif (Status::isClosedConsultation($status)) {
                 $closed[] = $row;
             } else {
                 $active[] = $row;
@@ -119,6 +120,39 @@ class DoctorConsultationService
             'message' => 'Complete the consultation from the consultation room after reviewing the clinical record.',
             'type' => 'warning',
         ];
+    }
+
+    /**
+     * Mark an unattended Approved consultation as No-Show. Distinct from
+     * completing a visit and from cancelling a booking.
+     *
+     * @return array{success:bool,message:string,type:string}
+     */
+    public static function markNoShow(int $doctorId, int $requestId, string $csrfToken): array
+    {
+        if (!Csrf::verify($csrfToken)) {
+            return [
+                'success' => false,
+                'message' => 'Unable to verify the request. Please refresh the page and try again.',
+                'type' => 'danger',
+            ];
+        }
+
+        $result = ConsultationRequest::markNoShow($requestId, $doctorId);
+        $success = (bool) ($result['success'] ?? false);
+        $type = (string) ($result['type'] ?? ($success ? 'success' : 'danger'));
+
+        if ($success && $type === 'success') {
+            NotificationService::notifyConsultationNoShow($requestId);
+            AuditLogService::record(
+                'consultation_no_show',
+                'Doctor marked consultation as No-Show.',
+                AuditLogService::ENTITY_CONSULTATION_REQUEST,
+                $requestId
+            );
+        }
+
+        return $result;
     }
 
     public static function getStatusOptions(): array

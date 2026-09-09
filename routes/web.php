@@ -136,6 +136,10 @@ $router->post('/doctor/consultations/{id}/complete', [DoctorController::class, '
     new RoleMiddleware(['doctor']),
 ]);
 
+$router->post('/doctor/consultations/{id}/no-show', [DoctorController::class, 'markNoShow'], [
+    new RoleMiddleware(['doctor']),
+]);
+
 $router->get('/doctor/consultations/{id}/prescription', [DoctorController::class, 'showPrescription'], [
     new RoleMiddleware(['doctor']),
 ]);
@@ -285,6 +289,10 @@ $router->post('/admin/consultation-requests/{id}/reject', [AdminController::clas
 ]);
 
 $router->post('/admin/consultation-requests/{id}/cancel', [AdminController::class, 'cancelConsultationRequest'], [
+    new RoleMiddleware(['admin']),
+]);
+
+$router->post('/admin/consultation-requests/{id}/no-show', [AdminController::class, 'markNoShowConsultationRequest'], [
     new RoleMiddleware(['admin']),
 ]);
 

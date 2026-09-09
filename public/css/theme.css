@@ -2806,6 +2806,7 @@ textarea.form-control {
 .ux-badge--danger    { background: rgba(239, 68, 68, 0.12); color: #991B1B; border-color: rgba(239,68,68,0.22); }
 .ux-badge--booked    { background: var(--pale-blue); color: var(--medical-blue); border-color: rgba(var(--medical-blue-rgb), 0.18); }
 .ux-badge--completed { background: var(--mint-green); color: var(--success-text); border-color: rgba(var(--emerald-green-rgb), 0.22); }
+.ux-badge--no-show   { background: rgba(255, 193, 7, 0.16); color: #856404; border-color: rgba(255, 193, 7, 0.28); }
 .ux-badge--final     { background: var(--pale-blue); color: var(--medical-blue); border-color: rgba(var(--medical-blue-rgb), 0.18); }
 .ux-badge--cancelled,
 .ux-badge--draft,

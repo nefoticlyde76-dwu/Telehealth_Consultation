@@ -58,7 +58,7 @@ $summaryPartyMeta = trim(implode(' · ', array_filter([
               $reason      = (string) ($videoJoin['reason'] ?? '');
               $joinUrl     = (string) ($videoJoin['joinUrl'] ?? '');
               $hasJoinUrl  = $joinUrl !== '';
-              $isCancelledOrRejected = $status === 'unavailable' && in_array(strtolower(trim((string) ($request['status'] ?? ''))), ['rejected', 'cancelled'], true);
+              $isCancelledOrRejected = $status === 'unavailable' && \App\Helpers\Status::isClosedConsultation((string) ($request['status'] ?? ''));
               $showButton = $hasJoinUrl && !$isCancelledOrRejected;
 
               if ($showButton):

@@ -173,7 +173,7 @@ $paginationBuildUrl = null;
           <div class="ux-card__header d-flex justify-content-between align-items-baseline gap-3">
             <div>
               <h3 class="h6 mb-1">Closed requests</h3>
-              <p class="text-muted small mb-0">Rejected or cancelled bookings remain in your history for reference.</p>
+              <p class="text-muted small mb-0">Rejected, cancelled, or no-show bookings remain in your history for reference.</p>
             </div>
             <span class="text-muted small"><?= count($closedRows) ?></span>
           </div>

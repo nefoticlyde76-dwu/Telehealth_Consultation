@@ -30,7 +30,7 @@ class AuditLogService
             'consultation_approved' => ['label' => 'Consultation Approved', 'category' => 'consultation', 'severity' => 'success'],
             'consultation_rejected' => ['label' => 'Consultation Rejected', 'category' => 'consultation', 'severity' => 'warning'],
             'consultation_cancelled' => ['label' => 'Consultation Cancelled', 'category' => 'consultation', 'severity' => 'warning'],
-            'consultation_rescheduled' => ['label' => 'Consultation Rescheduled', 'category' => 'consultation', 'severity' => 'info'],
+            'consultation_no_show' => ['label' => 'Consultation No-Show', 'category' => 'consultation', 'severity' => 'warning'],
             'consultation_completed' => ['label' => 'Consultation Completed', 'category' => 'consultation', 'severity' => 'success'],
             'clinical_record_finalized' => ['label' => 'Clinical Record Finalized', 'category' => 'clinical', 'severity' => 'success'],
             'clinical_record_viewed_cross_doctor' => ['label' => 'Clinical Record Viewed (Cross-Doctor)', 'category' => 'clinical', 'severity' => 'info'],

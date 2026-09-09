@@ -223,6 +223,19 @@ $clinicalFields = [
         </button>
         <p class="small text-muted mb-0 mt-2">Review the draft first. Completing finalizes the clinical record and cannot be undone from this screen.</p>
       </div>
+    <?php endif; ?>
+    <?php
+    $canMarkNoShow = (bool) ($context['can_no_show'] ?? false)
+        && (string) ($context['no_show_endpoint'] ?? '') !== ''
+        && $consultationStatus === 'Approved';
+    if ($canMarkNoShow):
+        $noShowUrl = (string) $context['no_show_endpoint'];
+        $csrfToken = $clinicalCsrf;
+        $noShowButtonClass = 'btn btn-outline-warning w-100' . ($canComplete ? ' mt-2' : '');
+        $noShowReturnTo = 'room';
+        require __DIR__ . '/../../partials/shared/_no_show_action.php';
+        ?>
+      <p class="small text-muted mb-0 mt-2">Mark as No-Show if the scheduled consultation was not attended after its start time. This does not finalize a clinical record.</p>
     <?php elseif ($isCompleted && $prescriptionPath !== ''): ?>
       <a href="<?= \App\Helpers\Helper::escape($prescriptionPath) ?>" class="btn btn-primary w-100">
         <i class="bi bi-capsule me-1"></i>

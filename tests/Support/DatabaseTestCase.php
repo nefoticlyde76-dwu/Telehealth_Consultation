@@ -15,6 +15,8 @@ use App\Models\User;
 use App\Services\AuthService;
 use App\Services\GoogleAuthService;
 use App\Services\LoginAttemptService;
+use App\Services\MailService;
+use App\Services\NotificationService;
 use DateTimeImmutable;
 use PDO;
 use PHPUnit\Framework\TestCase;
@@ -61,6 +63,8 @@ abstract class DatabaseTestCase extends TestCase
         Helper::$exitOnRedirect = false;
         Helper::$lastRedirect = null;
         LoginAttemptService::resetTestState();
+        NotificationService::resetTestState();
+        MailService::resetTestState();
         LoginAttemptService::$testSkipDelay = true;
         GoogleAuthService::$testJwksOverride = null;
         AuthService::$testFailGooglePatientInsert = false;
@@ -326,6 +330,7 @@ abstract class DatabaseTestCase extends TestCase
         foreach (array_unique($this->userIds) as $userId) {
             $db->prepare('DELETE FROM user_sessions WHERE user_id = :id')->execute([':id' => $userId]);
             $db->prepare('DELETE FROM notifications WHERE user_id = :id')->execute([':id' => $userId]);
+            $db->prepare('DELETE FROM notification_preferences WHERE user_id = :id')->execute([':id' => $userId]);
             $db->prepare('DELETE FROM login_attempts WHERE email IN (SELECT email FROM users WHERE id = :id)')->execute([':id' => $userId]);
             $db->prepare('DELETE FROM patient WHERE user_id = :id')->execute([':id' => $userId]);
             $db->prepare('DELETE FROM doctor WHERE user_id = :id')->execute([':id' => $userId]);

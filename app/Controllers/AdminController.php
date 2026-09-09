@@ -1016,6 +1016,30 @@ class AdminController extends Controller
         Helper::redirect('/admin/consultation-requests/' . $requestId);
     }
 
+    public function markNoShowConsultationRequest(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/admin/consultation-requests');
+            return;
+        }
+
+        $user = $this->requireAdminUser();
+
+        if ($user === null) {
+            return;
+        }
+
+        $requestId = (int) $id;
+        $result = AdminConsultationService::markNoShow($requestId, (string) ($_POST['_token'] ?? ''));
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? ($result['success'] ?? false ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Consultation No-Show update completed.',
+        ]);
+
+        Helper::redirect('/admin/consultation-requests/' . $requestId);
+    }
+
     /**
      * After approve/reject, stay on the request detail page unless the
      * decision was made from the review workspace.

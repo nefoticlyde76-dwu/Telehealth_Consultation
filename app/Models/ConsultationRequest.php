@@ -40,7 +40,8 @@ class ConsultationRequest
                 COUNT(*) AS total_requests,
                 SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pending_requests,
                 SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) AS approved_requests,
-                SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed_requests
+                SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed_requests,
+                SUM(CASE WHEN status = 'No-Show' THEN 1 ELSE 0 END) AS no_show_requests
             FROM consultation_requests
             WHERE patient_id = :patient_id"
         );
@@ -69,6 +70,7 @@ class ConsultationRequest
             'upcoming_appointments' => (int) $upcomingStmt->fetchColumn(),
             'consultation_history' => (int) ($row['total_requests'] ?? 0),
             'completed_requests' => (int) ($row['completed_requests'] ?? 0),
+            'no_show_requests' => (int) ($row['no_show_requests'] ?? 0),
             'latest_status' => $latestStatus,
             'latest_status_display' => $latestStatus !== '' ? $latestStatus : 'No requests yet',
             'latest_request' => $latestRequest,
@@ -446,7 +448,9 @@ class ConsultationRequest
                 SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pending_requests,
                 SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END) AS approved_requests,
                 SUM(CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END) AS rejected_requests,
-                SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed_requests
+                SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) AS completed_requests,
+                SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled_requests,
+                SUM(CASE WHEN status = 'No-Show' THEN 1 ELSE 0 END) AS no_show_requests
             FROM consultation_requests"
         );
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -457,6 +461,8 @@ class ConsultationRequest
             'approved_requests' => (int) ($row['approved_requests'] ?? 0),
             'rejected_requests' => (int) ($row['rejected_requests'] ?? 0),
             'completed_requests' => (int) ($row['completed_requests'] ?? 0),
+            'cancelled_requests' => (int) ($row['cancelled_requests'] ?? 0),
+            'no_show_requests' => (int) ($row['no_show_requests'] ?? 0),
         ];
     }
 
@@ -737,7 +743,9 @@ class ConsultationRequest
             "SELECT
                 consultation_requests.*,
                 patient_user.full_name AS patient_name,
+                patient_user.email AS patient_email,
                 doctor_user.full_name AS doctor_name,
+                doctor_user.email AS doctor_email,
                 doctor.specialization,
                 doctor.professional_title AS doctor_title,
                 doctor.profile_photo_path AS doctor_photo_path,
@@ -1156,6 +1164,216 @@ class ConsultationRequest
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Approved consultations whose scheduled start falls in [from, to], inclusive.
+     * Datetimes are naive local wall-clock values (Pacific/Port_Moresby).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function findApprovedStartingBetween(string $fromDatetime, string $toDatetime): array
+    {
+        $fromDatetime = trim($fromDatetime);
+        $toDatetime = trim($toDatetime);
+        if ($fromDatetime === '' || $toDatetime === '') {
+            return [];
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_requests.id,
+                consultation_requests.patient_id,
+                consultation_requests.doctor_id,
+                consultation_requests.status,
+                patient_user.full_name AS patient_name,
+                patient_user.email AS patient_email,
+                doctor_user.full_name AS doctor_name,
+                doctor_user.email AS doctor_email,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time
+            FROM consultation_requests
+            INNER JOIN users AS patient_user ON patient_user.id = consultation_requests.patient_id
+            INNER JOIN users AS doctor_user ON doctor_user.id = consultation_requests.doctor_id
+            INNER JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
+            WHERE consultation_requests.status = 'Approved'
+              AND TIMESTAMP(doctor_availability.consultation_date, doctor_availability.start_time)
+                  BETWEEN :from_at AND :to_at
+            ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, consultation_requests.id ASC"
+        );
+        $stmt->bindValue(':from_at', $fromDatetime);
+        $stmt->bindValue(':to_at', $toDatetime);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    /**
+     * @param array<string, mixed> $request
+     */
+    public static function appointmentHasStarted(array $request, ?\DateTimeImmutable $now = null): bool
+    {
+        $date = trim((string) ($request['consultation_date'] ?? ''));
+        $time = trim((string) ($request['start_time'] ?? ''));
+        if ($date === '' || $time === '') {
+            return false;
+        }
+        if (preg_match('/^\d{2}:\d{2}$/', $time) === 1) {
+            $time .= ':00';
+        }
+
+        $now ??= \App\Helpers\Helper::now();
+        $start = \DateTimeImmutable::createFromFormat(
+            'Y-m-d H:i:s',
+            $date . ' ' . $time,
+            $now->getTimezone()
+        );
+        if (!$start instanceof \DateTimeImmutable) {
+            return false;
+        }
+
+        return $start->getTimestamp() <= $now->getTimestamp();
+    }
+
+    /**
+     * Mark an Approved consultation as No-Show and release the booked slot.
+     *
+     * @return array{success:bool,message:string,type:string}
+     */
+    public static function markNoShow(int $requestId, ?int $doctorId = null): array
+    {
+        if ($requestId <= 0) {
+            return [
+                'success' => false,
+                'message' => 'The consultation request is invalid.',
+                'type' => 'danger',
+            ];
+        }
+
+        $db = Database::getInstance();
+
+        try {
+            $db->beginTransaction();
+
+            $requestStmt = $db->prepare(
+                "SELECT id, status, doctor_id, availability_id
+                FROM consultation_requests
+                WHERE id = :id"
+                . (($doctorId !== null && $doctorId > 0) ? ' AND doctor_id = :doctor_id' : '')
+                . " LIMIT 1
+                FOR UPDATE"
+            );
+            $requestStmt->bindValue(':id', $requestId, PDO::PARAM_INT);
+            if ($doctorId !== null && $doctorId > 0) {
+                $requestStmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+            }
+            $requestStmt->execute();
+            $requestRow = $requestStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+            if ($requestRow === null) {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'The requested consultation could not be found.',
+                    'type' => 'warning',
+                ];
+            }
+
+            $currentStatus = (string) ($requestRow['status'] ?? '');
+            if ($currentStatus === Status::NO_SHOW) {
+                $db->commit();
+                return [
+                    'success' => true,
+                    'message' => 'This consultation is already marked as No-Show.',
+                    'type' => 'info',
+                ];
+            }
+
+            if ($currentStatus !== Status::APPROVED) {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Only an approved consultation can be marked as No-Show.',
+                    'type' => 'danger',
+                ];
+            }
+
+            $availabilityId = (int) ($requestRow['availability_id'] ?? 0);
+            $slotRow = null;
+            if ($availabilityId > 0) {
+                $slotStmt = $db->prepare(
+                    "SELECT id, status, consultation_date, start_time, end_time
+                    FROM doctor_availability
+                    WHERE id = :id
+                    FOR UPDATE"
+                );
+                $slotStmt->bindValue(':id', $availabilityId, PDO::PARAM_INT);
+                $slotStmt->execute();
+                $slotRow = $slotStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            }
+
+            if (!self::appointmentHasStarted($slotRow ?? [])) {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'A consultation cannot be marked as No-Show before its scheduled start time.',
+                    'type' => 'warning',
+                ];
+            }
+
+            if (is_array($slotRow) && (string) ($slotRow['status'] ?? '') === Status::SLOT_BOOKED) {
+                $releasedStatus = SlotExpirationService::hasEnded(
+                    (string) ($slotRow['consultation_date'] ?? ''),
+                    (string) ($slotRow['end_time'] ?? '')
+                ) ? Status::SLOT_EXPIRED : Status::SLOT_AVAILABLE;
+                $updateSlot = $db->prepare('UPDATE doctor_availability SET status = :status WHERE id = :id');
+                $updateSlot->bindValue(':status', $releasedStatus);
+                $updateSlot->bindValue(':id', $availabilityId, PDO::PARAM_INT);
+                $updateSlot->execute();
+            }
+
+            $updateRequest = $db->prepare(
+                "UPDATE consultation_requests
+                SET status = :status
+                WHERE id = :id
+                  AND status = 'Approved'"
+            );
+            $updateRequest->bindValue(':status', Status::NO_SHOW);
+            $updateRequest->bindValue(':id', $requestId, PDO::PARAM_INT);
+            $updateRequest->execute();
+
+            if ($updateRequest->rowCount() < 1) {
+                $db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'The consultation could not be marked as No-Show.',
+                    'type' => 'danger',
+                ];
+            }
+
+            $db->commit();
+            SlotExpirationService::sweep();
+
+            return [
+                'success' => true,
+                'message' => 'Consultation marked as No-Show.',
+                'type' => 'success',
+            ];
+        } catch (\Throwable $exception) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+
+            error_log('Consultation no-show update failed: ' . $exception->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'The consultation could not be marked as No-Show right now.',
+                'type' => 'danger',
+            ];
+        }
+    }
+
     public static function getDoctorStatusSummary(int $doctorId): array
     {
         if ($doctorId <= 0) {
@@ -1163,6 +1381,7 @@ class ConsultationRequest
                 'approved_appointments' => 0,
                 'upcoming_consultations' => 0,
                 'completed_consultations' => 0,
+                'no_show_consultations' => 0,
             ];
         }
 
@@ -1178,7 +1397,8 @@ class ConsultationRequest
                         ELSE 0
                     END
                 ) AS upcoming_consultations,
-                SUM(CASE WHEN consultation_requests.status = 'Completed' THEN 1 ELSE 0 END) AS completed_consultations
+                SUM(CASE WHEN consultation_requests.status = 'Completed' THEN 1 ELSE 0 END) AS completed_consultations,
+                SUM(CASE WHEN consultation_requests.status = 'No-Show' THEN 1 ELSE 0 END) AS no_show_consultations
             FROM consultation_requests
             LEFT JOIN doctor_availability ON doctor_availability.id = consultation_requests.availability_id
             WHERE consultation_requests.doctor_id = :doctor_id"
@@ -1191,6 +1411,7 @@ class ConsultationRequest
             'approved_appointments' => (int) ($row['approved_appointments'] ?? 0),
             'upcoming_consultations' => (int) ($row['upcoming_consultations'] ?? 0),
             'completed_consultations' => (int) ($row['completed_consultations'] ?? 0),
+            'no_show_consultations' => (int) ($row['no_show_consultations'] ?? 0),
         ];
     }
 

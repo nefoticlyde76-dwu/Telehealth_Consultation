@@ -162,7 +162,7 @@ expect_true(
 $normalizedRejected = $patientFilters->invoke(null, ['status' => 'Rejected']);
 expect_true($normalizedRejected['status'] === 'Rejected', 'Patient filters accept Rejected');
 expect_true(
-    PatientConsultationBookingService::getStatusOptions() === ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled'],
+    PatientConsultationBookingService::getStatusOptions() === ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled', 'No-Show'],
     'Patient status options match the canonical consultation labels'
 );
 

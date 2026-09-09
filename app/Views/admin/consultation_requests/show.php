@@ -128,6 +128,12 @@ $timeLabel = substr((string) ($request['start_time'] ?? ''), 0, 5) . ' - ' . sub
             Cancel Request
           </button>
         </form>
+        <?php if ($status === 'Approved' && \App\Models\ConsultationRequest::appointmentHasStarted($request)): ?>
+          <?php
+          $noShowUrl = \App\Helpers\Helper::url('/admin/consultation-requests/' . $requestId . '/no-show');
+          require __DIR__ . '/../../partials/shared/_no_show_action.php';
+          ?>
+        <?php endif; ?>
       <?php else: ?>
         <p class="text-muted small mb-0">This consultation request is no longer pending, so no further approval actions are available.</p>
       <?php endif; ?>

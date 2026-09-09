@@ -2189,6 +2189,12 @@ html:has(body.dashboard-layout) {
   border-color: rgba(var(--emerald-green-rgb), 0.22);
 }
 
+.dashboard-layout .ux-badge--no-show {
+  background: rgba(255, 193, 7, 0.16);
+  color: #856404;
+  border-color: rgba(255, 193, 7, 0.28);
+}
+
 .dashboard-layout .ux-badge--pending {
   background: var(--pale-blue);
   color: var(--medical-blue);

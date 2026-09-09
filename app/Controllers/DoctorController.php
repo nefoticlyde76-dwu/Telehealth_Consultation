@@ -605,6 +605,8 @@ class DoctorController extends Controller
                 $fallback['videoJoin']['reason'] = 'This consultation request was rejected by MBPHA administration.';
             } elseif ($status === 'cancelled') {
                 $fallback['videoJoin']['reason'] = 'This consultation has been cancelled.';
+            } elseif ($status === 'no-show') {
+                $fallback['videoJoin']['reason'] = 'This consultation was marked as No-Show.';
             } elseif ($status !== 'approved') {
                 $fallback['videoJoin']['reason'] = 'You can join once MBPHA administration approves the consultation.';
             }
@@ -701,6 +703,51 @@ class DoctorController extends Controller
         }
 
         Helper::redirect('/doctor/consultations/' . (int) $id . '/room');
+    }
+
+    public function markNoShow(string $id): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/doctor/consultations/' . (int) $id);
+            return;
+        }
+
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'doctor') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $requestId = (int) $id;
+        $result = DoctorConsultationService::markNoShow(
+            (int) $user->id,
+            $requestId,
+            (string) ($_POST['_token'] ?? '')
+        );
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? (($result['success'] ?? false) ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Consultation status update completed.',
+        ]);
+
+        if (($result['success'] ?? false) === true) {
+            Helper::redirect('/doctor/consultations/' . $requestId);
+            return;
+        }
+
+        $returnTo = trim((string) ($_POST['return_to'] ?? ''));
+        if ($returnTo === 'room') {
+            Helper::redirect('/doctor/consultations/' . $requestId . '/room');
+            return;
+        }
+
+        Helper::redirect('/doctor/consultations/' . $requestId);
     }
 
     /**
@@ -834,6 +881,8 @@ class DoctorController extends Controller
             'join_token_endpoint'      => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/join-token'),
             'clinical_save_endpoint'   => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/clinical-record'),
             'complete_endpoint'        => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/complete'),
+            'no_show_endpoint'         => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/no-show'),
+            'can_no_show'              => ConsultationRequest::appointmentHasStarted($request),
             'prescription_path'        => Helper::url('/doctor/consultations/' . (int) $request['id'] . '/prescription'),
             'clinical_record'          => $clinicalRecord,
             'clinical_can_edit'        => $canEditClinical,
@@ -984,6 +1033,9 @@ class DoctorController extends Controller
             'priorConsultations' => is_array($priorConsultations) ? $priorConsultations : [],
             'videoJoin' => is_array($videoJoin) ? $videoJoin : null,
             'viewerRole' => 'doctor',
+            'csrfToken' => Csrf::generate(),
+            'canNoShow' => (string) ($request['status'] ?? '') === 'Approved'
+                && ConsultationRequest::appointmentHasStarted($request),
             'statusMessage' => Session::getFlash('status'),
         ], 'layouts/dashboard');
     }

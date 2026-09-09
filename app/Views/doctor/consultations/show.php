@@ -93,6 +93,13 @@ $summaryPartyMeta = trim((string) ($request['patient_gender'] ?? ''));
           <a href="<?= \App\Helpers\Helper::escape($roomUrl) ?>" class="cr-btn">
             Review &amp; complete
           </a>
+          <?php
+            if (!empty($canNoShow)):
+                $noShowUrl = \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/no-show');
+                $noShowButtonClass = 'cr-btn';
+                require __DIR__ . '/../../partials/shared/_no_show_action.php';
+            endif;
+          ?>
         <?php endif; ?>
       </div>
     </header>

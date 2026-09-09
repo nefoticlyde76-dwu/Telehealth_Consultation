@@ -39,7 +39,7 @@ $dashboardHome = \App\Services\AuthService::getRoleRedirectUrl($dashboardRole);
         <input class="form-check-input" type="checkbox" value="1" id="appointment_in_app" name="appointment_in_app" <?= !empty($preferences['appointment_in_app']) ? 'checked' : '' ?>>
         <label class="form-check-label" for="appointment_in_app">
           Appointment notices
-          <span class="d-block small text-muted">Booking created, approved, assigned, rejected, and upcoming reminders.</span>
+          <span class="d-block small text-muted">Booking created, approved, assigned, rejected, 24-hour and 1-hour reminders, and no-show notices.</span>
         </label>
       </div>
 

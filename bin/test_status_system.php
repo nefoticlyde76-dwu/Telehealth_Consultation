@@ -36,8 +36,8 @@ function expect_true(bool $condition, string $label): void
 
 $canonical = Status::consultationKeys();
 expect_true(
-    $canonical === ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled'],
-    'Consultation status keys stay Pending, Approved, Rejected, Completed, Cancelled'
+    $canonical === ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled', 'No-Show'],
+    'Consultation status keys stay Pending, Approved, Rejected, Completed, Cancelled, No-Show'
 );
 
 expect_true(Status::label('Pending') === 'Pending', 'Pending label is Pending');
@@ -46,6 +46,8 @@ expect_true(Status::label('Rejected') === 'Rejected', 'Rejected label is Rejecte
 expect_true(Status::label('Completed') === 'Completed', 'Completed label is Completed');
 expect_true(Status::label('Cancelled') === 'Cancelled', 'Cancelled label is Cancelled');
 expect_true(Status::label('canceled') === 'Cancelled', 'Canceled alias maps to Cancelled');
+expect_true(Status::label('No-Show') === 'No-Show', 'No-Show label is No-Show');
+expect_true(Status::label('no_show') === 'No-Show', 'no_show alias maps to No-Show');
 
 expect_true(
     Status::badgeClass('Approved') !== Status::badgeClass('Completed'),
@@ -60,6 +62,11 @@ expect_true(Status::badgeClass('Approved') === 'ux-badge--approved', 'Approved u
 expect_true(Status::badgeClass('Completed') === 'ux-badge--completed', 'Completed uses the completed badge class');
 expect_true(Status::badgeClass('Rejected') === 'ux-badge--rejected', 'Rejected uses the rejected badge class');
 expect_true(Status::badgeClass('Cancelled') === 'ux-badge--cancelled', 'Cancelled uses the cancelled badge class');
+expect_true(Status::badgeClass('No-Show') === 'ux-badge--no-show', 'No-Show uses the no-show badge class');
+expect_true(
+    Status::badgeClass('No-Show') !== Status::badgeClass('Cancelled'),
+    'No-Show and Cancelled use distinct badge classes'
+);
 
 $unknown = Status::resolve('TotallyInvented');
 expect_true($unknown['known'] === false, 'Unknown statuses are marked unknown');
@@ -164,16 +171,22 @@ expect_true(AdminConsultationService::getStatusOptions() === Status::consultatio
 expect_true(DoctorConsultationService::getStatusOptions() === Status::consultationKeys(), 'Doctor filter values match the central consultation keys');
 
 $filterLabels = array_column(Status::filterOptions(Status::DOMAIN_CONSULTATION), 'label');
-expect_true($filterLabels === ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled'], 'Filter labels match badge labels');
+expect_true($filterLabels === ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled', 'No-Show'], 'Filter labels match badge labels');
 
 expect_true(Status::canAdminTransition('Pending', 'Approved'), 'Admin may approve Pending');
 expect_true(Status::canAdminTransition('Pending', 'Rejected'), 'Admin may reject Pending');
 expect_true(Status::canAdminTransition('Approved', 'Cancelled'), 'Admin may cancel Approved');
+expect_true(Status::canAdminTransition('Approved', 'No-Show'), 'Admin may mark Approved as No-Show');
+expect_true(!Status::canAdminTransition('Pending', 'No-Show'), 'Admin may not mark Pending as No-Show');
 expect_true(!Status::canAdminTransition('Pending', 'Completed'), 'Admin may not complete a request');
 expect_true(!Status::canAdminTransition('Approved', 'Completed'), 'Admin may not mark Approved as Completed');
 expect_true(!Status::canAdminTransition('Rejected', 'Approved'), 'Rejected cannot return to Approved');
 expect_true(!Status::canAdminTransition('Completed', 'Approved'), 'Completed cannot return to Approved');
 expect_true(!in_array('Completed', Status::adminActionableStatuses(), true), 'Completed is not an admin-postable status');
+expect_true(!in_array('No-Show', Status::adminActionableStatuses(), true), 'No-Show uses a dedicated admin action, not the generic status POST');
+expect_true(Status::isClosedConsultation('No-Show'), 'No-Show is a closed consultation status');
+expect_true(!Status::isCompletedConsultation('No-Show'), 'No-Show is not counted as Completed');
+expect_true(Status::closedConsultationKeys() === ['Rejected', 'Cancelled', 'No-Show'], 'Closed consultation keys include Rejected, Cancelled, and No-Show');
 
 $pendingActions = Status::consultationUiActions('Pending', ['role' => 'admin']);
 expect_true($pendingActions['approve'] && $pendingActions['reject'] && !$pendingActions['join'], 'Pending admin actions are review-only');
@@ -226,12 +239,20 @@ $cancelledDoctor = Status::consultationUiActions('Cancelled', [
 ]);
 expect_true(!$cancelledDoctor['join'] && !$cancelledDoctor['review_complete'], 'Cancelled doctors cannot join or complete');
 
+$noShowDoctor = Status::consultationUiActions('Approved', [
+    'role' => 'doctor',
+    'can_no_show' => true,
+]);
+expect_true($noShowDoctor['no_show'] && $noShowDoctor['review_complete'], 'Doctors can mark an eligible Approved visit as No-Show');
+$noShowClosed = Status::consultationUiActions('No-Show', ['role' => 'doctor', 'can_no_show' => true]);
+expect_true(!$noShowClosed['join'] && !$noShowClosed['review_complete'] && !$noShowClosed['no_show'], 'No-Show consultations have no join or complete actions');
+
 $badgeHtml = Status::badgeHtml('Approved');
 expect_true(str_contains($badgeHtml, 'Approved') && str_contains($badgeHtml, 'ux-badge--approved'), 'Badge HTML includes the label and class');
 expect_true(str_contains($badgeHtml, 'bi-check-circle-fill'), 'Badge HTML includes an icon in addition to the text label');
 
 $chart = Status::consultationDistributionChart(['Pending' => 2, 'Approved' => 1]);
-expect_true($chart['data']['labels'] === ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled'], 'Chart labels use the same status names as badges');
+expect_true($chart['data']['labels'] === ['Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled', 'No-Show'], 'Chart labels use the same status names as badges');
 
 expect_true(
     Status::filteredListUrl('/admin/consultation-requests', 'Pending') === '/admin/consultation-requests?status=Pending',

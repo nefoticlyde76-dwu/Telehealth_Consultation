@@ -200,6 +200,39 @@ class AdminConsultationService
         return self::updateRequestStatus($requestId, Status::CANCELLED, $csrfToken);
     }
 
+    /**
+     * Mark an unattended Approved consultation as No-Show. Does not go
+     * through updateStatusForAdmin, which only handles review decisions.
+     *
+     * @return array{success:bool,message:string,type:string}
+     */
+    public static function markNoShow(int $requestId, string $csrfToken): array
+    {
+        if (!Csrf::verify($csrfToken)) {
+            return [
+                'success' => false,
+                'message' => 'Unable to verify the request. Please refresh the page and try again.',
+                'type' => 'danger',
+            ];
+        }
+
+        $result = ConsultationRequest::markNoShow($requestId, null);
+        $success = (bool) ($result['success'] ?? false);
+        $type = (string) ($result['type'] ?? ($success ? 'success' : 'danger'));
+
+        if ($success && $type === 'success') {
+            NotificationService::notifyConsultationNoShow($requestId);
+            AuditLogService::record(
+                'consultation_no_show',
+                'Consultation marked as No-Show by administrator.',
+                AuditLogService::ENTITY_CONSULTATION_REQUEST,
+                $requestId
+            );
+        }
+
+        return $result;
+    }
+
     public static function getStatusOptions(): array
     {
         return Status::consultationKeys();

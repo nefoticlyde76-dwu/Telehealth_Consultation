@@ -6,6 +6,7 @@ $historyRows = is_array($historyRows ?? null) ? $historyRows : [];
 $emptyTitle = (string) ($emptyTitle ?? 'No consultations in this section');
 $emptyText = (string) ($emptyText ?? 'Matching consultations will appear here.');
 $showResetAction = (bool) ($showResetAction ?? false);
+$csrfToken = (string) ($csrfToken ?? '');
 
 require_once __DIR__ . '/../../partials/shared/status_helper.php';
 ?>
@@ -74,6 +75,7 @@ require_once __DIR__ . '/../../partials/shared/status_helper.php';
                 'join_status' => $joinStatus,
                 'can_join' => $canJoinNow,
                 'join_url' => $joinUrl,
+                'can_no_show' => \App\Models\ConsultationRequest::appointmentHasStarted($consultation),
             ]);
             $isCompleted = (bool) $actions['view_record'];
             $joinLabel = (string) ($actions['join_label'] ?: 'Join Consultation');
@@ -149,6 +151,13 @@ require_once __DIR__ . '/../../partials/shared/status_helper.php';
                       <i class="bi bi-clipboard2-pulse me-1"></i>
                       Review &amp; complete
                     </a>
+                    <?php if ($actions['no_show'] && $csrfToken !== ''): ?>
+                      <?php
+                      $noShowUrl = \App\Helpers\Helper::url('/doctor/consultations/' . (string) $consultationId . '/no-show');
+                      $noShowFormClass = 'd-inline';
+                      require __DIR__ . '/../../partials/shared/_no_show_action.php';
+                      ?>
+                    <?php endif; ?>
                   <?php elseif ($isCompleted): ?>
                     <a href="<?= \App\Helpers\Helper::escape($consultationRecordUrl) ?>" class="btn btn-outline-primary btn-sm">
                       <i class="bi bi-clipboard2-pulse me-1"></i>

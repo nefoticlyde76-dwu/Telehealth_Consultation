@@ -22,6 +22,7 @@ class Status
     public const REJECTED = 'Rejected';
     public const CANCELLED = 'Cancelled';
     public const COMPLETED = 'Completed';
+    public const NO_SHOW = 'No-Show';
 
     public const RECORD_DRAFT = 'Draft';
     public const RECORD_FINAL = 'Final';
@@ -85,6 +86,14 @@ class Status
                     'icon' => 'bi-slash-circle',
                     'chart' => Palette::DARK_GRAY,
                     'description' => 'Cancelled. This consultation is no longer active.',
+                ],
+                self::NO_SHOW => [
+                    'label' => 'No-Show',
+                    'category' => 'no_show',
+                    'badge' => 'ux-badge--no-show',
+                    'icon' => 'bi-person-x-fill',
+                    'chart' => Palette::WARNING,
+                    'description' => 'The scheduled consultation was not attended. Distinct from cancellation.',
                 ],
             ],
             self::DOMAIN_RECORD => [
@@ -204,12 +213,13 @@ class Status
     {
         return [
             self::PENDING => [self::APPROVED, self::REJECTED, self::CANCELLED],
-            self::APPROVED => [self::CANCELLED],
+            self::APPROVED => [self::CANCELLED, self::NO_SHOW],
         ];
     }
 
     /**
-     * Statuses an administrator may POST. Completed is doctor-only.
+     * Statuses an administrator may POST through the generic approve/reject/cancel path.
+     * Completed is doctor-only. No-Show uses a dedicated action after the start time.
      *
      * @return list<string>
      */
@@ -232,7 +242,31 @@ class Status
      */
     public static function consultationKeys(): array
     {
-        return [self::PENDING, self::APPROVED, self::REJECTED, self::COMPLETED, self::CANCELLED];
+        return [self::PENDING, self::APPROVED, self::REJECTED, self::COMPLETED, self::CANCELLED, self::NO_SHOW];
+    }
+
+    /**
+     * Terminal statuses that are not a completed visit.
+     *
+     * @return list<string>
+     */
+    public static function closedConsultationKeys(): array
+    {
+        return [self::REJECTED, self::CANCELLED, self::NO_SHOW];
+    }
+
+    public static function isClosedConsultation(string $status): bool
+    {
+        return in_array(
+            self::normalizeKey(self::DOMAIN_CONSULTATION, $status),
+            self::closedConsultationKeys(),
+            true
+        );
+    }
+
+    public static function isCompletedConsultation(string $status): bool
+    {
+        return self::normalizeKey(self::DOMAIN_CONSULTATION, $status) === self::COMPLETED;
     }
 
     /**
@@ -451,7 +485,10 @@ class Status
      *   has_prescription?:bool,
      *   join_status?:string,
      *   can_join?:bool,
-     *   join_url?:string
+     *   join_url?:string,
+     *   can_cancel?:bool,
+     *   can_reschedule?:bool,
+     *   can_no_show?:bool
      * } $context
      * @return array<string, bool|string>
      */
@@ -468,7 +505,7 @@ class Status
         $isPending = $key === self::PENDING;
         $isApproved = $key === self::APPROVED;
         $isCompleted = $key === self::COMPLETED;
-        $isClosed = in_array($key, [self::REJECTED, self::CANCELLED], true);
+        $isClosed = in_array($key, self::closedConsultationKeys(), true);
         $joinWindow = $isApproved && $joinUrl !== '' && in_array($joinStatus, ['open', 'early', 'ended'], true);
 
         return [
@@ -488,6 +525,7 @@ class Status
             'create_prescription' => $role === 'doctor' && $isCompleted && !$hasPrescription,
             'download_prescription' => $isCompleted && $hasPrescription,
             'review_complete' => $role === 'doctor' && $isApproved,
+            'no_show' => ($role === 'doctor' || $role === 'admin') && $isApproved && !empty($context['can_no_show']),
         ];
     }
 
@@ -583,6 +621,9 @@ class Status
             'approved' => self::APPROVED,
             'rejected' => self::REJECTED,
             'completed' => self::COMPLETED,
+            'no_show' => self::NO_SHOW,
+            'no-show' => self::NO_SHOW,
+            'noshow' => self::NO_SHOW,
             'available' => self::SLOT_AVAILABLE,
             'booked' => self::SLOT_BOOKED,
             'expired' => self::SLOT_EXPIRED,

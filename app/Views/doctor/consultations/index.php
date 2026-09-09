@@ -78,7 +78,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
   </div>
 
   <div class="row g-3 mb-4">
-    <div class="col-sm-4">
+    <div class="col-sm-6 col-xl-3">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--success">
           <i class="bi bi-calendar2-check-fill"></i>
@@ -89,7 +89,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
         </div>
       </div>
     </div>
-    <div class="col-sm-4">
+    <div class="col-sm-6 col-xl-3">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--cyan">
           <i class="bi bi-calendar3-event-fill"></i>
@@ -100,7 +100,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
         </div>
       </div>
     </div>
-    <div class="col-sm-4">
+    <div class="col-sm-6 col-xl-3">
       <div class="ux-stat compact d-flex align-items-center gap-3">
         <div class="ux-stat__icon ux-stat__icon--success">
           <i class="bi bi-check2-circle"></i>
@@ -108,6 +108,17 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
         <div class="flex-grow-1">
           <div class="ux-stat__value"><?= (int) ($summary['completed_consultations'] ?? 0) ?></div>
           <div class="ux-stat__label">Completed</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="ux-stat compact d-flex align-items-center gap-3">
+        <div class="ux-stat__icon ux-stat__icon--warning">
+          <i class="bi bi-person-x-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="ux-stat__value"><?= (int) ($summary['no_show_consultations'] ?? 0) ?></div>
+          <div class="ux-stat__label">No-Show</div>
         </div>
       </div>
     </div>
@@ -173,7 +184,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
           <div class="ux-card__header d-flex justify-content-between align-items-baseline gap-3">
             <div>
               <h3 class="h6 mb-1">Closed consultations</h3>
-              <p class="text-muted small mb-0">Rejected or cancelled consultations remain listed for reference.</p>
+              <p class="text-muted small mb-0">Rejected, cancelled, or no-show consultations remain listed for reference.</p>
             </div>
             <span class="text-muted small"><?= count($closedRows) ?></span>
           </div>

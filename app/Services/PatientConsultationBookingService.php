@@ -76,6 +76,7 @@ class PatientConsultationBookingService
         $approved = ConsultationRequest::findForPatient($patientId, 50, 0, $groupFilters + ['status' => 'Approved', 'sort' => 'upcoming']);
         $rejected = ConsultationRequest::findForPatient($patientId, 20, 0, $groupFilters + ['status' => 'Rejected', 'sort' => 'newest']);
         $cancelled = ConsultationRequest::findForPatient($patientId, 20, 0, $groupFilters + ['status' => 'Cancelled', 'sort' => 'newest']);
+        $noShow = ConsultationRequest::findForPatient($patientId, 20, 0, $groupFilters + ['status' => Status::NO_SHOW, 'sort' => 'newest']);
 
         $completedFilters = $groupFilters + ['status' => 'Completed', 'sort' => 'newest'];
         $completedTotal = ConsultationRequest::countForPatient($patientId, $completedFilters);
@@ -83,7 +84,7 @@ class PatientConsultationBookingService
         $offset = ($pagination['current_page'] - 1) * $perPage;
         $completed = ConsultationRequest::findForPatient($patientId, $perPage, $offset, $completedFilters);
 
-        $requests = array_merge($pending, $approved, $completed, $rejected, $cancelled);
+        $requests = array_merge($pending, $approved, $completed, $rejected, $cancelled, $noShow);
 
         return [
             'filters' => $filters,
@@ -91,7 +92,7 @@ class PatientConsultationBookingService
             'groups' => [
                 'active' => array_merge($pending, $approved),
                 'completed' => $completed,
-                'closed' => array_merge($rejected, $cancelled),
+                'closed' => array_merge($rejected, $cancelled, $noShow),
             ],
             'grouped' => true,
             'filterActive' => ListFilter::isActive($filters, ['sort' => '', 'per_page' => self::PER_PAGE]),
@@ -123,9 +124,9 @@ class PatientConsultationBookingService
 
         foreach ($requests as $row) {
             $status = (string) ($row['status'] ?? '');
-            if ($status === 'Completed') {
+            if (Status::isCompletedConsultation($status)) {
                 $completed[] = $row;
-            } elseif (in_array($status, ['Rejected', 'Cancelled'], true)) {
+            } elseif (Status::isClosedConsultation($status)) {
                 $closed[] = $row;
             } else {
                 $active[] = $row;

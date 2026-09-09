@@ -654,6 +654,8 @@ class PatientController extends Controller
                 $fallback['reason'] = 'This consultation request was rejected by MBPHA administration.';
             } elseif ($status === 'cancelled') {
                 $fallback['reason'] = 'This consultation has been cancelled.';
+            } elseif ($status === 'no-show') {
+                $fallback['reason'] = 'This consultation was marked as No-Show.';
             } elseif ($status !== 'approved') {
                 $fallback['reason'] = 'You can join once MBPHA administration approves the consultation.';
             }

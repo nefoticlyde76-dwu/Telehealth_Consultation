@@ -52,6 +52,8 @@ $expectedTypes = [
     NotificationService::TYPE_COMPLETED,
     NotificationService::TYPE_PRESCRIPTION,
     NotificationService::TYPE_UPCOMING,
+    NotificationService::TYPE_REMINDER_24H,
+    NotificationService::TYPE_NO_SHOW,
 ];
 
 expect_true(
@@ -152,6 +154,26 @@ expect_true(
     'Doctor upcoming target opens the consultation page'
 );
 expect_true(
+    NotificationService::resolveTarget($doctorUpcoming, 'patient') === '/patient/consultation-requests/42',
+    'Patient 1-hour reminder target opens consultation details'
+);
+$reminder24h = [
+    'notification_type' => NotificationService::TYPE_REMINDER_24H,
+    'related_entity_id' => 42,
+];
+$noShowNote = [
+    'notification_type' => NotificationService::TYPE_NO_SHOW,
+    'related_entity_id' => 42,
+];
+expect_true(
+    NotificationService::resolveTarget($reminder24h, 'patient') === '/patient/consultation-requests/42',
+    'Patient 24-hour reminder target opens consultation details'
+);
+expect_true(
+    NotificationService::resolveTarget($noShowNote, 'doctor') === '/doctor/consultations/42',
+    'Doctor no-show target opens the consultation page'
+);
+expect_true(
     NotificationService::resolveTarget($doctorAssigned, 'patient') === '/notifications',
     'Patient cannot follow a doctor notification target'
 );
@@ -189,8 +211,16 @@ expect_true(
     in_array(NotificationService::TYPE_ASSIGNED, $doctorTypes, true)
         && in_array(NotificationService::TYPE_CANCELLED, $doctorTypes, true)
         && in_array(NotificationService::TYPE_RESCHEDULED, $doctorTypes, true)
-        && in_array(NotificationService::TYPE_UPCOMING, $doctorTypes, true),
-    'Doctor type filter includes assigned, cancelled, rescheduled, and upcoming notifications'
+        && in_array(NotificationService::TYPE_UPCOMING, $doctorTypes, true)
+        && in_array(NotificationService::TYPE_REMINDER_24H, $doctorTypes, true)
+        && in_array(NotificationService::TYPE_NO_SHOW, $doctorTypes, true),
+    'Doctor type filter includes assigned, cancelled, rescheduled, upcoming, 24-hour reminder, and no-show notifications'
+);
+expect_true(
+    in_array(NotificationService::TYPE_UPCOMING, $patientTypes, true)
+        && in_array(NotificationService::TYPE_REMINDER_24H, $patientTypes, true)
+        && in_array(NotificationService::TYPE_NO_SHOW, $patientTypes, true),
+    'Patient type filter includes 1-hour, 24-hour, and no-show notifications'
 );
 expect_true(
     $adminTypes === [NotificationService::TYPE_REQUEST_CREATED],
