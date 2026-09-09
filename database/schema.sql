@@ -7,7 +7,7 @@
 --   mysql -u root -p < database/schema.sql
 --
 -- It consolidates every table, column, index, unique key, and foreign key
--- used by the running application after migrations 001–031:
+-- used by the running application after migrations 001–032:
 --
 --   Identity        roles, users, patient, doctor, admin
 --   Scheduling      doctor_availability, consultation_requests
@@ -15,7 +15,7 @@
 --   Video           consultation_rooms
 --   Operations      audit_logs, notifications, notification_preferences
 --   Security        user_sessions, doctor_password_setup_tokens,
---                   password_reset_tokens
+--                   password_reset_tokens, login_attempts
 --
 -- Intentionally absent
 --   consultation_ai_reviews          dropped by 017
@@ -434,6 +434,20 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     INDEX idx_password_reset_tokens_user_usable (user_id, used_at, expires_at)
 ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   COMMENT='Self-service password-reset tokens. Hash only.';
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    failed_count INT UNSIGNED NOT NULL DEFAULT 0,
+    window_started_at DATETIME NOT NULL,
+    last_failed_at DATETIME NOT NULL,
+    locked_until DATETIME NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE INDEX uq_login_attempts_email_ip (email, ip_address),
+    INDEX idx_login_attempts_locked_until (locked_until)
+) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  COMMENT='Failed password-login counters keyed by email and IP.';
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- Seed data (roles + local administrator only)

@@ -24,6 +24,7 @@ class AuditLogService
         return [
             'login_success' => ['label' => 'Login Success', 'category' => 'authentication', 'severity' => 'info'],
             'login_failed' => ['label' => 'Login Failed', 'category' => 'authentication', 'severity' => 'warning'],
+            'login_lockout' => ['label' => 'Login Lockout', 'category' => 'authentication', 'severity' => 'warning'],
             'logout' => ['label' => 'Logout', 'category' => 'authentication', 'severity' => 'info'],
             'consultation_request_created' => ['label' => 'Consultation Request Created', 'category' => 'consultation', 'severity' => 'info'],
             'consultation_approved' => ['label' => 'Consultation Approved', 'category' => 'consultation', 'severity' => 'success'],

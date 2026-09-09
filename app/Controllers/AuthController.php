@@ -9,6 +9,7 @@ use App\Helpers\Helper;
 use App\Models\User;
 use App\Services\AuditLogService;
 use App\Services\AuthService;
+use App\Services\LoginAttemptService;
 use App\Services\PasswordResetService;
 
 class AuthController extends Controller
@@ -31,33 +32,54 @@ class AuthController extends Controller
 
             if (empty($errors)) {
                 try {
-                    $user = AuthService::authenticate($email, $password);
-                    if ($user && $user->getRole()) {
-                        AuthService::login($user->id, $user->getRole());
-                        AuditLogService::record(
-                            'login_success',
-                            'User authenticated successfully.',
-                            AuditLogService::ENTITY_AUTH,
-                            (int) $user->id
-                        );
-                        Helper::redirect(AuthService::getRoleRedirectUrl($user->getRole()));
-                        return;
-                    }
+                    $attempt = LoginAttemptService::inspect($email);
+                    if ($attempt['locked']) {
+                        $errors[] = LoginAttemptService::LOCKOUT_MESSAGE;
+                    } else {
+                        LoginAttemptService::throttle($attempt['delay_seconds']);
+                        $user = AuthService::authenticate($email, $password);
+                        if ($user && $user->getRole()) {
+                            LoginAttemptService::clear($email);
+                            AuthService::login($user->id, $user->getRole());
+                            AuditLogService::record(
+                                'login_success',
+                                'User authenticated successfully.',
+                                AuditLogService::ENTITY_AUTH,
+                                (int) $user->id
+                            );
+                            Helper::redirect(AuthService::getRoleRedirectUrl($user->getRole()));
+                            return;
+                        }
 
-                    AuditLogService::record(
-                        'login_failed',
-                        'Authentication failed for supplied credentials.',
-                        AuditLogService::ENTITY_AUTH,
-                        null,
-                        'failed',
-                        [
+                        $failure = LoginAttemptService::recordFailure($email);
+                        $failedAuditContext = [
                             'actor_name' => 'Guest',
                             'actor_role' => 'guest',
                             'subject_name' => $email,
                             'subject_role' => 'guest',
-                        ]
-                    );
-                    $errors[] = 'Invalid email, password, or account status.';
+                        ];
+                        AuditLogService::record(
+                            'login_failed',
+                            'Authentication failed for supplied credentials.',
+                            AuditLogService::ENTITY_AUTH,
+                            null,
+                            'failed',
+                            $failedAuditContext
+                        );
+                        if ($failure['just_locked']) {
+                            AuditLogService::record(
+                                'login_lockout',
+                                'Sign-in temporarily locked after repeated failed attempts.',
+                                AuditLogService::ENTITY_AUTH,
+                                null,
+                                'failed',
+                                $failedAuditContext
+                            );
+                            $errors[] = LoginAttemptService::LOCKOUT_MESSAGE;
+                        } else {
+                            $errors[] = 'Invalid email, password, or account status.';
+                        }
+                    }
                 } catch (\Throwable $exception) {
                     error_log('Authentication error: ' . $exception->getMessage());
                     $errors[] = 'Authentication is temporarily unavailable. Please try again later.';
