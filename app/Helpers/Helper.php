@@ -106,6 +106,16 @@ class Helper
         return 'http';
     }
 
+    /**
+     * True when this request arrived over HTTPS.
+     * Same signals Session uses for the Secure cookie flag (HTTPS / port 443),
+     * plus X-Forwarded-Proto for App Platform and Cloudflare.
+     */
+    public static function isHttpsRequest(): bool
+    {
+        return self::requestScheme() === 'https';
+    }
+
     public static function redirect(string $url): void
     {
         header('Location: ' . self::url($url));

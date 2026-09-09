@@ -3,6 +3,7 @@
 namespace App\Core;
 
 use App\Config\Environment;
+use App\Middleware\SecurityHeadersMiddleware;
 
 class Router
 {
@@ -30,6 +31,8 @@ class Router
 
     public function dispatch(): void
     {
+        SecurityHeadersMiddleware::apply();
+
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         $requestUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
         $requestUri = is_string($requestUri) ? $requestUri : '/';
