@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeAosAnimations();
   initializeConsultationQueueWorkspace();
   initializeDesktopSidebarToggle();
+  initializeDesktopRightbarToggle();
   initializeMobileNavigation();
-  initializeListFilterLoading();
   initializeNotificationToasts();
   initializeUxConfirmModal();
   initializePermanentDeleteModal();
@@ -676,6 +676,95 @@ function initializeDesktopSidebarToggle() {
   });
 }
 
+function initializeDesktopRightbarToggle() {
+  const toggles = document.querySelectorAll("[data-desktop-rightbar-toggle]");
+  const shell = document.querySelector(".dashboard-shell");
+  const rightbar = document.getElementById("dashboardDesktopRightbar");
+  const storageKey = "mbpha-dashboard-rightbar-collapsed";
+
+  if (toggles.length === 0 || !shell || !rightbar) {
+    return;
+  }
+
+  const prefersReducedMotion = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let animationTimer = 0;
+
+  const endRightbarAnimation = () => {
+    window.clearTimeout(animationTimer);
+    shell.classList.remove("dashboard-shell--rightbar-animating");
+  };
+
+  const applyCollapsed = (collapsed, animate) => {
+    window.clearTimeout(animationTimer);
+    if (animate && !prefersReducedMotion()) {
+      shell.classList.add("dashboard-shell--rightbar-animating");
+      animationTimer = window.setTimeout(endRightbarAnimation, 360);
+    } else {
+      shell.classList.remove("dashboard-shell--rightbar-animating");
+    }
+    shell.classList.toggle("dashboard-shell--rightbar-collapsed", collapsed);
+    if (collapsed) {
+      shell.setAttribute("data-rightbar-collapsed", "");
+    } else {
+      shell.removeAttribute("data-rightbar-collapsed");
+    }
+    const scroll = rightbar.querySelector(".rightbar-scroll");
+    const rail = rightbar.querySelector(".rightbar-icon-rail");
+    if (scroll instanceof HTMLElement) {
+      scroll.setAttribute("aria-hidden", collapsed ? "true" : "false");
+      scroll.inert = collapsed;
+    }
+    if (rail instanceof HTMLElement) {
+      rail.setAttribute("aria-hidden", collapsed ? "false" : "true");
+      rail.inert = !collapsed;
+    }
+    toggles.forEach((toggle) => {
+      toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      if (toggle.classList.contains("rightbar-toggle")) {
+        toggle.setAttribute(
+          "aria-label",
+          collapsed ? "Expand overview panel" : "Collapse overview panel"
+        );
+        toggle.setAttribute("data-label", collapsed ? "Expand overview" : "Collapse overview");
+      }
+    });
+  };
+
+  try {
+    applyCollapsed(window.localStorage.getItem(storageKey) === "1", false);
+  } catch (error) {
+    applyCollapsed(false, false);
+  }
+
+  window.requestAnimationFrame(() => {
+    shell.classList.add("dashboard-shell--rightbar-ready");
+  });
+
+  shell.addEventListener("transitionend", (event) => {
+    const target = event.target;
+    const isRightbar = target instanceof HTMLElement && target.classList.contains("dashboard-rightbar");
+    if (
+      isRightbar &&
+      (event.propertyName === "flex-basis" || event.propertyName === "width")
+    ) {
+      endRightbarAnimation();
+    }
+  });
+
+  toggles.forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      const collapsed = !shell.classList.contains("dashboard-shell--rightbar-collapsed");
+      applyCollapsed(collapsed, true);
+      try {
+        window.localStorage.setItem(storageKey, collapsed ? "1" : "0");
+      } catch (error) {
+        // Ignore storage failures in private browsing.
+      }
+    });
+  });
+}
+
 /**
  * Mobile offcanvas navigation: lock page scroll while open, and close
  * the drawer after a sidebar destination is chosen.
@@ -716,31 +805,6 @@ function initializeMobileNavigation() {
           instance.hide();
         }
       });
-    });
-  });
-}
-
-function initializeListFilterLoading() {
-  const forms = document.querySelectorAll("form[data-list-filter]");
-  forms.forEach((form) => {
-    if (!(form instanceof HTMLFormElement)) {
-      return;
-    }
-    form.addEventListener("submit", () => {
-      const shell = form.closest(".ux-filter");
-      if (shell) {
-        shell.classList.add("is-loading");
-        shell.setAttribute("aria-busy", "true");
-      }
-      const button = form.querySelector('button[type="submit"]');
-      if (button instanceof HTMLButtonElement) {
-        button.disabled = true;
-        button.setAttribute("aria-disabled", "true");
-        if (!button.dataset.originalHtml) {
-          button.dataset.originalHtml = button.innerHTML;
-        }
-        button.innerHTML = '<span class="ux-loading__spinner" aria-hidden="true"></span> Loading…';
-      }
     });
   });
 }

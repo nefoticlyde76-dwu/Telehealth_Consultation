@@ -5,8 +5,6 @@ $pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_it
 $summary = $summary ?? [];
 $availability = $availability ?? [];
 $statusOptions = $statusOptions ?? [];
-$dateOptions = $dateOptions ?? [];
-$sortOptions = $sortOptions ?? [];
 $statusMessage = $statusMessage ?? null;
 $csrfToken = $csrfToken ?? '';
 $filterActive = (bool) ($filterActive ?? false);
@@ -20,57 +18,6 @@ $statusFieldOptions = \App\Helpers\Status::filterOptions(
     $statusOptions
 );
 
-$filterForm = [
-    'action' => \App\Helpers\Helper::url('/doctor/availability'),
-    'title' => 'Filter slots',
-    'clear_url' => \App\Helpers\Helper::url('/doctor/availability?view=list'),
-    'hidden' => ['view' => 'list'],
-    'search' => [
-        'label' => 'Search',
-        'placeholder' => 'Search by date, time, or notes',
-        'value' => (string) ($filters['search'] ?? ''),
-    ],
-    'fields' => [
-        [
-            'type' => 'select',
-            'name' => 'status',
-            'label' => 'Status',
-            'value' => (string) ($filters['status'] ?? ''),
-            'empty_label' => 'All statuses',
-            'options' => $statusFieldOptions,
-        ],
-        [
-            'type' => 'date_preset',
-            'name' => 'date',
-            'label' => 'Date',
-            'value' => (string) ($filters['date'] ?? ''),
-            'empty_label' => 'All dates',
-            'options' => $dateOptions,
-            'from_value' => (string) ($filters['date_from'] ?? ''),
-            'to_value' => (string) ($filters['date_to'] ?? ''),
-        ],
-        [
-            'type' => 'select',
-            'name' => 'sort',
-            'label' => 'Sort',
-            'value' => (string) ($filters['sort'] ?? 'earliest'),
-            'include_empty' => false,
-            'options' => $sortOptions,
-        ],
-        [
-            'type' => 'select',
-            'name' => 'per_page',
-            'label' => 'Per page',
-            'value' => (string) ((int) ($filters['per_page'] ?? 10)),
-            'include_empty' => false,
-            'options' => [
-                ['value' => '10', 'label' => '10'],
-                ['value' => '25', 'label' => '25'],
-                ['value' => '50', 'label' => '50'],
-            ],
-        ],
-    ],
-];
 $filterTabs = array_merge(
     [['value' => '', 'label' => 'All']],
     $statusFieldOptions
@@ -109,7 +56,6 @@ $filterTabUrl = static function (string $value) use ($filters): string {
   </div>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
-  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
@@ -184,12 +130,12 @@ $filterTabUrl = static function (string $value) use ($filters): string {
                     <div class="ux-empty__icon">
                       <i class="bi bi-calendar-x"></i>
                     </div>
-                    <h4 class="ux-empty__title"><?= $filterActive ? 'No matching availability slots' : 'No availability slots yet' ?></h4>
-                    <p class="ux-empty__text"><?= $filterActive ? 'Try changing your search or filters, or create a new consultation slot.' : 'Create a consultation slot so patients can book an appointment.' ?></p>
+                    <h4 class="ux-empty__title"><?= $filterActive ? 'No availability slots in this view' : 'No availability slots yet' ?></h4>
+                    <p class="ux-empty__text"><?= $filterActive ? 'There are no consultation slots in this status. Choose another tab or create a new slot.' : 'Create a consultation slot so patients can book an appointment.' ?></p>
                     <div class="ux-empty__action">
                       <?php if ($filterActive): ?>
-                        <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-outline-primary btn-sm">
-                          Clear Filters
+                        <a href="<?= \App\Helpers\Helper::url('/doctor/availability?view=list') ?>" class="btn btn-outline-primary btn-sm">
+                          View all slots
                         </a>
                       <?php endif; ?>
                       <a href="<?= \App\Helpers\Helper::url('/doctor/availability/create') ?>" class="btn btn-primary btn-sm">

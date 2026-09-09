@@ -204,7 +204,7 @@
   }
 
   function syncDateRange(preset) {
-    const wrapper = preset.closest(".ux-th, .ux-table-toolbar, .ux-th-date, th, .ux-filter");
+    const wrapper = preset.closest(".ux-th, .ux-table-toolbar, .ux-th-date, th");
     const range = wrapper ? wrapper.querySelector("[data-date-range]") : null;
     if (!(range instanceof HTMLElement)) {
       return;

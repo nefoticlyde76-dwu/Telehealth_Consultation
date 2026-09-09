@@ -111,7 +111,7 @@
   --ds-sidebar-width: 248px;
   --ds-topbar-height: 64px;
   --ds-space: 4px;
-  --ds-font: Inter, "Segoe UI", -apple-system, Roboto, sans-serif;
+  --ds-font: Poppins, Inter, "Segoe UI", -apple-system, Roboto, sans-serif;
 
   --ds-navy-rgb: var(--dark-navy-rgb);
   --ds-accent-rgb: var(--medical-blue-rgb);
@@ -1114,85 +1114,6 @@ textarea.form-control {
 .ux-badge--dotless,
 .ux-badge--no-dot {
   padding: 4px 12px;
-}
-
-.ux-filter {
-  border-radius: 16px;
-  border: 1px solid rgba(217, 226, 236, 0.95);
-  background: #fff;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-.ux-filter__row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  align-items: end;
-}
-
-.ux-filter label,
-.ux-filter .form-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--dark-gray);
-  margin-bottom: 6px;
-  display: block;
-}
-
-.ux-filter .card-header,
-.ux-filter .ux-filter__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 0 14px 0;
-  margin: 0 0 18px 0;
-  border-bottom: 1px solid rgba(217, 226, 236, 0.95);
-  background: transparent;
-}
-
-.ux-filter .card-header .h6,
-.ux-filter .ux-filter__header-title {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.005em;
-  color: var(--navy-black);
-  margin: 0;
-}
-
-.ux-filter .card-header .ux-filter__header-icon,
-.ux-filter .ux-filter__header-icon {
-  color: var(--medical-blue);
-  font-size: 16px;
-  margin-right: 6px;
-}
-
-.ux-filter .form-control,
-.ux-filter .form-select {
-  border: 1px solid var(--medium-gray);
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 14px;
-  background: #fff;
-  box-shadow: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.ux-filter .form-control:focus,
-.ux-filter .form-select:focus {
-  border: 2px solid var(--medical-blue);
-  box-shadow: none;
-  outline: none;
-  padding: 9px 13px;
-}
-
-.ux-filter__actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 16px;
 }
 
 .ux-chip {

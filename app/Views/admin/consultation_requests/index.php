@@ -13,9 +13,6 @@ $pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_it
 $summary = $summary ?? [];
 $requests = $requests ?? [];
 $statusOptions = $statusOptions ?? [];
-$doctorOptions = $doctorOptions ?? [];
-$dateOptions = $dateOptions ?? [];
-$sortOptions = $sortOptions ?? [];
 $selectedId = (int) ($selectedId ?? 0);
 $selectedRequest = is_array($selectedRequest ?? null) ? $selectedRequest : null;
 $queuePosition = (int) ($queuePosition ?? 0);
@@ -34,65 +31,11 @@ $buildQueueUrl = static function (array $overrides = []) use ($filters, $paginat
     return \App\Helpers\Helper::url(\App\Services\AdminConsultationService::workspacePath($merged, $selected, $page));
 };
 
-$doctorFieldOptions = [];
-foreach ($doctorOptions as $doctorOption) {
-    $doctorFieldOptions[] = [
-        'value' => (string) ((int) ($doctorOption['id'] ?? 0)),
-        'label' => (string) ($doctorOption['full_name'] ?? 'Doctor'),
-    ];
-}
-
 $statusFieldOptions = \App\Helpers\Status::filterOptions(
     \App\Helpers\Status::DOMAIN_CONSULTATION,
     $statusOptions
 );
 
-$filterForm = [
-    'action' => \App\Helpers\Helper::url('/admin/consultation-requests'),
-    'title' => 'Filter queue',
-    'clear_url' => \App\Helpers\Helper::url('/admin/consultation-requests'),
-    'search' => [
-        'label' => 'Search',
-        'placeholder' => 'Patient, email, doctor, or request ID',
-        'value' => (string) ($filters['search'] ?? ''),
-    ],
-    'fields' => [
-        [
-            'type' => 'select',
-            'name' => 'status',
-            'label' => 'Status',
-            'value' => (string) ($filters['status'] ?? ''),
-            'empty_label' => 'All statuses',
-            'options' => $statusFieldOptions,
-        ],
-        [
-            'type' => 'select',
-            'name' => 'doctor_id',
-            'label' => 'Doctor',
-            'value' => (string) ((int) ($filters['doctor_id'] ?? 0)),
-            'empty_label' => 'All doctors',
-            'options' => $doctorFieldOptions,
-        ],
-        [
-            'type' => 'date_preset',
-            'name' => 'date',
-            'label' => 'Date',
-            'value' => (string) ($filters['date'] ?? ''),
-            'empty_label' => 'All dates',
-            'options' => $dateOptions,
-            'from_value' => (string) ($filters['date_from'] ?? ''),
-            'to_value' => (string) ($filters['date_to'] ?? ''),
-        ],
-        [
-            'type' => 'select',
-            'name' => 'sort',
-            'label' => 'Sort',
-            'value' => (string) ($filters['sort'] ?? 'date_asc'),
-            'include_empty' => false,
-            'options' => $sortOptions,
-        ],
-    ],
-];
 $filterTabs = array_merge(
     [['value' => '', 'label' => 'All']],
     $statusFieldOptions
@@ -111,7 +54,7 @@ $emptyTitle = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterAct
     : 'No matching requests';
 $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActive
     ? 'All consultation requests have been reviewed.'
-    : 'Try changing your search or filters.';
+    : 'There are no requests in this view.';
 ?>
 
 <section class="mb-4 ux-review-workspace" data-consultation-queue-workspace>
@@ -169,8 +112,6 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
       </div>
     </div>
   </div>
-
-  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="ux-review-workspace__grid">
     <aside class="ux-card ux-data-card ux-queue" aria-label="Consultation request queue">

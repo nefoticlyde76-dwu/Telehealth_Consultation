@@ -40,7 +40,7 @@ require_once __DIR__ . '/../../partials/shared/status_helper.php';
                   <div class="ux-empty__action">
                     <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
                       <i class="bi bi-arrow-clockwise me-1"></i>
-                      Clear Filters
+                      View all consultations
                     </a>
                   </div>
                 <?php endif; ?>

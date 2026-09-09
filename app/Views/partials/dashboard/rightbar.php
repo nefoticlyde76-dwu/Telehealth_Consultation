@@ -74,8 +74,62 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
 };
 ?>
 
-<aside class="dashboard-rightbar d-none d-xl-flex flex-column">
-  <?= $renderRightbarContent() ?>
+<?php
+$rightbarNow = \App\Helpers\Helper::now();
+$rightbarDay = $rightbarNow->format('j');
+$rightbarMonth = $rightbarNow->format('M');
+?>
+<aside class="dashboard-rightbar d-none d-xl-flex flex-column" id="dashboardDesktopRightbar">
+  <div class="rightbar-toolbar">
+    <div class="rightbar-toolbar-copy">
+      <span class="rightbar-toolbar-title">Overview</span>
+    </div>
+    <button
+      type="button"
+      class="rightbar-toggle"
+      data-desktop-rightbar-toggle
+      aria-expanded="true"
+      aria-controls="dashboardDesktopRightbar"
+      aria-label="Collapse overview panel"
+      data-label="Expand overview"
+    >
+      <span class="rightbar-toggle-glyphs" aria-hidden="true">
+        <i class="bi bi-chevron-right rightbar-toggle-glyph rightbar-toggle-glyph--collapse"></i>
+        <i class="bi bi-chevron-left rightbar-toggle-glyph rightbar-toggle-glyph--expand"></i>
+      </span>
+    </button>
+  </div>
+
+  <nav class="rightbar-icon-rail" aria-label="Overview shortcuts" aria-hidden="true" inert>
+    <button type="button" class="rightbar-rail-item rightbar-rail-item--date" data-desktop-rightbar-toggle data-label="Calendar" aria-label="Open calendar">
+      <span class="rightbar-rail-date-month"><?= \App\Helpers\Helper::escape($rightbarMonth) ?></span>
+      <span class="rightbar-rail-date-day"><?= \App\Helpers\Helper::escape($rightbarDay) ?></span>
+    </button>
+    <?php if ($showUpcomingList): ?>
+      <button type="button" class="rightbar-rail-item" data-desktop-rightbar-toggle data-label="<?= \App\Helpers\Helper::escape($upcomingTitle) ?>" aria-label="<?= \App\Helpers\Helper::escape($upcomingTitle) ?>">
+        <i class="bi bi-clock-history" aria-hidden="true"></i>
+        <span class="rightbar-count"><?= \App\Helpers\Helper::escape((string) count($upcomingItems)) ?></span>
+      </button>
+    <?php endif; ?>
+    <?php foreach ($quickActions as $action): ?>
+      <?php
+      $actionLabel = (string) ($action['label'] ?? 'Action');
+      $actionIcon = (string) ($action['icon'] ?? 'bi-lightning-charge');
+      ?>
+      <a
+        href="<?= \App\Helpers\Helper::url((string) ($action['url'] ?? '#')) ?>"
+        class="rightbar-rail-item"
+        data-label="<?= \App\Helpers\Helper::escape($actionLabel) ?>"
+        aria-label="<?= \App\Helpers\Helper::escape($actionLabel) ?>"
+      >
+        <i class="bi <?= \App\Helpers\Helper::escape($actionIcon) ?>" aria-hidden="true"></i>
+      </a>
+    <?php endforeach; ?>
+  </nav>
+
+  <div class="rightbar-scroll">
+    <?= $renderRightbarContent() ?>
+  </div>
 </aside>
 
 <div class="offcanvas offcanvas-end dashboard-rightbar-offcanvas" tabindex="-1" id="dashboardRightbar" aria-labelledby="dashboardRightbarLabel">

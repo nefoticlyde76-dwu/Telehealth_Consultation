@@ -7,8 +7,6 @@ $grouped = (bool) ($grouped ?? false);
 $summary = $summary ?? [];
 $pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0, 'from' => 0, 'to' => 0];
 $statusOptions = $statusOptions ?? [];
-$dateOptions = $dateOptions ?? [];
-$sortOptions = $sortOptions ?? [];
 $csrfToken = $csrfToken ?? '';
 $filterActive = (bool) ($filterActive ?? false);
 
@@ -29,56 +27,6 @@ $statusFieldOptions = \App\Helpers\Status::filterOptions(
     $statusOptions
 );
 
-$filterForm = [
-    'action' => \App\Helpers\Helper::url('/doctor/consultations'),
-    'title' => 'Filter consultations',
-    'clear_url' => \App\Helpers\Helper::url('/doctor/consultations'),
-    'search' => [
-        'label' => 'Search',
-        'placeholder' => 'Search by patient name',
-        'value' => (string) ($filters['search'] ?? ''),
-    ],
-    'fields' => [
-        [
-            'type' => 'select',
-            'name' => 'status',
-            'label' => 'Status',
-            'value' => (string) ($filters['status'] ?? ''),
-            'empty_label' => 'All statuses',
-            'options' => $statusFieldOptions,
-        ],
-        [
-            'type' => 'date_preset',
-            'name' => 'date',
-            'label' => 'Date',
-            'value' => (string) ($filters['date'] ?? ''),
-            'empty_label' => 'All dates',
-            'options' => $dateOptions,
-            'from_value' => (string) ($filters['date_from'] ?? ''),
-            'to_value' => (string) ($filters['date_to'] ?? ''),
-        ],
-        [
-            'type' => 'select',
-            'name' => 'sort',
-            'label' => 'Sort',
-            'value' => (string) ($filters['sort'] ?? ''),
-            'empty_label' => 'Default',
-            'options' => $sortOptions,
-        ],
-        [
-            'type' => 'select',
-            'name' => 'per_page',
-            'label' => 'Per page',
-            'value' => (string) ((int) ($filters['per_page'] ?? 10)),
-            'include_empty' => false,
-            'options' => [
-                ['value' => '10', 'label' => '10'],
-                ['value' => '25', 'label' => '25'],
-                ['value' => '50', 'label' => '50'],
-            ],
-        ],
-    ],
-];
 $filterTabs = array_merge(
     [['value' => '', 'label' => 'All']],
     $statusFieldOptions
@@ -129,8 +77,6 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
     </div>
   </div>
 
-  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
-
   <div class="row g-3 mb-4">
     <div class="col-sm-4">
       <div class="ux-stat compact d-flex align-items-center gap-3">
@@ -178,7 +124,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
         $historyRows = [];
         $emptyTitle = $filterActive ? 'No matching consultations' : 'No consultations yet';
         $emptyText = $filterActive
-            ? 'Try changing your search or filters.'
+            ? 'There are no consultations in this view.'
             : 'Approved and completed consultations will appear here.';
         $showResetAction = $filterActive;
         require __DIR__ . '/_history_table.php';
@@ -251,7 +197,7 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
       $historyRows = $consultations;
       $emptyTitle = $filterActive ? 'No matching consultations' : 'No consultations yet';
       $emptyText = $filterActive
-          ? 'Try changing your search or filters.'
+          ? 'There are no consultations in this view.'
           : 'Approved and completed consultations will appear here.';
       $showResetAction = true;
       require __DIR__ . '/_history_table.php';

@@ -7,7 +7,6 @@ $filters = $filters ?? ['doctor_id' => 0, 'specialization' => '', 'consultation_
 $slots = $slots ?? [];
 $summary = $summary ?? [];
 $pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0];
-$doctorOptions = $doctorOptions ?? [];
 $specializationOptions = $specializationOptions ?? [];
 $statusMessage = $statusMessage ?? null;
 
@@ -28,42 +27,6 @@ $buildPageUrl = static function (int $page) use ($filters): string {
     return Helper::url('/patient/available-slots') . ($queryString !== '' ? '?' . $queryString : '');
 };
 
-$filterForm = [
-    'action' => Helper::url('/patient/available-slots'),
-    'title' => 'Filter slots',
-    'clear_url' => Helper::url('/patient/available-slots?view=list'),
-    'hidden' => ['view' => 'list'],
-    'fields' => [
-        [
-            'type' => 'select',
-            'name' => 'doctor_id',
-            'label' => 'Doctor',
-            'value' => (string) ((int) ($filters['doctor_id'] ?? 0) ?: ''),
-            'empty_label' => 'All doctors',
-            'options' => array_map(static fn (array $doctorOption): array => [
-                'value' => (string) ((int) ($doctorOption['doctor_id'] ?? 0)),
-                'label' => (string) ($doctorOption['full_name'] ?? 'Doctor'),
-            ], $doctorOptions),
-        ],
-        [
-            'type' => 'select',
-            'name' => 'specialization',
-            'label' => 'Specialization',
-            'value' => (string) ($filters['specialization'] ?? ''),
-            'empty_label' => 'All specializations',
-            'options' => array_map(static fn (string $option): array => [
-                'value' => $option,
-                'label' => $option,
-            ], $specializationOptions),
-        ],
-        [
-            'type' => 'date',
-            'name' => 'consultation_date',
-            'label' => 'Consultation Date',
-            'value' => (string) ($filters['consultation_date'] ?? ''),
-        ],
-    ],
-];
 $filterTabs = array_merge(
     [['value' => '', 'label' => 'All']],
     array_map(static fn (string $option): array => [
@@ -88,7 +51,7 @@ $filterTabUrl = static function (string $value) use ($filters): string {
         <li class="active">Available Slots</li>
       </ol>
       <h2 class="ux-page-header__title">Available Consultation Slots</h2>
-      <p class="ux-page-header__subtitle">Filter future availability by doctor, specialization, or consultation date to find and book your preferred appointment.</p>
+      <p class="ux-page-header__subtitle">Browse future availability and book your preferred appointment.</p>
     </div>
     <div class="ux-page-header__right">
       <span class="ux-chip ux-badge--dotless">
@@ -109,8 +72,6 @@ $filterTabUrl = static function (string $value) use ($filters): string {
       </a>
     </div>
   </div>
-
-  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-4">
@@ -176,12 +137,12 @@ $filterTabUrl = static function (string $value) use ($filters): string {
                     <div class="ux-empty__icon">
                       <i class="bi bi-calendar-x"></i>
                     </div>
-                    <h4 class="ux-empty__title">No available consultation slots matched the current filters</h4>
-                    <p class="ux-empty__text">Adjust the filters to review other future consultation slots.</p>
+                    <h4 class="ux-empty__title">No available consultation slots</h4>
+                    <p class="ux-empty__text">There are no future consultation slots in this view.</p>
                     <div class="ux-empty__action">
-                      <a href="<?= \App\Helpers\Helper::url('/patient/available-slots') ?>" class="btn btn-outline-primary btn-sm">
+                      <a href="<?= \App\Helpers\Helper::url('/patient/available-slots?view=list') ?>" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-arrow-clockwise me-1"></i>
-                        Reset Filters
+                        View all slots
                       </a>
                     </div>
                   </div>

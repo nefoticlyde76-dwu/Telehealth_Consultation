@@ -487,7 +487,6 @@
 .dashboard-layout .ux-card,
 .dashboard-layout .card,
 .dashboard-layout .ux-table-wrapper,
-.dashboard-layout .ux-filter,
 .dashboard-layout .ux-stat {
   background: var(--ds-card) !important;
   background-image: none !important;
@@ -694,12 +693,6 @@
 .auth-page .form-select:focus {
   border-color: var(--ds-accent);
   box-shadow: var(--shadow-focus);
-}
-
-.dashboard-layout .ux-filter .form-control:focus,
-.dashboard-layout .ux-filter .form-select:focus {
-  border-width: 1px;
-  padding: 8px 12px;
 }
 
 /* ---------- Welcome / page hero (same chrome, role content only) ---------- */

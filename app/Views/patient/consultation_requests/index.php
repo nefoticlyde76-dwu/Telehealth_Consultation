@@ -6,9 +6,6 @@ $summary = $summary ?? [];
 $pagination = $pagination ?? ['current_page' => 1, 'total_pages' => 1, 'total_items' => 0, 'from' => 0, 'to' => 0];
 $filters = $filters ?? ['search' => '', 'status' => '', 'date' => '', 'sort' => '', 'documents' => '', 'per_page' => 10];
 $statusOptions = $statusOptions ?? [];
-$dateOptions = $dateOptions ?? [];
-$sortOptions = $sortOptions ?? [];
-$documentOptions = $documentOptions ?? [];
 $grouped = (bool) ($grouped ?? true);
 $filterActive = (bool) ($filterActive ?? false);
 
@@ -25,64 +22,6 @@ $statusFieldOptions = \App\Helpers\Status::filterOptions(
     $statusOptions
 );
 
-$filterForm = [
-    'action' => \App\Helpers\Helper::url('/patient/consultation-requests'),
-    'title' => 'Find a consultation',
-    'clear_url' => \App\Helpers\Helper::url('/patient/consultation-requests'),
-    'search' => [
-        'label' => 'Search',
-        'placeholder' => 'Search by doctor or medication name',
-        'value' => (string) ($filters['search'] ?? ''),
-    ],
-    'fields' => [
-        [
-            'type' => 'select',
-            'name' => 'status',
-            'label' => 'Status',
-            'value' => (string) ($filters['status'] ?? ''),
-            'empty_label' => 'All statuses',
-            'options' => $statusFieldOptions,
-        ],
-        [
-            'type' => 'date_preset',
-            'name' => 'date',
-            'label' => 'Date',
-            'value' => (string) ($filters['date'] ?? ''),
-            'empty_label' => 'All dates',
-            'options' => $dateOptions,
-            'from_value' => (string) ($filters['date_from'] ?? ''),
-            'to_value' => (string) ($filters['date_to'] ?? ''),
-        ],
-        [
-            'type' => 'select',
-            'name' => 'documents',
-            'label' => 'Records',
-            'value' => (string) ($filters['documents'] ?? ''),
-            'empty_label' => 'All records',
-            'options' => $documentOptions,
-        ],
-        [
-            'type' => 'select',
-            'name' => 'sort',
-            'label' => 'Sort',
-            'value' => (string) ($filters['sort'] ?? ''),
-            'empty_label' => 'Default',
-            'options' => $sortOptions,
-        ],
-        [
-            'type' => 'select',
-            'name' => 'per_page',
-            'label' => 'Per page',
-            'value' => (string) ((int) ($filters['per_page'] ?? 10)),
-            'include_empty' => false,
-            'options' => [
-                ['value' => '10', 'label' => '10'],
-                ['value' => '25', 'label' => '25'],
-                ['value' => '50', 'label' => '50'],
-            ],
-        ],
-    ],
-];
 $filterTabs = array_merge(
     [['value' => '', 'label' => 'All']],
     $statusFieldOptions
@@ -124,8 +63,6 @@ $paginationBuildUrl = null;
       </a>
     </div>
   </div>
-
-  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
@@ -185,7 +122,7 @@ $paginationBuildUrl = null;
         $historyRows = [];
         $emptyTitle = $filterActive ? 'No matching consultations' : 'No consultations in your history yet';
         $emptyText = $filterActive
-            ? 'Try changing your search or filters.'
+            ? 'There are no consultations in this view.'
             : 'Book an available slot to start a consultation. Completed records and prescriptions will appear here.';
         $showEmptyAction = !$filterActive;
         require __DIR__ . '/_history_table.php';
@@ -258,8 +195,8 @@ $paginationBuildUrl = null;
       </div>
       <?php
       $historyRows = $requests;
-      $emptyTitle = 'No matching consultations';
-      $emptyText = 'Try changing your search or filters.';
+      $emptyTitle = 'No consultations to display';
+      $emptyText = 'There are no consultations in this view.';
       $showEmptyAction = false;
       require __DIR__ . '/_history_table.php';
       ?>

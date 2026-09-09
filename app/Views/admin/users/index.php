@@ -8,64 +8,16 @@ require_once __DIR__ . '/../../partials/profile/_helpers.php';
 
 $csrfToken = (string) ($csrfToken ?? '');
 $filters = is_array($filters ?? null) ? $filters : [];
-$search = (string) ($filters['search'] ?? '');
-$role = (string) ($filters['role'] ?? '');
 $status = (string) ($filters['status'] ?? '');
-$sort = (string) ($filters['sort'] ?? 'newest');
 $users = is_array($users ?? null) ? $users : [];
 $pagination = is_array($pagination ?? null) ? $pagination : [];
 $summary = is_array($summary ?? null) ? $summary : [];
-$roleOptions = is_array($roleOptions ?? null) ? $roleOptions : [];
 $statusOptions = is_array($statusOptions ?? null) ? $statusOptions : [];
-$sortOptions = is_array($sortOptions ?? null) ? $sortOptions : [];
 $actorUserId = (int) ($actorUserId ?? 0);
 $confirmationPhrase = AccountSecurityService::CONFIRMATION_PHRASE;
 
 require __DIR__ . '/../../partials/shared/status_helper.php';
 
-$filterForm = [
-    'action' => Helper::url('/admin/users'),
-    'title' => 'Filter users',
-    'clear_url' => Helper::url('/admin/users'),
-    'search' => [
-        'name' => 'search',
-        'value' => $search,
-        'placeholder' => 'Search by name or email',
-        'label' => 'Search users',
-    ],
-    'fields' => [
-        [
-            'type' => 'select',
-            'name' => 'role',
-            'label' => 'Role',
-            'value' => $role,
-            'empty_label' => 'All roles',
-            'options' => array_map(static fn (string $opt): array => [
-                'value' => $opt,
-                'label' => user_profile_role_label($opt),
-            ], $roleOptions),
-        ],
-        [
-            'type' => 'select',
-            'name' => 'status',
-            'label' => 'Status',
-            'value' => $status,
-            'empty_label' => 'All statuses',
-            'options' => array_map(static fn (string $opt): array => [
-                'value' => $opt,
-                'label' => Status::label($opt, Status::DOMAIN_USER),
-            ], $statusOptions),
-        ],
-        [
-            'type' => 'select',
-            'name' => 'sort',
-            'label' => 'Sort',
-            'value' => $sort,
-            'include_empty' => false,
-            'options' => $sortOptions,
-        ],
-    ],
-];
 $filterTabs = array_merge(
     [['value' => '', 'label' => 'All']],
     array_map(static fn (string $opt): array => [
@@ -99,7 +51,6 @@ $filterTabUrl = static function (string $value) use ($filters): string {
   </div>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
-  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
@@ -186,10 +137,10 @@ $filterTabUrl = static function (string $value) use ($filters): string {
               <tr>
                 <td colspan="7" class="ux-table__empty-state">
                   <?php
-                  $emptyIcon = 'bi-search';
-                  $emptyTitle = 'No users match your filters';
-                  $emptyText = 'Try another name, email, role, or status.';
-                  $emptyActions = '<a href="' . Helper::url('/admin/users') . '" class="btn btn-outline-primary btn-sm">Reset filters</a>';
+                  $emptyIcon = 'bi-people';
+                  $emptyTitle = 'No users to display';
+                  $emptyText = 'There are no user accounts in this view.';
+                  $emptyActions = '<a href="' . Helper::url('/admin/users') . '" class="btn btn-outline-primary btn-sm">View all users</a>';
                   $emptyCompact = true;
                   require __DIR__ . '/../../partials/shared/empty_state.php';
                   ?>

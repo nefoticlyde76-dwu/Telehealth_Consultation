@@ -11,6 +11,12 @@
   initial-value: 248px;
 }
 
+@property --dash-rightbar-track {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 300px;
+}
+
 html:has(body.dashboard-layout) {
   height: 100%;
   overflow: hidden;
@@ -74,8 +80,9 @@ html:has(body.dashboard-layout) {
   --table-row-header-color: var(--dark-navy);
 
   --dash-rightbar: 300px;
+  --dash-rightbar-collapsed: 72px;
   --dash-topbar: 64px;
-  --dash-font: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --dash-font: Poppins, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --dash-font-display: Poppins, Inter, system-ui, sans-serif;
   height: 100dvh;
   max-height: 100dvh;
@@ -131,6 +138,7 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .dashboard-shell,
 .dashboard-layout .dashboard-shell--with-rightbar {
   --dash-sidebar-track: var(--dash-sidebar);
+  --dash-rightbar-track: var(--dash-rightbar);
   display: flex;
   flex-direction: column;
   gap: 0 !important;
@@ -154,7 +162,16 @@ html:has(body.dashboard-layout) {
   --dash-sidebar-track: var(--dash-sidebar-collapsed);
 }
 
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] {
+  --dash-rightbar-track: var(--dash-rightbar-collapsed);
+}
+
 .dashboard-layout .dashboard-shell:not(.dashboard-shell--sidebar-ready) .dashboard-sidebar {
+  transition: none;
+}
+
+.dashboard-layout .dashboard-shell:not(.dashboard-shell--rightbar-ready) .dashboard-rightbar {
   transition: none;
 }
 
@@ -915,6 +932,12 @@ html:has(body.dashboard-layout) {
 @media (prefers-reduced-motion: reduce) {
   .dashboard-layout .dashboard-shell,
   .dashboard-layout .dashboard-sidebar,
+  .dashboard-layout .dashboard-rightbar,
+  .dashboard-layout .rightbar-toolbar,
+  .dashboard-layout .rightbar-toolbar-copy,
+  .dashboard-layout .rightbar-scroll,
+  .dashboard-layout .rightbar-icon-rail,
+  .dashboard-layout .rightbar-rail-item,
   .dashboard-layout .dashboard-brand,
   .dashboard-layout .sidebar-caption,
   .dashboard-layout .sidebar-link,
@@ -1540,7 +1563,6 @@ html:has(body.dashboard-layout) {
 /* ---------- Cards ---------- */
 .dashboard-layout .ux-card,
 .dashboard-layout .card,
-.dashboard-layout .ux-filter,
 .dashboard-layout .cr-card {
   background: #fff !important;
   border: 1px solid var(--dash-border) !important;
@@ -2133,27 +2155,6 @@ html:has(body.dashboard-layout) {
   box-shadow: 0 0 0 3px rgba(10, 111, 182, 0.16);
 }
 
-.dashboard-layout .ux-filter {
-  padding: 16px 18px 18px;
-}
-
-.dashboard-layout .ux-filter .card-header {
-  padding: 0 0 12px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid var(--dash-border);
-}
-
-.dashboard-layout .ux-filter .card-header .h6 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.dashboard-layout .ux-filter__header-icon {
-  color: var(--dash-blue);
-  margin-right: 6px;
-}
-
 /* ---------- Badges / chips / status ---------- */
 .dashboard-layout .ux-badge,
 .dashboard-layout .badge {
@@ -2470,8 +2471,7 @@ html:has(body.dashboard-layout) {
   gap: 16px;
 }
 
-.dashboard-layout .ux-review-workspace > .mb-4,
-.dashboard-layout .ux-review-workspace > .ux-filter {
+.dashboard-layout .ux-review-workspace > .mb-4 {
   margin-bottom: 0 !important;
 }
 
@@ -2634,34 +2634,6 @@ html:has(body.dashboard-layout) {
   margin-top: auto;
 }
 
-.dashboard-layout .ux-filter__search {
-  margin-bottom: 16px !important;
-}
-
-.dashboard-layout .ux-filter__grid {
-  --bs-gutter-x: 12px;
-  --bs-gutter-y: 12px;
-}
-
-.dashboard-layout .ux-filter__actions-col {
-  display: flex;
-  align-items: flex-end;
-}
-
-.dashboard-layout .ux-filter__actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 0;
-  width: 100%;
-}
-
-.dashboard-layout .ux-filter__actions .btn {
-  white-space: nowrap;
-}
-
 .dashboard-layout .ux-queue__item {
   display: block;
   padding: 12px 16px;
@@ -2684,26 +2656,313 @@ html:has(body.dashboard-layout) {
   position: relative;
   top: 0;
   align-self: stretch;
-  flex: 0 0 var(--dash-rightbar);
-  width: var(--dash-rightbar);
+  flex: 0 0 var(--dash-rightbar-track);
+  width: auto;
+  max-width: none;
   height: auto;
   max-height: none;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  min-width: 0;
+  overflow: hidden;
   background: #fff;
   border: 0;
   border-left: 1px solid var(--dash-border);
   border-radius: 0;
   box-shadow: none;
   padding: 20px 16px 24px;
-  gap: 14px;
+  gap: 12px;
   display: flex;
   flex-direction: column;
+  z-index: 20;
+  contain: layout;
+  transition: flex-basis var(--dash-sidebar-duration) var(--dash-sidebar-ease);
 }
 
 .dashboard-layout .dashboard-rightbar-offcanvas {
   width: min(320px, 92vw);
+}
+
+.dashboard-layout .rightbar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 32px;
+  margin: 0 0 2px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.dashboard-layout .rightbar-toolbar-copy {
+  min-width: 0;
+}
+
+.dashboard-layout .rightbar-toolbar-title {
+  display: block;
+  font-family: var(--dash-font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--dash-heading);
+  line-height: 1.2;
+}
+
+.dashboard-layout .rightbar-toggle {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--dash-border);
+  background: #fff;
+  color: var(--dash-slate);
+  border-radius: 8px;
+  font-family: inherit;
+  appearance: none;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.dashboard-layout .rightbar-toggle:hover {
+  background: var(--dash-canvas);
+  color: var(--dash-blue);
+  border-color: var(--dash-blue-action);
+}
+
+.dashboard-layout .rightbar-toggle:focus-visible {
+  outline: 2px solid var(--medical-blue);
+  outline-offset: 2px;
+  background: var(--dash-canvas);
+  color: var(--dash-blue);
+}
+
+.dashboard-layout .rightbar-toggle-glyphs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  position: relative;
+}
+
+.dashboard-layout .rightbar-toggle-glyph {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.dashboard-layout .rightbar-toggle-glyph--expand {
+  display: none;
+}
+
+.dashboard-layout .rightbar-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dashboard-layout .rightbar-icon-rail {
+  display: none;
+}
+
+.dashboard-layout .rightbar-rail-item {
+  position: relative;
+  width: var(--dash-rail-tile);
+  min-width: var(--dash-rail-tile);
+  height: var(--dash-rail-tile);
+  min-height: var(--dash-rail-tile);
+  margin: 0 auto;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--dash-navy);
+  border-radius: 11px;
+  font-family: inherit;
+  appearance: none;
+  cursor: pointer;
+  text-decoration: none;
+  overflow: visible;
+}
+
+.dashboard-layout .rightbar-rail-item:hover,
+.dashboard-layout .rightbar-rail-item:focus-visible {
+  background: rgba(10, 111, 182, 0.10);
+  color: var(--dash-blue);
+}
+
+.dashboard-layout .rightbar-rail-item:focus-visible {
+  outline: 2px solid var(--medical-blue);
+  outline-offset: 2px;
+}
+
+.dashboard-layout .rightbar-rail-item i {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.dashboard-layout .rightbar-rail-item--date {
+  flex-direction: column;
+  gap: 0;
+  line-height: 1;
+}
+
+.dashboard-layout .rightbar-rail-date-month {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dash-blue);
+}
+
+.dashboard-layout .rightbar-rail-date-day {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dash-navy);
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .dashboard-rightbar,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .dashboard-rightbar {
+  flex-basis: var(--dash-rightbar-collapsed);
+  padding: 8px 0 10px;
+  gap: 6px;
+  overflow-x: visible;
+  overflow-y: hidden;
+  contain: none;
+}
+
+.dashboard-layout .dashboard-shell--rightbar-animating .dashboard-rightbar {
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toolbar,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toolbar {
+  justify-content: center;
+  min-height: var(--dash-rail-tile);
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toolbar-copy,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toolbar-copy,
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-scroll,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-scroll {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  flex: 0 0 0;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toggle,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toggle {
+  width: var(--dash-rail-tile);
+  height: var(--dash-rail-tile);
+  border-color: transparent;
+  border-radius: 11px;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toggle:hover,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toggle:hover,
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toggle:focus-visible,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toggle:focus-visible {
+  background: rgba(10, 111, 182, 0.10);
+  border-color: transparent;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toggle-glyph--collapse,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toggle-glyph--collapse {
+  display: none;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toggle-glyph--expand,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toggle-glyph--expand {
+  display: inline-block;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-icon-rail,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-icon-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 0 0;
+  border-top: 1px solid var(--dash-border);
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-icon-rail .rightbar-count,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-icon-rail .rightbar-count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 9px;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toggle::after,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toggle::after,
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-rail-item[data-label]::after,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-rail-item[data-label]::after {
+  content: attr(data-label);
+  position: absolute;
+  right: calc(100% + 10px);
+  left: auto;
+  top: 50%;
+  translate: 0 -50%;
+  background: var(--navy-black);
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  scale: 0.92;
+  pointer-events: none;
+  z-index: 80;
+  box-shadow: var(--ds-shadow-overlay);
+  transition: opacity 0.15s ease, scale 0.15s ease;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toggle:hover::after,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toggle:hover::after,
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-toggle:focus-visible::after,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-toggle:focus-visible::after,
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-rail-item:hover::after,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-rail-item:hover::after,
+.dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .rightbar-rail-item:focus-visible::after,
+.dashboard-layout .dashboard-shell[data-rightbar-collapsed] .rightbar-rail-item:focus-visible::after {
+  opacity: 1;
+  scale: 1;
+}
+
+.dashboard-layout .dashboard-shell--rightbar-animating .rightbar-toggle::after,
+.dashboard-layout .dashboard-shell--rightbar-animating .rightbar-rail-item[data-label]::after {
+  opacity: 0 !important;
 }
 
 .dashboard-layout .rightbar-section {
@@ -2876,7 +3135,9 @@ html:has(body.dashboard-layout) {
     padding: 0 16px !important;
   }
 
-  .dashboard-layout .dashboard-rightbar {
+  .dashboard-layout .dashboard-rightbar,
+  .dashboard-layout .dashboard-shell.dashboard-shell--rightbar-collapsed .dashboard-rightbar,
+  .dashboard-layout .dashboard-shell[data-rightbar-collapsed] .dashboard-rightbar {
     display: none !important;
   }
 
@@ -2892,10 +3153,6 @@ html:has(body.dashboard-layout) {
 
   .dashboard-layout .ux-review-workspace__detail > .ux-card {
     min-height: 18rem;
-  }
-
-  .dashboard-layout .ux-filter__actions-col {
-    padding-top: 4px;
   }
 }
 
@@ -2953,8 +3210,7 @@ html:has(body.dashboard-layout) {
     margin-right: -4px;
   }
 
-  .dashboard-layout .ux-page-header__right .btn,
-  .dashboard-layout .ux-filter__actions .btn {
+  .dashboard-layout .ux-page-header__right .btn {
     min-height: 40px;
   }
 }
@@ -3182,8 +3438,7 @@ html:has(body.dashboard-layout) {
   font-size: 13px;
 }
 
-.dashboard-layout .ux-loading__spinner,
-.dashboard-layout .ux-filter.is-loading::after {
+.dashboard-layout .ux-loading__spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
@@ -3191,12 +3446,6 @@ html:has(body.dashboard-layout) {
   border-top-color: var(--dash-blue);
   border-radius: 50%;
   animation: ux-spin 0.7s linear infinite;
-}
-
-.dashboard-layout .ux-filter.is-loading {
-  position: relative;
-  pointer-events: none;
-  opacity: 0.7;
 }
 
 @keyframes ux-spin {
@@ -4520,8 +4769,7 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .ux-card,
-  .dashboard-layout .card,
-  .dashboard-layout .ux-filter {
+  .dashboard-layout .card {
     min-width: 0;
     max-width: 100%;
   }
@@ -4554,24 +4802,6 @@ html:has(body.dashboard-layout) {
   .dashboard-layout .invalid-feedback,
   .dashboard-layout .form-text {
     overflow-wrap: anywhere;
-  }
-
-  .dashboard-layout .ux-filter {
-    padding: 14px;
-  }
-
-  .dashboard-layout .ux-filter__actions {
-    width: 100%;
-  }
-
-  .dashboard-layout .ux-filter__actions .btn {
-    min-height: 44px;
-    flex: 1 1 auto;
-    justify-content: center;
-  }
-
-  .dashboard-layout .ux-filter__grid > [class*="col-"] {
-    min-width: 0;
   }
 
   .dashboard-layout .btn:not(.btn-sm):not(.topbar-toggle):not(.notification-bell):not(.profile-trigger) {
@@ -4729,7 +4959,6 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .ux-page-header__right .btn,
-  .dashboard-layout .ux-filter__actions .btn,
   .dashboard-layout .user-profile-page .user-profile-header__actions .btn {
     width: 100%;
   }

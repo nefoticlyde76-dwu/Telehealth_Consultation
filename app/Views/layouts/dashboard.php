@@ -44,6 +44,13 @@
             shell.classList.add("dashboard-shell--sidebar-collapsed");
             shell.setAttribute("data-collapsed", "");
           }
+          if (
+            shell.classList.contains("dashboard-shell--with-rightbar") &&
+            window.localStorage.getItem("mbpha-dashboard-rightbar-collapsed") === "1"
+          ) {
+            shell.classList.add("dashboard-shell--rightbar-collapsed");
+            shell.setAttribute("data-rightbar-collapsed", "");
+          }
         } catch (e) {}
       })();
     </script>

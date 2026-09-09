@@ -5,31 +5,8 @@ use App\Helpers\ListFilter;
 $filters = is_array($filters ?? null) ? $filters : [];
 $logs = is_array($logs ?? null) ? $logs : [];
 $pagination = is_array($pagination ?? null) ? $pagination : [];
-$actionOptions = is_array($actionOptions ?? null) ? $actionOptions : [];
 $roleOptions = is_array($roleOptions ?? null) ? $roleOptions : [];
-$dateOptions = is_array($dateOptions ?? null) ? $dateOptions : [];
-$sortOptions = is_array($sortOptions ?? null) ? $sortOptions : [];
-$userOptions = is_array($userOptions ?? null) ? $userOptions : [];
 
-$filterForm = [
-    'action' => Helper::url('/admin/audit-logs'),
-    'title' => 'Search and filter activity',
-    'clear_url' => Helper::url('/admin/audit-logs'),
-    'search' => [
-        'name' => 'search',
-        'value' => (string) ($filters['search'] ?? ''),
-        'placeholder' => 'Search activity...',
-        'label' => 'Search',
-    ],
-    'fields' => [
-        ['type' => 'select', 'name' => 'action', 'label' => 'Action', 'value' => (string) ($filters['action'] ?? ''), 'empty_label' => 'All actions', 'options' => $actionOptions],
-        ['type' => 'select', 'name' => 'role', 'label' => 'Role', 'value' => (string) ($filters['role'] ?? ''), 'empty_label' => 'All roles', 'options' => $roleOptions],
-        ['type' => 'select', 'name' => 'user_id', 'label' => 'User', 'value' => (string) ((int) ($filters['user_id'] ?? 0) ?: ''), 'empty_label' => 'All users', 'options' => array_map(static fn (array $u): array => ['value' => (string) (int) ($u['id'] ?? 0), 'label' => (string) (($u['full_name'] ?? '') . ' (' . ($u['email'] ?? '') . ')')], $userOptions)],
-        ['type' => 'date_preset', 'name' => 'date', 'label' => 'Date', 'value' => (string) ($filters['date'] ?? ''), 'empty_label' => 'All dates', 'options' => $dateOptions, 'from_value' => (string) ($filters['date_from'] ?? ''), 'to_value' => (string) ($filters['date_to'] ?? '')],
-        ['type' => 'select', 'name' => 'sort', 'label' => 'Sort', 'value' => (string) ($filters['sort'] ?? 'newest'), 'include_empty' => false, 'options' => $sortOptions],
-        ['type' => 'select', 'name' => 'per_page', 'label' => 'Per page', 'value' => (string) ($filters['per_page'] ?? 25), 'include_empty' => false, 'options' => [['value' => '25', 'label' => '25'], ['value' => '50', 'label' => '50'], ['value' => '100', 'label' => '100']]],
-    ],
-];
 $filterTabs = array_merge(
     [['value' => '', 'label' => 'All']],
     ListFilter::selectOptions($roleOptions)
@@ -54,7 +31,6 @@ $filterTabUrl = static function (string $value) use ($filters): string {
   </div>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
-  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="ux-card ux-data-card">
     <div class="ux-card__header">
@@ -80,8 +56,8 @@ $filterTabUrl = static function (string $value) use ($filters): string {
               <td colspan="6" class="ux-table__empty-state">
                 <div class="ux-empty">
                   <div class="ux-empty__icon"><i class="bi bi-journal-x"></i></div>
-                  <h4 class="ux-empty__title">No matching activity found</h4>
-                  <p class="ux-empty__text">Try changing your search or filters.</p>
+                  <h4 class="ux-empty__title">No activity found</h4>
+                  <p class="ux-empty__text">There are no activity records in this view.</p>
                 </div>
               </td>
             </tr>

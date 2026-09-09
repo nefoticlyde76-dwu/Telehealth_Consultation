@@ -27,30 +27,6 @@ $buildPageUrl = static function (int $page) use ($filters): string {
     return Helper::url('/admin/doctors') . ($queryString !== '' ? '?' . $queryString : '');
 };
 
-$filterForm = [
-    'action' => Helper::url('/admin/doctors'),
-    'title' => 'Filter clinicians',
-    'clear_url' => Helper::url('/admin/doctors'),
-    'search' => [
-        'name' => 'search',
-        'value' => (string) ($filters['search'] ?? ''),
-        'placeholder' => 'Search by full name, email, specialization, title, or employee ID',
-        'label' => 'Search doctors',
-    ],
-    'fields' => [
-        [
-            'type' => 'select',
-            'name' => 'status',
-            'label' => 'Status',
-            'value' => (string) ($filters['status'] ?? ''),
-            'empty_label' => 'All statuses',
-            'options' => array_map(static fn (string $opt): array => [
-                'value' => $opt,
-                'label' => Status::label($opt, Status::DOMAIN_USER),
-            ], $statusOptions),
-        ],
-    ],
-];
 $filterTabs = array_merge(
     [['value' => '', 'label' => 'All']],
     array_map(static fn (string $opt): array => [
@@ -88,8 +64,6 @@ $filterTabUrl = static function (string $value) use ($filters): string {
       </a>
     </div>
   </div>
-
-  <?php require __DIR__ . '/../../partials/shared/list_filter.php'; ?>
 
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
@@ -164,12 +138,12 @@ $filterTabUrl = static function (string $value) use ($filters): string {
                     <div class="ux-empty__icon">
                       <i class="bi bi-person-bounding-box"></i>
                     </div>
-                    <h4 class="ux-empty__title">No doctor accounts matched the current filters</h4>
-                    <p class="ux-empty__text">Adjust the search or status filter to broaden the clinician listing.</p>
+                    <h4 class="ux-empty__title">No doctor accounts to display</h4>
+                    <p class="ux-empty__text">There are no clinician accounts in this view.</p>
                     <div class="ux-empty__action">
                       <a href="<?= \App\Helpers\Helper::url('/admin/doctors') ?>" class="btn btn-outline-primary btn-sm">
                         <i class="bi bi-arrow-clockwise me-1"></i>
-                        Reset Filters
+                        View all doctors
                       </a>
                     </div>
                   </div>
