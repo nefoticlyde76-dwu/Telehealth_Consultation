@@ -128,10 +128,6 @@ body.public-layout .site-footer {
   z-index: 1;
 }
 
-body.auth-login-layout .public-agh-layer {
-  display: none !important;
-}
-
 body.home-landing-layout main.public-shell {
   overflow: visible;
   background: transparent;
