@@ -543,6 +543,21 @@
   color: var(--cr-text-secondary);
 }
 
+.cr-page .cr-prior {
+  margin-top: var(--cr-section);
+}
+
+.cr-page .cr-prior__item {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--cr-divider);
+}
+
+.cr-page .cr-prior__item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
 /* ---------- Prescription ---------- */
 .cr-page .cr-rx {
   padding: 18px;

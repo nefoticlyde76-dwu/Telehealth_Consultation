@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ConsultationRecord;
 use App\Models\ConsultationRequest;
 use App\Models\Prescription;
+use App\Models\User;
 
 class PatientClinicalRecordService
 {
@@ -66,6 +67,99 @@ class PatientClinicalRecordService
             'request' => $request,
             'record' => $record,
             'prescriptions' => $prescriptions,
+        ];
+    }
+
+    /**
+     * Prior finalized records from other doctors for a patient this doctor
+     * has already treated. Default deny when there is no consultation_requests
+     * relationship. The viewing doctor's own records are not included.
+     *
+     * @return list<array{
+     *   request:array<string,mixed>,
+     *   record:array<string,mixed>,
+     *   prescriptions:list<array<string,mixed>>
+     * }>|null
+     */
+    public static function getPriorFinalizedRecordsForDoctor(int $viewerDoctorId, int $patientId): ?array
+    {
+        if ($viewerDoctorId <= 0 || $patientId <= 0) {
+            return null;
+        }
+
+        if (!ConsultationRequest::doctorHasRelationshipWithPatient($viewerDoctorId, $patientId)) {
+            return null;
+        }
+
+        $viewer = User::findById($viewerDoctorId);
+        $prior = [];
+
+        foreach (ConsultationRecord::findFinalizedHistoryForPatient($patientId) as $row) {
+            if ((int) ($row['patient_id'] ?? 0) !== $patientId) {
+                continue;
+            }
+            if ((string) ($row['record_status'] ?? '') !== ConsultationRecord::STATUS_FINAL) {
+                continue;
+            }
+
+            $authorDoctorId = (int) ($row['doctor_id'] ?? 0);
+            if ($authorDoctorId <= 0 || $authorDoctorId === $viewerDoctorId) {
+                continue;
+            }
+
+            $recordId = (int) ($row['id'] ?? 0);
+            if ($recordId <= 0) {
+                continue;
+            }
+
+            $prescriptions = Prescription::findByRecordForPatient($recordId, $patientId);
+            $request = self::priorRecordRequestContext($row);
+            $prior[] = [
+                'request' => $request,
+                'record' => $row,
+                'prescriptions' => $prescriptions,
+            ];
+
+            AuditLogService::record(
+                'clinical_record_viewed_cross_doctor',
+                'Doctor viewed another clinician\'s finalized clinical record.',
+                AuditLogService::ENTITY_CONSULTATION_RECORD,
+                $recordId,
+                'success',
+                [
+                    'actor_name' => trim((string) ($viewer?->full_name ?? '')) !== ''
+                        ? (string) $viewer->full_name
+                        : 'Doctor',
+                    'actor_role' => 'doctor',
+                    'subject_name' => (string) ($row['patient_name'] ?? 'Patient'),
+                    'subject_role' => 'patient',
+                ]
+            );
+        }
+
+        return $prior;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private static function priorRecordRequestContext(array $row): array
+    {
+        return [
+            'id' => (int) ($row['consultation_request_id'] ?? 0),
+            'patient_id' => (int) ($row['patient_id'] ?? 0),
+            'doctor_id' => (int) ($row['doctor_id'] ?? 0),
+            'status' => 'Completed',
+            'patient_name' => (string) ($row['patient_name'] ?? ''),
+            'patient_address' => (string) ($row['patient_address'] ?? ''),
+            'doctor_name' => (string) ($row['doctor_name'] ?? ''),
+            'doctor_title' => (string) ($row['doctor_title'] ?? ''),
+            'specialization' => (string) ($row['specialization'] ?? ''),
+            'doctor_signature_path' => (string) ($row['doctor_signature_path'] ?? ''),
+            'doctor_clinic_address' => (string) ($row['doctor_clinic_address'] ?? ''),
+            'doctor_photo_path' => $row['doctor_photo_path'] ?? null,
+            'consultation_date' => (string) ($row['consultation_date'] ?? ''),
         ];
     }
 

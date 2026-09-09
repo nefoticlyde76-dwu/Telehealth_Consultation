@@ -957,6 +957,10 @@ class DoctorController extends Controller
         $patientName = (string) ($request['patient_name'] ?? 'Patient');
         $isCompleted = (string) ($request['status'] ?? '') === 'Completed';
         $videoJoin = self::computeDoctorVideoJoinContext($request)['videoJoin'] ?? null;
+        $priorConsultations = PatientClinicalRecordService::getPriorFinalizedRecordsForDoctor(
+            (int) $user->id,
+            (int) ($request['patient_id'] ?? 0)
+        );
 
         $this->render('doctor/consultations/show', [
             'title' => ($isCompleted ? 'Consultation Record' : 'Consultation Details') . ' | MBPHA TeleHealth Consultation System',
@@ -977,6 +981,7 @@ class DoctorController extends Controller
             'request' => $request,
             'clinicalRecord' => $page['record'] ?? null,
             'prescriptions' => $page['prescriptions'] ?? [],
+            'priorConsultations' => is_array($priorConsultations) ? $priorConsultations : [],
             'videoJoin' => is_array($videoJoin) ? $videoJoin : null,
             'viewerRole' => 'doctor',
             'statusMessage' => Session::getFlash('status'),

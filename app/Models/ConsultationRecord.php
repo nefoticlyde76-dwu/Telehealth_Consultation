@@ -452,6 +452,60 @@ class ConsultationRecord
     }
 
     /**
+     * Finalized clinical records for a patient across every treating doctor.
+     * Draft and in-progress notes are never returned.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function findFinalizedHistoryForPatient(int $patientId): array
+    {
+        if ($patientId <= 0) {
+            return [];
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                consultation_records.id,
+                consultation_records.consultation_request_id,
+                consultation_records.patient_id,
+                consultation_records.doctor_id,
+                consultation_records.chief_complaint,
+                consultation_records.symptoms,
+                consultation_records.clinical_findings,
+                consultation_records.diagnosis,
+                consultation_records.treatment_plan,
+                consultation_records.additional_notes,
+                consultation_records.record_status,
+                consultation_records.finalized_at,
+                consultation_records.consultation_date,
+                consultation_records.created_at,
+                consultation_records.updated_at,
+                doctor.professional_title AS doctor_title,
+                doctor.specialization,
+                doctor.signature_path AS doctor_signature_path,
+                doctor.clinic_address AS doctor_clinic_address,
+                doctor.profile_photo_path AS doctor_photo_path,
+                doctor_user.full_name AS doctor_name,
+                patient_user.full_name AS patient_name,
+                patient.address AS patient_address
+             FROM consultation_records
+             INNER JOIN doctor ON doctor.user_id = consultation_records.doctor_id
+             INNER JOIN users AS doctor_user ON doctor_user.id = doctor.user_id
+             INNER JOIN patient ON patient.user_id = consultation_records.patient_id
+             INNER JOIN users AS patient_user ON patient_user.id = patient.user_id
+            WHERE consultation_records.patient_id = :patient_id
+              AND consultation_records.record_status = :record_status
+            ORDER BY consultation_records.finalized_at DESC, consultation_records.id DESC"
+        );
+        $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
+        $stmt->bindValue(':record_status', self::STATUS_FINAL);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    /**
      * @param array<string, mixed> $fields
      * @return list<string>
      */

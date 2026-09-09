@@ -32,6 +32,7 @@ class AuditLogService
             'consultation_cancelled' => ['label' => 'Consultation Cancelled', 'category' => 'consultation', 'severity' => 'warning'],
             'consultation_completed' => ['label' => 'Consultation Completed', 'category' => 'consultation', 'severity' => 'success'],
             'clinical_record_finalized' => ['label' => 'Clinical Record Finalized', 'category' => 'clinical', 'severity' => 'success'],
+            'clinical_record_viewed_cross_doctor' => ['label' => 'Clinical Record Viewed (Cross-Doctor)', 'category' => 'clinical', 'severity' => 'info'],
             'prescription_created' => ['label' => 'Prescription Created', 'category' => 'prescription', 'severity' => 'success'],
             'availability_created' => ['label' => 'Availability Created', 'category' => 'availability', 'severity' => 'info'],
             'availability_updated' => ['label' => 'Availability Updated', 'category' => 'availability', 'severity' => 'info'],

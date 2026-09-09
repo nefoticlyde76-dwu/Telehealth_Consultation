@@ -212,6 +212,31 @@ class ConsultationRequest
         return $row ?: null;
     }
 
+    /**
+     * True when this doctor already has at least one consultation_requests
+     * row with the patient (any status). Used as a minimum-necessary
+     * relationship check before cross-doctor clinical reads.
+     */
+    public static function doctorHasRelationshipWithPatient(int $doctorId, int $patientId): bool
+    {
+        if ($doctorId <= 0 || $patientId <= 0) {
+            return false;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT COUNT(*)
+               FROM consultation_requests
+              WHERE doctor_id = :doctor_id
+                AND patient_id = :patient_id"
+        );
+        $stmt->bindValue(':doctor_id', $doctorId, PDO::PARAM_INT);
+        $stmt->bindValue(':patient_id', $patientId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public static function findLatestForPatient(int $patientId): ?array
     {
         $db = Database::getInstance();

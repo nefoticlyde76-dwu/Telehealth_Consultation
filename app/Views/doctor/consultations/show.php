@@ -99,4 +99,5 @@ $summaryPartyMeta = trim((string) ($request['patient_gender'] ?? ''));
   </div>
 
   <?php require __DIR__ . '/../../partials/shared/_consultation_record_details.php'; ?>
+  <?php require __DIR__ . '/../../partials/shared/_prior_consultations.php'; ?>
 </div>
