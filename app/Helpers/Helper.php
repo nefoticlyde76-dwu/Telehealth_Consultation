@@ -117,7 +117,13 @@ class Helper
         $url = self::url($path);
         $file = Paths::publicRoot() . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, ltrim($path, '/'));
         if (is_file($file)) {
-            $url .= (str_contains($url, '?') ? '&' : '?') . 'v=' . filemtime($file);
+            // App Platform (and similar hosts) stamp checkout files at 1980-01-01,
+            // so filemtime() never changes between deploys and browsers keep stale CSS.
+            $version = @hash_file('crc32b', $file);
+            if (!is_string($version) || $version === '') {
+                $version = (string) filemtime($file);
+            }
+            $url .= (str_contains($url, '?') ? '&' : '?') . 'v=' . $version;
         }
 
         return $url;
