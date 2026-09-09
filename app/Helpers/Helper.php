@@ -116,10 +116,23 @@ class Helper
         return self::requestScheme() === 'https';
     }
 
+    /**
+     * Test-only: when false, redirect() records the target and returns
+     * instead of calling exit(). Production callers must leave this true.
+     */
+    public static bool $exitOnRedirect = true;
+
+    public static ?string $lastRedirect = null;
+
     public static function redirect(string $url): void
     {
-        header('Location: ' . self::url($url));
-        exit;
+        self::$lastRedirect = self::url($url);
+        if (!headers_sent()) {
+            header('Location: ' . self::$lastRedirect);
+        }
+        if (self::$exitOnRedirect) {
+            exit;
+        }
     }
 
     public static function asset(string $path): string
