@@ -5,7 +5,6 @@ use App\Helpers\Status;
 $bookingSummary = is_array($bookingSummary ?? null) ? $bookingSummary : [];
 $slotPreview = is_array($slotPreview ?? null) ? $slotPreview : [];
 $recentRequests = is_array($recentRequests ?? null) ? $recentRequests : [];
-$recentNotifications = is_array($recentNotifications ?? null) ? $recentNotifications : [];
 $charts = is_array($charts ?? null) ? $charts : [];
 $latestRequest = is_array($bookingSummary['latest_request'] ?? null) ? $bookingSummary['latest_request'] : null;
 $headerNotifications = is_array($headerNotifications ?? null) ? $headerNotifications : [];
@@ -63,18 +62,6 @@ $summaryStats = [
         'url' => '/notifications?read_state=unread',
     ],
 ];
-
-$notificationItems = [];
-foreach ($recentNotifications as $item) {
-    $notificationItems[] = [
-        'title' => (string) ($item['title'] ?? 'Notification'),
-        'description' => (string) ($item['message'] ?? ''),
-        'meta' => (string) ($item['relative_time'] ?? ''),
-        'url' => (string) ($item['open_url'] ?? '/notifications'),
-        'icon' => (string) ($item['icon'] ?? 'bi-bell'),
-        'unread' => !empty($item['unread']),
-    ];
-}
 
 $welcomePills = [
     [
@@ -199,145 +186,118 @@ $welcomeIcon = 'bi-calendar2-heart';
 </section>
 
 <section class="mb-4">
-  <div class="row g-4">
-    <div class="col-xl-7">
-      <div class="ux-card ux-data-card h-100">
-        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <?php
-          $sectionTitle = 'Recent Consultations';
-          $sectionSubtitle = 'Your latest requests and their status.';
-          $sectionIcon = 'bi-clock-history';
-          $sectionTone = 'navy';
-          require __DIR__ . '/../partials/dashboard/section_heading.php';
-          ?>
-          <a href="<?= Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All
-          </a>
-        </div>
-        <div class="ux-card__body">
-          <?php if ($recentRequests === []): ?>
-            <?php
-            $emptyIcon = 'bi-clipboard2-x';
-            $emptyTitle = 'No consultations found';
-            $emptyText = 'Your consultations will appear here once you have an appointment.';
-            $emptyActions = '<a href="' . Helper::url('/patient/available-slots') . '" class="btn btn-primary btn-sm">Book Consultation</a>';
-            $emptyCompact = true;
-            require __DIR__ . '/../partials/shared/empty_state.php';
-            ?>
-          <?php else: ?>
-            <div class="ux-table-wrapper">
-              <table class="ux-table align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">Doctor</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="text-end">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($recentRequests as $request): ?>
-                    <?php $status = (string) ($request['status'] ?? Status::PENDING); ?>
-                    <tr>
-                      <td>
-                        <?php
-                        $personName = (string) ($request['doctor_name'] ?? 'Doctor');
-                        $personPhoto = $request['doctor_photo_path'] ?? null;
-                        $personMeta = (string) ($request['specialization'] ?? '');
-                        $personSize = 'sm';
-                        require __DIR__ . '/../partials/shared/person_row.php';
-                        ?>
-                      </td>
-                      <td><?= Helper::escape(Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
-                      <td><?= ux_status_badge($status) ?></td>
-                      <td class="text-end">
-                        <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($request['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
-                          <i class="bi <?= $status === Status::COMPLETED ? 'bi-file-earmark-text' : 'bi-eye' ?> me-1" aria-hidden="true"></i>
-                          <?= $status === Status::COMPLETED ? 'View Record' : 'View Details' ?>
-                        </a>
-                      </td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
+  <div class="ux-card ux-data-card">
+    <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+      <?php
+      $sectionTitle = 'Recent Consultations';
+      $sectionSubtitle = 'Your latest requests and their status.';
+      $sectionIcon = 'bi-clock-history';
+      $sectionTone = 'navy';
+      require __DIR__ . '/../partials/dashboard/section_heading.php';
+      ?>
+      <a href="<?= Helper::url('/patient/consultation-requests') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All
+      </a>
     </div>
+    <div class="ux-card__body">
+      <?php if ($recentRequests === []): ?>
+        <?php
+        $emptyIcon = 'bi-clipboard2-x';
+        $emptyTitle = 'No consultations found';
+        $emptyText = 'Your consultations will appear here once you have an appointment.';
+        $emptyActions = '<a href="' . Helper::url('/patient/available-slots') . '" class="btn btn-primary btn-sm">Book Consultation</a>';
+        $emptyCompact = true;
+        require __DIR__ . '/../partials/shared/empty_state.php';
+        ?>
+      <?php else: ?>
+        <div class="ux-table-wrapper">
+          <table class="ux-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Doctor</th>
+                <th scope="col">Date</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($recentRequests as $request): ?>
+                <?php $status = (string) ($request['status'] ?? Status::PENDING); ?>
+                <tr>
+                  <td>
+                    <?php
+                    $personName = (string) ($request['doctor_name'] ?? 'Doctor');
+                    $personPhoto = $request['doctor_photo_path'] ?? null;
+                    $personMeta = (string) ($request['specialization'] ?? '');
+                    $personSize = 'sm';
+                    require __DIR__ . '/../partials/shared/person_row.php';
+                    ?>
+                  </td>
+                  <td><?= Helper::escape(Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                  <td><?= ux_status_badge($status) ?></td>
+                  <td class="text-end">
+                    <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($request['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
+                      <i class="bi <?= $status === Status::COMPLETED ? 'bi-file-earmark-text' : 'bi-eye' ?> me-1" aria-hidden="true"></i>
+                      <?= $status === Status::COMPLETED ? 'View Record' : 'View Details' ?>
+                    </a>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php endif; ?>
+    </div>
+  </div>
+</section>
 
-    <div class="col-xl-5">
-      <div class="ux-card ux-data-card h-100 mb-4">
-        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+<section class="mb-4">
+  <div class="ux-card">
+    <div class="ux-card__header mb-3">
+      <?php
+      $sectionTitle = 'Next Available Slots';
+      $sectionSubtitle = (string) count($slotPreview) . ' upcoming times you can book';
+      $sectionIcon = 'bi-calendar2-plus';
+      $sectionTone = 'success';
+      require __DIR__ . '/../partials/dashboard/section_heading.php';
+      ?>
+    </div>
+    <div class="ux-card__body">
+      <?php if ($slotPreview === []): ?>
+        <?php
+        $emptyIcon = 'bi-calendar-x';
+        $emptyTitle = 'No slots available';
+        $emptyText = 'When doctors publish availability, times will appear here.';
+        $emptyActions = '';
+        $emptyCompact = true;
+        require __DIR__ . '/../partials/shared/empty_state.php';
+        ?>
+      <?php else: ?>
+        <?php foreach (array_slice($slotPreview, 0, 4) as $slot): ?>
           <?php
-          $sectionTitle = 'Notifications';
-          $sectionSubtitle = 'Updates about your consultations.';
-          $sectionIcon = 'bi-bell';
-          $sectionTone = 'info';
-          require __DIR__ . '/../partials/dashboard/section_heading.php';
+          $previewExpiresAt = Helper::combineDateTimeIso(
+              (string) ($slot['consultation_date'] ?? ''),
+              (string) ($slot['end_time'] ?? '')
+          );
           ?>
-          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All
-          </a>
-        </div>
-        <div class="ux-card__body">
-          <?php
-          $activityEmptyTitle = "You're all caught up";
-          $activityEmptyText = "You don't have any notifications yet.";
-          $activityEmptyIcon = 'bi-bell';
-          require __DIR__ . '/../partials/shared/notification_preview_table.php';
-          ?>
-        </div>
-      </div>
-
-      <div class="ux-card">
-        <div class="ux-card__header mb-3">
-          <?php
-          $sectionTitle = 'Next Available Slots';
-          $sectionSubtitle = (string) count($slotPreview) . ' upcoming times you can book';
-          $sectionIcon = 'bi-calendar2-plus';
-          $sectionTone = 'success';
-          require __DIR__ . '/../partials/dashboard/section_heading.php';
-          ?>
-        </div>
-        <div class="ux-card__body">
-          <?php if ($slotPreview === []): ?>
+          <div class="ux-slot-row"<?= $previewExpiresAt !== '' ? ' data-slot-expires-at="' . Helper::escape($previewExpiresAt) . '"' : '' ?>>
             <?php
-            $emptyIcon = 'bi-calendar-x';
-            $emptyTitle = 'No slots available';
-            $emptyText = 'When doctors publish availability, times will appear here.';
-            $emptyActions = '';
-            $emptyCompact = true;
-            require __DIR__ . '/../partials/shared/empty_state.php';
+            $personName = (string) ($slot['full_name'] ?? 'Doctor');
+            $personPhoto = $slot['profile_photo_path'] ?? null;
+            $personMeta = (string) ($slot['specialization'] ?? 'General Practice');
+            $personSize = 'sm';
+            require __DIR__ . '/../partials/shared/person_row.php';
             ?>
-          <?php else: ?>
-            <?php foreach (array_slice($slotPreview, 0, 4) as $slot): ?>
-              <?php
-              $previewExpiresAt = Helper::combineDateTimeIso(
-                  (string) ($slot['consultation_date'] ?? ''),
-                  (string) ($slot['end_time'] ?? '')
-              );
-              ?>
-              <div class="ux-slot-row"<?= $previewExpiresAt !== '' ? ' data-slot-expires-at="' . Helper::escape($previewExpiresAt) . '"' : '' ?>>
-                <?php
-                $personName = (string) ($slot['full_name'] ?? 'Doctor');
-                $personPhoto = $slot['profile_photo_path'] ?? null;
-                $personMeta = (string) ($slot['specialization'] ?? 'General Practice');
-                $personSize = 'sm';
-                require __DIR__ . '/../partials/shared/person_row.php';
-                ?>
-                <div class="flex-grow-1 text-center">
-                  <strong class="d-block"><?= Helper::escape(Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M', '')) ?></strong>
-                  <span class="small text-muted"><?= Helper::escape(substr((string) ($slot['start_time'] ?? ''), 0, 5)) ?></span>
-                </div>
-                <a href="<?= Helper::url('/patient/consultation-requests/book/' . (int) ($slot['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">
-                  <i class="bi bi-calendar2-plus me-1" aria-hidden="true"></i>Book
-                </a>
-              </div>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </div>
-      </div>
+            <div class="flex-grow-1 text-center">
+              <strong class="d-block"><?= Helper::escape(Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M', '')) ?></strong>
+              <span class="small text-muted"><?= Helper::escape(substr((string) ($slot['start_time'] ?? ''), 0, 5)) ?></span>
+            </div>
+            <a href="<?= Helper::url('/patient/consultation-requests/book/' . (int) ($slot['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">
+              <i class="bi bi-calendar2-plus me-1" aria-hidden="true"></i>Book
+            </a>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
   </div>
 </section>

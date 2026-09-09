@@ -1462,11 +1462,11 @@ html:has(body.dashboard-layout) {
 
 .dashboard-layout .ux-stat__value {
   font-family: var(--dash-font-display);
-  font-size: 26px;
+  font-size: 40px;
   font-weight: 700;
   color: var(--dash-text);
-  margin: 0;
-  line-height: 1.15;
+  margin: 4px 0 0;
+  line-height: 1.05;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
@@ -1509,7 +1509,7 @@ html:has(body.dashboard-layout) {
 }
 
 .dashboard-layout .ux-stat.compact .ux-stat__value {
-  font-size: 22px;
+  font-size: 28px;
 }
 
 .dashboard-layout .ux-stat.compact .ux-stat__icon {
@@ -4760,7 +4760,7 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .ux-stat__value {
-    font-size: 1.55rem;
+    font-size: 2rem;
     overflow-wrap: anywhere;
   }
 
@@ -5039,7 +5039,7 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .ux-stat__value {
-    font-size: 1.4rem;
+    font-size: 1.75rem;
   }
 
   .dashboard-layout .ux-stat__icon {

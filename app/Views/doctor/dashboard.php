@@ -7,7 +7,6 @@ $charts = is_array($charts ?? null) ? $charts : [];
 $availabilityChart = $charts['availability'] ?? null;
 $upcomingApprovedAppointments = is_array($upcomingApprovedAppointments ?? null) ? $upcomingApprovedAppointments : [];
 $recentCompletedConsultations = is_array($recentCompletedConsultations ?? null) ? $recentCompletedConsultations : [];
-$recentNotifications = is_array($recentNotifications ?? null) ? $recentNotifications : [];
 $todaySummary = is_array($todaySummary ?? null) ? $todaySummary : [];
 $headerNotifications = is_array($headerNotifications ?? null) ? $headerNotifications : [];
 require_once __DIR__ . '/../partials/shared/status_helper.php';
@@ -32,18 +31,6 @@ ob_start();
 $pageHeaderActions = ob_get_clean();
 $summaryStats = $stats;
 
-$notificationItems = [];
-foreach ($recentNotifications as $item) {
-    $notificationItems[] = [
-        'title' => (string) ($item['title'] ?? 'Notification'),
-        'description' => (string) ($item['message'] ?? ''),
-        'meta' => (string) ($item['relative_time'] ?? ''),
-        'url' => (string) ($item['open_url'] ?? '/notifications'),
-        'icon' => (string) ($item['icon'] ?? 'bi-bell'),
-        'unread' => !empty($item['unread']),
-    ];
-}
-
 $welcomePills = [
     [
         'icon' => 'bi-calendar2-check',
@@ -63,94 +50,65 @@ $welcomeIcon = 'bi-heart-pulse';
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
 
 <section class="mb-4">
-  <div class="row g-4">
-    <div class="col-xl-8">
-      <div class="ux-card ux-data-card h-100">
-        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <?php
-          $sectionTitle = "Today's Schedule";
-          $sectionSubtitle = (string) $bookedToday . ' booked · ' . (string) $openToday . ' open slots';
-          $sectionIcon = 'bi-calendar2-week';
-          $sectionTone = 'pending';
-          require __DIR__ . '/../partials/dashboard/section_heading.php';
-          ?>
-          <a href="<?= Helper::url('/doctor/consultations?date=today') ?>" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>View Today
-          </a>
-        </div>
-        <div class="ux-card__body">
-          <?php if ($todaysAppointments === []): ?>
-            <?php
-            $emptyIcon = 'bi-calendar2-x';
-            $emptyTitle = 'No consultations scheduled today';
-            $emptyText = 'Approved consultations for today will appear here.';
-            $emptyActions = '<a href="' . Helper::url('/doctor/availability') . '" class="btn btn-primary btn-sm">Create Availability Slot</a>';
-            $emptyCompact = false;
-            require __DIR__ . '/../partials/shared/empty_state.php';
-            ?>
-          <?php else: ?>
-            <div class="ux-table-wrapper">
-              <table class="ux-table align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">Time</th>
-                    <th scope="col">Patient</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="text-end">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach (array_slice($todaysAppointments, 0, 5) as $appointment): ?>
-                    <tr>
-                      <td class="text-muted small"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
-                      <td>
-                        <?php
-                        $personName = (string) ($appointment['patient_name'] ?? 'Patient');
-                        $personPhoto = $appointment['patient_photo_path'] ?? null;
-                        $personMeta = '';
-                        $personSize = 'sm';
-                        require __DIR__ . '/../partials/shared/person_row.php';
-                        ?>
-                      </td>
-                      <td><?= ux_status_badge(Status::APPROVED) ?></td>
-                      <td class="text-end">
-                        <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
-                          <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Open
-                        </a>
-                      </td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
+  <div class="ux-card ux-data-card">
+    <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+      <?php
+      $sectionTitle = "Today's Schedule";
+      $sectionSubtitle = (string) $bookedToday . ' booked · ' . (string) $openToday . ' open slots';
+      $sectionIcon = 'bi-calendar2-week';
+      $sectionTone = 'pending';
+      require __DIR__ . '/../partials/dashboard/section_heading.php';
+      ?>
+      <a href="<?= Helper::url('/doctor/consultations?date=today') ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-calendar2-check me-1" aria-hidden="true"></i>View Today
+      </a>
     </div>
-
-    <div class="col-xl-4">
-      <div class="ux-card ux-data-card h-100">
-        <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-          <?php
-          $sectionTitle = 'Notifications';
-          $sectionSubtitle = 'Recent consultation updates.';
-          $sectionIcon = 'bi-bell';
-          $sectionTone = 'info';
-          require __DIR__ . '/../partials/dashboard/section_heading.php';
-          ?>
-          <a href="<?= Helper::url('/notifications') ?>" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-arrow-right me-1" aria-hidden="true"></i>View All
-          </a>
+    <div class="ux-card__body">
+      <?php if ($todaysAppointments === []): ?>
+        <?php
+        $emptyIcon = 'bi-calendar2-x';
+        $emptyTitle = 'No consultations scheduled today';
+        $emptyText = 'Approved consultations for today will appear here.';
+        $emptyActions = '<a href="' . Helper::url('/doctor/availability') . '" class="btn btn-primary btn-sm">Create Availability Slot</a>';
+        $emptyCompact = false;
+        require __DIR__ . '/../partials/shared/empty_state.php';
+        ?>
+      <?php else: ?>
+        <div class="ux-table-wrapper">
+          <table class="ux-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Time</th>
+                <th scope="col">Patient</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach (array_slice($todaysAppointments, 0, 5) as $appointment): ?>
+                <tr>
+                  <td class="text-muted small"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
+                  <td>
+                    <?php
+                    $personName = (string) ($appointment['patient_name'] ?? 'Patient');
+                    $personPhoto = $appointment['patient_photo_path'] ?? null;
+                    $personMeta = '';
+                    $personSize = 'sm';
+                    require __DIR__ . '/../partials/shared/person_row.php';
+                    ?>
+                  </td>
+                  <td><?= ux_status_badge(Status::APPROVED) ?></td>
+                  <td class="text-end">
+                    <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
+                      <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Open
+                    </a>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
         </div>
-        <div class="ux-card__body">
-          <?php
-          $activityEmptyTitle = "You're all caught up";
-          $activityEmptyText = "You don't have any notifications yet.";
-          $activityEmptyIcon = 'bi-bell';
-          require __DIR__ . '/../partials/shared/notification_preview_table.php';
-          ?>
-        </div>
-      </div>
+      <?php endif; ?>
     </div>
   </div>
 </section>
