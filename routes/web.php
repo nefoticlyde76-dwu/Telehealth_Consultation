@@ -84,6 +84,18 @@ $router->get('/patient/consultation-requests/{id}', [PatientController::class, '
     new RoleMiddleware(['patient']),
 ]);
 
+$router->post('/patient/consultation-requests/{id}/cancel', [PatientController::class, 'cancelConsultationRequest'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/consultation-requests/{id}/reschedule', [PatientController::class, 'rescheduleConsultationRequest'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->post('/patient/consultation-requests/{id}/reschedule', [PatientController::class, 'rescheduleConsultationRequest'], [
+    new RoleMiddleware(['patient']),
+]);
+
 $router->get('/patient/consultation-requests/{id}/download-record', [PatientController::class, 'downloadConsultationRecord'], [
     new RoleMiddleware(['patient']),
 ]);

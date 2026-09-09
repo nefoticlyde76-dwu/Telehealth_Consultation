@@ -85,6 +85,8 @@ $summaryPartyMeta = trim(implode(' · ', array_filter([
         <?php
               endif;
           }
+          $bookingChangeVariant = 'header';
+          require __DIR__ . '/../../partials/shared/_booking_change_actions.php';
         ?>
       </div>
     </header>

@@ -71,6 +71,90 @@ class Notification
         return (int) $db->lastInsertId();
     }
 
+    /**
+     * Insert a notification, or refresh the existing dedupe row so a later
+     * reschedule can notify the same doctor with the new appointment time.
+     *
+     * @param array{
+     *   user_id:int,
+     *   notification_type:string,
+     *   title:string,
+     *   message:string,
+     *   related_entity_type?:string,
+     *   related_entity_id:int
+     * } $data
+     */
+    public static function createOrReplace(array $data): int
+    {
+        $userId = (int) ($data['user_id'] ?? 0);
+        $type = trim((string) ($data['notification_type'] ?? ''));
+        $title = trim((string) ($data['title'] ?? ''));
+        $message = trim((string) ($data['message'] ?? ''));
+        $entityType = trim((string) ($data['related_entity_type'] ?? self::ENTITY_CONSULTATION_REQUEST));
+        $entityId = (int) ($data['related_entity_id'] ?? 0);
+
+        if ($userId <= 0 || $type === '' || $title === '' || $message === '' || $entityType === '' || $entityId <= 0) {
+            return 0;
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "INSERT INTO notifications (
+                user_id,
+                notification_type,
+                title,
+                message,
+                related_entity_type,
+                related_entity_id,
+                is_read,
+                created_at
+            ) VALUES (
+                :user_id,
+                :notification_type,
+                :title,
+                :message,
+                :related_entity_type,
+                :related_entity_id,
+                0,
+                NOW()
+            )
+            ON DUPLICATE KEY UPDATE
+                title = VALUES(title),
+                message = VALUES(message),
+                is_read = 0,
+                created_at = NOW()"
+        );
+        $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $stmt->bindValue(':notification_type', $type);
+        $stmt->bindValue(':title', $title);
+        $stmt->bindValue(':message', $message);
+        $stmt->bindValue(':related_entity_type', $entityType);
+        $stmt->bindValue(':related_entity_id', $entityId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $id = (int) $db->lastInsertId();
+        if ($id > 0) {
+            return $id;
+        }
+
+        $existing = $db->prepare(
+            "SELECT id
+            FROM notifications
+            WHERE user_id = :user_id
+              AND notification_type = :notification_type
+              AND related_entity_type = :related_entity_type
+              AND related_entity_id = :related_entity_id
+            LIMIT 1"
+        );
+        $existing->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $existing->bindValue(':notification_type', $type);
+        $existing->bindValue(':related_entity_type', $entityType);
+        $existing->bindValue(':related_entity_id', $entityId, PDO::PARAM_INT);
+        $existing->execute();
+
+        return (int) $existing->fetchColumn();
+    }
+
     public static function countForUser(int $userId, array $filters = []): int
     {
         if ($userId <= 0) {

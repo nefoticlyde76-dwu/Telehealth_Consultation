@@ -185,6 +185,14 @@ $approvedPatient = Status::consultationUiActions('Approved', [
     'join_url' => '/patient/consultations/1/room',
 ]);
 expect_true($approvedPatient['join'] && $approvedPatient['join_enabled'] && !$approvedPatient['view_record'], 'Approved patients can join and cannot view a completed record');
+expect_true(!$approvedPatient['cancel'] && !$approvedPatient['reschedule'], 'Patients cannot cancel or reschedule without eligibility flags');
+
+$pendingPatientChange = Status::consultationUiActions('Pending', [
+    'role' => 'patient',
+    'can_cancel' => true,
+    'can_reschedule' => true,
+]);
+expect_true($pendingPatientChange['cancel'] && $pendingPatientChange['reschedule'], 'Patients can cancel or reschedule when the cutoff allows it');
 
 $completedPatient = Status::consultationUiActions('Completed', [
     'role' => 'patient',

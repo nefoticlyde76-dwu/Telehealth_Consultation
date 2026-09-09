@@ -475,7 +475,9 @@ class Status
             'review' => $role === 'admin' && $isPending,
             'approve' => $role === 'admin' && $isPending,
             'reject' => $role === 'admin' && $isPending,
-            'cancel' => $role === 'admin' && ($isPending || $isApproved),
+            'cancel' => ($role === 'admin' && ($isPending || $isApproved))
+                || ($role === 'patient' && ($isPending || $isApproved) && !empty($context['can_cancel'])),
+            'reschedule' => $role === 'patient' && ($isPending || $isApproved) && !empty($context['can_reschedule']),
             'join' => $joinWindow && !$isClosed && !$isCompleted,
             'join_enabled' => $joinWindow && $canJoin,
             'join_label' => self::joinButtonLabel($joinStatus),

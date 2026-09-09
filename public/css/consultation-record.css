@@ -123,6 +123,11 @@
   flex-shrink: 0;
 }
 
+.cr-page .cr-header__actions form {
+  display: inline-flex;
+  margin: 0;
+}
+
 .cr-page .cr-btn {
   display: inline-flex;
   align-items: center;

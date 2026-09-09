@@ -46,6 +46,8 @@ $expectedTypes = [
     NotificationService::TYPE_REQUEST_CREATED,
     NotificationService::TYPE_APPROVED,
     NotificationService::TYPE_ASSIGNED,
+    NotificationService::TYPE_CANCELLED,
+    NotificationService::TYPE_RESCHEDULED,
     NotificationService::TYPE_REJECTED,
     NotificationService::TYPE_COMPLETED,
     NotificationService::TYPE_PRESCRIPTION,
@@ -185,8 +187,10 @@ expect_true(
 );
 expect_true(
     in_array(NotificationService::TYPE_ASSIGNED, $doctorTypes, true)
+        && in_array(NotificationService::TYPE_CANCELLED, $doctorTypes, true)
+        && in_array(NotificationService::TYPE_RESCHEDULED, $doctorTypes, true)
         && in_array(NotificationService::TYPE_UPCOMING, $doctorTypes, true),
-    'Doctor type filter includes assigned and upcoming notifications'
+    'Doctor type filter includes assigned, cancelled, rescheduled, and upcoming notifications'
 );
 expect_true(
     $adminTypes === [NotificationService::TYPE_REQUEST_CREATED],

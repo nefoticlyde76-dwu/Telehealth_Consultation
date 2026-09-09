@@ -22,6 +22,8 @@ class NotificationService
     public const TYPE_REQUEST_CREATED = 'consultation_request_created';
     public const TYPE_APPROVED = 'consultation_approved';
     public const TYPE_ASSIGNED = 'consultation_assigned';
+    public const TYPE_CANCELLED = 'consultation_cancelled';
+    public const TYPE_RESCHEDULED = 'consultation_rescheduled';
     public const TYPE_REJECTED = 'consultation_rejected';
     public const TYPE_COMPLETED = 'consultation_completed';
     public const TYPE_PRESCRIPTION = 'prescription_created';
@@ -58,6 +60,20 @@ class NotificationService
             self::TYPE_ASSIGNED => [
                 'title' => 'New Consultation',
                 'icon' => 'bi-calendar2-check',
+                'audience' => ['doctor'],
+                'action' => 'Open',
+                'tone' => 'info',
+            ],
+            self::TYPE_CANCELLED => [
+                'title' => 'Consultation Cancelled',
+                'icon' => 'bi-slash-circle',
+                'audience' => ['doctor'],
+                'action' => 'Open',
+                'tone' => 'warn',
+            ],
+            self::TYPE_RESCHEDULED => [
+                'title' => 'Consultation Rescheduled',
+                'icon' => 'bi-calendar2-week',
                 'audience' => ['doctor'],
                 'action' => 'Open',
                 'tone' => 'info',
@@ -255,6 +271,80 @@ class NotificationService
                 self::typeTitle(self::TYPE_REJECTED),
                 'Your consultation request has been rejected.',
                 $requestId
+            );
+        });
+    }
+
+    public static function notifyPatientCancelledConsultation(int $requestId): void
+    {
+        self::safeRun(function () use ($requestId): void {
+            $context = self::requestContext($requestId);
+            if ($context === null) {
+                return;
+            }
+
+            $doctorId = (int) ($context['doctor_id'] ?? 0);
+            if ($doctorId <= 0) {
+                return;
+            }
+
+            $patientName = self::personName((string) ($context['patient_name'] ?? ''), 'A patient');
+            $when = self::appointmentPhrase(
+                (string) ($context['consultation_date'] ?? ''),
+                (string) ($context['start_time'] ?? '')
+            );
+            $message = $when !== ''
+                ? $patientName . ' cancelled their consultation scheduled for ' . $when . '.'
+                : $patientName . ' cancelled their consultation booking.';
+
+            self::createForUser(
+                $doctorId,
+                self::TYPE_CANCELLED,
+                self::typeTitle(self::TYPE_CANCELLED),
+                $message,
+                $requestId
+            );
+        });
+    }
+
+    public static function notifyPatientRescheduledConsultation(
+        int $requestId,
+        string $previousDate = '',
+        string $previousTime = ''
+    ): void {
+        self::safeRun(function () use ($requestId, $previousDate, $previousTime): void {
+            $context = self::requestContext($requestId);
+            if ($context === null) {
+                return;
+            }
+
+            $doctorId = (int) ($context['doctor_id'] ?? 0);
+            if ($doctorId <= 0) {
+                return;
+            }
+
+            $patientName = self::personName((string) ($context['patient_name'] ?? ''), 'A patient');
+            $newWhen = self::appointmentPhrase(
+                (string) ($context['consultation_date'] ?? ''),
+                (string) ($context['start_time'] ?? '')
+            );
+            $oldWhen = self::appointmentPhrase($previousDate, $previousTime);
+
+            if ($oldWhen !== '' && $newWhen !== '') {
+                $message = $patientName . ' rescheduled their consultation from ' . $oldWhen . ' to ' . $newWhen . '.';
+            } elseif ($newWhen !== '') {
+                $message = $patientName . ' rescheduled their consultation to ' . $newWhen . '.';
+            } else {
+                $message = $patientName . ' rescheduled their consultation.';
+            }
+
+            self::createForUser(
+                $doctorId,
+                self::TYPE_RESCHEDULED,
+                self::typeTitle(self::TYPE_RESCHEDULED),
+                $message,
+                $requestId,
+                true
             );
         });
     }
@@ -489,7 +579,7 @@ class NotificationService
             self::TYPE_REQUEST_CREATED => '/admin/consultation-requests?selected=' . $entityId,
             self::TYPE_APPROVED, self::TYPE_REJECTED, self::TYPE_COMPLETED, self::TYPE_PRESCRIPTION
                 => '/patient/consultation-requests/' . $entityId,
-            self::TYPE_ASSIGNED, self::TYPE_UPCOMING
+            self::TYPE_ASSIGNED, self::TYPE_CANCELLED, self::TYPE_RESCHEDULED, self::TYPE_UPCOMING
                 => '/doctor/consultations/' . $entityId,
             default => '/notifications',
         };
@@ -642,20 +732,25 @@ class NotificationService
         string $type,
         string $title,
         string $message,
-        int $requestId
+        int $requestId,
+        bool $replace = false
     ): int {
         if (!self::userAllowsType($userId, $type)) {
             return 0;
         }
 
-        return Notification::createOnce([
+        $payload = [
             'user_id' => $userId,
             'notification_type' => $type,
             'title' => $title,
             'message' => $message,
             'related_entity_type' => self::ENTITY_CONSULTATION_REQUEST,
             'related_entity_id' => $requestId,
-        ]);
+        ];
+
+        return $replace
+            ? Notification::createOrReplace($payload)
+            : Notification::createOnce($payload);
     }
 
     private static function userAllowsType(int $userId, string $type): bool
@@ -670,6 +765,8 @@ class NotificationService
             self::TYPE_REQUEST_CREATED,
             self::TYPE_APPROVED,
             self::TYPE_ASSIGNED,
+            self::TYPE_CANCELLED,
+            self::TYPE_RESCHEDULED,
             self::TYPE_REJECTED,
             self::TYPE_UPCOMING,
         ];

@@ -399,7 +399,7 @@ class PatientController extends Controller
         };
         $requests = $pageData['requests'] ?? [];
         if (is_array($requests)) {
-            $requests = array_map($attachJoin, $requests);
+            $requests = PatientConsultationBookingService::decorateRequestsForPatient(array_map($attachJoin, $requests));
         } else {
             $requests = [];
         }
@@ -407,7 +407,9 @@ class PatientController extends Controller
         $groups = is_array($pageData['groups'] ?? null) ? $pageData['groups'] : PatientConsultationBookingService::groupHistoryRows($requests);
         foreach (['active', 'completed', 'closed'] as $groupKey) {
             $groupRows = $groups[$groupKey] ?? [];
-            $groups[$groupKey] = is_array($groupRows) ? array_map($attachJoin, $groupRows) : [];
+            $groups[$groupKey] = is_array($groupRows)
+                ? PatientConsultationBookingService::decorateRequestsForPatient(array_map($attachJoin, $groupRows))
+                : [];
         }
 
         $this->render('patient/consultation_requests/index', [
@@ -436,6 +438,7 @@ class PatientController extends Controller
             'sortOptions' => $pageData['sortOptions'] ?? [],
             'documentOptions' => $pageData['documentOptions'] ?? [],
             'statusMessage' => Session::getFlash('status'),
+            'csrfToken' => Csrf::generate(),
         ], 'layouts/dashboard');
     }
 
@@ -488,8 +491,135 @@ class PatientController extends Controller
             'videoJoin' => $videoJoin,
             'clinicalRecord' => is_array($clinical) ? ($clinical['record'] ?? null) : null,
             'prescriptions' => is_array($clinical) ? ($clinical['prescriptions'] ?? []) : [],
+            'bookingChange' => PatientConsultationBookingService::changeEligibility($request),
             'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/consultation-record.css') . '"><link rel="stylesheet" href="' . Helper::asset('css/prescription.css') . '">',
             'statusMessage' => Session::getFlash('status'),
+            'csrfToken' => Csrf::generate(),
+        ], 'layouts/dashboard');
+    }
+
+    public function cancelConsultationRequest(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            Helper::redirect('/patient/consultation-requests/' . (int) $id);
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $requestId = (int) $id;
+        $result = PatientConsultationBookingService::cancelBooking(
+            (int) $user->id,
+            $requestId,
+            (string) ($_POST['_token'] ?? '')
+        );
+
+        Session::flash('status', [
+            'type' => $result['type'] ?? (($result['success'] ?? false) ? 'success' : 'danger'),
+            'message' => $result['message'] ?? 'Unable to cancel this consultation booking.',
+        ]);
+
+        $owned = PatientConsultationBookingService::getRequestDetail((int) $user->id, $requestId);
+        Helper::redirect(
+            $owned !== null
+                ? '/patient/consultation-requests/' . $requestId
+                : '/patient/consultation-requests'
+        );
+    }
+
+    public function rescheduleConsultationRequest(string $id): void
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $user = AuthService::getUser();
+        if ($user === null || $user->id === null) {
+            Helper::redirect('/login');
+            return;
+        }
+
+        $requestId = (int) $id;
+        $errors = [];
+        $failedMessage = '';
+        $failedType = 'warning';
+
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $result = PatientConsultationBookingService::rescheduleBooking(
+                (int) $user->id,
+                $requestId,
+                (int) ($_POST['availability_id'] ?? 0),
+                (string) ($_POST['_token'] ?? '')
+            );
+
+            if ($result['success'] ?? false) {
+                Session::flash('status', [
+                    'type' => 'success',
+                    'message' => $result['message'] ?? 'Your consultation has been rescheduled.',
+                ]);
+                Helper::redirect('/patient/consultation-requests/' . $requestId);
+                return;
+            }
+
+            $errors = $result['errors'] ?? [(string) ($result['message'] ?? 'Unable to reschedule this consultation.')];
+            $failedMessage = (string) ($result['message'] ?? 'Unable to reschedule this consultation.');
+            $failedType = (string) ($result['type'] ?? 'danger');
+        }
+
+        $pageData = PatientConsultationBookingService::getReschedulePageData((int) $user->id, $requestId);
+        $request = $pageData['request'] ?? null;
+        $eligibility = is_array($pageData['eligibility'] ?? null) ? $pageData['eligibility'] : [];
+
+        if (!is_array($request) || $request === []) {
+            Session::flash('status', [
+                'type' => 'warning',
+                'message' => $failedMessage !== '' ? $failedMessage : 'The requested consultation record could not be found.',
+            ]);
+            Helper::redirect('/patient/consultation-requests');
+            return;
+        }
+
+        if (empty($eligibility['can_reschedule'])) {
+            Session::flash('status', [
+                'type' => $failedType,
+                'message' => $failedMessage !== ''
+                    ? $failedMessage
+                    : (string) ($eligibility['blocked_reason'] ?? 'This consultation cannot be rescheduled.'),
+            ]);
+            Helper::redirect('/patient/consultation-requests/' . $requestId);
+            return;
+        }
+
+        $this->render('patient/consultation_requests/reschedule', [
+            'title' => 'Reschedule Consultation | MBPHA TeleHealth Consultation System',
+            'user' => $user,
+            'dashboardRole' => 'patient',
+            'dashboardRoleLabel' => 'Patient Dashboard',
+            'dashboardTitle' => 'Reschedule Consultation',
+            'dashboardDescription' => 'Choose another available slot with the same doctor.',
+            'sidebarItems' => [
+                ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2-fill'],
+                ['path' => '/patient/consultation-requests', 'label' => 'Consultation History', 'icon' => 'bi-clipboard2-check'],
+                ['path' => '/patient/doctors', 'label' => 'Doctor Directory', 'icon' => 'bi-person-badge'],
+                ['path' => '/patient/available-slots', 'label' => 'Available Slots', 'icon' => 'bi-calendar2-week'],
+                ['path' => '/patient/profile', 'label' => 'My Profile', 'icon' => 'bi-person-circle'],
+            ],
+            'request' => $request,
+            'eligibility' => $eligibility,
+            'slots' => $pageData['slots'] ?? [],
+            'errors' => $errors,
+            'statusMessage' => Session::getFlash('status'),
+            'csrfToken' => Csrf::generate(),
         ], 'layouts/dashboard');
     }
 

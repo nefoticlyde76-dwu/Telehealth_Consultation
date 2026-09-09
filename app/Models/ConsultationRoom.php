@@ -172,6 +172,32 @@ class ConsultationRoom
         return $loaded;
     }
 
+    /**
+     * Recreate the Daily room after an approved consultation is moved to a
+     * different slot. Deletes the local room row inside the caller's
+     * transaction so upsert can allocate a room for the new times. The
+     * previous Daily room name is returned so the caller can delete it
+     * after a successful commit.
+     */
+    public static function replaceForRescheduledConsultation(int $requestId): string
+    {
+        $existing = self::findByConsultationRequestId($requestId);
+        $previousName = trim((string) ($existing['daily_room_name'] ?? ''));
+
+        if ($existing !== null) {
+            $db = Database::getInstance();
+            $delete = $db->prepare(
+                'DELETE FROM consultation_rooms WHERE consultation_request_id = :request_id'
+            );
+            $delete->bindValue(':request_id', $requestId, PDO::PARAM_INT);
+            $delete->execute();
+        }
+
+        self::upsertForApprovedConsultation($requestId);
+
+        return $previousName;
+    }
+
     /* ------------------------------------------------------------------ *\
        Private helpers
     \* ------------------------------------------------------------------ */

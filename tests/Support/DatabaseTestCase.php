@@ -194,11 +194,11 @@ abstract class DatabaseTestCase extends TestCase
         return $requestId;
     }
 
-    protected function createAvailability(int $doctorId, string $start = '09:00:00', string $end = '09:30:00'): int
+    protected function createAvailability(int $doctorId, string $start = '09:00:00', string $end = '09:30:00', ?string $date = null): int
     {
         $slot = new DoctorAvailability();
         $slot->doctor_id = $doctorId;
-        $slot->consultation_date = (new DateTimeImmutable('+5 days'))->format('Y-m-d');
+        $slot->consultation_date = $date ?? (new DateTimeImmutable('+5 days'))->format('Y-m-d');
         $slot->start_time = $start;
         $slot->end_time = $end;
         $slot->notes = 'PHPUnit booking slot';

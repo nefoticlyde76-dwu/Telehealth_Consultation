@@ -45,6 +45,9 @@ class App
                 'token_ttl_minutes' => self::boundedInt('PASSWORD_RESET_TOKEN_TTL_MINUTES', 30, 1, 1440),
                 'request_cooldown_minutes' => self::boundedInt('PASSWORD_RESET_REQUEST_COOLDOWN_MINUTES', 5, 1, 60),
             ],
+            'booking' => [
+                'change_cutoff_hours' => self::boundedInt('BOOKING_CHANGE_CUTOFF_HOURS', 24, 1, 168),
+            ],
         ];
     }
 

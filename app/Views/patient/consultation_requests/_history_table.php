@@ -159,10 +159,18 @@ require_once __DIR__ . '/../../partials/shared/status_helper.php';
                     <a href="<?= \App\Helpers\Helper::escape($detailUrl) ?>" class="btn btn-outline-primary btn-sm" aria-label="View consultation details">
                       View Details
                     </a>
+                    <?php
+                    $bookingChangeVariant = 'table';
+                    require __DIR__ . '/../../partials/shared/_booking_change_actions.php';
+                    ?>
                   <?php else: ?>
                     <a href="<?= \App\Helpers\Helper::escape($detailUrl) ?>" class="btn btn-outline-primary btn-sm" aria-label="View consultation details">
                       View Details
                     </a>
+                    <?php
+                    $bookingChangeVariant = 'table';
+                    require __DIR__ . '/../../partials/shared/_booking_change_actions.php';
+                    ?>
                   <?php endif; ?>
                 </div>
               </td>
