@@ -4,14 +4,13 @@ $pageHeaderTitle = (string) ($pageHeaderTitle ?? $dashboardTitle ?? '');
 $pageHeaderSubtitle = (string) ($pageHeaderSubtitle ?? $dashboardDescription ?? '');
 $pageHeaderBreadcrumbs = is_array($pageHeaderBreadcrumbs ?? null) ? $pageHeaderBreadcrumbs : [];
 $pageHeaderActions = $pageHeaderActions ?? '';
-$pageHeaderCompact = !empty($pageHeaderCompact);
 $pageHeaderHeadingTag = (string) ($pageHeaderHeadingTag ?? 'h1');
 if (!in_array($pageHeaderHeadingTag, ['h1', 'h2'], true)) {
     $pageHeaderHeadingTag = 'h1';
 }
 ?>
 
-<div class="ux-page-header<?= $pageHeaderCompact ? ' ux-page-header--home' : '' ?>">
+<div class="ux-page-header">
   <div class="ux-page-header__left">
     <?php if ($pageHeaderBreadcrumbs !== []): ?>
       <nav aria-label="Breadcrumb">
@@ -49,7 +48,3 @@ if (!in_array($pageHeaderHeadingTag, ['h1', 'h2'], true)) {
     </div>
   <?php endif; ?>
 </div>
-<?php
-$pageHeaderCompact = false;
-$pageHeaderActions = '';
-?>

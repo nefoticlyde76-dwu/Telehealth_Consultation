@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,18 +7,6 @@
   <title><?= $title ?? 'MBPHA TeleHealth Consultation System' ?></title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
-  <script>
-    (function () {
-      try {
-        var stored = window.localStorage.getItem("mbpha-theme");
-        var theme = (stored === "dark" || stored === "light")
-          ? stored
-          : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-        document.documentElement.setAttribute("data-bs-theme", theme);
-        document.documentElement.setAttribute("data-theme", theme);
-      } catch (e) {}
-    })();
-  </script>
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/fonts.css') ?>">
   <?= \App\Helpers\Cdn::stylesheet(\App\Helpers\Cdn::BOOTSTRAP_CSS, \App\Helpers\Cdn::BOOTSTRAP_CSS_INTEGRITY) ?>
   <?= \App\Helpers\Cdn::stylesheet(\App\Helpers\Cdn::BOOTSTRAP_ICONS_CSS, \App\Helpers\Cdn::BOOTSTRAP_ICONS_CSS_INTEGRITY) ?>
@@ -30,7 +18,6 @@
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/wallet-heroes.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/user-profile.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/responsive.css') ?>">
-  <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/dashboard-home.css') ?>">
   <?= $pageStyles ?? '' ?>
 </head>
 <body class="dashboard-layout dashboard-layout--<?= \App\Helpers\Helper::escape((string) ($dashboardRole ?? 'default')) ?>"

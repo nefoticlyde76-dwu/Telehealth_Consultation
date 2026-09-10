@@ -53,17 +53,21 @@ $cardToneMap = [
           ? ' aria-label="' . Helper::escape($statLabel . ': ' . $statValue . '. Open related records.') . '"'
           : '';
       ?>
-      <div class="col-6 col-xl-3">
+      <div class="col-sm-6 col-xl-3">
         <<?= $statTag ?> class="ux-stat h-100 <?= $statCardTone ?><?= $statUrl !== '' ? ' ux-stat--link' : '' ?>"<?= $statHref ?><?= $statAria ?>>
-          <span class="ux-stat__icon <?= $statTone ?>" aria-hidden="true">
-            <i class="bi <?= Helper::escape($statIcon) ?>"></i>
-          </span>
-          <span class="ux-stat__label"><?= Helper::escape($statLabel) ?></span>
-          <p class="ux-stat__value mb-0"<?= is_numeric($statValue) ? ' data-counter="' . Helper::escape($statValue) . '"' : '' ?>>
-            <?= Helper::escape($statValue) ?>
-          </p>
+          <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
+            <div>
+              <span class="ux-stat__label"><?= Helper::escape($statLabel) ?></span>
+              <p class="ux-stat__value mb-0"<?= is_numeric($statValue) ? ' data-counter="' . Helper::escape($statValue) . '"' : '' ?>>
+                <?= Helper::escape($statValue) ?>
+              </p>
+            </div>
+            <span class="ux-stat__icon <?= $statTone ?>" aria-hidden="true">
+              <i class="bi <?= Helper::escape($statIcon) ?>"></i>
+            </span>
+          </div>
           <?php if ($statDescription !== ''): ?>
-            <p class="ux-stat__meta text-muted mb-0"><?= Helper::escape($statDescription) ?></p>
+            <p class="text-muted mb-0 small"><?= Helper::escape($statDescription) ?></p>
           <?php endif; ?>
           <?php if ($statUrl !== ''): ?>
             <span class="ux-stat__cta">

@@ -53,17 +53,6 @@ $settingsIsDistinct = $settingsPath !== '' && $settingsPath !== '#' && $settings
         </a>
       <?php endif; ?>
 
-      <button
-        type="button"
-        class="theme-toggle"
-        data-theme-toggle
-        aria-pressed="false"
-        aria-label="Switch to dark mode"
-        title="Toggle colour theme"
-      >
-        <i class="bi bi-moon" aria-hidden="true"></i>
-      </button>
-
       <?php require __DIR__ . '/notifications_bell.php'; ?>
 
       <div class="dropdown">

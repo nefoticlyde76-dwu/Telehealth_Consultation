@@ -22,7 +22,6 @@ $todaysAppointments = array_values(array_filter($upcomingApprovedAppointments, s
 $pageHeaderTitle = 'Doctor Dashboard';
 $pageHeaderSubtitle = "See today's workload, upcoming consultations, and what needs your attention.";
 $pageHeaderBreadcrumbs = [];
-$pageHeaderCompact = true;
 ob_start();
 ?>
 <a href="<?= Helper::url('/doctor/availability') ?>" class="btn btn-primary btn-sm">
@@ -76,7 +75,7 @@ $welcomeIcon = 'bi-heart-pulse';
         ?>
       <?php else: ?>
         <div class="ux-table-wrapper">
-          <table class="ux-table ux-table--stack align-middle mb-0">
+          <table class="ux-table align-middle mb-0">
             <thead>
               <tr>
                 <th scope="col">Time</th>
@@ -88,8 +87,8 @@ $welcomeIcon = 'bi-heart-pulse';
             <tbody>
               <?php foreach (array_slice($todaysAppointments, 0, 5) as $appointment): ?>
                 <tr>
-                  <td class="text-muted small" data-label="Time"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
-                  <td data-label="Patient">
+                  <td class="text-muted small"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
+                  <td>
                     <?php
                     $personName = (string) ($appointment['patient_name'] ?? 'Patient');
                     $personPhoto = $appointment['patient_photo_path'] ?? null;
@@ -98,8 +97,8 @@ $welcomeIcon = 'bi-heart-pulse';
                     require __DIR__ . '/../partials/shared/person_row.php';
                     ?>
                   </td>
-                  <td data-label="Status"><?= ux_status_badge(Status::APPROVED) ?></td>
-                  <td class="text-end" data-label="Action">
+                  <td><?= ux_status_badge(Status::APPROVED) ?></td>
+                  <td class="text-end">
                     <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
                       <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Open
                     </a>
@@ -142,7 +141,7 @@ $welcomeIcon = 'bi-heart-pulse';
             ?>
           <?php else: ?>
             <div class="ux-table-wrapper">
-              <table class="ux-table ux-table--stack align-middle mb-0">
+              <table class="ux-table align-middle mb-0">
                 <thead>
                   <tr>
                     <th scope="col">Patient</th>
@@ -154,7 +153,7 @@ $welcomeIcon = 'bi-heart-pulse';
                 <tbody>
                   <?php foreach (array_slice($upcomingApprovedAppointments, 0, 5) as $appointment): ?>
                     <tr>
-                      <td data-label="Patient">
+                      <td>
                         <?php
                         $personName = (string) ($appointment['patient_name'] ?? 'Patient');
                         $personPhoto = $appointment['patient_photo_path'] ?? null;
@@ -163,9 +162,9 @@ $welcomeIcon = 'bi-heart-pulse';
                         require __DIR__ . '/../partials/shared/person_row.php';
                         ?>
                       </td>
-                      <td data-label="Date"><?= Helper::escape(Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
-                      <td class="text-muted small" data-label="Time"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
-                      <td class="text-end" data-label="Action">
+                      <td><?= Helper::escape(Helper::formatDate((string) ($appointment['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                      <td class="text-muted small"><?= Helper::escape(substr((string) ($appointment['start_time'] ?? ''), 0, 5)) ?> – <?= Helper::escape(substr((string) ($appointment['end_time'] ?? ''), 0, 5)) ?></td>
+                      <td class="text-end">
                         <a href="<?= Helper::url('/doctor/consultations/' . (int) ($appointment['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
                           <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Open
                         </a>
@@ -206,7 +205,7 @@ $welcomeIcon = 'bi-heart-pulse';
             ?>
           <?php else: ?>
             <div class="ux-table-wrapper">
-              <table class="ux-table ux-table--stack align-middle mb-0">
+              <table class="ux-table align-middle mb-0">
                 <thead>
                   <tr>
                     <th scope="col">Patient</th>
@@ -217,7 +216,7 @@ $welcomeIcon = 'bi-heart-pulse';
                 <tbody>
                   <?php foreach ($recentCompletedConsultations as $consultation): ?>
                     <tr>
-                      <td data-label="Patient">
+                      <td>
                         <?php
                         $personName = (string) ($consultation['patient_name'] ?? 'Patient');
                         $personPhoto = $consultation['patient_photo_path'] ?? null;
@@ -226,8 +225,8 @@ $welcomeIcon = 'bi-heart-pulse';
                         require __DIR__ . '/../partials/shared/person_row.php';
                         ?>
                       </td>
-                      <td data-label="Date"><?= Helper::escape(Helper::formatDate((string) ($consultation['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
-                      <td class="text-end" data-label="Action">
+                      <td><?= Helper::escape(Helper::formatDate((string) ($consultation['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                      <td class="text-end">
                         <a href="<?= Helper::url('/doctor/consultations/' . (int) ($consultation['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
                           <i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i>View Record
                         </a>
