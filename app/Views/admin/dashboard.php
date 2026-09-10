@@ -24,6 +24,7 @@ foreach ($stats as $statItem) {
 $pageHeaderTitle = 'Administrator Dashboard';
 $pageHeaderSubtitle = 'Review pending requests, manage accounts, and monitor recent activity.';
 $pageHeaderBreadcrumbs = [];
+$pageHeaderCompact = true;
 ob_start();
 ?>
 <a href="<?= Helper::url(Status::filteredListUrl('/admin/consultation-requests', Status::PENDING)) ?>" class="btn btn-primary btn-sm">
@@ -79,7 +80,7 @@ $welcomeIcon = 'bi-shield-check';
         ?>
       <?php else: ?>
         <div class="ux-table-wrapper">
-          <table class="ux-table align-middle mb-0">
+          <table class="ux-table ux-table--stack align-middle mb-0">
             <thead>
               <tr>
                 <th scope="col">Patient</th>
@@ -92,7 +93,7 @@ $welcomeIcon = 'bi-shield-check';
             <tbody>
               <?php foreach ($recentConsultationRequests as $request): ?>
                 <tr>
-                  <td>
+                  <td data-label="Patient">
                     <?php
                     $personName = (string) ($request['patient_name'] ?? 'Patient');
                     $personPhoto = $request['patient_photo_path'] ?? null;
@@ -101,7 +102,7 @@ $welcomeIcon = 'bi-shield-check';
                     require __DIR__ . '/../partials/shared/person_row.php';
                     ?>
                   </td>
-                  <td>
+                  <td data-label="Doctor">
                     <?php
                     $personName = (string) ($request['doctor_name'] ?? 'Doctor');
                     $personPhoto = $request['doctor_photo_path'] ?? null;
@@ -110,9 +111,9 @@ $welcomeIcon = 'bi-shield-check';
                     require __DIR__ . '/../partials/shared/person_row.php';
                     ?>
                   </td>
-                  <td><?= Helper::escape(Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
-                  <td><?= ux_status_badge((string) ($request['status'] ?? Status::PENDING)) ?></td>
-                  <td class="text-end">
+                  <td data-label="Date"><?= Helper::escape(Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                  <td data-label="Status"><?= ux_status_badge((string) ($request['status'] ?? Status::PENDING)) ?></td>
+                  <td class="text-end" data-label="Action">
                     <a href="<?= Helper::url('/admin/consultation-requests/' . (int) ($request['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
                       <i class="bi bi-eye me-1" aria-hidden="true"></i>Review
                     </a>
@@ -155,7 +156,7 @@ $welcomeIcon = 'bi-shield-check';
             ?>
           <?php else: ?>
             <div class="ux-table-wrapper">
-              <table class="ux-table align-middle mb-0">
+              <table class="ux-table ux-table--stack align-middle mb-0">
                 <caption class="visually-hidden">Recent audit events</caption>
                 <thead>
                   <tr>
@@ -168,10 +169,10 @@ $welcomeIcon = 'bi-shield-check';
                 <tbody>
                   <?php foreach ($recentAudit as $auditItem): ?>
                     <tr>
-                      <td><?= Helper::escape((string) ($auditItem['title'] ?? 'Activity')) ?></td>
-                      <td class="text-muted"><?= Helper::escape((string) ($auditItem['description'] ?? '')) ?></td>
-                      <td class="text-muted small text-nowrap"><?= Helper::escape((string) ($auditItem['meta'] ?? '')) ?></td>
-                      <td class="text-end">
+                      <td data-label="Event"><?= Helper::escape((string) ($auditItem['title'] ?? 'Activity')) ?></td>
+                      <td class="text-muted" data-label="Detail"><?= Helper::escape((string) ($auditItem['description'] ?? '')) ?></td>
+                      <td class="text-muted small text-nowrap" data-label="When"><?= Helper::escape((string) ($auditItem['meta'] ?? '')) ?></td>
+                      <td class="text-end" data-label="Action">
                         <?php $auditUrl = trim((string) ($auditItem['url'] ?? '')); ?>
                         <?php if ($auditUrl !== ''): ?>
                           <a href="<?= Helper::url($auditUrl) ?>" class="btn btn-outline-primary btn-sm">
@@ -215,7 +216,7 @@ $welcomeIcon = 'bi-shield-check';
             ?>
           <?php else: ?>
             <div class="ux-table-wrapper">
-              <table class="ux-table align-middle mb-0">
+              <table class="ux-table ux-table--stack align-middle mb-0">
                 <caption class="visually-hidden">Recently registered user accounts</caption>
                 <thead>
                   <tr>
@@ -227,7 +228,7 @@ $welcomeIcon = 'bi-shield-check';
                 <tbody>
                   <?php foreach ($latestUsers as $latestUser): ?>
                     <tr>
-                      <td>
+                      <td data-label="User">
                         <?php
                         $personName = (string) ($latestUser['full_name'] ?? 'User');
                         $personPhoto = $latestUser['profile_photo_path'] ?? null;
@@ -236,8 +237,8 @@ $welcomeIcon = 'bi-shield-check';
                         require __DIR__ . '/../partials/shared/person_row.php';
                         ?>
                       </td>
-                      <td class="text-muted"><?= Helper::escape(user_profile_role_label((string) ($latestUser['role_name'] ?? 'user'))) ?></td>
-                      <td><?= ux_status_badge((string) ($latestUser['status'] ?? ''), Status::DOMAIN_USER) ?></td>
+                      <td class="text-muted" data-label="Role"><?= Helper::escape(user_profile_role_label((string) ($latestUser['role_name'] ?? 'user'))) ?></td>
+                      <td data-label="Status"><?= ux_status_badge((string) ($latestUser['status'] ?? ''), Status::DOMAIN_USER) ?></td>
                     </tr>
                   <?php endforeach; ?>
                 </tbody>

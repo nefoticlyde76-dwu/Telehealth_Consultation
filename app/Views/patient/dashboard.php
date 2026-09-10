@@ -20,6 +20,7 @@ $latestStatus = (string) ($latestRequest['status'] ?? '');
 $pageHeaderTitle = 'Patient Dashboard';
 $pageHeaderSubtitle = 'Check your next consultation, track request status, and book care when you need it.';
 $pageHeaderBreadcrumbs = [];
+$pageHeaderCompact = true;
 ob_start();
 ?>
 <a href="<?= Helper::url('/patient/available-slots') ?>" class="btn btn-primary btn-sm">
@@ -112,41 +113,41 @@ $welcomeIcon = 'bi-calendar2-heart';
             $nextStep = 'This consultation is complete. You can view the record and prescription when available.';
         }
         ?>
-        <div class="ux-table-wrapper mb-3">
-          <table class="ux-table align-middle mb-0">
-            <thead>
-              <tr>
-                <th scope="col">Doctor</th>
-                <th scope="col">Specialization</th>
-                <th scope="col">Status</th>
-                <th scope="col">Consultation Date</th>
-                <th scope="col">Time</th>
-                <th scope="col">Reference</th>
-                <th scope="col">Next Step</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <?php
-                  $personName = (string) ($latestRequest['doctor_name'] ?? 'Doctor');
-                  $personPhoto = $latestRequest['doctor_photo_path'] ?? null;
-                  $personMeta = '';
-                  $personSize = 'sm';
-                  require __DIR__ . '/../partials/shared/person_row.php';
-                  ?>
-                </td>
-                <td><?= Helper::escape((string) ($latestRequest['specialization'] ?? 'General Practice')) ?></td>
-                <td><?= ux_status_badge($latestStatus) ?></td>
-                <td><?= Helper::escape(Helper::formatDate((string) ($latestRequest['consultation_date'] ?? ''), 'D, d M Y', 'Not scheduled')) ?></td>
-                <td class="text-nowrap"><?= Helper::escape($timeLabel) ?></td>
-                <td class="font-monospace">#TH-<?= Helper::escape((string) ((int) ($latestRequest['id'] ?? 0))) ?></td>
-                <td><?= Helper::escape($nextStep) ?></td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="ux-next-consult mb-3">
+          <div class="ux-next-consult__identity">
+            <?php
+            $personName = (string) ($latestRequest['doctor_name'] ?? 'Doctor');
+            $personPhoto = $latestRequest['doctor_photo_path'] ?? null;
+            $personMeta = (string) ($latestRequest['specialization'] ?? 'General Practice');
+            $personSize = 'sm';
+            require __DIR__ . '/../partials/shared/person_row.php';
+            ?>
+            <?= ux_status_badge($latestStatus) ?>
+          </div>
+          <dl class="ux-next-consult__grid">
+            <div class="ux-next-consult__item">
+              <dt>Consultation date</dt>
+              <dd><?= Helper::escape(Helper::formatDate((string) ($latestRequest['consultation_date'] ?? ''), 'D, d M Y', 'Not scheduled')) ?></dd>
+            </div>
+            <div class="ux-next-consult__item">
+              <dt>Time</dt>
+              <dd><?= Helper::escape($timeLabel) ?></dd>
+            </div>
+            <div class="ux-next-consult__item">
+              <dt>Reference</dt>
+              <dd class="font-monospace">#TH-<?= Helper::escape((string) ((int) ($latestRequest['id'] ?? 0))) ?></dd>
+            </div>
+            <div class="ux-next-consult__item">
+              <dt>Specialization</dt>
+              <dd><?= Helper::escape((string) ($latestRequest['specialization'] ?? 'General Practice')) ?></dd>
+            </div>
+            <div class="ux-next-consult__item ux-next-consult__item--wide">
+              <dt>Next step</dt>
+              <dd><?= Helper::escape($nextStep) ?></dd>
+            </div>
+          </dl>
         </div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="ux-next-consult__actions d-flex flex-wrap gap-2">
           <?php if ($latestStatus === Status::PENDING): ?>
             <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($latestRequest['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">
               <i class="bi bi-eye me-1" aria-hidden="true"></i>Track Request
@@ -211,7 +212,7 @@ $welcomeIcon = 'bi-calendar2-heart';
         ?>
       <?php else: ?>
         <div class="ux-table-wrapper">
-          <table class="ux-table align-middle mb-0">
+          <table class="ux-table ux-table--stack align-middle mb-0">
             <thead>
               <tr>
                 <th scope="col">Doctor</th>
@@ -224,7 +225,7 @@ $welcomeIcon = 'bi-calendar2-heart';
               <?php foreach ($recentRequests as $request): ?>
                 <?php $status = (string) ($request['status'] ?? Status::PENDING); ?>
                 <tr>
-                  <td>
+                  <td data-label="Doctor">
                     <?php
                     $personName = (string) ($request['doctor_name'] ?? 'Doctor');
                     $personPhoto = $request['doctor_photo_path'] ?? null;
@@ -233,9 +234,9 @@ $welcomeIcon = 'bi-calendar2-heart';
                     require __DIR__ . '/../partials/shared/person_row.php';
                     ?>
                   </td>
-                  <td><?= Helper::escape(Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
-                  <td><?= ux_status_badge($status) ?></td>
-                  <td class="text-end">
+                  <td data-label="Date"><?= Helper::escape(Helper::formatDate((string) ($request['consultation_date'] ?? ''), 'd M Y', 'Not scheduled')) ?></td>
+                  <td data-label="Status"><?= ux_status_badge($status) ?></td>
+                  <td class="text-end" data-label="Action">
                     <a href="<?= Helper::url('/patient/consultation-requests/' . (int) ($request['id'] ?? 0)) ?>" class="btn btn-outline-primary btn-sm">
                       <i class="bi <?= $status === Status::COMPLETED ? 'bi-file-earmark-text' : 'bi-eye' ?> me-1" aria-hidden="true"></i>
                       <?= $status === Status::COMPLETED ? 'View Record' : 'View Details' ?>
@@ -288,9 +289,9 @@ $welcomeIcon = 'bi-calendar2-heart';
             $personSize = 'sm';
             require __DIR__ . '/../partials/shared/person_row.php';
             ?>
-            <div class="flex-grow-1 text-center">
-              <strong class="d-block"><?= Helper::escape(Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M', '')) ?></strong>
-              <span class="small text-muted"><?= Helper::escape(substr((string) ($slot['start_time'] ?? ''), 0, 5)) ?></span>
+            <div class="ux-slot-row__when">
+              <strong class="ux-slot-row__date"><?= Helper::escape(Helper::formatDate((string) ($slot['consultation_date'] ?? ''), 'd M', '')) ?></strong>
+              <span class="ux-slot-row__time"><?= Helper::escape(substr((string) ($slot['start_time'] ?? ''), 0, 5)) ?></span>
             </div>
             <a href="<?= Helper::url('/patient/consultation-requests/book/' . (int) ($slot['id'] ?? 0)) ?>" class="btn btn-primary btn-sm">
               <i class="bi bi-calendar2-plus me-1" aria-hidden="true"></i>Book

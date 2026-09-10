@@ -57,11 +57,11 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
             <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Quick Actions
           </h2>
         </div>
-        <div class="d-grid gap-2">
+        <div class="d-grid gap-2 ux-quick-actions">
           <?php foreach ($quickActions as $action): ?>
             <a href="<?= \App\Helpers\Helper::url((string) ($action['url'] ?? '#')) ?>" class="btn rightbar-action">
               <span class="d-inline-flex align-items-center gap-2">
-                <i class="bi <?= \App\Helpers\Helper::escape((string) ($action['icon'] ?? 'bi-lightning-charge')) ?>"></i>
+                <i class="bi <?= \App\Helpers\Helper::escape((string) ($action['icon'] ?? 'bi-lightning-charge')) ?>" aria-hidden="true"></i>
                 <?= \App\Helpers\Helper::escape((string) ($action['label'] ?? 'Action')) ?>
               </span>
               <i class="bi bi-chevron-right" aria-hidden="true"></i>

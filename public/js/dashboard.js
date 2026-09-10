@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   initializeDashboardDateTime();
+  initializeThemeToggle();
+  initializeDashboardTooltips();
   initializeMiniCalendars();
   initializeMbphaCalendars();
   initializeDashboardCharts();
@@ -14,6 +16,51 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeUserBulkSelection();
   initializeNotificationBulkSelection();
 });
+
+function applyDashboardTheme(theme) {
+  const next = theme === "dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-bs-theme", next);
+  document.documentElement.setAttribute("data-theme", next);
+  try {
+    window.localStorage.setItem("mbpha-theme", next);
+  } catch (e) {}
+
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    const isDark = next === "dark";
+    button.setAttribute("aria-pressed", isDark ? "true" : "false");
+    button.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+    button.setAttribute("title", isDark ? "Switch to light mode" : "Switch to dark mode");
+    const icon = button.querySelector("i");
+    if (icon) {
+      icon.className = isDark ? "bi bi-sun" : "bi bi-moon";
+    }
+  });
+}
+
+function initializeThemeToggle() {
+  const current = document.documentElement.getAttribute("data-bs-theme") || "light";
+  applyDashboardTheme(current);
+
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    if (button.dataset.themeBound === "1") {
+      return;
+    }
+    button.dataset.themeBound = "1";
+    button.addEventListener("click", () => {
+      const next = document.documentElement.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
+      applyDashboardTheme(next);
+    });
+  });
+}
+
+function initializeDashboardTooltips() {
+  if (!window.bootstrap || typeof window.bootstrap.Tooltip !== "function") {
+    return;
+  }
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((element) => {
+    window.bootstrap.Tooltip.getOrCreateInstance(element, { container: "body" });
+  });
+}
 
 /**
  * Return the server's configured application timezone (typically

@@ -83,25 +83,27 @@ $welcomePills = is_array($welcomePills ?? null) ? $welcomePills : [];
       <p class="ux-welcome__eyebrow"><?= Helper::escape($welcomeEyebrow) ?></p>
       <h2 class="ux-welcome__title"><?= Helper::escape($welcomeTitle) ?></h2>
       <p class="ux-welcome__description"><?= Helper::escape($welcomeDescription) ?></p>
-      <?php if ($welcomePills !== []): ?>
-        <div class="ux-welcome__meta-pill-row">
-          <?php foreach ($welcomePills as $pill): ?>
-            <?php
-            $pillLabel = trim((string) ($pill['label'] ?? ''));
-            $pillIcon = trim((string) ($pill['icon'] ?? ''));
-            if ($pillLabel === '') {
-                continue;
-            }
-            ?>
-            <span class="ux-welcome__meta-pill">
-              <?php if ($pillIcon !== ''): ?>
-                <i class="bi <?= Helper::escape($pillIcon) ?>" aria-hidden="true"></i>
-              <?php endif; ?>
-              <?= Helper::escape($pillLabel) ?>
-            </span>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
+      <div class="ux-welcome__meta-pill-row">
+        <span class="ux-welcome__meta-pill">
+          <i class="bi bi-clock" aria-hidden="true"></i>
+          <span data-dashboard-datetime="full">Loading time</span>
+        </span>
+        <?php foreach ($welcomePills as $pill): ?>
+          <?php
+          $pillLabel = trim((string) ($pill['label'] ?? ''));
+          $pillIcon = trim((string) ($pill['icon'] ?? ''));
+          if ($pillLabel === '') {
+              continue;
+          }
+          ?>
+          <span class="ux-welcome__meta-pill">
+            <?php if ($pillIcon !== ''): ?>
+              <i class="bi <?= Helper::escape($pillIcon) ?>" aria-hidden="true"></i>
+            <?php endif; ?>
+            <?= Helper::escape($pillLabel) ?>
+          </span>
+        <?php endforeach; ?>
+      </div>
     </div>
     <div class="ux-welcome__visual" aria-hidden="true">
       <span class="ux-welcome__icon">
