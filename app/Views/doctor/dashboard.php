@@ -31,16 +31,6 @@ ob_start();
 $pageHeaderActions = ob_get_clean();
 $summaryStats = $stats;
 
-$welcomePills = [
-    [
-        'icon' => 'bi-calendar2-check',
-        'label' => $bookedToday === 1 ? '1 booked today' : $bookedToday . ' booked today',
-    ],
-    [
-        'icon' => 'bi-calendar2-plus',
-        'label' => $openToday === 1 ? '1 open slot' : $openToday . ' open slots',
-    ],
-];
 $welcomeIcon = 'bi-heart-pulse';
 ?>
 

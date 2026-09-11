@@ -12,13 +12,14 @@ $toneMap = [
     'surface' => 'ux-stat__icon--surface',
     'mint' => 'ux-stat__icon--mint',
     'success' => 'ux-stat__icon--mint',
-    'amber' => 'ux-stat__icon--pending',
-    'warning' => 'ux-stat__icon--pending',
+    'amber' => 'ux-stat__icon--amber',
+    'warning' => 'ux-stat__icon--amber',
     'pending' => 'ux-stat__icon--pending',
     'navy' => 'ux-stat__icon--navy',
     'danger' => 'ux-stat__icon--danger',
-    'info' => 'ux-stat__icon--cyan',
+    'info' => 'ux-stat__icon--purple',
     'cyan' => 'ux-stat__icon--cyan',
+    'purple' => 'ux-stat__icon--purple',
 ];
 $cardToneMap = [
     'surface' => 'ux-stat--navy',
@@ -31,6 +32,7 @@ $cardToneMap = [
     'danger' => 'ux-stat--danger',
     'info' => 'ux-stat--info',
     'cyan' => 'ux-stat--info',
+    'purple' => 'ux-stat--info',
 ];
 ?>
 
@@ -55,26 +57,24 @@ $cardToneMap = [
       ?>
       <div class="col-sm-6 col-xl-3">
         <<?= $statTag ?> class="ux-stat h-100 <?= $statCardTone ?><?= $statUrl !== '' ? ' ux-stat--link' : '' ?>"<?= $statHref ?><?= $statAria ?>>
-          <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
-            <div>
-              <span class="ux-stat__label"><?= Helper::escape($statLabel) ?></span>
-              <p class="ux-stat__value mb-0"<?= is_numeric($statValue) ? ' data-counter="' . Helper::escape($statValue) . '"' : '' ?>>
-                <?= Helper::escape($statValue) ?>
-              </p>
-            </div>
-            <span class="ux-stat__icon <?= $statTone ?>" aria-hidden="true">
-              <i class="bi <?= Helper::escape($statIcon) ?>"></i>
-            </span>
+          <span class="ux-stat__icon <?= $statTone ?>" aria-hidden="true">
+            <i class="bi <?= Helper::escape($statIcon) ?>"></i>
+          </span>
+          <div class="ux-stat__body">
+            <p class="ux-stat__value mb-0"<?= is_numeric($statValue) ? ' data-counter="' . Helper::escape($statValue) . '"' : '' ?>>
+              <?= Helper::escape($statValue) ?>
+            </p>
+            <span class="ux-stat__label"><?= Helper::escape($statLabel) ?></span>
+            <?php if ($statDescription !== ''): ?>
+              <p class="ux-stat__meta"><?= Helper::escape($statDescription) ?></p>
+            <?php endif; ?>
+            <?php if ($statUrl !== ''): ?>
+              <span class="ux-stat__cta">
+                View details
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+              </span>
+            <?php endif; ?>
           </div>
-          <?php if ($statDescription !== ''): ?>
-            <p class="text-muted mb-0 small"><?= Helper::escape($statDescription) ?></p>
-          <?php endif; ?>
-          <?php if ($statUrl !== ''): ?>
-            <span class="ux-stat__cta">
-              View details
-              <i class="bi bi-arrow-right" aria-hidden="true"></i>
-            </span>
-          <?php endif; ?>
         </<?= $statTag ?>>
       </div>
     <?php endforeach; ?>

@@ -33,7 +33,10 @@ $back = is_array($profilePage['back'] ?? null) ? $profilePage['back'] : null;
     <?php endif; ?>
 
     <?php if ($title !== ''): ?>
-      <h1 class="user-profile-header__title"><?= Helper::escape($title) ?></h1>
+      <h1 class="user-profile-header__title">
+        <?= Helper::escape($title) ?>
+        <i class="bi bi-check-circle-fill user-profile-header__verified" aria-hidden="true"></i>
+      </h1>
     <?php endif; ?>
 
     <?php if ($subtitle !== ''): ?>

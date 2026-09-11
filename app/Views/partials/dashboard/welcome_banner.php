@@ -37,19 +37,24 @@ if ($welcomeFullName !== '') {
     }
 }
 
+$welcomeHour = (int) Helper::now()->format('G');
+$welcomeGreeting = $welcomeHour < 12
+    ? 'Good morning'
+    : ($welcomeHour < 17 ? 'Good afternoon' : 'Good evening');
+
 $welcomeTitle = $welcomeFirstName !== ''
-    ? 'Welcome back, ' . $welcomeFirstName
-    : 'Welcome back';
+    ? $welcomeGreeting . ', ' . $welcomeFirstName
+    : $welcomeGreeting;
 
 $welcomeDefaults = [
     'admin' => [
         'eyebrow' => 'Administrator',
-        'message' => 'Review pending requests, manage accounts, and monitor recent activity.',
+        'message' => 'Review pending requests, manage accounts, and keep provincial care moving.',
         'icon' => 'bi-shield-check',
     ],
     'doctor' => [
         'eyebrow' => 'Doctor',
-        'message' => "See today's workload, upcoming consultations, and what needs your attention.",
+        'message' => "Here's what's happening with your practice today.",
         'icon' => 'bi-heart-pulse',
     ],
     'patient' => [
@@ -75,38 +80,56 @@ if ($welcomeIcon === '') {
 }
 
 $welcomePills = is_array($welcomePills ?? null) ? $welcomePills : [];
+$welcomeNow = Helper::now();
 ?>
 
 <section class="ux-welcome ux-welcome--<?= Helper::escape($welcomeRole) ?>" aria-label="Welcome">
   <div class="ux-welcome__grid">
-    <div>
+    <div class="ux-welcome__copy">
       <p class="ux-welcome__eyebrow"><?= Helper::escape($welcomeEyebrow) ?></p>
       <h2 class="ux-welcome__title"><?= Helper::escape($welcomeTitle) ?></h2>
       <p class="ux-welcome__description"><?= Helper::escape($welcomeDescription) ?></p>
-      <?php if ($welcomePills !== []): ?>
-        <div class="ux-welcome__meta-pill-row">
-          <?php foreach ($welcomePills as $pill): ?>
-            <?php
-            $pillLabel = trim((string) ($pill['label'] ?? ''));
-            $pillIcon = trim((string) ($pill['icon'] ?? ''));
-            if ($pillLabel === '') {
-                continue;
-            }
-            ?>
-            <span class="ux-welcome__meta-pill">
-              <?php if ($pillIcon !== ''): ?>
-                <i class="bi <?= Helper::escape($pillIcon) ?>" aria-hidden="true"></i>
-              <?php endif; ?>
-              <?= Helper::escape($pillLabel) ?>
-            </span>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
+      <div class="ux-welcome__meta-pill-row">
+        <span class="ux-welcome__meta-pill">
+          <i class="bi bi-calendar2" aria-hidden="true"></i>
+          <span data-dashboard-datetime="longdate"><?= Helper::escape($welcomeNow->format('F j, Y')) ?></span>
+        </span>
+        <span class="ux-welcome__meta-pill ux-welcome__meta-pill--online">
+          <i class="bi bi-circle-fill" aria-hidden="true"></i>
+          You're online
+        </span>
+        <span class="ux-welcome__meta-pill">
+          <i class="bi bi-clock" aria-hidden="true"></i>
+          <span data-dashboard-datetime="time"><?= Helper::escape($welcomeNow->format('g:i A')) ?></span>
+        </span>
+        <?php foreach ($welcomePills as $pill): ?>
+          <?php
+          $pillLabel = trim((string) ($pill['label'] ?? ''));
+          $pillIcon = trim((string) ($pill['icon'] ?? ''));
+          if ($pillLabel === '') {
+              continue;
+          }
+          ?>
+          <span class="ux-welcome__meta-pill">
+            <?php if ($pillIcon !== ''): ?>
+              <i class="bi <?= Helper::escape($pillIcon) ?>" aria-hidden="true"></i>
+            <?php endif; ?>
+            <?= Helper::escape($pillLabel) ?>
+          </span>
+        <?php endforeach; ?>
+      </div>
     </div>
     <div class="ux-welcome__visual" aria-hidden="true">
-      <span class="ux-welcome__icon">
-        <i class="bi <?= Helper::escape($welcomeIcon) ?>"></i>
-      </span>
+      <p class="ux-welcome__tagline">Better Access. Healthier Communities.</p>
+      <svg class="ux-welcome__motif" viewBox="0 0 160 120" width="180" height="135" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M38 18c0 8-6 14-14 14S10 26 10 18 16 4 24 4s14 6 14 14Z" stroke="#0A6FB6" stroke-width="4"/>
+        <path d="M122 18c0 8-6 14-14 14s-14-6-14-14 6-14 14-14 14 6 14 14Z" stroke="#0A6FB6" stroke-width="4"/>
+        <path d="M38 18v10c0 22 18 36 42 36" stroke="#17375E" stroke-width="4" stroke-linecap="round"/>
+        <path d="M122 18v10c0 10-4 18-10 24" stroke="#17375E" stroke-width="4" stroke-linecap="round"/>
+        <path d="M80 64v18" stroke="#17375E" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="80" cy="96" r="14" stroke="#18A558" stroke-width="4"/>
+        <circle cx="80" cy="96" r="6" fill="#40C4FF"/>
+      </svg>
     </div>
   </div>
 </section>

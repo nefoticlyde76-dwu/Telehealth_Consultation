@@ -12,15 +12,6 @@ $recentAudit = is_array($recentAudit ?? null) ? $recentAudit : [];
 $charts = is_array($charts ?? null) ? $charts : [];
 $headerNotifications = is_array($headerNotifications ?? null) ? $headerNotifications : [];
 
-$adminPending = 0;
-$unreadCount = (int) ($headerNotifications['unread_count'] ?? 0);
-foreach ($stats as $statItem) {
-    $lblLower = strtolower(trim((string) ($statItem['label'] ?? '')));
-    if (str_contains($lblLower, 'pending')) {
-        $adminPending = (int) ($statItem['value'] ?? 0);
-    }
-}
-
 $pageHeaderTitle = 'Administrator Dashboard';
 $pageHeaderSubtitle = 'Review pending requests, manage accounts, and monitor recent activity.';
 $pageHeaderBreadcrumbs = [];
@@ -34,16 +25,6 @@ $pageHeaderActions = ob_get_clean();
 
 $summaryStats = $stats;
 
-$welcomePills = [
-    [
-        'icon' => 'bi-hourglass-split',
-        'label' => $adminPending === 1 ? '1 pending request' : $adminPending . ' pending requests',
-    ],
-    [
-        'icon' => 'bi-bell',
-        'label' => $unreadCount === 1 ? '1 unread notification' : $unreadCount . ' unread notifications',
-    ],
-];
 $welcomeIcon = 'bi-shield-check';
 ?>
 

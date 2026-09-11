@@ -28,6 +28,12 @@ $filterTabUrl = static function (string $value) use ($filters): string {
       <h2 class="ux-page-header__title">Activity &amp; Audit Logs</h2>
       <p class="ux-page-header__subtitle">Chronological records of important security and workflow events.</p>
     </div>
+    <div class="ux-page-header__right">
+      <span class="ux-chip ux-badge--dotless">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+        Security record
+      </span>
+    </div>
   </div>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>

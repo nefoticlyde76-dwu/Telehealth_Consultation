@@ -108,7 +108,7 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--soft-cyan);
+  color: rgba(227, 242, 253, 0.42);
   margin: 16px 8px 8px;
 }
 

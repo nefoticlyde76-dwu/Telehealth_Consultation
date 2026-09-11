@@ -63,16 +63,6 @@ $summaryStats = [
     ],
 ];
 
-$welcomePills = [
-    [
-        'icon' => 'bi-calendar2-check',
-        'label' => $upcomingCount === 1 ? '1 upcoming consultation' : $upcomingCount . ' upcoming consultations',
-    ],
-    [
-        'icon' => 'bi-hourglass-split',
-        'label' => $pendingCount === 1 ? '1 pending request' : $pendingCount . ' pending requests',
-    ],
-];
 $welcomeIcon = 'bi-calendar2-heart';
 ?>
 

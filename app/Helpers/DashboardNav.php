@@ -28,7 +28,7 @@ class DashboardNav
                 'settings' => '/admin/profile',
                 'groups' => [
                     [
-                        'caption' => 'Overview',
+                        'caption' => 'Main Navigation',
                         'items' => [
                             ['path' => '/admin/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
                         ],
@@ -73,7 +73,7 @@ class DashboardNav
                 'settings' => '/doctor/profile/edit',
                 'groups' => [
                     [
-                        'caption' => 'Overview',
+                        'caption' => 'Main Navigation',
                         'items' => [
                             ['path' => '/doctor/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
                         ],
@@ -105,7 +105,7 @@ class DashboardNav
                 'settings' => '/patient/profile/edit',
                 'groups' => [
                     [
-                        'caption' => 'Overview',
+                        'caption' => 'Main Navigation',
                         'items' => [
                             ['path' => '/patient/dashboard', 'label' => 'Dashboard', 'icon' => 'bi-grid-1x2'],
                         ],
@@ -207,6 +207,34 @@ class DashboardNav
             'doctor' => ['label' => 'Create Slot', 'url' => '/doctor/availability/create', 'icon' => 'bi-plus-lg'],
             'admin' => ['label' => 'Review Requests', 'url' => '/admin/consultation-requests', 'icon' => 'bi-clipboard2-check'],
             default => null,
+        };
+    }
+
+    /**
+     * Topbar search submits to the role's primary list. Page-level table
+     * search, when present, is preferred by dashboard.js.
+     *
+     * @return array{url:string,placeholder:string}
+     */
+    public static function searchTarget(string $role): array
+    {
+        return match ($role) {
+            'admin' => [
+                'url' => '/admin/users',
+                'placeholder' => 'Search patients, consultations, or anything…',
+            ],
+            'doctor' => [
+                'url' => '/doctor/consultations',
+                'placeholder' => 'Search patients, consultations, or anything…',
+            ],
+            'patient' => [
+                'url' => '/patient/doctors',
+                'placeholder' => 'Search doctors, consultations, or anything…',
+            ],
+            default => [
+                'url' => '/',
+                'placeholder' => 'Search…',
+            ],
         };
     }
 }

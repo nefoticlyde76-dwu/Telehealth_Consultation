@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializePermanentDeleteModal();
   initializeUserBulkSelection();
   initializeNotificationBulkSelection();
+  initializeTopbarSearch();
 });
 
 /**
@@ -92,6 +93,21 @@ const SHORT_MONTHS = [
   "Dec",
 ];
 
+const FULL_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 function formatAppNow(mode, n) {
   const weekday =
     n.weekdayShort ||
@@ -100,13 +116,49 @@ function formatAppNow(mode, n) {
     ] ||
     "";
   const datePart = `${weekday}, ${pad2(n.day)} ${SHORT_MONTHS[n.month - 1]}`;
-  if (mode === "date") {
-    return datePart;
-  }
   const hour = n.hour;
   const hour12 = ((hour + 11) % 12) + 1;
   const ampm = hour >= 12 ? "PM" : "AM";
-  return `${datePart} ${n.year} ${pad2(hour12)}:${pad2(n.minute)} ${ampm}`;
+  const timePart = `${hour12}:${pad2(n.minute)} ${ampm}`;
+  if (mode === "date") {
+    return datePart;
+  }
+  if (mode === "longdate") {
+    return `${FULL_MONTHS[n.month - 1]} ${n.day}, ${n.year}`;
+  }
+  if (mode === "time") {
+    return timePart;
+  }
+  return `${datePart} ${n.year} ${timePart}`;
+}
+
+function initializeTopbarSearch() {
+  const form = document.querySelector("[data-topbar-search]");
+  if (!(form instanceof HTMLFormElement)) {
+    return;
+  }
+
+  form.addEventListener("submit", (event) => {
+    const input = form.querySelector('input[name="search"]');
+    const query = input instanceof HTMLInputElement ? input.value.trim() : "";
+    const pageSearch = document.querySelector('.ux-table-toolbar__input[name="search"]');
+    if (!(pageSearch instanceof HTMLInputElement)) {
+      return;
+    }
+
+    event.preventDefault();
+    pageSearch.value = query;
+    const pageForm =
+      pageSearch.form ||
+      document.querySelector("form[data-table-filter-form]");
+    if (pageForm instanceof HTMLFormElement) {
+      if (typeof pageForm.requestSubmit === "function") {
+        pageForm.requestSubmit();
+      } else {
+        pageForm.submit();
+      }
+    }
+  });
 }
 
 function initializeDashboardDateTime() {
@@ -130,21 +182,6 @@ function initializeDashboardDateTime() {
   render();
   window.setInterval(render, 60 * 1000);
 }
-
-const FULL_MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 function calendarDateKey(year, month, day) {
   return `${year}-${pad2(month + 1)}-${pad2(day)}`;

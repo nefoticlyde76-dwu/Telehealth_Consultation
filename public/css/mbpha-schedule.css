@@ -231,9 +231,9 @@
 }
 
 .mbpha-avail__table thead th.is-today {
-  background: var(--royal-blue);
+  background: var(--navy-black, #102A43);
   color: var(--white);
-  border-radius: 8px 8px 0 0;
+  border-radius: 0;
 }
 
 .mbpha-avail__table thead th.is-today .mbpha-avail__day-name,
@@ -562,7 +562,7 @@
 }
 
 .mbpha-avail__cal-day-head.is-today {
-  background: var(--royal-blue);
+  background: var(--navy-black, #102A43);
   color: var(--white);
 }
 

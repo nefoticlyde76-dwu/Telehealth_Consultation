@@ -113,6 +113,15 @@
   --ds-space: 4px;
   --ds-font: Poppins, Inter, "Segoe UI", -apple-system, Roboto, sans-serif;
 
+  /* Chrome refinements — same MBPHA brand, calmer healthcare SaaS surfaces */
+  --ds-sidebar-bg: #12263F;
+  --ds-sidebar-bg-rgb: 18, 38, 63;
+  --ds-accent-purple: #5B5FC7;
+  --ds-accent-purple-rgb: 91, 95, 199;
+  --ds-accent-purple-bg: rgba(91, 95, 199, 0.10);
+  --ds-shadow-card: 0 1px 2px rgba(var(--dark-navy-rgb), 0.05);
+  --surface-purple: var(--ds-accent-purple-bg);
+
   --ds-navy-rgb: var(--dark-navy-rgb);
   --ds-accent-rgb: var(--medical-blue-rgb);
   --ds-teal-rgb: var(--soft-cyan-rgb);
