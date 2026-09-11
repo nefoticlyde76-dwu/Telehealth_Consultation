@@ -84,9 +84,20 @@ $welcomeNow = Helper::now();
 ?>
 
 <section class="ux-welcome ux-welcome--<?= Helper::escape($welcomeRole) ?>" aria-label="Welcome">
+  <div class="ux-welcome__atmosphere" aria-hidden="true">
+    <span class="ux-welcome__land"></span>
+    <span class="ux-welcome__plus ux-welcome__plus--1">+</span>
+    <span class="ux-welcome__plus ux-welcome__plus--2">+</span>
+    <span class="ux-welcome__plus ux-welcome__plus--3">+</span>
+    <span class="ux-welcome__plus ux-welcome__plus--4">+</span>
+  </div>
+
   <div class="ux-welcome__grid">
     <div class="ux-welcome__copy">
-      <p class="ux-welcome__eyebrow"><?= Helper::escape($welcomeEyebrow) ?></p>
+      <p class="ux-welcome__eyebrow">
+        <i class="bi <?= Helper::escape($welcomeIcon) ?>" aria-hidden="true"></i>
+        <span><?= Helper::escape($welcomeEyebrow) ?></span>
+      </p>
       <h2 class="ux-welcome__title"><?= Helper::escape($welcomeTitle) ?></h2>
       <p class="ux-welcome__description"><?= Helper::escape($welcomeDescription) ?></p>
       <div class="ux-welcome__meta-pill-row">
@@ -119,16 +130,17 @@ $welcomeNow = Helper::now();
         <?php endforeach; ?>
       </div>
     </div>
+
     <div class="ux-welcome__visual" aria-hidden="true">
       <p class="ux-welcome__tagline">Better Access. Healthier Communities.</p>
-      <svg class="ux-welcome__motif" viewBox="0 0 160 120" width="180" height="135" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M38 18c0 8-6 14-14 14S10 26 10 18 16 4 24 4s14 6 14 14Z" stroke="#0A6FB6" stroke-width="4"/>
-        <path d="M122 18c0 8-6 14-14 14s-14-6-14-14 6-14 14-14 14 6 14 14Z" stroke="#0A6FB6" stroke-width="4"/>
-        <path d="M38 18v10c0 22 18 36 42 36" stroke="#17375E" stroke-width="4" stroke-linecap="round"/>
-        <path d="M122 18v10c0 10-4 18-10 24" stroke="#17375E" stroke-width="4" stroke-linecap="round"/>
-        <path d="M80 64v18" stroke="#17375E" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="80" cy="96" r="14" stroke="#18A558" stroke-width="4"/>
-        <circle cx="80" cy="96" r="6" fill="#40C4FF"/>
+      <svg class="ux-welcome__motif" viewBox="0 0 220 200" width="220" height="200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path class="ux-welcome__motif-line" d="M52 58c0 46 28 72 68 72"/>
+        <path class="ux-welcome__motif-line" d="M168 58c0 22-8 40-22 52"/>
+        <path class="ux-welcome__motif-line" d="M120 130v22"/>
+        <circle class="ux-welcome__motif-node" cx="52" cy="36" r="20"/>
+        <circle class="ux-welcome__motif-node" cx="168" cy="36" r="20"/>
+        <circle class="ux-welcome__motif-hub" cx="120" cy="172" r="22"/>
+        <path class="ux-welcome__motif-cross" d="M120 160v24M108 172h24"/>
       </svg>
     </div>
   </div>
