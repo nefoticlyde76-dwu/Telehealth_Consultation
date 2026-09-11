@@ -36,8 +36,9 @@
       <form action="<?= \App\Helpers\Helper::url('/login') ?>" method="POST" class="auth-login-form needs-validation" novalidate>
         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken ?? '') ?>">
 
-        <div class="auth-login-field auth-field">
+        <div class="auth-login-field auth-field auth-field--icon">
           <div class="auth-field__control">
+            <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-envelope"></i></span>
             <input
               type="email"
               class="form-control"
@@ -53,8 +54,9 @@
           <div class="invalid-feedback">Please enter a valid email address.</div>
         </div>
 
-        <div class="auth-login-field auth-field auth-field--pass">
+        <div class="auth-login-field auth-field auth-field--pass auth-field--icon">
           <div class="auth-field__control">
+            <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-lock"></i></span>
             <input
               type="password"
               class="form-control"
@@ -83,7 +85,15 @@
         </div>
 
         <div class="auth-login-actions">
-          <button type="submit" class="btn auth-login-submit">Sign in</button>
+          <button
+            type="submit"
+            class="btn auth-login-submit"
+            data-auth-submit
+            data-loading-label="Signing in…"
+          >
+            <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+            <span data-auth-submit-label>Sign in</span>
+          </button>
           <?php if ($googleClientId !== ''): ?>
           <div class="auth-login-or" role="separator" aria-label="or">OR</div>
           <div
@@ -109,7 +119,14 @@
           <?php endif; ?>
         </div>
       </form>
+
+      <p class="auth-login-secure">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+        Your information is protected with secure server-side authentication.
+      </p>
     </article>
+
+    <?php require __DIR__ . '/../partials/auth/trust.php'; ?>
   </div>
 </main>
 

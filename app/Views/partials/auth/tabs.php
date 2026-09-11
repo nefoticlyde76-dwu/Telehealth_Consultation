@@ -10,11 +10,17 @@ $registerCurrent = $authTab === 'register';
     href="<?= $loginUrl ?>"
     class="auth-tabs__item<?= $loginCurrent ? ' is-active' : '' ?>"
     <?php if ($loginCurrent): ?>aria-current="page"<?php endif; ?>
-  >Log In</a>
+  >
+    <i class="bi bi-person" aria-hidden="true"></i>
+    Log In
+  </a>
   <a
     href="<?= $registerUrl ?>"
     class="auth-tabs__item<?= $registerCurrent ? ' is-active' : '' ?>"
     <?php if ($registerCurrent): ?>aria-current="page"<?php endif; ?>
-  >Register</a>
+  >
+    <i class="bi bi-person-plus" aria-hidden="true"></i>
+    Register
+  </a>
   <span class="auth-tabs__pill" aria-hidden="true"></span>
 </nav>

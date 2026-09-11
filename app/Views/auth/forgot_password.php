@@ -24,8 +24,9 @@ $emailInvalid = isset($fieldErrors['email']);
       <form action="<?= \App\Helpers\Helper::url('/forgot-password') ?>" method="POST" class="auth-login-form auth-form needs-validation" novalidate>
         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken ?? '') ?>">
 
-        <div class="auth-login-field auth-field">
+        <div class="auth-login-field auth-field auth-field--icon">
           <div class="auth-field__control">
+            <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-envelope"></i></span>
             <input
               type="email"
               class="form-control<?= $emailInvalid ? ' is-invalid' : '' ?>"
