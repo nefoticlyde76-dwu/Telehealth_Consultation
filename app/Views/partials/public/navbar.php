@@ -22,6 +22,19 @@ $isNavActive = static function (string $path) use ($currentPath): bool {
 
 $loginActive = $currentPath === '/login';
 $registerActive = $currentPath === '/register';
+$publicRoleLabel = '';
+$publicProfilePath = $dashboardUrl;
+$publicUnreadCount = 0;
+if ($currentUser && $currentRole) {
+    $publicNavConfig = \App\Helpers\DashboardNav::forRole((string) $currentRole);
+    $publicRoleLabel = (string) ($publicNavConfig['roleLabel'] ?? 'Account');
+    $publicProfilePath = (string) ($publicNavConfig['profile'] ?? $dashboardUrl);
+    $publicUnreadCount = 0;
+    if (!empty($currentUser->id)) {
+        $publicHeaderData = \App\Services\NotificationService::getHeaderData((int) $currentUser->id, (string) $currentRole);
+        $publicUnreadCount = (int) ($publicHeaderData['unread_count'] ?? 0);
+    }
+}
 ?>
 <div class="public-agh-layer" aria-hidden="true"></div>
 <nav class="navbar navbar-expand-xl navbar-light public-navbar" aria-label="MBPHA TeleHealth public navigation">
@@ -52,11 +65,48 @@ $registerActive = $currentPath === '/register';
 
     <div class="public-navbar-actions d-none d-xl-flex">
       <?php if ($currentUser && $currentRole): ?>
-        <a class="btn btn-outline-primary" href="<?= \App\Helpers\Helper::url($dashboardUrl) ?>">Dashboard</a>
-        <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
-          <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(\App\Core\Csrf::generate()) ?>">
-          <button type="submit" class="btn btn-primary">Logout</button>
-        </form>
+        <a
+          class="public-navbar-icon"
+          href="<?= \App\Helpers\Helper::url('/notifications') ?>"
+          aria-label="<?= $publicUnreadCount > 0 ? 'Notifications, ' . $publicUnreadCount . ' unread' : 'Notifications' ?>"
+        >
+          <i class="bi bi-bell" aria-hidden="true"></i>
+          <?php if ($publicUnreadCount > 0): ?>
+            <span class="public-navbar-icon__badge"><?= $publicUnreadCount > 99 ? '99+' : (string) $publicUnreadCount ?></span>
+          <?php endif; ?>
+        </a>
+        <a class="btn btn-primary" href="<?= \App\Helpers\Helper::url($dashboardUrl) ?>">Dashboard</a>
+        <div class="dropdown">
+          <button class="public-navbar-profile" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Account menu">
+            <?php
+            $avatarPath = $currentUser->profile_photo_path ?? null;
+            $avatarUserId = (int) ($currentUser->id ?? 0);
+            $fullName = $currentUser->full_name ?? 'User';
+            $avatarClass = 'user-avatar user-avatar--xs';
+            require __DIR__ . '/../shared/user_avatar.php';
+            ?>
+            <span class="public-navbar-profile__meta">
+              <strong><?= \App\Helpers\Helper::escape($currentUser->full_name ?? 'User') ?></strong>
+              <small><?= \App\Helpers\Helper::escape($publicRoleLabel) ?></small>
+            </span>
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end p-2">
+            <li>
+              <a href="<?= \App\Helpers\Helper::url($publicProfilePath) ?>" class="dropdown-item">
+                <i class="bi bi-person me-2" aria-hidden="true"></i>Profile
+              </a>
+            </li>
+            <li>
+              <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
+                <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(\App\Core\Csrf::generate()) ?>">
+                <button type="submit" class="dropdown-item">
+                  <i class="bi bi-box-arrow-left me-2" aria-hidden="true"></i>Logout
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
       <?php else: ?>
         <a
           class="btn btn-outline-primary<?= $loginActive ? ' is-active' : '' ?>"

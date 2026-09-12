@@ -4,16 +4,17 @@
  */
 defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
 ?>
-<section id="home" class="lp-hero-section" aria-labelledby="hero-title">
-    <div class="lp-hero">
+<section id="home" class="lp-hero-section medical-hero" aria-labelledby="hero-title">
+    <div class="lp-hero medical-hero-content">
         <div class="lp-hero__surface" aria-hidden="true"></div>
-        <div class="lp-hero__motifs" aria-hidden="true">
+        <div class="lp-hero__motifs medical-decoration" aria-hidden="true">
             <span class="lp-hero__plus lp-hero__plus--1">+</span>
             <span class="lp-hero__plus lp-hero__plus--2">+</span>
             <span class="lp-hero__plus lp-hero__plus--3">+</span>
             <span class="lp-hero__plus lp-hero__plus--4">+</span>
             <span class="lp-hero__plus lp-hero__plus--5">+</span>
         </div>
+        <div class="lp-hero__wave" aria-hidden="true"></div>
 
         <div class="lp-hero__layout">
             <div class="lp-hero__copy">
@@ -22,6 +23,8 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                     <span class="lp-hero__badge-full">Milne Bay Provincial Health Authority</span>
                     <span class="lp-hero__badge-short">Milne Bay PHA</span>
                 </span>
+
+                <p class="lp-hero__eyebrow">Telehealth consultation</p>
 
                 <h1 id="hero-title" class="lp-hero__title">
                     TeleHealth consultation with MBPHA doctors, <span class="lp-hero__emphasis">online.</span>
@@ -65,7 +68,7 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                 <div class="lp-hero__support" aria-label="Additional service information">
                     <div class="lp-hero__support-item">
                         <span class="lp-hero__support-icon" aria-hidden="true">
-                            <i class="bi bi-person-check"></i>
+                            <i class="bi bi-calendar3"></i>
                         </span>
                         <span class="lp-hero__support-copy">
                             <strong>Doctor availability</strong>
@@ -75,7 +78,7 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                     <span class="lp-hero__support-divider" aria-hidden="true"></span>
                     <div class="lp-hero__support-item">
                         <span class="lp-hero__support-icon" aria-hidden="true">
-                            <i class="bi bi-broadcast"></i>
+                            <i class="bi bi-wifi"></i>
                         </span>
                         <span class="lp-hero__support-copy">
                             <strong>Online consultations</strong>
@@ -85,8 +88,11 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                 </div>
             </div>
 
-            <aside class="lp-hero__glance" aria-label="Consultation overview">
-                <p class="lp-hero__glance-kicker">Consultation at a glance</p>
+            <aside class="lp-hero__glance medical-hero-glance" aria-label="Consultation overview">
+                <p class="lp-hero__glance-kicker">
+                    <i class="bi bi-camera-video" aria-hidden="true"></i>
+                    Consultation at a glance
+                </p>
                 <h2 class="lp-hero__glance-title">What you can do today</h2>
                 <p class="lp-hero__glance-copy">
                     Find an available doctor, request a slot, track approval, and join your online session in one place.

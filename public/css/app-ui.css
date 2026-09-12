@@ -18,13 +18,13 @@
 
 .dashboard-layout {
   --dash-sidebar: 232px;
-  --dash-topbar: 60px;
-  --dash-radius: 14px;
-  --dash-radius-lg: 18px;
-  --dash-shadow: var(--app-shadow-sm, 0 2px 8px rgba(19, 58, 89, 0.04));
-  --dash-sidebar-bg: #102b45;
-  --dash-sidebar-active: #0b78c8;
-  --dash-canvas: #f4f8fc;
+  --dash-topbar: 64px;
+  --dash-radius: 12px;
+  --dash-radius-lg: 16px;
+  --dash-shadow: var(--app-shadow-md, 0 6px 20px rgba(15, 58, 89, 0.07));
+  --dash-sidebar-bg: #0d2b46;
+  --dash-sidebar-active: #0c7bc6;
+  --dash-canvas: #f3f7fb;
 }
 
 .dashboard-layout--patient {
@@ -282,21 +282,21 @@
 
 /* Public / auth shared refinements */
 body.public-layout .public-navbar {
-  background: rgba(255, 255, 255, 0.97) !important;
-  box-shadow: 0 1px 0 #dde8f0;
+  background: #ffffff !important;
+  box-shadow: none;
 }
 
 body.public-layout .public-navbar .nav-link,
 body.public-layout .public-navbar.navbar-light .nav-link,
 body.public-layout .public-navbar.navbar-dark .nav-link {
-  color: #12375a !important;
+  color: #173e60 !important;
 }
 
 body.public-layout .public-navbar .nav-link.active,
 body.public-layout .public-navbar.navbar-light .nav-link.active,
 body.public-layout .public-navbar.navbar-dark .nav-link.active {
-  background: #e7f4fd !important;
-  color: #0b78c8 !important;
+  background: #ddf2fd !important;
+  color: #0876bc !important;
 }
 
 .pp-intro {
@@ -425,13 +425,13 @@ body.auth-login-layout .auth-login-card {
 /* Dark mode — no leftover white Bootstrap cards */
 html[data-theme="dark"] .dashboard-layout,
 .theme-dark .dashboard-layout {
-  --dash-canvas: #0b1724;
-  --dash-white: #13283b;
-  --dash-border: #28475e;
-  --dash-text: #f0f6fb;
-  --dash-text-secondary: #a4b8c9;
-  --dash-muted: #a4b8c9;
-  --dash-heading: #f0f6fb;
+  --dash-canvas: #091724;
+  --dash-white: #12283a;
+  --dash-border: #29485d;
+  --dash-text: #f0f6fa;
+  --dash-text-secondary: #a7bac9;
+  --dash-muted: #a7bac9;
+  --dash-heading: #f0f6fa;
 }
 
 html[data-theme="dark"] .dashboard-layout .ux-card,
@@ -444,28 +444,28 @@ html[data-theme="dark"] .user-profile-page .user-profile-card,
 .theme-dark .dashboard-layout .ux-card,
 .theme-dark .dashboard-layout .card,
 .theme-dark .dashboard-layout .ux-stat {
-  background: #13283b !important;
-  border-color: #28475e !important;
-  color: #f0f6fb;
+  background: #12283a !important;
+  border-color: #29485d !important;
+  color: #f0f6fa;
 }
 
 html[data-theme="dark"] .dashboard-layout .ux-table tbody td,
 html[data-theme="dark"] .dashboard-layout .table tbody td,
 .theme-dark .dashboard-layout .ux-table tbody td {
-  background: #13283b;
-  color: #f0f6fb;
-  border-bottom-color: #28475e;
+  background: #12283a;
+  color: #f0f6fa;
+  border-bottom-color: #29485d;
 }
 
 html[data-theme="dark"] .dashboard-layout .ux-table:not(.ux-details-table) tbody tr:nth-child(even) td,
 .theme-dark .dashboard-layout .ux-table:not(.ux-details-table) tbody tr:nth-child(even) td {
-  background: #17344c;
+  background: #17354c;
 }
 
 html[data-theme="dark"] .dashboard-layout .dashboard-topbar,
 .theme-dark .dashboard-layout .dashboard-topbar {
-  background: #13283b;
-  border-bottom-color: #28475e;
+  background: #12283a;
+  border-bottom-color: #29485d;
 }
 
 html[data-theme="dark"] .dashboard-layout .form-label,
@@ -532,9 +532,9 @@ html[data-theme="dark"] .dashboard-layout .form-label,
     grid-template-columns: 1fr;
   }
 
-  body.home-landing-layout .lp-hero__pills,
   body.home-landing-layout .lp-hero__support,
-  body.home-landing-layout .lp-hero__glance {
+  body.home-landing-layout .lp-hero__plus,
+  body.home-landing-layout .lp-hero__wave {
     display: none;
   }
 }

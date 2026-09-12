@@ -5,7 +5,7 @@ $pageKicker = 'How It Works';
 $pageTitleHtml = 'From registration to <span class="pp-intro__emphasis">consultation records.</span>';
 $pageLedeHtml = 'MBPHA TeleHealth follows a fixed process. Each step below is part of the <span class="pp-intro__emphasis">live system</span> — nothing extra has been added.';
 $pageLedeShortHtml = 'Eight steps from registration to your consultation record.';
-$pageIntroVisual = 'stethoscope';
+$pageIntroVisual = '';
 
 $steps = [
     [

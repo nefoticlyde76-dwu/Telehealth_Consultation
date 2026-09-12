@@ -55,21 +55,21 @@ html:has(body.dashboard-layout) {
   --dash-danger: var(--danger);
   --dash-warning: #B45309;
   --dash-warning-bg: rgba(245, 158, 11, 0.14);
-  --dash-radius: 10px;
-  --dash-radius-lg: 12px;
-  --dash-shadow: 0 1px 3px rgba(var(--dark-navy-rgb), 0.06);
-  --dash-sidebar: 248px;
+  --dash-radius: 12px;
+  --dash-radius-lg: 16px;
+  --dash-shadow: 0 6px 20px rgba(15, 58, 89, 0.07);
+  --dash-sidebar: 232px;
   --dash-sidebar-collapsed: 72px;
   --dash-rail-tile: 44px;
   --dash-sidebar-duration: 0.3s;
   --dash-sidebar-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --dash-sidebar-bg: var(--ds-sidebar-bg, #12263F);
+  --dash-sidebar-bg: var(--ds-sidebar-bg, #0d2b46);
   --dash-sidebar-border: rgba(255, 255, 255, 0.08);
   --dash-sidebar-text: var(--white);
-  --dash-sidebar-muted: rgba(227, 242, 253, 0.68);
-  --dash-sidebar-caption: rgba(227, 242, 253, 0.42);
-  --dash-sidebar-hover: rgba(10, 111, 182, 0.22);
-  --dash-sidebar-active: var(--medical-blue);
+  --dash-sidebar-muted: #b8c8d7;
+  --dash-sidebar-caption: #6f8ba2;
+  --dash-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --dash-sidebar-active: #0c7bc6;
   --dash-heading: var(--dark-navy);
   --table-header-bg: var(--medical-blue);
   --table-header-color: var(--white);
@@ -412,13 +412,13 @@ html:has(body.dashboard-layout) {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  height: 36px;
+  height: 40px;
   margin: 0;
   padding: 0 12px;
   border: 0 !important;
   border-radius: 10px !important;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--dash-sidebar-muted) !important;
   background: transparent !important;
   text-decoration: none;
@@ -451,9 +451,10 @@ html:has(body.dashboard-layout) {
 }
 
 .dashboard-layout .sidebar-link.active {
-  color: var(--dash-sidebar-text) !important;
+  color: #ffffff !important;
   font-weight: 600;
   background: var(--dash-sidebar-active) !important;
+  box-shadow: 0 4px 12px rgba(10, 123, 198, 0.24) !important;
 }
 
 .dashboard-layout .sidebar-link.active::before {
@@ -6120,15 +6121,15 @@ html:has(body.dashboard-layout) {
    Dashboard welcome banner
    ============================================================ */
 .dashboard-layout .dashboard-welcome-banner {
-  --welcome-primary: #0b6fd3;
-  --welcome-primary-dark: #0b3558;
-  --welcome-bg: linear-gradient(110deg, #f8fcff 0%, #edf7fe 55%, #eaf5fc 100%);
+  --welcome-primary: var(--medical-blue);
+  --welcome-primary-dark: var(--dark-navy);
+  --welcome-bg: #f4f9fd;
   --welcome-surface: #ffffff;
-  --welcome-border: #d8eaf7;
-  --welcome-text: #0b3558;
-  --welcome-muted: #5d7690;
-  --welcome-radius: 24px;
-  --welcome-shadow: 0 12px 35px rgba(14, 83, 130, 0.08);
+  --welcome-border: #d8e6f0;
+  --welcome-text: #082f50;
+  --welcome-muted: #637b91;
+  --welcome-radius: 20px;
+  --welcome-shadow: 0 12px 32px rgba(15, 58, 89, 0.11);
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
@@ -6147,9 +6148,7 @@ html:has(body.dashboard-layout) {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 46% 72% at 92% 12%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 68%),
-    radial-gradient(ellipse 32% 48% at 8% 86%, rgba(186, 224, 255, 0.26) 0%, rgba(186, 224, 255, 0) 72%);
+  background: radial-gradient(ellipse 40% 60% at 92% 18%, rgba(25, 189, 244, 0.10) 0%, transparent 70%);
 }
 
 .dashboard-layout .dashboard-welcome-hero {
