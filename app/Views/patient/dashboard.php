@@ -17,17 +17,6 @@ $upcomingCount = (int) ($bookingSummary['upcoming_appointments'] ?? $approvedCou
 $unreadCount = (int) ($headerNotifications['unread_count'] ?? 0);
 $latestStatus = (string) ($latestRequest['status'] ?? '');
 
-$pageHeaderTitle = 'Patient Dashboard';
-$pageHeaderSubtitle = 'Check your next consultation, track request status, and book care when you need it.';
-$pageHeaderBreadcrumbs = [];
-ob_start();
-?>
-<a href="<?= Helper::url('/patient/available-slots') ?>" class="btn btn-primary btn-sm">
-  <i class="bi bi-calendar2-plus me-1" aria-hidden="true"></i>Book Consultation
-</a>
-<?php
-$pageHeaderActions = ob_get_clean();
-
 $summaryStats = [
     [
         'label' => 'Upcoming',
@@ -67,7 +56,6 @@ $welcomeIcon = 'bi-calendar2-heart';
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
-<?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/welcome_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
 

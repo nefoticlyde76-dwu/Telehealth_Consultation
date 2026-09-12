@@ -1031,17 +1031,23 @@ html:has(body.dashboard-layout) {
 
 .dashboard-layout .topbar-right {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  flex: 1 1 0;
-  flex-shrink: 0;
+  flex: 0 1 auto;
   min-width: 0;
+}
+
+.dashboard-layout .topbar-right > .dropdown,
+.dashboard-layout .topbar-right > .topbar-quick-action {
+  flex: 0 0 auto;
 }
 
 .dashboard-layout .topbar-quick-action,
 .dashboard-layout .btn.topbar-quick-action {
   height: 36px;
+  width: auto;
   padding: 0 14px !important;
   background: var(--dash-blue-action) !important;
   border-color: var(--dash-blue-action) !important;
@@ -1053,6 +1059,8 @@ html:has(body.dashboard-layout) {
   align-items: center;
   gap: 6px;
   box-shadow: none !important;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .dashboard-layout .topbar-quick-action:hover {
@@ -1138,6 +1146,7 @@ html:has(body.dashboard-layout) {
   font-size: 13px;
   color: var(--dash-text);
   box-shadow: none;
+  text-overflow: ellipsis;
 }
 
 .dashboard-layout .topbar-search input:focus,
@@ -1282,12 +1291,12 @@ html:has(body.dashboard-layout) {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(52%, 560px);
+  width: min(46%, 480px);
   background:
-    linear-gradient(90deg, #f4f9fd 0%, rgba(244, 249, 253, 0.55) 28%, rgba(227, 242, 253, 0.22) 100%),
+    linear-gradient(90deg, #f7fbfe 0%, rgba(247, 251, 254, 0.82) 36%, rgba(227, 242, 253, 0.35) 100%),
     url("../images/AGH.png") right 38% / cover no-repeat;
-  filter: grayscale(0.35) saturate(0.55) brightness(1.28);
-  opacity: 0.28;
+  filter: grayscale(0.55) saturate(0.4) brightness(1.4);
+  opacity: 0.16;
 }
 
 .dashboard-layout .ux-welcome__plus {
@@ -1318,6 +1327,8 @@ html:has(body.dashboard-layout) {
 }
 
 .dashboard-layout .ux-welcome__copy {
+  position: relative;
+  z-index: 2;
   flex: 1 1 320px;
   min-width: 0;
 }
@@ -1365,7 +1376,7 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .ux-welcome--patient .ux-welcome__description {
   max-width: 38rem;
   margin: 0 0 16px;
-  color: var(--dark-gray);
+  color: #3d4f63;
   font-family: var(--dash-font);
   font-size: 15px;
   font-weight: 400;
@@ -1383,13 +1394,13 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .ux-welcome--doctor .ux-welcome__meta-pill,
 .dashboard-layout .ux-welcome--patient .ux-welcome__meta-pill {
   background: var(--white);
-  border: 1px solid rgba(var(--medical-blue-rgb), 0.12);
+  border: 1px solid rgba(var(--medical-blue-rgb), 0.2);
   color: var(--navy-black);
   font-family: var(--dash-font);
   border-radius: var(--ds-radius-pill);
   padding: 6px 12px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -1454,57 +1465,22 @@ html:has(body.dashboard-layout) {
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  gap: 10px;
-  flex: 0 1 38%;
-  min-width: 200px;
-  max-width: 420px;
+  gap: 0;
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 96px;
   position: relative;
-}
-
-.dashboard-layout .ux-welcome__tagline {
-  margin: 0;
-  max-width: 18rem;
-  text-align: right;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--dark-navy);
 }
 
 .dashboard-layout .ux-welcome__motif {
   display: block;
-  width: min(220px, 32vw);
+  width: 72px;
   height: auto;
-  max-height: 168px;
-  opacity: 0.96;
+  max-height: 72px;
+  object-fit: contain;
+  opacity: 1;
   pointer-events: none;
   user-select: none;
-}
-
-.dashboard-layout .ux-welcome__motif-line {
-  stroke: var(--dark-navy);
-  stroke-width: 8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-}
-
-.dashboard-layout .ux-welcome__motif-node {
-  fill: none;
-  stroke: var(--medical-blue);
-  stroke-width: 8;
-}
-
-.dashboard-layout .ux-welcome__motif-hub {
-  fill: var(--white);
-  stroke: var(--emerald-green);
-  stroke-width: 7;
-}
-
-.dashboard-layout .ux-welcome__motif-cross {
-  stroke: var(--emerald-green);
-  stroke-width: 5;
-  stroke-linecap: round;
 }
 
 .dashboard-layout .ux-welcome__icon,
@@ -4224,7 +4200,7 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .notification-page__header {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px 16px;
   padding: 18px 18px 12px !important;
@@ -4236,7 +4212,6 @@ html:has(body.dashboard-layout) {
   align-items: center;
   gap: 10px;
   min-width: 0;
-  padding-top: 4px;
 }
 
 .dashboard-layout .notification-page__heading-icon {
@@ -4260,18 +4235,29 @@ html:has(body.dashboard-layout) {
 
 .dashboard-layout .notification-page__tools {
   display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: flex-end;
-  justify-content: flex-start;
-  gap: 10px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 10px;
   min-width: 0;
   flex: 1 1 280px;
+}
+
+.dashboard-layout .notification-page__controls {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 10px;
+  min-width: 0;
 }
 
 .dashboard-layout .notification-page .ux-table-toolbar {
   flex: 0 0 auto;
   width: auto;
+  max-width: 100%;
   justify-content: flex-end;
 }
 
@@ -4298,6 +4284,8 @@ html:has(body.dashboard-layout) {
   border: 0;
   padding: 0;
   gap: 6px;
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .dashboard-layout .notification-page .ux-table-filters a {
@@ -4482,15 +4470,16 @@ html:has(body.dashboard-layout) {
 }
 
 @media (max-width: 767.98px) {
-  .dashboard-layout .notification-page__tools {
+  .dashboard-layout .notification-page__tools,
+  .dashboard-layout .notification-page__controls {
     flex: 1 1 100%;
-    align-items: stretch;
+    justify-content: flex-start;
   }
 
   .dashboard-layout .notification-page .ux-table-toolbar,
   .dashboard-layout .notification-page .ux-table-toolbar__search {
-    flex: 1 1 100%;
-    max-width: none;
+    flex: 0 1 auto;
+    max-width: 100%;
     width: auto;
   }
 
@@ -4919,6 +4908,13 @@ html:has(body.dashboard-layout) {
   gap: 8px;
   min-width: 0;
   flex: 1 1 220px;
+}
+
+.dashboard-layout .notification-page .ux-table-toolbar,
+.dashboard-layout .notification-page__controls .ux-table-toolbar {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
 }
 
 .dashboard-layout .ux-table-toolbar__search {
@@ -5952,17 +5948,12 @@ html:has(body.dashboard-layout) {
     flex: 0 0 auto;
     align-items: flex-start;
     min-width: 0;
-    max-width: 180px;
-  }
-
-  .dashboard-layout .ux-welcome__tagline {
-    text-align: left;
-    font-size: 12px;
+    max-width: 64px;
   }
 
   .dashboard-layout .ux-welcome__motif {
-    width: 120px;
-    max-height: 110px;
+    width: 56px;
+    max-height: 56px;
   }
 
   .dashboard-layout .ux-welcome__land {
@@ -5973,26 +5964,49 @@ html:has(body.dashboard-layout) {
 
 @media (max-width: 767.98px) {
   .dashboard-layout .dashboard-topbar {
-    height: auto;
+    height: var(--dash-topbar);
     min-height: var(--dash-topbar);
-    max-height: none;
-    padding: 8px 12px !important;
+    max-height: var(--dash-topbar);
+    padding: 0 12px !important;
   }
 
   .dashboard-layout .dashboard-topbar-row {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 8px;
   }
 
-  .dashboard-layout .topbar-left,
+  .dashboard-layout .topbar-left {
+    flex: 0 0 auto;
+  }
+
   .dashboard-layout .topbar-right {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
   }
 
   .dashboard-layout .topbar-search {
-    order: 3;
-    flex: 1 1 100%;
+    order: 0;
+    flex: 1 1 auto;
     max-width: none;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .dashboard-layout .topbar-profile-meta {
+    display: none !important;
+  }
+
+  .dashboard-layout .topbar-quick-action,
+  .dashboard-layout .btn.topbar-quick-action {
+    height: 40px;
+    width: auto;
+    max-width: none;
+    flex: 0 0 auto;
+    padding: 0 12px !important;
   }
 
   .dashboard-layout .topbar-brand-wrap .brand-wordmark {
@@ -6051,4 +6065,651 @@ html:has(body.dashboard-layout) {
     color: var(--dash-muted);
   }
 }
+
+@media (max-width: 767.98px) {
+  .dashboard-layout .dashboard-topbar-row {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .dashboard-layout .topbar-brand-wrap {
+    display: none !important;
+  }
+
+  .dashboard-layout .topbar-toggle,
+  .dashboard-layout .notification-bell {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .dashboard-layout .profile-trigger {
+    height: 40px;
+    min-height: 40px;
+    padding: 2px 6px 2px 2px;
+  }
+
+  .dashboard-layout .topbar-search input,
+  .dashboard-layout .topbar-search .form-control {
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .dashboard-layout .topbar-right {
+    display: flex;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .dashboard-layout .topbar-right > .dropdown,
+  .dashboard-layout .topbar-right > .topbar-quick-action,
+  .dashboard-layout .topbar-right > .btn {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .dashboard-layout .topbar-profile-meta {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   Dashboard welcome banner
+   ============================================================ */
+.dashboard-layout .dashboard-welcome-banner {
+  --welcome-primary: #0b6fd3;
+  --welcome-primary-dark: #0b3558;
+  --welcome-bg: linear-gradient(110deg, #f8fcff 0%, #edf7fe 55%, #eaf5fc 100%);
+  --welcome-surface: #ffffff;
+  --welcome-border: #d8eaf7;
+  --welcome-text: #0b3558;
+  --welcome-muted: #5d7690;
+  --welcome-radius: 24px;
+  --welcome-shadow: 0 12px 35px rgba(14, 83, 130, 0.08);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 24px;
+  min-height: 390px;
+  border: 1px solid var(--welcome-border);
+  border-radius: var(--welcome-radius);
+  background: var(--welcome-bg);
+  box-shadow: var(--welcome-shadow);
+  container-type: inline-size;
+  container-name: welcome-banner;
+}
+
+.dashboard-layout .dashboard-welcome-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 46% 72% at 92% 12%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 68%),
+    radial-gradient(ellipse 32% 48% at 8% 86%, rgba(186, 224, 255, 0.26) 0%, rgba(186, 224, 255, 0) 72%);
+}
+
+.dashboard-layout .dashboard-welcome-hero {
+  position: relative;
+  z-index: 1;
+  min-height: 260px;
+  padding: 38px 52px 28px;
+  overflow: hidden;
+}
+
+.dashboard-layout .welcome-banner-hero-row {
+  position: relative;
+  z-index: 2;
+  min-height: 220px;
+}
+
+.dashboard-layout .welcome-banner-content {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+
+.dashboard-layout .welcome-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #ddf3ff;
+  color: #0969c7;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.dashboard-layout .welcome-greeting {
+  margin: 18px 0 0;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  color: var(--welcome-text);
+  overflow-wrap: anywhere;
+}
+
+.dashboard-layout .welcome-greeting__name {
+  color: var(--welcome-primary);
+}
+
+.dashboard-layout .welcome-description {
+  margin: 14px 0 0;
+  max-width: 40rem;
+  font-size: 17px;
+  line-height: 1.65;
+  color: #55718a;
+}
+
+.dashboard-layout .welcome-role-slot {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.dashboard-layout .welcome-role-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 280px;
+  padding: 16px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 25px rgba(32, 91, 130, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-layout .welcome-role-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  border-radius: 50%;
+  background: #e6f3ff;
+  color: var(--welcome-primary);
+  font-size: 1.25rem;
+}
+
+.dashboard-layout .welcome-role-card__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--welcome-text);
+}
+
+.dashboard-layout .welcome-role-card__text {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #647d92;
+}
+
+.dashboard-layout .welcome-banner-visual {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 43%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dashboard-layout .welcome-banner-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center right;
+  opacity: 0.92;
+}
+
+.dashboard-layout .welcome-banner-visual__fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #edf7fe 0%, rgba(237, 247, 254, 0.25) 45%, rgba(237, 247, 254, 0) 100%);
+}
+
+.dashboard-layout .welcome-banner-logo {
+  position: absolute;
+  top: 50%;
+  right: 28px;
+  z-index: 2;
+  width: 148px;
+  height: 148px;
+  object-fit: cover;
+  object-position: 6% center;
+  transform: translateY(-50%);
+  mix-blend-mode: multiply;
+}
+
+.dashboard-layout .welcome-banner-actions {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  padding: 28px 52px 34px;
+  border-top: 1px solid rgba(210, 230, 242, 0.7);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.dashboard-layout .welcome-action-card,
+.dashboard-layout .welcome-primary-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  min-height: 78px;
+  padding: 15px 18px;
+  text-decoration: none;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
+}
+
+.dashboard-layout .welcome-action-card {
+  border: 1px solid #ddecf7;
+  border-radius: 20px;
+  background: rgba(248, 252, 255, 0.85);
+}
+
+.dashboard-layout .welcome-action-card:hover,
+.dashboard-layout .welcome-action-card:focus-visible {
+  border-color: #c6e1f3;
+  box-shadow: 0 10px 22px rgba(11, 82, 132, 0.08);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.dashboard-layout .welcome-action-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 50%;
+  font-size: 1.15rem;
+}
+
+.dashboard-layout .welcome-action-card--appointment .welcome-action-icon {
+  background: #e6f3ff;
+  color: var(--welcome-primary);
+}
+
+.dashboard-layout .welcome-action-card--health .welcome-action-icon {
+  background: #e6f7ee;
+  color: #16a36a;
+}
+
+.dashboard-layout .welcome-action-card--support .welcome-action-icon {
+  background: #eee8fb;
+  color: #6d4ad8;
+}
+
+.dashboard-layout .welcome-action-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dashboard-layout .welcome-action-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #688097;
+}
+
+.dashboard-layout .welcome-action-value {
+  margin-top: 3px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--welcome-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-layout .welcome-action-description {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #6d8295;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-layout .welcome-action-arrow {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: #7893a8;
+  font-size: 0.95rem;
+}
+
+.dashboard-layout .welcome-primary-action {
+  justify-content: center;
+  border-radius: 18px;
+  background: var(--welcome-primary);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(11, 111, 211, 0.22);
+}
+
+.dashboard-layout .welcome-primary-action:hover,
+.dashboard-layout .welcome-primary-action:focus-visible {
+  background: #095bb0;
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(11, 111, 211, 0.28);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.dashboard-layout .welcome-primary-action i:last-child {
+  margin-left: 2px;
+}
+
+@container welcome-banner (max-width: 1099.98px) {
+  .dashboard-layout .welcome-banner-hero-row {
+    min-height: 0;
+  }
+
+  .dashboard-layout .dashboard-welcome-hero {
+    min-height: 220px;
+    padding: 28px 28px 22px;
+  }
+
+  .dashboard-layout .welcome-greeting {
+    font-size: 38px;
+  }
+
+  .dashboard-layout .welcome-role-card {
+    max-width: 240px;
+  }
+
+  .dashboard-layout .welcome-banner-visual {
+    width: 34%;
+  }
+
+  .dashboard-layout .welcome-banner-logo {
+    right: 16px;
+    width: 112px;
+    height: 112px;
+  }
+
+  .dashboard-layout .welcome-banner-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 22px 28px 26px;
+  }
+}
+
+@container welcome-banner (max-width: 799.98px) {
+  .dashboard-layout .welcome-banner-visual,
+  .dashboard-layout .welcome-banner-logo {
+    display: none;
+  }
+
+  .dashboard-layout .welcome-role-slot {
+    margin-top: 6px;
+  }
+
+  .dashboard-layout .welcome-role-card {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@container welcome-banner (max-width: 639.98px) {
+  .dashboard-layout .dashboard-welcome-hero {
+    min-height: 0;
+    padding: 24px 20px 20px;
+  }
+
+  .dashboard-layout .welcome-greeting {
+    font-size: 30px;
+    line-height: 1.15;
+  }
+
+  .dashboard-layout .welcome-description {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .dashboard-layout .welcome-banner-actions {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 18px 20px 22px;
+  }
+
+  .dashboard-layout .welcome-action-card {
+    min-height: 66px;
+  }
+
+  .dashboard-layout .welcome-primary-action {
+    min-height: 56px;
+    font-size: 16px;
+  }
+
+  .dashboard-layout .welcome-action-value,
+  .dashboard-layout .welcome-action-description {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .dashboard-layout .dashboard-welcome-hero {
+    padding: 28px 28px 22px;
+    min-height: 220px;
+  }
+
+  .dashboard-layout .welcome-banner-hero-row {
+    min-height: 0;
+  }
+
+  .dashboard-layout .welcome-greeting {
+    font-size: 38px;
+  }
+
+  .dashboard-layout .welcome-role-card {
+    max-width: 240px;
+  }
+
+  .dashboard-layout .welcome-banner-visual {
+    width: 34%;
+  }
+
+  .dashboard-layout .welcome-banner-logo {
+    right: 16px;
+    width: 112px;
+    height: 112px;
+  }
+
+  .dashboard-layout .welcome-banner-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 22px 28px 26px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .dashboard-layout .dashboard-welcome-banner {
+    min-height: 0;
+    border-radius: 20px;
+  }
+
+  .dashboard-layout .dashboard-welcome-hero {
+    min-height: 0;
+    padding: 24px 20px 20px;
+  }
+
+  .dashboard-layout .welcome-greeting {
+    font-size: 30px;
+    line-height: 1.15;
+  }
+
+  .dashboard-layout .welcome-description {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .dashboard-layout .welcome-banner-visual,
+  .dashboard-layout .welcome-banner-logo {
+    display: none;
+  }
+
+  .dashboard-layout .welcome-role-slot {
+    margin-top: 6px;
+  }
+
+  .dashboard-layout .welcome-role-card {
+    width: 100%;
+    max-width: none;
+  }
+
+  .dashboard-layout .welcome-banner-actions {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 18px 20px 22px;
+  }
+
+  .dashboard-layout .welcome-action-card {
+    min-height: 66px;
+  }
+
+  .dashboard-layout .welcome-primary-action {
+    min-height: 56px;
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-layout .welcome-action-card,
+  .dashboard-layout .welcome-primary-action {
+    transition: none;
+  }
+
+  .dashboard-layout .welcome-action-card:hover,
+  .dashboard-layout .welcome-primary-action:hover {
+    transform: none;
+  }
+}
+
+html[data-theme="dark"] .dashboard-layout .dashboard-welcome-banner,
+.theme-dark .dashboard-layout .dashboard-welcome-banner,
+.dashboard-layout.theme-dark .dashboard-welcome-banner {
+  --welcome-primary: #4ea1f3;
+  --welcome-primary-dark: #f1f7fc;
+  --welcome-bg: #0e1e2d;
+  --welcome-surface: #14283a;
+  --welcome-border: #23435b;
+  --welcome-text: #f1f7fc;
+  --welcome-muted: #a6bacb;
+  --welcome-shadow: 0 12px 35px rgba(0, 0, 0, 0.28);
+  background: #0e1e2d;
+}
+
+html[data-theme="dark"] .dashboard-layout .dashboard-welcome-banner::before,
+.theme-dark .dashboard-layout .dashboard-welcome-banner::before,
+.dashboard-layout.theme-dark .dashboard-welcome-banner::before {
+  background:
+    radial-gradient(ellipse 46% 72% at 92% 12%, rgba(78, 161, 243, 0.12) 0%, rgba(14, 30, 45, 0) 68%),
+    radial-gradient(ellipse 32% 48% at 8% 86%, rgba(20, 40, 58, 0.8) 0%, rgba(14, 30, 45, 0) 72%);
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-badge,
+.theme-dark .dashboard-layout .welcome-badge,
+.dashboard-layout.theme-dark .welcome-badge {
+  background: #17344d;
+  color: #8ec8f7;
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-description,
+html[data-theme="dark"] .dashboard-layout .welcome-role-card__text,
+html[data-theme="dark"] .dashboard-layout .welcome-action-title,
+html[data-theme="dark"] .dashboard-layout .welcome-action-description,
+html[data-theme="dark"] .dashboard-layout .welcome-action-arrow,
+.theme-dark .dashboard-layout .welcome-description,
+.theme-dark .dashboard-layout .welcome-role-card__text,
+.theme-dark .dashboard-layout .welcome-action-title,
+.theme-dark .dashboard-layout .welcome-action-description,
+.dashboard-layout.theme-dark .welcome-description,
+.dashboard-layout.theme-dark .welcome-role-card__text,
+.dashboard-layout.theme-dark .welcome-action-title,
+.dashboard-layout.theme-dark .welcome-action-description {
+  color: #a6bacb;
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-role-card,
+html[data-theme="dark"] .dashboard-layout .welcome-action-card,
+html[data-theme="dark"] .dashboard-layout .welcome-banner-actions,
+.theme-dark .dashboard-layout .welcome-role-card,
+.theme-dark .dashboard-layout .welcome-action-card,
+.theme-dark .dashboard-layout .welcome-banner-actions,
+.dashboard-layout.theme-dark .welcome-role-card,
+.dashboard-layout.theme-dark .welcome-action-card,
+.dashboard-layout.theme-dark .welcome-banner-actions {
+  background: #14283a;
+  border-color: #23435b;
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-role-icon,
+html[data-theme="dark"] .dashboard-layout .welcome-action-card--appointment .welcome-action-icon,
+.theme-dark .dashboard-layout .welcome-role-icon,
+.dashboard-layout.theme-dark .welcome-role-icon {
+  background: #17344d;
+  color: #4ea1f3;
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-action-card--health .welcome-action-icon,
+.theme-dark .dashboard-layout .welcome-action-card--health .welcome-action-icon,
+.dashboard-layout.theme-dark .welcome-action-card--health .welcome-action-icon {
+  background: #163528;
+  color: #3dce8a;
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-action-card--support .welcome-action-icon,
+.theme-dark .dashboard-layout .welcome-action-card--support .welcome-action-icon,
+.dashboard-layout.theme-dark .welcome-action-card--support .welcome-action-icon {
+  background: #2a2150;
+  color: #b9a4ff;
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-banner-visual__fade,
+.theme-dark .dashboard-layout .welcome-banner-visual__fade,
+.dashboard-layout.theme-dark .welcome-banner-visual__fade {
+  background: linear-gradient(90deg, #0e1e2d 0%, rgba(14, 30, 45, 0.55) 45%, rgba(14, 30, 45, 0.2) 100%);
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-banner-photo,
+.theme-dark .dashboard-layout .welcome-banner-photo,
+.dashboard-layout.theme-dark .welcome-banner-photo {
+  filter: brightness(0.55) saturate(0.7);
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-banner-logo,
+.theme-dark .dashboard-layout .welcome-banner-logo,
+.dashboard-layout.theme-dark .welcome-banner-logo {
+  mix-blend-mode: normal;
+  filter: brightness(0.92);
+}
+
+html[data-theme="dark"] .dashboard-layout .welcome-action-value,
+html[data-theme="dark"] .dashboard-layout .welcome-role-card__title,
+.theme-dark .dashboard-layout .welcome-action-value,
+.dashboard-layout.theme-dark .welcome-action-value {
+  color: #f1f7fc;
+}
+
 

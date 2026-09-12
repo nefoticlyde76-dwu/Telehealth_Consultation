@@ -22,20 +22,13 @@ $todaysAppointments = array_values(array_filter($upcomingApprovedAppointments, s
 $pageHeaderTitle = 'Doctor Dashboard';
 $pageHeaderSubtitle = "See today's workload, upcoming consultations, and what needs your attention.";
 $pageHeaderBreadcrumbs = [];
-ob_start();
-?>
-<a href="<?= Helper::url('/doctor/availability') ?>" class="btn btn-primary btn-sm">
-  <i class="bi bi-calendar-week me-1" aria-hidden="true"></i>Manage Availability
-</a>
-<?php
-$pageHeaderActions = ob_get_clean();
+$pageHeaderActions = '';
 $summaryStats = $stats;
 
 $welcomeIcon = 'bi-heart-pulse';
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
-<?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/welcome_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
 

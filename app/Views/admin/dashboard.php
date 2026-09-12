@@ -12,24 +12,12 @@ $recentAudit = is_array($recentAudit ?? null) ? $recentAudit : [];
 $charts = is_array($charts ?? null) ? $charts : [];
 $headerNotifications = is_array($headerNotifications ?? null) ? $headerNotifications : [];
 
-$pageHeaderTitle = 'Administrator Dashboard';
-$pageHeaderSubtitle = 'Review pending requests, manage accounts, and monitor recent activity.';
-$pageHeaderBreadcrumbs = [];
-ob_start();
-?>
-<a href="<?= Helper::url(Status::filteredListUrl('/admin/consultation-requests', Status::PENDING)) ?>" class="btn btn-primary btn-sm">
-  <i class="bi bi-clipboard2-check me-1" aria-hidden="true"></i>Review Pending Requests
-</a>
-<?php
-$pageHeaderActions = ob_get_clean();
-
 $summaryStats = $stats;
 
 $welcomeIcon = 'bi-shield-check';
 ?>
 
 <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
-<?php require __DIR__ . '/../partials/dashboard/page_header.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/welcome_banner.php'; ?>
 <?php require __DIR__ . '/../partials/dashboard/summary_stats.php'; ?>
 
