@@ -20,22 +20,95 @@ class PatientAiAssistantController extends Controller
         Helper::redirect('/patient/dashboard');
     }
 
+    public function conversation(): void
+    {
+        $user = $this->requirePatientJson();
+        if ($user === null) {
+            return;
+        }
+
+        $requestedId = (int) ($_GET['id'] ?? 0);
+        $result = PatientAiAssistantService::getConversation(
+            (int) $user->id,
+            $requestedId > 0 ? $requestedId : null
+        );
+
+        $this->sendServiceResult($result, [
+            'conversation' => $result['conversation'] ?? null,
+            'messages' => $result['messages'] ?? [],
+        ]);
+    }
+
+    public function conversations(): void
+    {
+        $user = $this->requirePatientJson();
+        if ($user === null) {
+            return;
+        }
+
+        $result = PatientAiAssistantService::listConversations((int) $user->id);
+        $this->sendServiceResult($result, [
+            'conversations' => $result['conversations'] ?? [],
+        ]);
+    }
+
+    public function deleteConversation(): void
+    {
+        $user = $this->requirePatientPost();
+        if ($user === null) {
+            return;
+        }
+
+        $conversationId = (int) ($_POST['conversation_id'] ?? 0);
+        $result = PatientAiAssistantService::deleteConversation((int) $user->id, $conversationId);
+        $this->sendServiceResult($result, [
+            'deleted' => (bool) ($result['deleted'] ?? false),
+        ]);
+    }
+
     public function chat(): void
+    {
+        $user = $this->requirePatientPost();
+        if ($user === null) {
+            return;
+        }
+
+        $message = (string) ($_POST['message'] ?? '');
+        $conversationId = (int) ($_POST['conversation_id'] ?? 0);
+        $startNew = (string) ($_POST['start_new'] ?? '') === '1';
+
+        try {
+            $result = PatientAiAssistantService::reply(
+                (int) $user->id,
+                $message,
+                $conversationId > 0 ? $conversationId : null,
+                $startNew
+            );
+        } catch (\Throwable $e) {
+            error_log('[PatientAiAssistantController::chat] Unexpected assistant error.');
+            $this->jsonResponse([
+                'success' => false,
+                'message' => PatientAiAssistantService::SAFE_UNAVAILABLE,
+                'csrf_token' => Csrf::generate(),
+            ], 500);
+            return;
+        }
+
+        $this->sendServiceResult($result, [
+            'reply' => (string) ($result['reply'] ?? ''),
+            'conversation_id' => (int) ($result['conversation_id'] ?? 0),
+            'title' => (string) ($result['title'] ?? ''),
+        ]);
+    }
+
+    private function requirePatientPost(): ?object
     {
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
             $this->jsonResponse([
                 'success' => false,
                 'message' => 'This action must be submitted as a POST request.',
             ], 405);
-            return;
-        }
-
-        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
-            $this->jsonResponse([
-                'success' => false,
-                'message' => 'Please sign in as a patient to use MediMate AI.',
-            ], 401);
-            return;
+            return null;
         }
 
         if (!Csrf::verify((string) ($_POST['_token'] ?? ''))) {
@@ -43,7 +116,20 @@ class PatientAiAssistantController extends Controller
                 'success' => false,
                 'message' => 'Security token expired or is invalid. Please refresh the page and try again.',
             ], 419);
-            return;
+            return null;
+        }
+
+        return $this->requirePatientJson();
+    }
+
+    private function requirePatientJson(): ?object
+    {
+        if (!AuthService::isAuthenticated() || AuthService::getUserRole() !== 'patient') {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Please sign in as a patient to use MediMate AI.',
+            ], 401);
+            return null;
         }
 
         $user = AuthService::getUser();
@@ -52,33 +138,30 @@ class PatientAiAssistantController extends Controller
                 'success' => false,
                 'message' => 'Please sign in as a patient to use MediMate AI.',
             ], 401);
-            return;
+            return null;
         }
 
-        $message = (string) ($_POST['message'] ?? '');
+        return $user;
+    }
 
-        try {
-            $result = PatientAiAssistantService::reply((int) $user->id, $message);
-        } catch (\Throwable $e) {
-            error_log('[PatientAiAssistantController::chat] Unexpected assistant error.');
-            $this->jsonResponse([
-                'success' => false,
-                'message' => PatientAiAssistantService::SAFE_UNAVAILABLE,
-            ], 500);
-            return;
-        }
-
+    /**
+     * @param array{ok?:bool,message?:string,http_code?:int} $result
+     * @param array<string, mixed> $extra
+     */
+    private function sendServiceResult(array $result, array $extra = []): void
+    {
         if (!($result['ok'] ?? false)) {
-            $this->jsonResponse([
+            $this->jsonResponse(array_merge([
                 'success' => false,
                 'message' => (string) ($result['message'] ?? PatientAiAssistantService::SAFE_UNAVAILABLE),
-            ], (int) ($result['http_code'] ?? 502));
+                'csrf_token' => Csrf::generate(),
+            ], $extra), (int) ($result['http_code'] ?? 502));
             return;
         }
 
-        $this->jsonResponse([
+        $this->jsonResponse(array_merge([
             'success' => true,
-            'reply' => (string) ($result['reply'] ?? ''),
-        ]);
+            'csrf_token' => Csrf::generate(),
+        ], $extra));
     }
 }

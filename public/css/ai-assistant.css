@@ -185,7 +185,8 @@
   background: rgba(255, 255, 255, 0.35);
 }
 
-.medimate-close {
+.medimate-close,
+.medimate-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -198,9 +199,99 @@
 }
 
 .medimate-close:hover,
-.medimate-close:focus-visible {
+.medimate-close:focus-visible,
+.medimate-icon-btn:hover,
+.medimate-icon-btn:focus-visible {
   background: rgba(255, 255, 255, 0.14);
   color: #fff;
+  outline: none;
+}
+
+.medimate-history {
+  flex-shrink: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid rgba(10, 111, 182, 0.08);
+  background: #f4f9fd;
+}
+
+.medimate-history[hidden] {
+  display: none;
+}
+
+.medimate-history__title {
+  margin: 0 0 8px;
+  color: #0b3558;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.medimate-history__heading {
+  margin: 8px 0 4px;
+  color: #5d7690;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.medimate-history__heading:first-child {
+  margin-top: 0;
+}
+
+.medimate-history__empty {
+  margin: 0;
+  color: #5d7690;
+  font-size: 0.8rem;
+}
+
+.medimate-history__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.medimate-history__item {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #0b3558;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.medimate-history__row.is-active .medimate-history__item,
+.medimate-history__item:hover,
+.medimate-history__item:focus-visible {
+  background: #fff;
+  outline: none;
+}
+
+.medimate-history__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #7893a8;
+}
+
+.medimate-history__delete:hover,
+.medimate-history__delete:focus-visible {
+  background: #fff;
+  color: #d95454;
   outline: none;
 }
 
@@ -522,5 +613,9 @@
   .medimate-chip {
     padding: 8px 10px;
     font-size: 0.7rem;
+  }
+
+  .medimate-online {
+    display: none;
   }
 }

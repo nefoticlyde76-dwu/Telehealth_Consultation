@@ -59,6 +59,30 @@ class GeminiService
     }
 
     /**
+     * Multi-turn generateContent using the same Gemini client as generateText().
+     *
+     * @param list<array{role?:string,text?:string,message?:string}> $turns
+     * @param array<string, mixed> $options
+     * @return array{ok: bool, message: string, text?: string, http_code?: int}
+     */
+    public static function generateConversation(array $turns, array $options = []): array
+    {
+        $config = self::resolveConfig();
+        if (!($config['ok'] ?? false)) {
+            return [
+                'ok' => false,
+                'message' => (string) ($config['message'] ?? 'Gemini is not configured.'),
+                'http_code' => (int) ($config['http_code'] ?? 503),
+            ];
+        }
+
+        return self::generateContent($turns, [
+            'api_key' => (string) $config['api_key'],
+            'model' => (string) $config['model'],
+        ], $options);
+    }
+
+    /**
      * Connection check used by the temporary /ai/test route.
      *
      * @return array{ok: bool, message: string, text?: string, http_code?: int}
@@ -69,15 +93,21 @@ class GeminiService
     }
 
     /**
+     * @param string|list<array{role?:string,text?:string,message?:string}> $input
      * @param array{api_key: non-empty-string, model: non-empty-string} $config
      * @param array<string, mixed> $options
      * @return array{ok: bool, message: string, text?: string, http_code?: int}
      */
-    private static function generateContent(string $prompt, array $config, array $options = []): array
+    private static function generateContent(string|array $input, array $config, array $options = []): array
     {
         if (!extension_loaded('curl')) {
             error_log('[GeminiService] PHP ext-curl is not installed.');
             return self::failResult('Server missing cURL extension.', 500);
+        }
+
+        $contents = self::normalizeContents($input);
+        if ($contents === []) {
+            return self::failResult('A prompt is required.', 400);
         }
 
         $url = self::API_BASE . '/models/' . rawurlencode($config['model']) . ':generateContent';
@@ -95,13 +125,7 @@ class GeminiService
         $timeout = max(10, min(60, $timeout));
 
         $payload = [
-            'contents' => [
-                [
-                    'parts' => [
-                        ['text' => $prompt],
-                    ],
-                ],
-            ],
+            'contents' => $contents,
             'generationConfig' => [
                 'temperature' => $temperature,
                 'maxOutputTokens' => $maxTokens,
@@ -184,6 +208,49 @@ class GeminiService
             'text' => $text,
             'http_code' => 200,
         ];
+    }
+
+    /**
+     * @param string|list<array{role?:string,text?:string,message?:string}> $input
+     * @return list<array{role: string, parts: list<array{text: string}>}>
+     */
+    private static function normalizeContents(string|array $input): array
+    {
+        if (is_string($input)) {
+            $text = trim($input);
+            if ($text === '') {
+                return [];
+            }
+
+            return [
+                [
+                    'role' => 'user',
+                    'parts' => [
+                        ['text' => $text],
+                    ],
+                ],
+            ];
+        }
+
+        $contents = [];
+        foreach ($input as $turn) {
+            if (!is_array($turn)) {
+                continue;
+            }
+            $text = trim((string) ($turn['text'] ?? $turn['message'] ?? ''));
+            if ($text === '') {
+                continue;
+            }
+            $role = strtolower(trim((string) ($turn['role'] ?? 'user')));
+            $contents[] = [
+                'role' => in_array($role, ['assistant', 'model'], true) ? 'model' : 'user',
+                'parts' => [
+                    ['text' => $text],
+                ],
+            ];
+        }
+
+        return $contents;
     }
 
     /**

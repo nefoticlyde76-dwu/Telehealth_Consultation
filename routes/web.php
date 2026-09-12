@@ -79,6 +79,18 @@ $router->get('/patient/ai-assistant', [PatientAiAssistantController::class, 'ind
     new RoleMiddleware(['patient']),
 ]);
 
+$router->get('/patient/ai-assistant/conversations', [PatientAiAssistantController::class, 'conversations'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/ai-assistant/conversation', [PatientAiAssistantController::class, 'conversation'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->post('/patient/ai-assistant/conversation/delete', [PatientAiAssistantController::class, 'deleteConversation'], [
+    new RoleMiddleware(['patient']),
+]);
+
 $router->post('/patient/ai-assistant/chat', [PatientAiAssistantController::class, 'chat'], [
     new RoleMiddleware(['patient']),
 ]);

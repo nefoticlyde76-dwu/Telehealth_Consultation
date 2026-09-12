@@ -9,6 +9,10 @@
   const panel = root.querySelector("[data-medimate-panel]");
   const openButton = root.querySelector("[data-medimate-open]");
   const closeButton = root.querySelector("[data-medimate-close]");
+  const historyButton = root.querySelector("[data-medimate-history]");
+  const newChatButton = root.querySelector("[data-medimate-new]");
+  const historyPanel = root.querySelector("[data-medimate-history-panel]");
+  const historyList = root.querySelector("[data-medimate-history-list]");
   const form = root.querySelector("[data-ai-form]");
   const input = root.querySelector("[data-ai-input]");
   const sendButton = root.querySelector("[data-ai-send]");
@@ -16,6 +20,9 @@
   const welcome = root.querySelector("[data-ai-welcome]");
   const tokenInput = form instanceof HTMLFormElement ? form.querySelector('input[name="_token"]') : null;
   const endpoint = root.getAttribute("data-chat-endpoint") || "";
+  const conversationEndpoint = root.getAttribute("data-conversation-endpoint") || "";
+  const conversationsEndpoint = root.getAttribute("data-conversations-endpoint") || "";
+  const deleteEndpoint = root.getAttribute("data-delete-endpoint") || "";
   const avatarSrc = root.getAttribute("data-avatar") || "";
   const maxLength = Math.max(32, parseInt(root.getAttribute("data-max-length") || "1500", 10) || 1500);
 
@@ -25,18 +32,44 @@
 
   let inFlight = false;
   let closeTimer = 0;
+  let conversationId = 0;
+  let startNew = false;
+  let restored = false;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  loadLatestConversation();
 
   openButton.addEventListener("click", function () {
     setOpen(true);
   });
 
   closeButton.addEventListener("click", function () {
+    setHistoryOpen(false);
     setOpen(false);
   });
 
+  if (newChatButton instanceof HTMLButtonElement) {
+    newChatButton.addEventListener("click", function () {
+      beginNewChat();
+    });
+  }
+
+  if (historyButton instanceof HTMLButtonElement) {
+    historyButton.addEventListener("click", function () {
+      const nextOpen = historyPanel instanceof HTMLElement ? historyPanel.hidden : true;
+      setHistoryOpen(nextOpen);
+      if (nextOpen) {
+        loadConversationList();
+      }
+    });
+  }
+
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && root.classList.contains("is-open")) {
+      if (historyPanel instanceof HTMLElement && !historyPanel.hidden) {
+        setHistoryOpen(false);
+        return;
+      }
       setOpen(false);
     }
   });
@@ -77,14 +110,29 @@
         input.focus();
         scrollToLatest();
       }, reduceMotion ? 0 : 40);
+      if (!restored) {
+        loadLatestConversation();
+      }
       return;
     }
 
+    setHistoryOpen(false);
     root.classList.remove("is-open");
     closeTimer = window.setTimeout(function () {
       panel.hidden = true;
       openButton.focus();
     }, reduceMotion ? 0 : 220);
+  }
+
+  function beginNewChat() {
+    conversationId = 0;
+    startNew = true;
+    restored = true;
+    setHistoryOpen(false);
+    clearThreadMessages();
+    showWelcome();
+    clearError();
+    input.focus();
   }
 
   function submitMessage(raw) {
@@ -118,6 +166,12 @@
 
     const body = new FormData();
     body.append("message", message);
+    if (conversationId > 0) {
+      body.append("conversation_id", String(conversationId));
+    }
+    if (startNew) {
+      body.append("start_new", "1");
+    }
     if (tokenInput instanceof HTMLInputElement) {
       body.append("_token", tokenInput.value);
     }
@@ -153,9 +207,7 @@
         removePending(pending);
 
         const payload = result.payload && typeof result.payload === "object" ? result.payload : null;
-        if (payload && typeof payload.csrf_token === "string" && payload.csrf_token !== "" && tokenInput instanceof HTMLInputElement) {
-          tokenInput.value = payload.csrf_token;
-        }
+        applyCsrf(payload);
 
         if (result.response.redirected || result.response.status === 302 || result.response.status === 401) {
           showError("Please sign in again to continue.");
@@ -163,6 +215,11 @@
         }
 
         if (payload && payload.success === true && typeof payload.reply === "string" && payload.reply.trim() !== "") {
+          const nextId = parseInt(String(payload.conversation_id || "0"), 10) || 0;
+          if (nextId > 0) {
+            conversationId = nextId;
+            startNew = false;
+          }
           appendMessage("assistant", payload.reply);
           return;
         }
@@ -183,6 +240,248 @@
           input.focus();
         }
       });
+  }
+
+  function loadLatestConversation() {
+    if (conversationEndpoint === "") {
+      restored = true;
+      return;
+    }
+
+    fetchJson(conversationEndpoint).then(function (payload) {
+      restored = true;
+      if (!payload || payload.success !== true) {
+        return;
+      }
+      applyConversation(payload);
+    }).catch(function () {
+      restored = true;
+    });
+  }
+
+  function loadOwnedConversation(id) {
+    if (conversationEndpoint === "" || id <= 0) {
+      return;
+    }
+
+    fetchJson(conversationEndpoint + (conversationEndpoint.indexOf("?") === -1 ? "?" : "&") + "id=" + encodeURIComponent(String(id)))
+      .then(function (payload) {
+        if (!payload || payload.success !== true) {
+          showError("That conversation could not be opened.");
+          return;
+        }
+        applyConversation(payload);
+        setHistoryOpen(false);
+        scrollToLatest();
+      })
+      .catch(function () {
+        showError("That conversation could not be opened.");
+      });
+  }
+
+  function applyConversation(payload) {
+    const conversation = payload.conversation && typeof payload.conversation === "object" ? payload.conversation : null;
+    const messages = Array.isArray(payload.messages) ? payload.messages : [];
+    conversationId = conversation && parseInt(String(conversation.id || "0"), 10) > 0
+      ? parseInt(String(conversation.id), 10)
+      : 0;
+    startNew = false;
+
+    clearThreadMessages();
+    clearError();
+
+    if (messages.length === 0) {
+      showWelcome();
+      return;
+    }
+
+    hideWelcome();
+    messages.forEach(function (item) {
+      if (!item || typeof item !== "object") {
+        return;
+      }
+      const role = item.role === "assistant" ? "assistant" : "user";
+      const text = typeof item.message === "string" ? item.message : "";
+      if (text.trim() !== "") {
+        appendMessage(role, text);
+      }
+    });
+  }
+
+  function loadConversationList() {
+    if (!(historyList instanceof HTMLElement) || conversationsEndpoint === "") {
+      return;
+    }
+
+    historyList.innerHTML = "";
+    const loading = document.createElement("p");
+    loading.className = "medimate-history__empty";
+    loading.textContent = "Loading conversations…";
+    historyList.appendChild(loading);
+
+    fetchJson(conversationsEndpoint).then(function (payload) {
+      if (!(historyList instanceof HTMLElement)) {
+        return;
+      }
+      historyList.innerHTML = "";
+      const items = payload && Array.isArray(payload.conversations) ? payload.conversations : [];
+      if (items.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "medimate-history__empty";
+        empty.textContent = "No previous conversations yet.";
+        historyList.appendChild(empty);
+        return;
+      }
+
+      const groups = { today: [], yesterday: [], older: [] };
+      items.forEach(function (item) {
+        const group = item && item.group === "today" ? "today" : item && item.group === "yesterday" ? "yesterday" : "older";
+        groups[group].push(item);
+      });
+
+      appendHistoryGroup("Today", groups.today);
+      appendHistoryGroup("Yesterday", groups.yesterday);
+      appendHistoryGroup("Older", groups.older);
+    }).catch(function () {
+      if (!(historyList instanceof HTMLElement)) {
+        return;
+      }
+      historyList.innerHTML = "";
+      const empty = document.createElement("p");
+      empty.className = "medimate-history__empty";
+      empty.textContent = "Unable to load conversations.";
+      historyList.appendChild(empty);
+    });
+  }
+
+  function appendHistoryGroup(label, items) {
+    if (!(historyList instanceof HTMLElement) || items.length === 0) {
+      return;
+    }
+
+    const heading = document.createElement("p");
+    heading.className = "medimate-history__heading";
+    heading.textContent = label;
+    historyList.appendChild(heading);
+
+    items.forEach(function (item) {
+      const id = parseInt(String(item && item.id ? item.id : "0"), 10) || 0;
+      const title = item && typeof item.title === "string" && item.title.trim() !== "" ? item.title : "Health question";
+      const row = document.createElement("div");
+      row.className = "medimate-history__row";
+      if (id === conversationId && conversationId > 0) {
+        row.classList.add("is-active");
+      }
+
+      const open = document.createElement("button");
+      open.type = "button";
+      open.className = "medimate-history__item";
+      open.textContent = title;
+      open.addEventListener("click", function () {
+        loadOwnedConversation(id);
+      });
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "medimate-history__delete";
+      remove.setAttribute("aria-label", "Delete conversation");
+      remove.innerHTML = '<i class="bi bi-trash" aria-hidden="true"></i>';
+      remove.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        deleteConversation(id);
+      });
+
+      row.appendChild(open);
+      row.appendChild(remove);
+      historyList.appendChild(row);
+    });
+  }
+
+  function deleteConversation(id) {
+    if (id <= 0 || deleteEndpoint === "") {
+      return;
+    }
+    if (!window.confirm("Delete this conversation? This cannot be undone.")) {
+      return;
+    }
+
+    const body = new FormData();
+    body.append("conversation_id", String(id));
+    if (tokenInput instanceof HTMLInputElement) {
+      body.append("_token", tokenInput.value);
+    }
+
+    fetch(deleteEndpoint, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: body,
+    })
+      .then(function (response) {
+        return response.text().then(function (text) {
+          let payload = null;
+          try {
+            payload = text ? JSON.parse(text) : null;
+          } catch (_err) {
+            payload = null;
+          }
+          return payload;
+        });
+      })
+      .then(function (payload) {
+        applyCsrf(payload);
+        if (!payload || payload.success !== true) {
+          showError(payload && typeof payload.message === "string" ? payload.message : "That conversation could not be deleted.");
+          return;
+        }
+        if (id === conversationId) {
+          beginNewChat();
+        }
+        loadConversationList();
+      })
+      .catch(function () {
+        showError("That conversation could not be deleted.");
+      });
+  }
+
+  function fetchJson(url) {
+    return fetch(url, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    }).then(function (response) {
+      return response.text().then(function (text) {
+        let payload = null;
+        try {
+          payload = text ? JSON.parse(text) : null;
+        } catch (_err) {
+          payload = null;
+        }
+        applyCsrf(payload);
+        return payload;
+      });
+    });
+  }
+
+  function applyCsrf(payload) {
+    if (payload && typeof payload.csrf_token === "string" && payload.csrf_token !== "" && tokenInput instanceof HTMLInputElement) {
+      tokenInput.value = payload.csrf_token;
+    }
+  }
+
+  function setHistoryOpen(open) {
+    if (!(historyPanel instanceof HTMLElement) || !(historyButton instanceof HTMLButtonElement)) {
+      return;
+    }
+    historyPanel.hidden = !open;
+    historyButton.setAttribute("aria-expanded", open ? "true" : "false");
   }
 
   function appendMessage(role, text) {
@@ -307,6 +606,21 @@
     }
   }
 
+  function showWelcome() {
+    if (welcome instanceof HTMLElement) {
+      welcome.hidden = false;
+    }
+  }
+
+  function clearThreadMessages() {
+    Array.from(thread.children).forEach(function (node) {
+      if (node === welcome) {
+        return;
+      }
+      node.remove();
+    });
+  }
+
   function showError(message) {
     clearError();
     const alert = document.createElement("div");
@@ -333,6 +647,9 @@
         button.disabled = busy;
       }
     });
+    if (newChatButton instanceof HTMLButtonElement) {
+      newChatButton.disabled = busy;
+    }
   }
 
   function autosize() {

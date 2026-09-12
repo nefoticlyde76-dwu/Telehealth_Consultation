@@ -15,6 +15,9 @@ if (str_contains($currentPath, '/room')) {
 
 $csrfToken = Csrf::generate();
 $chatEndpoint = Helper::url('/patient/ai-assistant/chat');
+$conversationEndpoint = Helper::url('/patient/ai-assistant/conversation');
+$conversationsEndpoint = Helper::url('/patient/ai-assistant/conversations');
+$deleteEndpoint = Helper::url('/patient/ai-assistant/conversation/delete');
 $suggestedQuestions = PatientAiAssistantService::suggestedQuestions();
 $maxMessageLength = PatientAiAssistantService::MAX_MESSAGE_LENGTH;
 $medimateAvatar = Helper::asset('images/MediMate.png');
@@ -31,6 +34,9 @@ $suggestionIcons = [
   class="medimate"
   data-ai-assistant
   data-chat-endpoint="<?= Helper::escape($chatEndpoint) ?>"
+  data-conversation-endpoint="<?= Helper::escape($conversationEndpoint) ?>"
+  data-conversations-endpoint="<?= Helper::escape($conversationsEndpoint) ?>"
+  data-delete-endpoint="<?= Helper::escape($deleteEndpoint) ?>"
   data-avatar="<?= Helper::escape($medimateAvatar) ?>"
   data-max-length="<?= (int) $maxMessageLength ?>"
 >
@@ -72,6 +78,24 @@ $suggestionIcons = [
         <span class="medimate-header__rule" aria-hidden="true"></span>
         <button
           type="button"
+          class="medimate-icon-btn"
+          data-medimate-history
+          aria-label="Previous conversations"
+          aria-expanded="false"
+          aria-controls="medimate-history"
+        >
+          <i class="bi bi-clock-history" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="medimate-icon-btn"
+          data-medimate-new
+          aria-label="New chat"
+        >
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
           class="medimate-close"
           data-medimate-close
           aria-label="Close MediMate AI"
@@ -80,6 +104,11 @@ $suggestionIcons = [
         </button>
       </div>
     </header>
+
+    <div class="medimate-history" id="medimate-history" data-medimate-history-panel hidden>
+      <p class="medimate-history__title">Previous conversations</p>
+      <div class="medimate-history__list" data-medimate-history-list></div>
+    </div>
 
     <div class="medimate-thread" data-ai-thread tabindex="0" aria-live="polite" aria-relevant="additions">
       <div class="medimate-welcome" data-ai-welcome>
