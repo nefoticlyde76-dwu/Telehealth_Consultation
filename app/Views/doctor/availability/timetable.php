@@ -222,9 +222,9 @@ require __DIR__ . '/../../partials/dashboard/summary_stats.php';
   </div>
 </div>
 
-<div class="modal fade" id="availEditorModal" tabindex="-1" aria-labelledby="availEditorModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-3">
+<div class="modal fade availability-modal" id="availEditorModal" tabindex="-1" aria-labelledby="availEditorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered availability-modal-dialog">
+    <div class="modal-content availability-modal-content">
       <form
         method="POST"
         action="<?= Helper::url('/doctor/availability/create') ?>"
@@ -236,43 +236,67 @@ require __DIR__ . '/../../partials/dashboard/summary_stats.php';
         <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
         <input type="hidden" name="return_week" value="<?= Helper::escape($weekStart) ?>">
         <input type="hidden" name="status" value="Available">
-        <div class="modal-header border-bottom">
-          <h2 class="modal-title h5" id="availEditorModalLabel">Add Availability</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-header availability-modal-header">
+          <div class="availability-modal-heading">
+            <span class="availability-modal-icon" aria-hidden="true">
+              <i class="bi bi-calendar3"></i>
+            </span>
+            <h2 class="modal-title availability-modal-title" id="availEditorModalLabel">Add Availability</h2>
+          </div>
+          <button type="button" class="availability-modal-close" data-bs-dismiss="modal" aria-label="Close">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
         </div>
-        <div class="modal-body">
-          <p class="text-muted small mb-3" data-avail-modal-help>
+        <div class="modal-body availability-modal-body">
+          <p class="availability-helper" data-avail-modal-help>
             Enter any start and end time. The schedule will place this block using those times.
           </p>
           <div class="alert alert-warning d-none mb-3" role="alert" data-avail-booked-note>
             This time is booked and cannot be edited.
           </div>
-          <div class="mb-3">
-            <label class="form-label" for="avail-modal-date">Date</label>
-            <input type="date" class="form-control" id="avail-modal-date" name="consultation_date" min="<?= Helper::escape($todayDate) ?>" required>
-          </div>
-          <div class="row g-3">
-            <div class="col-sm-6">
-              <label class="form-label" for="avail-modal-start">Start time</label>
-              <input type="time" class="form-control" id="avail-modal-start" name="start_time" step="60" required>
+          <div class="availability-form">
+            <div class="availability-field">
+              <label class="form-label availability-label" for="avail-modal-date">
+                <i class="bi bi-calendar3" aria-hidden="true"></i>
+                Date<span class="availability-required">*</span>
+              </label>
+              <input type="date" class="form-control availability-input" id="avail-modal-date" name="consultation_date" min="<?= Helper::escape($todayDate) ?>" required>
             </div>
-            <div class="col-sm-6">
-              <label class="form-label" for="avail-modal-end">End time</label>
-              <input type="time" class="form-control" id="avail-modal-end" name="end_time" step="60" required>
+            <div class="availability-time-grid">
+              <div class="availability-field">
+                <label class="form-label availability-label" for="avail-modal-start">
+                  <i class="bi bi-clock" aria-hidden="true"></i>
+                  Start time<span class="availability-required">*</span>
+                </label>
+                <input type="time" class="form-control availability-input" id="avail-modal-start" name="start_time" step="60" required>
+              </div>
+              <div class="availability-field">
+                <label class="form-label availability-label" for="avail-modal-end">
+                  <i class="bi bi-clock" aria-hidden="true"></i>
+                  End time<span class="availability-required">*</span>
+                </label>
+                <input type="time" class="form-control availability-input" id="avail-modal-end" name="end_time" step="60" required>
+              </div>
             </div>
-          </div>
-          <div class="mt-3">
-            <label class="form-label" for="avail-modal-notes">Notes (optional)</label>
-            <textarea class="form-control" id="avail-modal-notes" name="notes" rows="2" maxlength="1000"></textarea>
+            <div class="availability-field">
+              <label class="form-label availability-label" for="avail-modal-notes">
+                <i class="bi bi-journal-text" aria-hidden="true"></i>
+                Notes (optional)
+              </label>
+              <textarea class="form-control availability-notes" id="avail-modal-notes" name="notes" rows="3" maxlength="1000" placeholder="Add any additional notes here..."></textarea>
+            </div>
           </div>
         </div>
-        <div class="modal-footer flex-wrap">
-          <button type="submit" form="avail-delete-form" class="btn btn-outline-danger me-auto d-none" data-avail-delete>
+        <div class="modal-footer availability-modal-footer">
+          <button type="submit" form="avail-delete-form" class="btn availability-delete d-none" data-avail-delete>
             Delete
           </button>
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <a class="btn btn-outline-primary d-none" data-avail-full-form href="<?= Helper::escape($createUrl) ?>" data-base-href="<?= Helper::escape($createUrl) ?>">Open full form</a>
-          <button type="submit" class="btn btn-primary" data-avail-save>Save Availability</button>
+          <button type="button" class="btn availability-cancel" data-bs-dismiss="modal">Cancel</button>
+          <a class="btn availability-open-form d-none" data-avail-full-form href="<?= Helper::escape($createUrl) ?>" data-base-href="<?= Helper::escape($createUrl) ?>">Open full form</a>
+          <button type="submit" class="btn availability-save" data-avail-save>
+            <i class="bi bi-calendar-check" aria-hidden="true"></i>
+            Save Availability
+          </button>
         </div>
       </form>
       <form
