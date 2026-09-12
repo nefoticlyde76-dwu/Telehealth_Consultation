@@ -30,6 +30,7 @@ $registerActive = $currentPath === '/register';
     $brandVariant = 'navbar';
     $brandSubtitle = '';
     $brandShowTitle = false;
+    $brandShowWordmark = false;
     $brandLink = \App\Helpers\Helper::url('/');
     require __DIR__ . '/../shared/brand_logo.php';
     ?>
@@ -70,6 +71,23 @@ $registerActive = $currentPath === '/register';
       <?php endif; ?>
     </div>
 
+    <div class="public-navbar-actions public-navbar-actions--compact d-flex d-xl-none">
+      <?php if ($currentUser && $currentRole): ?>
+        <a class="btn btn-primary public-navbar-cta" href="<?= \App\Helpers\Helper::url($dashboardUrl) ?>">Dashboard</a>
+      <?php else: ?>
+        <a
+          class="btn btn-outline-primary public-navbar-cta public-navbar-cta--login<?= $loginActive ? ' is-active' : '' ?>"
+          href="<?= \App\Helpers\Helper::url('/login') ?>"
+          <?php if ($loginActive): ?>aria-current="page"<?php endif; ?>
+        >Login</a>
+        <a
+          class="btn btn-primary public-navbar-cta<?= $registerActive ? ' is-active' : '' ?>"
+          href="<?= \App\Helpers\Helper::url('/register') ?>"
+          <?php if ($registerActive): ?>aria-current="page"<?php endif; ?>
+        >Register</a>
+      <?php endif; ?>
+    </div>
+
     <button
       class="navbar-toggler border-0 shadow-none d-xl-none"
       type="button"
@@ -95,6 +113,7 @@ $registerActive = $currentPath === '/register';
       $brandVariant = 'offcanvas';
       $brandSubtitle = 'Connecting Care, Improving Lives';
       $brandShowTitle = true;
+      $brandShowWordmark = false;
       $brandRoleLabel = '';
       $brandLink = \App\Helpers\Helper::url('/');
       require __DIR__ . '/../shared/brand_logo.php';
@@ -119,39 +138,25 @@ $registerActive = $currentPath === '/register';
           <span><?= \App\Helpers\Helper::escape($item['label']) ?></span>
         </a>
       <?php endforeach; ?>
-
-      <?php if ($currentUser && $currentRole): ?>
-        <a class="public-drawer-link" href="<?= \App\Helpers\Helper::url($dashboardUrl) ?>">
-          <span class="public-drawer-icon"><i class="bi bi-speedometer2"></i></span>
-          <span>Dashboard</span>
-        </a>
-      <?php else: ?>
-        <a
-          href="<?= \App\Helpers\Helper::url('/login') ?>"
-          class="public-drawer-link<?= $loginActive ? ' active' : '' ?>"
-          <?php if ($loginActive): ?>aria-current="page"<?php endif; ?>
-        >
-          <span class="public-drawer-icon"><i class="bi bi-box-arrow-in-right"></i></span>
-          <span>Login</span>
-        </a>
-        <a
-          href="<?= \App\Helpers\Helper::url('/register') ?>"
-          class="public-drawer-link<?= $registerActive ? ' active' : '' ?>"
-          <?php if ($registerActive): ?>aria-current="page"<?php endif; ?>
-        >
-          <span class="public-drawer-icon"><i class="bi bi-person-plus"></i></span>
-          <span>Register</span>
-        </a>
-      <?php endif; ?>
     </nav>
 
-    <?php if ($currentUser && $currentRole): ?>
-      <div class="public-nav-drawer-actions mt-auto pt-4">
+    <div class="public-nav-drawer-actions mt-auto pt-4">
+      <?php if ($currentUser && $currentRole): ?>
+        <a class="btn btn-primary w-100 mb-2" href="<?= \App\Helpers\Helper::url($dashboardUrl) ?>">Dashboard</a>
         <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
           <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(\App\Core\Csrf::generate()) ?>">
-          <button type="submit" class="btn btn-outline-light public-drawer-secondary w-100">Secure Logout</button>
+          <button type="submit" class="btn btn-outline-primary public-drawer-secondary w-100">Logout</button>
         </form>
-      </div>
-    <?php endif; ?>
+      <?php else: ?>
+        <a
+          class="btn btn-outline-primary w-100 mb-2<?= $loginActive ? ' is-active' : '' ?>"
+          href="<?= \App\Helpers\Helper::url('/login') ?>"
+        >Login</a>
+        <a
+          class="btn btn-primary w-100<?= $registerActive ? ' is-active' : '' ?>"
+          href="<?= \App\Helpers\Helper::url('/register') ?>"
+        >Register</a>
+      <?php endif; ?>
+    </div>
   </div>
 </div>

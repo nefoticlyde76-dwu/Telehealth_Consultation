@@ -18,6 +18,9 @@
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/wallet-heroes.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/user-profile.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/responsive.css') ?>">
+  <?php if (($dashboardRole ?? '') === 'patient'): ?>
+  <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/ai-assistant.css') ?>">
+  <?php endif; ?>
   <?= $pageStyles ?? '' ?>
 </head>
 <body class="dashboard-layout dashboard-layout--<?= \App\Helpers\Helper::escape((string) ($dashboardRole ?? 'default')) ?>"
@@ -69,6 +72,7 @@
   </div>
 
   <?php require __DIR__ . '/../partials/dashboard/notification_toasts.php'; ?>
+  <?php require __DIR__ . '/../partials/dashboard/medimate_widget.php'; ?>
 
   <div class="modal fade" id="uxConfirmModal" tabindex="-1" aria-labelledby="uxConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -96,6 +100,9 @@
   <script src="<?= \App\Helpers\Helper::asset('js/app.js') ?>"></script>
   <script src="<?= \App\Helpers\Helper::asset('js/dashboard.js') ?>"></script>
   <script src="<?= \App\Helpers\Helper::asset('js/table-filters.js') ?>"></script>
+  <?php if (($dashboardRole ?? '') === 'patient'): ?>
+  <script src="<?= \App\Helpers\Helper::asset('js/ai-assistant.js') ?>"></script>
+  <?php endif; ?>
   <?= $pageScripts ?? '' ?>
 </body>
 </html>

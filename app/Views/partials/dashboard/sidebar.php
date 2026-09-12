@@ -12,12 +12,14 @@ $navGroups = is_array($navConfig['groups'] ?? null) ? $navConfig['groups'] : [];
 $accountItems = is_array($navConfig['account'] ?? null) ? $navConfig['account'] : [];
 $allNavItems = DashboardNav::allItems($dashboardRole);
 $homePath = (string) ($navConfig['home'] ?? '/');
+$navUnreadCount = (int) ($headerNotifications['unread_count'] ?? 0);
 
-$renderNavGroup = static function (array $items, string $currentPath, array $allNavItems): void {
+$renderNavGroup = static function (array $items, string $currentPath, array $allNavItems, int $navUnreadCount): void {
     foreach ($items as $item):
         $itemPath = (string) ($item['path'] ?? '#');
         $itemLabel = (string) ($item['label'] ?? 'Link');
         $isActive = empty($item['skipActive']) && DashboardNav::isActive($itemPath, $currentPath, $allNavItems);
+        $showUnreadBadge = $itemPath === '/notifications';
         ?>
         <a href="<?= Helper::url($itemPath) ?>"
            class="sidebar-link<?= $isActive ? ' active' : '' ?>"
@@ -26,6 +28,9 @@ $renderNavGroup = static function (array $items, string $currentPath, array $all
            <?= $isActive ? ' aria-current="page"' : '' ?>>
             <span class="sidebar-link-icon" aria-hidden="true"><i class="bi <?= Helper::escape($item['icon'] ?? 'bi-grid') ?>"></i></span>
             <span class="sidebar-link-label"><?= Helper::escape($itemLabel) ?></span>
+            <?php if ($showUnreadBadge): ?>
+              <span class="sidebar-link-badge<?= $navUnreadCount > 0 ? ' has-unread' : '' ?>"><?= $navUnreadCount > 99 ? '99+' : (string) $navUnreadCount ?></span>
+            <?php endif; ?>
         </a>
         <?php
     endforeach;
@@ -39,6 +44,7 @@ $renderSidebarBody = static function (
     $user,
     string $roleFooterLabel,
     string $homePath,
+    int $navUnreadCount = 0,
     bool $forOffcanvas = false
 ) use ($renderNavGroup): void {
     $idPrefix = $forOffcanvas ? 'offcanvas-' : 'rail-';
@@ -72,7 +78,7 @@ $renderSidebarBody = static function (
             <p class="sidebar-caption" id="sidebar-<?= \App\Helpers\Helper::escape($groupSlug) ?>"><?= \App\Helpers\Helper::escape($groupCaption) ?></p>
           <?php endif; ?>
           <nav class="nav flex-column" <?= $groupCaption !== '' ? 'aria-labelledby="sidebar-' . \App\Helpers\Helper::escape($groupSlug) . '"' : 'aria-label="Dashboard navigation"' ?>>
-            <?php $renderNavGroup($groupItems, $currentPath, $allNavItems); ?>
+            <?php $renderNavGroup($groupItems, $currentPath, $allNavItems, $navUnreadCount); ?>
           </nav>
         </div>
       <?php endforeach; ?>
@@ -80,7 +86,7 @@ $renderSidebarBody = static function (
       <div class="sidebar-nav-group">
         <p class="sidebar-caption" id="<?= $idPrefix ?>account">Account</p>
         <nav class="nav flex-column" aria-labelledby="<?= $idPrefix ?>account">
-          <?php $renderNavGroup($accountItems, $currentPath, $allNavItems); ?>
+          <?php $renderNavGroup($accountItems, $currentPath, $allNavItems, $navUnreadCount); ?>
           <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
             <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(Csrf::generate()) ?>">
             <button type="submit" class="sidebar-link sidebar-logout-btn" data-label="Logout" data-tooltip="Logout">
@@ -115,7 +121,7 @@ $renderSidebarBody = static function (
 ?>
 
 <aside class="dashboard-sidebar d-none d-lg-flex flex-column" id="dashboardDesktopNav" aria-label="<?= \App\Helpers\Helper::escape($roleFooterLabel) ?> navigation">
-  <?php $renderSidebarBody($navGroups, $accountItems, $allNavItems, $currentPath, $user, $roleFooterLabel, $homePath, false); ?>
+  <?php $renderSidebarBody($navGroups, $accountItems, $allNavItems, $currentPath, $user, $roleFooterLabel, $homePath, $navUnreadCount, false); ?>
 </aside>
 
 <div class="offcanvas offcanvas-start dashboard-offcanvas" tabindex="-1" id="dashboardSidebar" aria-labelledby="dashboardSidebarLabel">
@@ -124,6 +130,6 @@ $renderSidebarBody = static function (
     <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Close navigation"></button>
   </div>
   <div class="offcanvas-body d-flex flex-column p-0">
-    <?php $renderSidebarBody($navGroups, $accountItems, $allNavItems, $currentPath, $user, $roleFooterLabel, $homePath, true); ?>
+    <?php $renderSidebarBody($navGroups, $accountItems, $allNavItems, $currentPath, $user, $roleFooterLabel, $homePath, $navUnreadCount, true); ?>
   </div>
 </div>

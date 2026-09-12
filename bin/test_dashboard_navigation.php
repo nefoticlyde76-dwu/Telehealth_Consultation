@@ -56,6 +56,8 @@ $adminLabels = labelsFor('admin');
 
 expect_true(in_array('Dashboard', $patientLabels, true), 'Patient nav includes Dashboard');
 expect_true(in_array('Book Consultation', $patientLabels, true), 'Patient nav includes Book Consultation');
+expect_true(!in_array('AI Health Assistant', $patientLabels, true), 'Patient nav no longer includes AI Health Assistant');
+expect_true(!in_array('MediMate AI', $patientLabels, true), 'Patient nav does not include MediMate AI');
 expect_true(in_array('My Consultations', $patientLabels, true), 'Patient nav includes My Consultations');
 expect_true(in_array('Notifications', $patientLabels, true), 'Patient nav includes Notifications');
 expect_true(in_array('Profile', $patientLabels, true), 'Patient nav includes Profile');
@@ -74,6 +76,7 @@ expect_true(in_array('Preferences', $doctorLabels, true), 'Doctor nav includes P
 expect_true(!in_array('Audit Logs', $doctorLabels, true), 'Doctor nav hides Audit Logs');
 expect_true(!in_array('Users', $doctorLabels, true), 'Doctor nav hides Users');
 expect_true(!in_array('Book Consultation', $doctorLabels, true), 'Doctor nav hides patient booking');
+expect_true(!in_array('AI Health Assistant', $doctorLabels, true), 'Doctor nav hides AI Health Assistant');
 
 expect_true(in_array('Dashboard', $adminLabels, true), 'Admin nav includes Dashboard');
 expect_true(in_array('Consultation Requests', $adminLabels, true), 'Admin nav includes Consultation Requests');
@@ -83,6 +86,7 @@ expect_true(in_array('Notifications', $adminLabels, true), 'Admin nav includes N
 expect_true(in_array('Security', $adminLabels, true), 'Admin nav includes Security');
 expect_true(in_array('Preferences', $adminLabels, true), 'Admin nav includes Preferences');
 expect_true(!in_array('Book Consultation', $adminLabels, true), 'Admin nav hides patient booking');
+expect_true(!in_array('AI Health Assistant', $adminLabels, true), 'Admin nav hides AI Health Assistant');
 expect_true(!in_array('Availability', $adminLabels, true), 'Admin nav hides doctor availability');
 
 expect_true(
@@ -127,6 +131,7 @@ $reflection = new ReflectionClass(RoleMiddleware::class);
 expect_true($reflection->hasMethod('handle'), 'RoleMiddleware still enforces server-side authorization');
 
 $patientPaths = pathsFor('patient');
+expect_true(!in_array('/patient/ai-assistant', $patientPaths, true), 'Patient nav does not expose /patient/ai-assistant');
 $adminOnly = ['/admin/dashboard', '/admin/audit-logs', '/admin/consultation-requests', '/admin/users'];
 foreach ($adminOnly as $path) {
     expect_true(!in_array($path, $patientPaths, true), 'Patient nav does not expose ' . $path);

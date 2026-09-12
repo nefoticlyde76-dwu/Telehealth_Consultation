@@ -10,13 +10,16 @@ if ($selectedRequest === null) {
     ?>
     <div class="ux-card ux-data-card ux-queue-detail h-100">
       <div class="ux-card__header">
-        <h2 class="ux-data-card__title">Request details</h2>
+        <h2 class="ux-data-card__title">
+          <i class="bi bi-clipboard2-pulse me-1" aria-hidden="true"></i>
+          Request details
+        </h2>
       </div>
       <?php
-      $emptyIcon = 'bi-clipboard2-pulse';
+      $emptyIcon = 'bi-clipboard-plus';
       $emptyTitle = 'No request selected';
       $emptyText = 'When pending requests are available, the first one opens here automatically.';
-      $emptyCompact = true;
+      $emptyCompact = false;
       require __DIR__ . '/../../partials/shared/empty_state.php';
       ?>
     </div>

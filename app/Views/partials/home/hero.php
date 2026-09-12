@@ -7,13 +7,20 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
 <section id="home" class="lp-hero-section" aria-labelledby="hero-title">
     <div class="lp-hero">
         <div class="lp-hero__surface" aria-hidden="true"></div>
+        <div class="lp-hero__motifs" aria-hidden="true">
+            <span class="lp-hero__plus lp-hero__plus--1">+</span>
+            <span class="lp-hero__plus lp-hero__plus--2">+</span>
+            <span class="lp-hero__plus lp-hero__plus--3">+</span>
+            <span class="lp-hero__plus lp-hero__plus--4">+</span>
+            <span class="lp-hero__plus lp-hero__plus--5">+</span>
+        </div>
 
         <div class="lp-hero__layout">
             <div class="lp-hero__copy">
                 <span class="lp-hero__badge">
-                    <i class="bi bi-shield-check" aria-hidden="true"></i>
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
                     <span class="lp-hero__badge-full">Milne Bay Provincial Health Authority</span>
-                    <span class="lp-hero__badge-short">MBPHA</span>
+                    <span class="lp-hero__badge-short">Milne Bay PHA</span>
                 </span>
 
                 <h1 id="hero-title" class="lp-hero__title">
@@ -30,9 +37,18 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                 </p>
 
                 <ul class="lp-hero__pills" aria-label="Platform features">
-                    <li>Secure platform access</li>
-                    <li>Doctor-led consultations</li>
-                    <li>Consultation records</li>
+                    <li>
+                        <span class="lp-hero__pill-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                        Secure platform access
+                    </li>
+                    <li>
+                        <span class="lp-hero__pill-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                        Doctor-led consultations
+                    </li>
+                    <li>
+                        <span class="lp-hero__pill-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                        Consultation records
+                    </li>
                 </ul>
 
                 <div class="lp-hero__actions">
@@ -47,18 +63,25 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                 </div>
 
                 <div class="lp-hero__support" aria-label="Additional service information">
-                    <p class="lp-hero__support-row">
-                        <i class="bi bi-person-check" aria-hidden="true"></i>
-                        <strong>Doctor availability</strong>
-                        <span class="lp-hero__sep" aria-hidden="true"></span>
-                        <span>Viewed before booking</span>
-                    </p>
-                    <p class="lp-hero__support-row">
-                        <i class="bi bi-broadcast" aria-hidden="true"></i>
-                        <strong>Online consultations</strong>
-                        <span class="lp-hero__sep" aria-hidden="true"></span>
-                        <span>Conducted by MBPHA doctors</span>
-                    </p>
+                    <div class="lp-hero__support-item">
+                        <span class="lp-hero__support-icon" aria-hidden="true">
+                            <i class="bi bi-person-check"></i>
+                        </span>
+                        <span class="lp-hero__support-copy">
+                            <strong>Doctor availability</strong>
+                            <span>Viewed before booking</span>
+                        </span>
+                    </div>
+                    <span class="lp-hero__support-divider" aria-hidden="true"></span>
+                    <div class="lp-hero__support-item">
+                        <span class="lp-hero__support-icon" aria-hidden="true">
+                            <i class="bi bi-broadcast"></i>
+                        </span>
+                        <span class="lp-hero__support-copy">
+                            <strong>Online consultations</strong>
+                            <span>Conducted by MBPHA doctors</span>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -70,32 +93,36 @@ defined('APP_VERSION') or define('APP_VERSION', '1.0.0');
                 </p>
                 <div class="lp-hero__glance-grid" role="list">
                     <div class="lp-hero__glance-item" role="listitem">
-                        <span class="lp-hero__glance-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></span>
-                        <span>
+                        <span class="lp-hero__glance-icon lp-hero__glance-icon--avail" aria-hidden="true"><i class="bi bi-calendar3"></i></span>
+                        <span class="lp-hero__glance-text">
                             <span class="lp-hero__glance-label">Availability</span>
                             <strong>Doctor schedule</strong>
                         </span>
+                        <i class="bi bi-arrow-right lp-hero__glance-arrow" aria-hidden="true"></i>
                     </div>
                     <div class="lp-hero__glance-item" role="listitem">
-                        <span class="lp-hero__glance-icon" aria-hidden="true"><i class="bi bi-calendar-plus"></i></span>
-                        <span>
+                        <span class="lp-hero__glance-icon lp-hero__glance-icon--book" aria-hidden="true"><i class="bi bi-calendar-plus"></i></span>
+                        <span class="lp-hero__glance-text">
                             <span class="lp-hero__glance-label">Booking</span>
                             <strong>Request a slot</strong>
                         </span>
+                        <i class="bi bi-arrow-right lp-hero__glance-arrow" aria-hidden="true"></i>
                     </div>
                     <div class="lp-hero__glance-item" role="listitem">
-                        <span class="lp-hero__glance-icon lp-hero__glance-icon--green" aria-hidden="true"><i class="bi bi-calendar2-check"></i></span>
-                        <span>
+                        <span class="lp-hero__glance-icon lp-hero__glance-icon--approve" aria-hidden="true"><i class="bi bi-calendar2-check"></i></span>
+                        <span class="lp-hero__glance-text">
                             <span class="lp-hero__glance-label">Approval</span>
                             <strong>Status updates</strong>
                         </span>
+                        <i class="bi bi-arrow-right lp-hero__glance-arrow" aria-hidden="true"></i>
                     </div>
                     <div class="lp-hero__glance-item" role="listitem">
-                        <span class="lp-hero__glance-icon" aria-hidden="true"><i class="bi bi-chat-dots"></i></span>
-                        <span>
+                        <span class="lp-hero__glance-icon lp-hero__glance-icon--consult" aria-hidden="true"><i class="bi bi-camera-video"></i></span>
+                        <span class="lp-hero__glance-text">
                             <span class="lp-hero__glance-label">Consultation</span>
                             <strong>Online session</strong>
                         </span>
+                        <i class="bi bi-arrow-right lp-hero__glance-arrow" aria-hidden="true"></i>
                     </div>
                 </div>
             </aside>

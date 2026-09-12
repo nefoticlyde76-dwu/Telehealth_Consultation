@@ -31,21 +31,15 @@ require_once __DIR__ . '/../../partials/shared/status_helper.php';
         <?php if ($historyRows === []): ?>
           <tr>
             <td colspan="8" class="ux-table__empty-state">
-              <div class="ux-empty">
-                <div class="ux-empty__icon">
-                  <i class="bi bi-clipboard2-x"></i>
-                </div>
-                <h4 class="ux-empty__title"><?= \App\Helpers\Helper::escape($emptyTitle) ?></h4>
-                <p class="ux-empty__text"><?= \App\Helpers\Helper::escape($emptyText) ?></p>
-                <?php if ($showResetAction): ?>
-                  <div class="ux-empty__action">
-                    <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
-                      <i class="bi bi-arrow-clockwise me-1"></i>
-                      View all consultations
-                    </a>
-                  </div>
-                <?php endif; ?>
-              </div>
+              <?php
+              $emptyIcon = (string) ($emptyIcon ?? 'bi-clipboard2-x');
+              $emptyActions = $showResetAction
+                  ? '<a href="' . \App\Helpers\Helper::url('/doctor/consultations') . '" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-clockwise me-1"></i>View all consultations</a>'
+                  : '';
+              $emptyCompact = false;
+              $emptyClass = (string) ($emptyClass ?? 'ux-empty--panel');
+              require __DIR__ . '/../../partials/shared/empty_state.php';
+              ?>
             </td>
           </tr>
         <?php else: ?>

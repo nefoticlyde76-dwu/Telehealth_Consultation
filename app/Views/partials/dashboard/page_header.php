@@ -4,6 +4,7 @@ $pageHeaderTitle = (string) ($pageHeaderTitle ?? $dashboardTitle ?? '');
 $pageHeaderSubtitle = (string) ($pageHeaderSubtitle ?? $dashboardDescription ?? '');
 $pageHeaderBreadcrumbs = is_array($pageHeaderBreadcrumbs ?? null) ? $pageHeaderBreadcrumbs : [];
 $pageHeaderActions = $pageHeaderActions ?? '';
+$pageHeaderIcon = trim((string) ($pageHeaderIcon ?? ''));
 $pageHeaderHeadingTag = (string) ($pageHeaderHeadingTag ?? 'h1');
 if (!in_array($pageHeaderHeadingTag, ['h1', 'h2'], true)) {
     $pageHeaderHeadingTag = 'h1';
@@ -34,7 +35,14 @@ if (!in_array($pageHeaderHeadingTag, ['h1', 'h2'], true)) {
     <?php endif; ?>
 
     <?php if ($pageHeaderTitle !== ''): ?>
-      <<?= $pageHeaderHeadingTag ?> class="ux-page-header__title"><?= \App\Helpers\Helper::escape($pageHeaderTitle) ?></<?= $pageHeaderHeadingTag ?>>
+      <<?= $pageHeaderHeadingTag ?> class="ux-page-header__title">
+        <?php if ($pageHeaderIcon !== ''): ?>
+          <span class="ux-page-header__icon" aria-hidden="true">
+            <i class="bi <?= \App\Helpers\Helper::escape($pageHeaderIcon) ?>"></i>
+          </span>
+        <?php endif; ?>
+        <?= \App\Helpers\Helper::escape($pageHeaderTitle) ?>
+      </<?= $pageHeaderHeadingTag ?>>
     <?php endif; ?>
 
     <?php if ($pageHeaderSubtitle !== ''): ?>
@@ -48,3 +56,10 @@ if (!in_array($pageHeaderHeadingTag, ['h1', 'h2'], true)) {
     </div>
   <?php endif; ?>
 </div>
+<?php
+$pageHeaderTitle = '';
+$pageHeaderSubtitle = '';
+$pageHeaderBreadcrumbs = [];
+$pageHeaderActions = '';
+$pageHeaderIcon = '';
+?>

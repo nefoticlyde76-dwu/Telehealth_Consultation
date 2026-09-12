@@ -52,11 +52,13 @@ $back = is_array($profilePage['back'] ?? null) ? $profilePage['back'] : null;
     <div class="user-profile-header__actions">
       <?php foreach ($headerLinks as $link): ?>
         <a href="<?= Helper::url((string) ($link['url'] ?? '#')) ?>" class="user-profile-header__back">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
           <?= Helper::escape((string) ($link['label'] ?? 'Open')) ?>
         </a>
       <?php endforeach; ?>
       <?php if (is_array($back) && ($back['url'] ?? '') !== ''): ?>
         <a href="<?= Helper::url((string) $back['url']) ?>" class="user-profile-header__back">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
           <?= Helper::escape((string) ($back['label'] ?? 'Back')) ?>
         </a>
       <?php endif; ?>

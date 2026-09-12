@@ -45,22 +45,26 @@ class DoctorDashboardService
                     'label' => "Today's Consultations",
                     'value' => (string) ($todaySummary['booked_today_slots'] ?? 0),
                     'icon' => 'bi-calendar-date',
-                    'description' => 'Approved consultations booked for today.',
+                    'description' => ((int) ($todaySummary['booked_today_slots'] ?? 0) === 0)
+                        ? 'No consultations booked for today.'
+                        : 'Approved consultations booked for today.',
                     'tone' => 'pending',
                     'url' => '/doctor/consultations?date=today',
                 ],
                 [
                     'label' => 'Upcoming Consultations',
                     'value' => (string) ($consultationSummary['upcoming_consultations'] ?? 0),
-                    'icon' => 'bi-clock-history',
-                    'description' => 'Approved consultations from today onward.',
+                    'icon' => 'bi-calendar-plus',
+                    'description' => ((int) ($consultationSummary['upcoming_consultations'] ?? 0) === 0)
+                        ? 'No upcoming consultations from today onward.'
+                        : 'Approved consultations from today onward.',
                     'tone' => 'success',
                     'url' => Status::filteredListUrl('/doctor/consultations', Status::APPROVED) . '&date=upcoming',
                 ],
                 [
                     'label' => 'Completed Consultations',
                     'value' => (string) ($consultationSummary['completed_consultations'] ?? 0),
-                    'icon' => 'bi-clipboard2-check',
+                    'icon' => 'bi-check2-circle',
                     'description' => 'Consultations you have completed.',
                     'tone' => 'navy',
                     'url' => Status::filteredListUrl('/doctor/consultations', Status::COMPLETED),

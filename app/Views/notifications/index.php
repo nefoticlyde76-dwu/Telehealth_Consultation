@@ -17,7 +17,7 @@ $readState = (string) ($filters['read_state'] ?? '');
 $search = (string) ($filters['search'] ?? '');
 $dashboardHome = \App\Services\AuthService::getRoleRedirectUrl($dashboardRole);
 
-$emptyTitle = 'You\'re all caught up';
+$emptyTitle = 'You’re all caught up.';
 $emptyText = 'You have no notifications to review.';
 if ($notifications === [] && $filterActive) {
     $emptyTitle = 'No matching notifications';
@@ -33,7 +33,7 @@ $filterForm = [
     'search' => [
         'name' => 'search',
         'value' => $search,
-        'placeholder' => 'Search title or message',
+        'placeholder' => 'Search title or message...',
         'label' => 'Search',
     ],
 ];
@@ -129,35 +129,42 @@ if ($unreadItems !== [] && $readState !== 'read') {
 if ($readItems !== [] && $readState !== 'unread') {
     $tableRows = array_merge($tableRows, $readItems);
 }
+$tableEmpty = $tableRows === [];
+$tableColCount = $tableEmpty ? 5 : 6;
 ?>
 
-<section class="mb-4">
-  <div class="ux-page-header">
-    <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= Helper::url($dashboardHome) ?>">Dashboard</a></li>
-        <li class="active">Notifications</li>
-      </ol>
-      <h2 class="ux-page-header__title">Notifications</h2>
-      <p class="ux-page-header__subtitle">Your personal notices. Deleting them does not change consultation records or audit history.</p>
-    </div>
-    <div class="ux-page-header__right d-flex flex-wrap gap-2">
-      <?php if ($unreadCount > 0): ?>
-        <form method="POST" action="<?= Helper::url('/notifications/mark-all-read') ?>">
-          <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
-          <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
-          <button type="submit" class="btn btn-outline-primary btn-sm">Mark all as read</button>
-        </form>
-      <?php endif; ?>
-      <?php if ($totalCount > 0 || $notifications !== []): ?>
-        <form method="POST" action="<?= Helper::url('/notifications/clear-all') ?>" data-confirm-title="Delete all your notifications?" data-confirm-body="This clears every notice in your inbox. Audit records are not deleted.">
-          <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
-          <button type="submit" class="btn btn-outline-danger btn-sm">Clear all</button>
-        </form>
-      <?php endif; ?>
-      <a href="<?= Helper::url('/account/notifications/preferences') ?>" class="btn btn-outline-secondary btn-sm">Preferences</a>
-    </div>
-  </div>
+<section class="mb-4 notification-inbox">
+  <?php
+  $pageHeaderTitle = 'Notifications';
+  $pageHeaderSubtitle = 'Your personal notices. Deleting them does not change consultation records or audit history.';
+  $pageHeaderIcon = 'bi-bell';
+  $pageHeaderHeadingTag = 'h2';
+  $pageHeaderBreadcrumbs = [
+      ['label' => 'Dashboard', 'url' => $dashboardHome],
+      ['label' => 'Notifications', 'active' => true],
+  ];
+  ob_start();
+  ?>
+  <?php if ($unreadCount > 0): ?>
+    <form method="POST" action="<?= Helper::url('/notifications/mark-all-read') ?>">
+      <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
+      <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
+      <button type="submit" class="btn btn-outline-primary btn-sm">Mark all as read</button>
+    </form>
+  <?php endif; ?>
+  <?php if ($totalCount > 0 || $notifications !== []): ?>
+    <form method="POST" action="<?= Helper::url('/notifications/clear-all') ?>" data-confirm-title="Delete all your notifications?" data-confirm-body="This clears every notice in your inbox. Audit records are not deleted.">
+      <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
+      <button type="submit" class="btn btn-outline-danger btn-sm">Clear all</button>
+    </form>
+  <?php endif; ?>
+  <a href="<?= Helper::url('/account/notifications/preferences') ?>" class="btn btn-outline-secondary btn-sm notification-inbox__pref">
+    <i class="bi bi-sliders me-1" aria-hidden="true"></i>Preferences
+  </a>
+  <?php
+  $pageHeaderActions = ob_get_clean();
+  require __DIR__ . '/../partials/dashboard/page_header.php';
+  ?>
 
   <?php require __DIR__ . '/../partials/shared/alerts.php'; ?>
 
@@ -165,25 +172,32 @@ if ($readItems !== [] && $readState !== 'unread') {
     <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
     <input type="hidden" name="return_to" value="<?= Helper::escape(Helper::currentRequestPath()) ?>">
 
-    <div class="ux-card ux-data-card notification-page" data-table-filter="tf-notifications">
+    <div class="ux-card ux-data-card notification-page<?= $tableEmpty ? ' notification-page--empty' : '' ?>" data-table-filter="tf-notifications">
       <?php require __DIR__ . '/../partials/shared/table_filter_form.php'; ?>
-      <div class="ux-card__header">
-        <h2 class="ux-data-card__title">Notifications</h2>
-        <div class="d-flex flex-wrap align-items-center gap-2">
-          <?php require __DIR__ . '/../partials/shared/table_toolbar.php'; ?>
-          <div class="ux-table-filters" role="group" aria-label="Filter by read state">
-            <?php foreach ($readStateTabs as $tab): ?>
-              <?php
-              $tabValue = (string) ($tab['value'] ?? '');
-              $tabLabel = (string) ($tab['label'] ?? 'All');
-              $tabActive = $readState === $tabValue;
-              ?>
-              <a
-                href="<?= Helper::escape($buildNotificationUrl(['read_state' => $tabValue])) ?>"
-                class="<?= $tabActive ? 'is-active' : '' ?>"
-                <?= $tabActive ? 'aria-current="page"' : '' ?>
-              ><?= Helper::escape($tabLabel) ?></a>
-            <?php endforeach; ?>
+      <div class="ux-card__header notification-page__header">
+        <div class="notification-page__heading">
+          <span class="notification-page__heading-icon" aria-hidden="true">
+            <i class="bi bi-bell"></i>
+          </span>
+          <h2 class="ux-data-card__title mb-0">Notifications</h2>
+        </div>
+        <div class="notification-page__tools">
+          <div class="notification-page__controls">
+            <?php require __DIR__ . '/../partials/shared/table_toolbar.php'; ?>
+            <div class="ux-table-filters" role="group" aria-label="Filter by read state">
+              <?php foreach ($readStateTabs as $tab): ?>
+                <?php
+                $tabValue = (string) ($tab['value'] ?? '');
+                $tabLabel = (string) ($tab['label'] ?? 'All');
+                $tabActive = $readState === $tabValue;
+                ?>
+                <a
+                  href="<?= Helper::escape($buildNotificationUrl(['read_state' => $tabValue])) ?>"
+                  class="<?= $tabActive ? 'is-active' : '' ?>"
+                  <?= $tabActive ? 'aria-current="page"' : '' ?>
+                ><?= Helper::escape($tabLabel) ?></a>
+              <?php endforeach; ?>
+            </div>
           </div>
           <?php if ($notifications !== []): ?>
             <button type="submit" class="btn btn-outline-danger btn-sm" data-bulk-submit disabled>
@@ -198,7 +212,9 @@ if ($readItems !== [] && $readState !== 'unread') {
               <caption class="visually-hidden">Inbox notifications with status and actions</caption>
               <thead>
                 <tr>
-                  <th scope="col" class="ux-table__chk"><span class="visually-hidden">Select</span></th>
+                  <?php if (!$tableEmpty): ?>
+                    <th scope="col" class="ux-table__chk"><span class="visually-hidden">Select</span></th>
+                  <?php endif; ?>
                   <th scope="col"><?php $colLabel = 'Notification'; $colFilter = null; require __DIR__ . '/../partials/shared/table_col_filter.php'; ?></th>
                   <th scope="col"><?php $colLabel = 'Type'; $colFilter = null; require __DIR__ . '/../partials/shared/table_col_filter.php'; ?></th>
                   <th scope="col"><?php $colLabel = 'Status'; $colFilter = null; require __DIR__ . '/../partials/shared/table_col_filter.php'; ?></th>
@@ -207,14 +223,16 @@ if ($readItems !== [] && $readState !== 'unread') {
                 </tr>
               </thead>
               <tbody>
-                <?php if ($tableRows === []): ?>
+                <?php if ($tableEmpty): ?>
                   <tr>
-                    <td colspan="6" class="ux-table__empty-state">
+                    <td colspan="<?= (int) $tableColCount ?>" class="ux-table__empty-state">
                       <?php
                       $emptyIcon = $filterActive ? 'bi-funnel' : 'bi-bell';
                       $emptyActions = '';
-                      $emptyCompact = true;
-                      $emptyPositive = !$filterActive;
+                      $emptyCompact = false;
+                      $emptyPositive = false;
+                      $emptyClass = $filterActive ? '' : 'ux-empty--inbox';
+                      $emptyBadge = $filterActive ? null : (string) $unreadCount;
                       require __DIR__ . '/../partials/shared/empty_state.php';
                       ?>
                     </td>

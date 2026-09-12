@@ -180,41 +180,35 @@ $primaryLabel = $welcomeDefaults[$welcomeRole]['primary_label'];
 $primaryUrl = $welcomeDefaults[$welcomeRole]['primary_url'];
 $primaryIcon = $welcomeDefaults[$welcomeRole]['primary_icon'];
 
-$logoUrl = Helper::asset('images/LOGOS.png');
 $visualUrl = Helper::asset('images/stetescope.png');
 ?>
 
 <section class="dashboard-welcome-banner dashboard-welcome-banner--<?= Helper::escape($welcomeRole) ?>" aria-label="Welcome">
   <div class="dashboard-welcome-hero">
-    <div class="row align-items-center g-3 g-xl-4 welcome-banner-hero-row">
-      <div class="col-12 col-md-7 col-xl-6 welcome-banner-content">
-        <p class="welcome-badge">
-          <i class="bi bi-person" aria-hidden="true"></i>
-          <span>Welcome Back</span>
-        </p>
-        <h1 class="welcome-greeting">
-          <?= Helper::escape($welcomeGreeting) ?><?php if ($welcomeNameLabel !== ''): ?>, <span class="welcome-greeting__name"><?= Helper::escape($welcomeNameLabel) ?></span><?php endif; ?>
-        </h1>
-        <p class="welcome-description"><?= Helper::escape($welcomeDescription) ?></p>
-      </div>
-
-      <div class="col-12 col-md-5 col-xl-5 welcome-role-slot">
-        <aside class="welcome-role-card">
-          <span class="welcome-role-icon" aria-hidden="true">
-            <i class="bi <?= Helper::escape($welcomeIcon) ?>"></i>
-          </span>
-          <div class="welcome-role-copy">
-            <p class="welcome-role-card__title"><?= Helper::escape($welcomeEyebrow) ?></p>
-            <p class="welcome-role-card__text"><?= Helper::escape($roleDescription) ?></p>
-          </div>
-        </aside>
-      </div>
+    <div class="welcome-banner-content">
+      <p class="welcome-badge">
+        <i class="bi bi-person" aria-hidden="true"></i>
+        <span>Welcome Back</span>
+      </p>
+      <h1 class="welcome-greeting">
+        <?= Helper::escape($welcomeGreeting) ?><?php if ($welcomeNameLabel !== ''): ?>, <span class="welcome-greeting__name"><?= Helper::escape($welcomeNameLabel) ?></span><?php endif; ?>
+      </h1>
+      <p class="welcome-description"><?= Helper::escape($welcomeDescription) ?></p>
     </div>
+
+    <aside class="welcome-role-card">
+      <span class="welcome-role-icon" aria-hidden="true">
+        <i class="bi <?= Helper::escape($welcomeIcon) ?>"></i>
+      </span>
+      <div class="welcome-role-copy">
+        <p class="welcome-role-card__title"><?= Helper::escape($welcomeEyebrow) ?></p>
+        <p class="welcome-role-card__text"><?= Helper::escape($roleDescription) ?></p>
+      </div>
+    </aside>
 
     <div class="welcome-banner-visual" aria-hidden="true">
       <img class="welcome-banner-photo" src="<?= Helper::escape($visualUrl) ?>" alt="">
       <span class="welcome-banner-visual__fade"></span>
-      <img class="welcome-banner-logo" src="<?= Helper::escape($logoUrl) ?>" alt="">
     </div>
   </div>
 
@@ -235,16 +229,6 @@ $visualUrl = Helper::asset('images/stetescope.png');
         <span class="welcome-action-title"><?= Helper::escape($healthTitle) ?></span>
         <span class="welcome-action-value"><?= Helper::escape($healthValue) ?></span>
         <span class="welcome-action-description"><?= Helper::escape($healthDescription) ?></span>
-      </span>
-      <i class="bi bi-chevron-right welcome-action-arrow" aria-hidden="true"></i>
-    </a>
-
-    <a href="<?= Helper::url('/contact') ?>" class="welcome-action-card welcome-action-card--support support-card">
-      <span class="welcome-action-icon" aria-hidden="true"><i class="bi bi-headset"></i></span>
-      <span class="welcome-action-content">
-        <span class="welcome-action-title">Need Help?</span>
-        <span class="welcome-action-value">Contact Support</span>
-        <span class="welcome-action-description">We’re here for you</span>
       </span>
       <i class="bi bi-chevron-right welcome-action-arrow" aria-hidden="true"></i>
     </a>

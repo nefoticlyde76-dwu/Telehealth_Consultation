@@ -5,7 +5,7 @@
 
 .auth-page-register .auth-login-shell,
 .auth-page-register .auth-login-card {
-  max-width: 500px;
+  max-width: 560px;
 }
 
 .auth-page-register .auth-login-card {
@@ -51,20 +51,30 @@
 .auth-page-register .auth-register-optional {
   margin: 14px 0 0;
   border: 1px solid var(--login-border);
-  border-radius: var(--login-input-radius);
+  border-radius: var(--ds-radius-pill);
   background: var(--login-white);
+}
+
+.auth-page-register .auth-register-optional[open] {
+  border-radius: var(--ds-radius-lg);
 }
 
 .auth-page-register .auth-register-optional summary {
   list-style: none;
   cursor: pointer;
-  padding: 11px 14px;
+  padding: 11px 18px;
   font-size: 13.5px;
-  font-weight: 600;
-  color: var(--login-text);
+  font-weight: 500;
+  color: var(--login-muted);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.auth-page-register .auth-register-optional summary span {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
 }
 
@@ -119,7 +129,7 @@
 @media (max-width: 1199.98px) {
   .auth-page-register .auth-login-shell,
   .auth-page-register .auth-login-card {
-    max-width: 500px;
+    max-width: 560px;
   }
 
   .auth-page-register .auth-login-card {

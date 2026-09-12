@@ -48,7 +48,9 @@ class DoctorController extends Controller
             'label' => 'Unread Notifications',
             'value' => (string) $unreadCount,
             'icon' => 'bi-bell',
-            'description' => 'Consultation updates that still need your attention.',
+            'description' => $unreadCount === 0
+                ? 'No unread notifications at the moment.'
+                : 'Consultation updates that still need your attention.',
             'tone' => 'info',
             'url' => '/notifications?read_state=unread',
         ];
@@ -68,7 +70,7 @@ class DoctorController extends Controller
                 ['path' => '/doctor/consultations', 'label' => 'Consultations', 'icon' => 'bi-clipboard2-pulse'],
                 ['path' => '/doctor/profile', 'label' => 'Profile', 'icon' => 'bi-person-vcard'],
             ],
-            'welcomeMessage' => 'Keep your profile, availability, and consultations up to date.',
+            'welcomeMessage' => '',
             'focusTitle' => 'Clinician profile readiness',
             'focusDescription' => 'Keep your phone number, specialization, profile photo, and signature up to date for future consultation records.',
             'statusMessage' => Session::getFlash('status'),

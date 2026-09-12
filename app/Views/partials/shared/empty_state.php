@@ -14,11 +14,20 @@ $emptyText = (string) ($emptyText ?? 'Records will appear here when they are ava
 $emptyActions = (string) ($emptyActions ?? '');
 $emptyCompact = !empty($emptyCompact);
 $emptyPositive = !empty($emptyPositive);
+$emptyClass = trim((string) ($emptyClass ?? ''));
+$emptyBadge = $emptyBadge ?? null;
+$emptyBadgeLabel = is_scalar($emptyBadge) ? trim((string) $emptyBadge) : '';
 ?>
 
-<div class="ux-empty<?= $emptyCompact ? ' ux-empty--compact' : '' ?><?= $emptyPositive ? ' ux-empty--positive' : '' ?> text-center">
+<div class="ux-empty<?= $emptyCompact ? ' ux-empty--compact' : '' ?><?= $emptyPositive ? ' ux-empty--positive' : '' ?><?= $emptyClass !== '' ? ' ' . \App\Helpers\Helper::escape($emptyClass) : '' ?> text-center">
   <div class="ux-empty__icon mx-auto mb-3" aria-hidden="true">
+    <span class="ux-empty__sparkles">
+      <span></span><span></span><span></span><span></span>
+    </span>
     <i class="bi <?= \App\Helpers\Helper::escape($emptyIcon) ?>"></i>
+    <?php if ($emptyBadgeLabel !== ''): ?>
+      <span class="ux-empty__badge"><?= \App\Helpers\Helper::escape($emptyBadgeLabel) ?></span>
+    <?php endif; ?>
   </div>
   <h3 class="ux-empty__title"><?= \App\Helpers\Helper::escape($emptyTitle) ?></h3>
   <p class="ux-empty__text"><?= \App\Helpers\Helper::escape($emptyText) ?></p>
@@ -32,4 +41,6 @@ $emptyPositive = !empty($emptyPositive);
 $emptyPositive = false;
 $emptyCompact = false;
 $emptyActions = '';
+$emptyClass = '';
+$emptyBadge = null;
 ?>

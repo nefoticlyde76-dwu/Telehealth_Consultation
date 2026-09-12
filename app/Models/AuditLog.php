@@ -130,7 +130,8 @@ class AuditLog
                 audit_logs.description,
                 " . (self::hasColumn('outcome') ? "audit_logs.outcome" : "'success'") . " AS outcome,
                 audit_logs.created_at,
-                users.email AS actor_email
+                users.email AS actor_email,
+                users.last_login_at AS actor_last_login_at
             FROM audit_logs
             LEFT JOIN users ON users.id = audit_logs.actor_user_id";
         [$conditions, $parameters] = self::buildFilters($filters);
@@ -229,6 +230,12 @@ class AuditLog
         if ($userId > 0) {
             $conditions[] = 'audit_logs.actor_user_id = :actor_user_id';
             $parameters[':actor_user_id'] = $userId;
+        }
+
+        $outcome = strtolower(trim((string) ($filters['outcome'] ?? '')));
+        if (in_array($outcome, ['success', 'failed'], true) && self::hasColumn('outcome')) {
+            $conditions[] = 'audit_logs.outcome = :outcome';
+            $parameters[':outcome'] = $outcome;
         }
 
         $range = is_array($filters['date_range'] ?? null) ? $filters['date_range'] : [];

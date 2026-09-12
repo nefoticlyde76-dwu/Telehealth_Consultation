@@ -20,7 +20,9 @@
   margin: 0;
   padding: 0 0 24px;
   min-height: 100%;
-  background: transparent;
+  background:
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(10, 111, 182, 0.08), transparent 55%),
+    transparent;
   color: var(--up-text);
 }
 
@@ -358,6 +360,22 @@
   width: 100%;
 }
 
+.user-profile-card--manage {
+  background: color-mix(in srgb, var(--mint-green, #e7f8ef) 55%, #fff);
+  border-color: rgba(24, 165, 88, 0.18);
+}
+
+.user-profile-card--manage .user-profile-card__title i {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: var(--up-success);
+}
+
 .user-profile-action {
   display: inline-flex;
   align-items: center;
@@ -374,6 +392,16 @@
   line-height: 1.2;
   text-decoration: none;
   text-align: left;
+}
+
+.user-profile-action span {
+  flex: 1 1 auto;
+}
+
+.user-profile-action__chevron {
+  margin-left: auto;
+  font-size: 0.85rem;
+  opacity: 0.55;
 }
 
 .user-profile-action i {

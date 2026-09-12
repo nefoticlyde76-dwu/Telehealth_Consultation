@@ -36,6 +36,10 @@ class App
             'google' => [
                 'client_id' => trim((string) Environment::get('GOOGLE_CLIENT_ID', '')),
             ],
+            'gemini' => [
+                'api_key' => trim((string) Environment::get('GEMINI_API_KEY', '')),
+                'model' => trim((string) Environment::get('GEMINI_MODEL', 'gemini-3.5-flash')),
+            ],
             'doctor_invitation' => [
                 'token_ttl_hours' => self::boundedInt('DOCTOR_INVITE_TOKEN_TTL_HOURS', 24, 1, 168),
                 'resend_cooldown_minutes' => self::boundedInt('DOCTOR_INVITE_RESEND_COOLDOWN_MINUTES', 5, 1),

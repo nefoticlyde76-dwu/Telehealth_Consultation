@@ -37,9 +37,7 @@ $topbarSearch = DashboardNav::searchTarget($dashboardRole);
         $brandSubtitle = '';
         $brandRoleLabel = '';
         $brandShowTitle = false;
-        $brandShowWordmark = true;
-        $brandWordmarkPrimary = 'MBPHA';
-        $brandWordmarkSecondary = 'TeleHealth';
+        $brandShowWordmark = false;
         $brandLink = Helper::url($homePath !== '' ? $homePath : '/');
         require __DIR__ . '/../shared/brand_logo.php';
         ?>
@@ -85,7 +83,7 @@ $topbarSearch = DashboardNav::searchTarget($dashboardRole);
           $avatarClass = 'user-avatar user-avatar--xs';
           require __DIR__ . '/../shared/user_avatar.php';
           ?>
-          <span class="text-start topbar-profile-meta d-none d-md-block">
+          <span class="text-start topbar-profile-meta d-none d-lg-block">
             <strong class="d-block"><?= Helper::escape($user->full_name ?? 'User') ?></strong>
             <small><?= Helper::escape($roleChip) ?></small>
           </span>

@@ -94,6 +94,7 @@ class AuditLogService
         $totalItems = AuditLog::countForAdmin($filters);
         $pagination = ListFilter::paginate(max(1, (int) ($query['page'] ?? 1)), $totalItems, (int) $filters['per_page']);
         $offset = ($pagination['current_page'] - 1) * (int) $filters['per_page'];
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
 
         return [
             'filters' => $filters,
@@ -105,7 +106,51 @@ class AuditLogService
             'dateOptions' => self::dateOptions(),
             'sortOptions' => self::sortOptions(),
             'userOptions' => User::findAdminAuditUserOptions(),
+            'summary' => [
+                'total_logs' => AuditLog::countForAdmin([]),
+                'success_logs' => AuditLog::countForAdmin(['outcome' => 'success']),
+                'failed_logs' => AuditLog::countForAdmin(['outcome' => 'failed']),
+                'today_logs' => AuditLog::countForAdmin(['date_range' => ['from' => $today, 'to' => $today]]),
+            ],
         ];
+    }
+
+    /**
+     * Stream the current filtered activity list as CSV. Presentation only.
+     */
+    public static function streamCsv(array $query): void
+    {
+        $filters = self::normalizeFilters($query);
+        $rows = AuditLog::findForAdmin($filters, 1000, 0);
+        $filename = 'mbpha-audit-logs-' . date('Ymd-His') . '.csv';
+
+        if (!headers_sent()) {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('X-Content-Type-Options: nosniff');
+        }
+
+        $handle = fopen('php://output', 'w');
+        if ($handle === false) {
+            return;
+        }
+
+        fputcsv($handle, ['When', 'Actor', 'Role', 'Action', 'Entity', 'Outcome', 'Description']);
+        foreach ($rows as $row) {
+            $entityType = trim((string) ($row['entity_type'] ?? ''));
+            $entityId = (int) ($row['entity_id'] ?? 0);
+            $entityLabel = $entityType !== '' ? $entityType . ($entityId > 0 ? ' #' . $entityId : '') : '';
+            fputcsv($handle, [
+                (string) ($row['created_at'] ?? ''),
+                (string) ($row['actor_name'] ?? 'System'),
+                (string) ($row['actor_role'] ?? ''),
+                (string) ($row['event_label'] ?? $row['action'] ?? ''),
+                $entityLabel,
+                (string) ($row['outcome'] ?? ''),
+                (string) ($row['description'] ?? ''),
+            ]);
+        }
+        fclose($handle);
     }
 
     public static function findDetailForAdmin(int $auditId): ?array

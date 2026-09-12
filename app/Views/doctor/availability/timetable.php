@@ -39,74 +39,64 @@ $createUrl = Helper::url('/doctor/availability/create' . ($weekStart !== '' ? '?
 ?>
 
 <section class="mb-4">
-  <div class="ux-page-header">
-    <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
-        <li class="active">Availability</li>
-      </ol>
-      <h2 class="ux-page-header__title">Doctor Availability</h2>
-      <p class="ux-page-header__subtitle">
-        Click a time on the grid for a quick start, or add any custom start and end time.
-        Saved hours are placed on the schedule from their actual times. Booked appointments stay locked.
-      </p>
-    </div>
-    <div class="ux-page-header__right">
-      <span class="ux-chip ux-badge--dotless">
-        <i class="bi bi-clock"></i>
-        <span><?= Helper::escape($timezoneLabel) ?></span>
-      </span>
-      <button type="button" class="btn btn-primary" data-avail-add>
-        <i class="bi bi-plus-lg me-2"></i>
-        Add Availability
-      </button>
-      <a href="<?= $availUrl(['view' => 'list']) ?>" class="btn btn-outline-primary">
-        <i class="bi bi-list-ul me-2"></i>
-        Slot list
-      </a>
-    </div>
-  </div>
+  <?php
+  $pageHeaderTitle = 'Doctor Availability';
+  $pageHeaderSubtitle = 'Click a time on the grid for a quick start, or add any custom start and end time. Saved hours are placed on the schedule from their actual times. Booked appointments stay locked.';
+  $pageHeaderIcon = 'bi-calendar-week';
+  $pageHeaderHeadingTag = 'h2';
+  $pageHeaderBreadcrumbs = [
+      ['label' => 'Dashboard', 'url' => '/doctor/dashboard'],
+      ['label' => 'Availability', 'active' => true],
+  ];
+  ob_start();
+  ?>
+  <span class="ux-chip ux-badge--dotless">
+    <i class="bi bi-clock"></i>
+    <span><?= Helper::escape($timezoneLabel) ?></span>
+  </span>
+  <button type="button" class="btn btn-primary" data-avail-add>
+    <i class="bi bi-plus-lg me-2"></i>
+    Add Availability
+  </button>
+  <a href="<?= $availUrl(['view' => 'list']) ?>" class="btn btn-outline-primary">
+    <i class="bi bi-list-ul me-2"></i>
+    Slot List
+  </a>
+  <?php
+  $pageHeaderActions = ob_get_clean();
+  require __DIR__ . '/../../partials/dashboard/page_header.php';
+  ?>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 </section>
 
-<div class="mbpha-avail" data-mbpha-avail data-today="<?= Helper::escape($todayDate) ?>" data-now="<?= Helper::escape($nowHm) ?>">
-  <div class="row g-3 mb-3">
-    <div class="col-sm-6 col-xl-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--navy">
-          <i class="bi bi-calendar-check"></i>
-        </div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($counts['available'] ?? 0) ?></div>
-          <div class="ux-stat__label">Available this week</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--pending">
-          <i class="bi bi-calendar2-event"></i>
-        </div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($counts['booked'] ?? 0) ?></div>
-          <div class="ux-stat__label">Booked appointments</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--success">
-          <i class="bi bi-calendar3"></i>
-        </div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($summary['upcoming_slots'] ?? 0) ?></div>
-          <div class="ux-stat__label">Upcoming saved slots</div>
-        </div>
-      </div>
-    </div>
-  </div>
+<?php
+$summaryStats = [
+    [
+        'label' => 'Available this week',
+        'value' => (int) ($counts['available'] ?? 0),
+        'icon' => 'bi-calendar-check',
+        'tone' => 'navy',
+    ],
+    [
+        'label' => 'Booked appointments',
+        'value' => (int) ($counts['booked'] ?? 0),
+        'icon' => 'bi-person',
+        'tone' => 'info',
+    ],
+    [
+        'label' => 'Upcoming saved slots',
+        'value' => (int) ($summary['upcoming_slots'] ?? 0),
+        'icon' => 'bi-clock',
+        'tone' => 'success',
+    ],
+];
+$summaryStatsCompact = true;
+$summaryStatsColumns = 3;
+require __DIR__ . '/../../partials/dashboard/summary_stats.php';
+?>
 
+<div class="mbpha-avail" data-mbpha-avail data-today="<?= Helper::escape($todayDate) ?>" data-now="<?= Helper::escape($nowHm) ?>">
   <div class="mbpha-avail__card">
     <div class="mbpha-avail__header">
       <div>

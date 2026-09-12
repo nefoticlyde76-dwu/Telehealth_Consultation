@@ -69,7 +69,7 @@ if (!function_exists('user_profile_account_tiles')) {
                 'tone' => user_profile_status_tone($status),
             ],
             [
-                'label' => 'Created',
+                'label' => 'Enrolled',
                 'value' => Helper::formatDate((string) ($user['created_at'] ?? ''), 'd M Y, g:i A', 'Not available'),
                 'icon' => 'bi-calendar3',
             ],

@@ -6169,6 +6169,7 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .welcome-banner-content {
   position: relative;
   z-index: 2;
+  max-width: min(52%, 44rem);
   min-width: 0;
 }
 
@@ -6209,25 +6210,21 @@ html:has(body.dashboard-layout) {
   color: #55718a;
 }
 
-.dashboard-layout .welcome-role-slot {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
 .dashboard-layout .welcome-role-card {
+  position: absolute;
+  top: 50%;
+  right: 36px;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 14px;
   max-width: 280px;
   padding: 16px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.95);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 8px 25px rgba(32, 91, 130, 0.05);
-  backdrop-filter: blur(10px);
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(14, 83, 130, 0.12);
+  transform: translateY(-50%);
 }
 
 .dashboard-layout .welcome-role-icon {
@@ -6282,24 +6279,11 @@ html:has(body.dashboard-layout) {
   background: linear-gradient(90deg, #edf7fe 0%, rgba(237, 247, 254, 0.25) 45%, rgba(237, 247, 254, 0) 100%);
 }
 
-.dashboard-layout .welcome-banner-logo {
-  position: absolute;
-  top: 50%;
-  right: 28px;
-  z-index: 2;
-  width: 148px;
-  height: 148px;
-  object-fit: cover;
-  object-position: 6% center;
-  transform: translateY(-50%);
-  mix-blend-mode: multiply;
-}
-
 .dashboard-layout .welcome-banner-actions {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   padding: 28px 52px 34px;
   border-top: 1px solid rgba(210, 230, 242, 0.7);
@@ -6350,11 +6334,6 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .welcome-action-card--health .welcome-action-icon {
   background: #e6f7ee;
   color: #16a36a;
-}
-
-.dashboard-layout .welcome-action-card--support .welcome-action-icon {
-  background: #eee8fb;
-  color: #6d4ad8;
 }
 
 .dashboard-layout .welcome-action-content {
@@ -6435,17 +6414,12 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .welcome-role-card {
+    right: 16px;
     max-width: 240px;
   }
 
   .dashboard-layout .welcome-banner-visual {
     width: 34%;
-  }
-
-  .dashboard-layout .welcome-banner-logo {
-    right: 16px;
-    width: 112px;
-    height: 112px;
   }
 
   .dashboard-layout .welcome-banner-actions {
@@ -6456,18 +6430,22 @@ html:has(body.dashboard-layout) {
 }
 
 @container welcome-banner (max-width: 799.98px) {
-  .dashboard-layout .welcome-banner-visual,
-  .dashboard-layout .welcome-banner-logo {
+  .dashboard-layout .welcome-banner-visual {
     display: none;
   }
 
-  .dashboard-layout .welcome-role-slot {
-    margin-top: 6px;
+  .dashboard-layout .welcome-banner-content {
+    max-width: none;
   }
 
   .dashboard-layout .welcome-role-card {
+    position: relative;
+    top: auto;
+    right: auto;
     width: 100%;
     max-width: none;
+    margin-top: 18px;
+    transform: none;
   }
 }
 
@@ -6523,17 +6501,12 @@ html:has(body.dashboard-layout) {
   }
 
   .dashboard-layout .welcome-role-card {
+    right: 16px;
     max-width: 240px;
   }
 
   .dashboard-layout .welcome-banner-visual {
     width: 34%;
-  }
-
-  .dashboard-layout .welcome-banner-logo {
-    right: 16px;
-    width: 112px;
-    height: 112px;
   }
 
   .dashboard-layout .welcome-banner-actions {
@@ -6564,18 +6537,22 @@ html:has(body.dashboard-layout) {
     line-height: 1.5;
   }
 
-  .dashboard-layout .welcome-banner-visual,
-  .dashboard-layout .welcome-banner-logo {
+  .dashboard-layout .welcome-banner-visual {
     display: none;
   }
 
-  .dashboard-layout .welcome-role-slot {
-    margin-top: 6px;
+  .dashboard-layout .welcome-banner-content {
+    max-width: none;
   }
 
   .dashboard-layout .welcome-role-card {
+    position: relative;
+    top: auto;
+    right: auto;
     width: 100%;
     max-width: none;
+    margin-top: 18px;
+    transform: none;
   }
 
   .dashboard-layout .welcome-banner-actions {
@@ -6679,13 +6656,6 @@ html[data-theme="dark"] .dashboard-layout .welcome-action-card--health .welcome-
   color: #3dce8a;
 }
 
-html[data-theme="dark"] .dashboard-layout .welcome-action-card--support .welcome-action-icon,
-.theme-dark .dashboard-layout .welcome-action-card--support .welcome-action-icon,
-.dashboard-layout.theme-dark .welcome-action-card--support .welcome-action-icon {
-  background: #2a2150;
-  color: #b9a4ff;
-}
-
 html[data-theme="dark"] .dashboard-layout .welcome-banner-visual__fade,
 .theme-dark .dashboard-layout .welcome-banner-visual__fade,
 .dashboard-layout.theme-dark .welcome-banner-visual__fade {
@@ -6696,13 +6666,6 @@ html[data-theme="dark"] .dashboard-layout .welcome-banner-photo,
 .theme-dark .dashboard-layout .welcome-banner-photo,
 .dashboard-layout.theme-dark .welcome-banner-photo {
   filter: brightness(0.55) saturate(0.7);
-}
-
-html[data-theme="dark"] .dashboard-layout .welcome-banner-logo,
-.theme-dark .dashboard-layout .welcome-banner-logo,
-.dashboard-layout.theme-dark .welcome-banner-logo {
-  mix-blend-mode: normal;
-  filter: brightness(0.92);
 }
 
 html[data-theme="dark"] .dashboard-layout .welcome-action-value,

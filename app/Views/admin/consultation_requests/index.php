@@ -42,6 +42,7 @@ $filterTabs = array_merge(
 );
 $filterTabCurrent = (string) ($filters['status'] ?? '');
 $filterTabAria = 'Filter queue by status';
+$filterTabsClass = 'ux-table-filters--text';
 $filterTabUrl = static function (string $value) use ($buildQueueUrl): string {
     return $buildQueueUrl(['status' => $value, 'selected' => 0, 'page' => 1]);
 };
@@ -58,60 +59,61 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
 ?>
 
 <section class="mb-4 ux-review-workspace" data-consultation-queue-workspace>
-  <div class="ux-page-header">
-    <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/admin/dashboard') ?>">Dashboard</a></li>
-        <li class="active">Consultation Requests</li>
-      </ol>
-      <h2 class="ux-page-header__title">Consultation Requests</h2>
-      <p class="ux-page-header__subtitle">Review each request, then approve or reject without leaving this workspace.</p>
-    </div>
-    <div class="ux-page-header__right">
-      <span class="ux-chip ux-badge--dotless">
-        <i class="bi bi-list-check"></i>
-        <span>
-          <?php if ($queuePosition > 0 && $totalItems > 0): ?>
-            <?= (int) $queuePosition ?> of <?= (int) $totalItems ?> <?= $queueNoun ?>
-          <?php else: ?>
-            <?= (int) $totalItems ?> <?= $queueNoun ?>
-          <?php endif; ?>
-        </span>
-      </span>
-    </div>
-  </div>
+  <?php
+  $pageHeaderTitle = 'Consultation Requests';
+  $pageHeaderSubtitle = 'Review each request, then approve or reject without leaving this workspace.';
+  $pageHeaderHeadingTag = 'h2';
+  $pageHeaderBreadcrumbs = [
+      ['label' => 'Dashboard', 'url' => '/admin/dashboard'],
+      ['label' => 'Consultation Requests', 'active' => true],
+  ];
+  ob_start();
+  ?>
+  <span class="ux-chip ux-badge--dotless">
+    <i class="bi bi-list-check"></i>
+    <span>
+      <?php if ($queuePosition > 0 && $totalItems > 0): ?>
+        <?= (int) $queuePosition ?> of <?= (int) $totalItems ?> <?= $queueNoun ?>
+      <?php else: ?>
+        <?= (int) $totalItems ?> <?= $queueNoun ?>
+      <?php endif; ?>
+    </span>
+  </span>
+  <?php
+  $pageHeaderActions = ob_get_clean();
+  require __DIR__ . '/../../partials/dashboard/page_header.php';
+  ?>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="row g-3 mb-4 ux-review-workspace__stats">
-    <div class="col-sm-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3 h-100">
-        <div class="ux-stat__icon ux-stat__icon--pending"><i class="bi bi-hourglass-split"></i></div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($summary['pending_requests'] ?? 0) ?></div>
-          <div class="ux-stat__label">Pending Requests</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3 h-100">
-        <div class="ux-stat__icon ux-stat__icon--navy"><i class="bi bi-calendar2-day"></i></div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($summary['today_requests'] ?? 0) ?></div>
-          <div class="ux-stat__label">Today’s Requests</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-4">
-      <div class="ux-stat compact d-flex align-items-center gap-3 h-100">
-        <div class="ux-stat__icon ux-stat__icon--mint"><i class="bi bi-check2-circle"></i></div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($summary['approved_requests'] ?? 0) ?></div>
-          <div class="ux-stat__label">Approved</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <?php
+  $summaryStats = [
+      [
+          'label' => 'Pending Requests',
+          'value' => (int) ($summary['pending_requests'] ?? 0),
+          'icon' => 'bi-hourglass-split',
+          'tone' => 'pending',
+          'url' => \App\Helpers\Status::filteredListUrl('/admin/consultation-requests', \App\Helpers\Status::PENDING),
+      ],
+      [
+          'label' => "Today's Requests",
+          'value' => (int) ($summary['today_requests'] ?? 0),
+          'icon' => 'bi-calendar2-day',
+          'tone' => 'info',
+          'url' => '/admin/consultation-requests?date=today',
+      ],
+      [
+          'label' => 'Approved',
+          'value' => (int) ($summary['approved_requests'] ?? 0),
+          'icon' => 'bi-check2-circle',
+          'tone' => 'success',
+          'url' => \App\Helpers\Status::filteredListUrl('/admin/consultation-requests', \App\Helpers\Status::APPROVED),
+      ],
+  ];
+  $summaryStatsCompact = true;
+  $summaryStatsColumns = 3;
+  require __DIR__ . '/../../partials/dashboard/summary_stats.php';
+  ?>
 
   <div class="ux-review-workspace__grid">
     <aside class="ux-card ux-data-card ux-queue" aria-label="Consultation request queue">
@@ -141,8 +143,8 @@ $emptyText = ((string) ($filters['status'] ?? '')) === 'Pending' && !$filterActi
                 <tr>
                   <td colspan="4" class="ux-table__empty-state">
                     <?php
-                    $emptyIcon = 'bi-clipboard2-check';
-                    $emptyCompact = true;
+                    $emptyIcon = 'bi-file-earmark-text';
+                    $emptyCompact = false;
                     require __DIR__ . '/../../partials/shared/empty_state.php';
                     ?>
                   </td>

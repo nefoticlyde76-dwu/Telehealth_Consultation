@@ -9,7 +9,7 @@ $calendarEvents = is_array($rightbar['calendarEvents'] ?? null) ? $rightbar['cal
 $calendarTitle = (string) ($rightbar['calendarTitle'] ?? 'Upcoming Appointments');
 $showUpcomingList = !empty($rightbar['showUpcomingList']);
 
-$renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems, $quickActions, $calendarEvents, $calendarTitle, $showUpcomingList): void {
+$renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems, $quickActions, $calendarEvents, $calendarTitle, $showUpcomingList, $dashboardRole): void {
     ?>
     <div class="rightbar-section rightbar-section--calendar">
       <?php require __DIR__ . '/calendar_widget.php'; ?>
@@ -68,6 +68,16 @@ $renderRightbarContent = static function () use ($upcomingTitle, $upcomingItems,
             </a>
           <?php endforeach; ?>
         </div>
+      </div>
+    <?php endif; ?>
+
+    <?php if ($dashboardRole === 'doctor'): ?>
+      <div class="rhp-specialist-card">
+        <h2>
+          <i class="bi bi-heart-pulse" aria-hidden="true"></i>
+          Patient Care First
+        </h2>
+        <p>Your dedication makes a difference.</p>
       </div>
     <?php endif; ?>
     <?php

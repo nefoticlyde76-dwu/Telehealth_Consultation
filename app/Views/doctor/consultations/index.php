@@ -56,73 +56,61 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
 <section class="mb-4">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="ux-page-header">
-    <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
-        <li class="active">Consultations</li>
-      </ol>
-      <h2 class="ux-page-header__title">My Consultations</h2>
-      <p class="ux-page-header__subtitle">Join approved consultations when they are open, complete the clinical record after the session, and download finalized documents from completed visits.</p>
-    </div>
-    <div class="ux-page-header__right">
-      <span class="ux-chip ux-badge--dotless">
-        <i class="bi bi-clipboard2-pulse-fill"></i>
-        <span><?= (int) (($summary['approved_appointments'] ?? 0) + ($summary['completed_consultations'] ?? 0)) ?> assigned consultations</span>
-      </span>
-      <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-primary btn-primary-xl">
-        <i class="bi bi-calendar-week me-2"></i>
-        Manage Availability
-      </a>
-    </div>
-  </div>
+  <?php
+  $pageHeaderTitle = 'My Consultations';
+  $pageHeaderSubtitle = 'Join approved consultations when they are open, complete the clinical record after the session, and download finalized documents from completed visits.';
+  $pageHeaderHeadingTag = 'h2';
+  $pageHeaderBreadcrumbs = [
+      ['label' => 'Dashboard', 'url' => '/doctor/dashboard'],
+      ['label' => 'Consultations', 'active' => true],
+  ];
+  ob_start();
+  ?>
+  <span class="ux-chip ux-badge--dotless">
+    <i class="bi bi-people"></i>
+    <span><?= (int) (($summary['approved_appointments'] ?? 0) + ($summary['completed_consultations'] ?? 0)) ?> assigned consultations</span>
+  </span>
+  <a href="<?= \App\Helpers\Helper::url('/doctor/availability') ?>" class="btn btn-primary">
+    <i class="bi bi-calendar-week me-2"></i>
+    Manage Availability
+  </a>
+  <?php
+  $pageHeaderActions = ob_get_clean();
+  require __DIR__ . '/../../partials/dashboard/page_header.php';
 
-  <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--success">
-          <i class="bi bi-calendar2-check-fill"></i>
-        </div>
-        <div class="flex-grow-1">
-          <div class="ux-stat__value"><?= (int) ($summary['approved_appointments'] ?? 0) ?></div>
-          <div class="ux-stat__label">Approved Appointments</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--cyan">
-          <i class="bi bi-calendar3-event-fill"></i>
-        </div>
-        <div class="flex-grow-1">
-          <div class="ux-stat__value"><?= (int) ($summary['upcoming_consultations'] ?? 0) ?></div>
-          <div class="ux-stat__label">Upcoming</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--success">
-          <i class="bi bi-check2-circle"></i>
-        </div>
-        <div class="flex-grow-1">
-          <div class="ux-stat__value"><?= (int) ($summary['completed_consultations'] ?? 0) ?></div>
-          <div class="ux-stat__label">Completed</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--warning">
-          <i class="bi bi-person-x-fill"></i>
-        </div>
-        <div class="flex-grow-1">
-          <div class="ux-stat__value"><?= (int) ($summary['no_show_consultations'] ?? 0) ?></div>
-          <div class="ux-stat__label">No-Show</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  $summaryStats = [
+      [
+          'label' => 'Approved Appointments',
+          'value' => (int) ($summary['approved_appointments'] ?? 0),
+          'icon' => 'bi-calendar2-check',
+          'tone' => 'success',
+          'url' => \App\Helpers\Status::filteredListUrl('/doctor/consultations', \App\Helpers\Status::APPROVED),
+      ],
+      [
+          'label' => 'Upcoming',
+          'value' => (int) ($summary['upcoming_consultations'] ?? 0),
+          'icon' => 'bi-clock',
+          'tone' => 'cyan',
+          'url' => \App\Helpers\Status::filteredListUrl('/doctor/consultations', \App\Helpers\Status::APPROVED),
+      ],
+      [
+          'label' => 'Completed',
+          'value' => (int) ($summary['completed_consultations'] ?? 0),
+          'icon' => 'bi-check2-circle',
+          'tone' => 'info',
+          'url' => \App\Helpers\Status::filteredListUrl('/doctor/consultations', \App\Helpers\Status::COMPLETED),
+      ],
+      [
+          'label' => 'No-Show',
+          'value' => (int) ($summary['no_show_consultations'] ?? 0),
+          'icon' => 'bi-person',
+          'tone' => 'warning',
+          'url' => \App\Helpers\Status::filteredListUrl('/doctor/consultations', \App\Helpers\Status::NO_SHOW),
+      ],
+  ];
+  $summaryStatsCompact = true;
+  require __DIR__ . '/../../partials/dashboard/summary_stats.php';
+  ?>
 
   <?php if ($grouped): ?>
     <?php if (!$hasAny): ?>
@@ -145,7 +133,10 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
       <div class="ux-card ux-data-card ux-history-card mb-4">
         <div class="ux-card__header">
           <div>
-            <h3 class="ux-data-card__title mb-1">Upcoming and active</h3>
+            <h3 class="ux-data-card__title mb-1">
+              <i class="bi bi-calendar2 me-1" aria-hidden="true"></i>
+              Upcoming and active
+            </h3>
             <p class="text-muted small mb-0">Approved consultations use Join Consultation when the session is open. Review and complete stays in the consultation room.</p>
           </div>
           <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
@@ -154,6 +145,8 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
         $historyRows = $activeRows;
         $emptyTitle = 'No upcoming or active consultations';
         $emptyText = 'Approved consultations ready to join will appear here.';
+        $emptyClass = 'ux-empty--panel';
+        $emptyIcon = 'bi-calendar2';
         $showResetAction = false;
         require __DIR__ . '/_history_table.php';
         ?>
@@ -162,10 +155,13 @@ $renderPagination = static function () use ($pagination, $paginationPath, $pagin
       <div class="ux-card ux-data-card ux-history-card mb-4">
         <div class="ux-card__header d-flex justify-content-between align-items-baseline gap-3">
           <div>
-            <h3 class="h6 mb-1">Completed consultations</h3>
+            <h3 class="h6 mb-1">
+              <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
+              Completed consultations
+            </h3>
             <p class="text-muted small mb-0">Newest first. View Record opens the historical clinical record. PDF actions appear only when the document exists.</p>
           </div>
-          <span class="text-muted small"><?= count($completedRows) ?></span>
+          <span class="ux-history-card__count"><?= count($completedRows) ?></span>
         </div>
         <?php
         $historyRows = $completedRows;

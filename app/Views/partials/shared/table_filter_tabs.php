@@ -14,13 +14,14 @@ use App\Helpers\Helper;
 $filterTabs = is_array($filterTabs ?? null) ? $filterTabs : [];
 $filterTabCurrent = (string) ($filterTabCurrent ?? '');
 $filterTabAria = (string) ($filterTabAria ?? 'Filter results');
+$filterTabsClass = trim((string) ($filterTabsClass ?? ''));
 $filterTabUrl = isset($filterTabUrl) && is_callable($filterTabUrl) ? $filterTabUrl : null;
 
 if ($filterTabs === [] || $filterTabUrl === null) {
     return;
 }
 ?>
-<div class="ux-table-filters" role="group" aria-label="<?= Helper::escape($filterTabAria) ?>">
+<div class="ux-table-filters<?= $filterTabsClass !== '' ? ' ' . Helper::escape($filterTabsClass) : '' ?>" role="group" aria-label="<?= Helper::escape($filterTabAria) ?>">
   <?php foreach ($filterTabs as $tab): ?>
     <?php
     if (!is_array($tab)) {
@@ -37,3 +38,6 @@ if ($filterTabs === [] || $filterTabUrl === null) {
     ><?= Helper::escape($tabLabel) ?></a>
   <?php endforeach; ?>
 </div>
+<?php
+$filterTabsClass = '';
+?>

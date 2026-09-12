@@ -129,6 +129,11 @@ class AdminController extends Controller
             return;
         }
 
+        if (trim((string) ($_GET['export'] ?? '')) === 'csv') {
+            AuditLogService::streamCsv($_GET);
+            return;
+        }
+
         $pageData = AuditLogService::getPageData($_GET);
         $this->render('admin/audit_logs/index', array_merge(
             $this->getAdminViewData($user, [
@@ -146,6 +151,7 @@ class AdminController extends Controller
                 'dateOptions' => $pageData['dateOptions'] ?? [],
                 'sortOptions' => $pageData['sortOptions'] ?? [],
                 'userOptions' => $pageData['userOptions'] ?? [],
+                'summary' => $pageData['summary'] ?? [],
                 'statusMessage' => Session::getFlash('status'),
             ]
         ), 'layouts/dashboard');

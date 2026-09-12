@@ -5,9 +5,11 @@ use App\Controllers\AdminController;
 use App\Controllers\AuthController;
 use App\Controllers\DoctorController;
 use App\Controllers\DoctorPasswordSetupController;
+use App\Controllers\GeminiTestController;
 use App\Controllers\GoogleAuthController;
 use App\Controllers\HomeController;
 use App\Controllers\NotificationController;
+use App\Controllers\PatientAiAssistantController;
 use App\Controllers\PatientController;
 use App\Middleware\RoleMiddleware;
 
@@ -36,6 +38,7 @@ $router->get('/doctor/setup-password', [DoctorPasswordSetupController::class, 's
 $router->post('/doctor/setup-password', [DoctorPasswordSetupController::class, 'store']);
 
 $authenticatedRoles = [new RoleMiddleware(['admin', 'doctor', 'patient'])];
+$router->get('/ai/test', [GeminiTestController::class, 'test'], $authenticatedRoles);
 $router->get('/notifications', [NotificationController::class, 'index'], $authenticatedRoles);
 $router->post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'], $authenticatedRoles);
 $router->post('/notifications/delete-selected', [NotificationController::class, 'deleteSelected'], $authenticatedRoles);
@@ -69,6 +72,14 @@ $router->post('/patient/profile/edit', [PatientController::class, 'editProfile']
 ]);
 
 $router->get('/patient/doctors', [PatientController::class, 'doctors'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->get('/patient/ai-assistant', [PatientAiAssistantController::class, 'index'], [
+    new RoleMiddleware(['patient']),
+]);
+
+$router->post('/patient/ai-assistant/chat', [PatientAiAssistantController::class, 'chat'], [
     new RoleMiddleware(['patient']),
 ]);
 

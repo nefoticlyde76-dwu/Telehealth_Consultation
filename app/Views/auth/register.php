@@ -60,8 +60,9 @@ $optionalOpen = $dobInvalid
         <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken ?? '') ?>">
 
         <div class="auth-register-grid">
-          <div class="auth-login-field auth-field">
+          <div class="auth-login-field auth-field auth-field--icon">
             <div class="auth-field__control">
+              <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-person"></i></span>
               <input
                 type="text"
                 class="form-control<?= $nameInvalid ? ' is-invalid' : '' ?>"
@@ -78,8 +79,9 @@ $optionalOpen = $dobInvalid
             <div class="invalid-feedback">Please enter your full name.</div>
           </div>
 
-          <div class="auth-login-field auth-field">
+          <div class="auth-login-field auth-field auth-field--icon">
             <div class="auth-field__control">
+              <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-envelope"></i></span>
               <input
                 type="email"
                 class="form-control<?= $emailInvalid ? ' is-invalid' : '' ?>"
@@ -97,8 +99,9 @@ $optionalOpen = $dobInvalid
             </div>
           </div>
 
-          <div class="auth-login-field auth-field auth-field--pass">
+          <div class="auth-login-field auth-field auth-field--pass auth-field--icon">
             <div class="auth-field__control">
+              <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-lock"></i></span>
               <input
                 type="password"
                 class="form-control<?= $passwordInvalid ? ' is-invalid' : '' ?>"
@@ -124,8 +127,9 @@ $optionalOpen = $dobInvalid
             <div class="invalid-feedback">Use at least 8 characters with uppercase, lowercase, number, and symbol.</div>
           </div>
 
-          <div class="auth-login-field auth-field auth-field--pass">
+          <div class="auth-login-field auth-field auth-field--pass auth-field--icon">
             <div class="auth-field__control">
+              <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-lock"></i></span>
               <input
                 type="password"
                 class="form-control<?= $confirmInvalid ? ' is-invalid' : '' ?>"
@@ -177,10 +181,16 @@ $optionalOpen = $dobInvalid
         </div>
 
         <details class="auth-register-optional"<?= $optionalOpen ? ' open' : '' ?>>
-          <summary>Optional details</summary>
+          <summary>
+            <span>
+              <i class="bi bi-sliders" aria-hidden="true"></i>
+              Optional details
+            </span>
+          </summary>
           <div class="auth-register-grid auth-register-optional__fields">
-            <div class="auth-login-field auth-field auth-field--raised">
+            <div class="auth-login-field auth-field auth-field--raised auth-field--icon">
               <div class="auth-field__control">
+                <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-calendar3"></i></span>
                 <input
                   type="date"
                   class="form-control<?= $dobInvalid ? ' is-invalid' : '' ?>"
@@ -197,8 +207,9 @@ $optionalOpen = $dobInvalid
               <div class="invalid-feedback">Date of birth cannot be in the future.</div>
             </div>
 
-            <div class="auth-login-field auth-field auth-field--raised">
+            <div class="auth-login-field auth-field auth-field--raised auth-field--icon">
               <div class="auth-field__control">
+                <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-gender-ambiguous"></i></span>
                 <select
                   class="form-select<?= $genderInvalid ? ' is-invalid' : '' ?>"
                   id="registerGender"
@@ -215,8 +226,9 @@ $optionalOpen = $dobInvalid
               <div class="invalid-feedback">Please select a valid gender option.</div>
             </div>
 
-            <div class="auth-login-field auth-field auth-register-grid__full">
+            <div class="auth-login-field auth-field auth-field--icon auth-register-grid__full">
               <div class="auth-field__control">
+                <span class="auth-field__icon" aria-hidden="true"><i class="bi bi-geo-alt"></i></span>
                 <input
                   type="text"
                   class="form-control"
@@ -287,7 +299,14 @@ $optionalOpen = $dobInvalid
           <?php endif; ?>
         </div>
       </form>
+
+      <p class="auth-login-secure">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+        Your information is protected with secure server-side authentication.
+      </p>
     </article>
+
+    <?php require __DIR__ . '/../partials/auth/trust.php'; ?>
   </div>
 </main>
 

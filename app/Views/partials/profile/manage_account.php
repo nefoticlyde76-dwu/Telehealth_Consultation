@@ -12,9 +12,9 @@ $manageExtraHtml = (string) ($profilePage['manage_extra_html'] ?? '');
 $returnTo = (string) ($profilePage['return_to'] ?? '');
 ?>
 
-<aside class="user-profile-card">
+<aside class="user-profile-card user-profile-card--manage">
   <h3 class="user-profile-card__title">
-    <i class="bi bi-person-gear" aria-hidden="true"></i>
+    <i class="bi bi-gear" aria-hidden="true"></i>
     Manage account
   </h3>
 
@@ -39,7 +39,8 @@ $returnTo = (string) ($profilePage['return_to'] ?? '');
       <?php if (($action['method'] ?? 'GET') === 'GET'): ?>
         <a href="<?= Helper::url((string) $action['url']) ?>" class="<?= Helper::escape($actionClass) ?>">
           <i class="bi <?= Helper::escape($icon) ?>" aria-hidden="true"></i>
-          <?= Helper::escape($label) ?>
+          <span><?= Helper::escape($label) ?></span>
+          <i class="bi bi-chevron-right user-profile-action__chevron" aria-hidden="true"></i>
         </a>
       <?php elseif ($key === 'delete'): ?>
         <button

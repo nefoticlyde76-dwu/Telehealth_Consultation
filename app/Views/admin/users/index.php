@@ -30,71 +30,93 @@ $filterTabAria = 'Filter users by status';
 $filterTabUrl = static function (string $value) use ($filters): string {
     return ListFilter::url('/admin/users', $filters, ['status' => $value, 'page' => 1]);
 };
+
+$search = (string) ($filters['search'] ?? '');
+$filterForm = [
+    'id' => 'tf-users',
+    'action' => Helper::url('/admin/users'),
+    'clear_url' => Helper::url('/admin/users'),
+    'active' => $search !== '' || $status !== '',
+    'hidden' => $status !== '' ? ['status' => $status] : [],
+    'search' => [
+        'name' => 'search',
+        'value' => $search,
+        'placeholder' => 'Search users...',
+        'label' => 'Search',
+    ],
+];
+$tableFilterId = 'tf-users';
 ?>
 
 <section class="mb-4">
-  <div class="ux-page-header">
-    <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= Helper::url('/admin/dashboard') ?>">Dashboard</a></li>
-        <li class="active">Users</li>
-      </ol>
-      <h2 class="ux-page-header__title">Users</h2>
-      <p class="ux-page-header__subtitle">Manage system accounts and access. Clinical consultation content is not shown here.</p>
-    </div>
-    <div class="ux-page-header__right d-flex flex-wrap gap-2">
-      <a href="<?= Helper::url('/admin/doctors/create') ?>" class="btn btn-primary btn-sm">
-        <i class="bi bi-person-plus me-1"></i>
-        Add doctor
-      </a>
-    </div>
-  </div>
+  <?php
+  $pageHeaderTitle = 'Users';
+  $pageHeaderSubtitle = 'Manage system accounts and access. Clinical consultation content is not shown here.';
+  $pageHeaderIcon = 'bi-people';
+  $pageHeaderHeadingTag = 'h2';
+  $pageHeaderBreadcrumbs = [
+      ['label' => 'Dashboard', 'url' => '/admin/dashboard'],
+      ['label' => 'Users', 'active' => true],
+  ];
+  ob_start();
+  ?>
+  <a href="<?= Helper::url('/admin/doctors/create') ?>" class="btn btn-primary">
+    <i class="bi bi-person-plus me-1"></i>
+    Add Doctor
+  </a>
+  <?php
+  $pageHeaderActions = ob_get_clean();
+  require __DIR__ . '/../../partials/dashboard/page_header.php';
+  ?>
 
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--navy"><i class="bi bi-people-fill"></i></div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($summary['total_users'] ?? 0) ?></div>
-          <div class="ux-stat__label">Total</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--success"><i class="bi bi-person-check-fill"></i></div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($summary['active_users'] ?? 0) ?></div>
-          <div class="ux-stat__label">Active</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--cyan"><i class="bi bi-pause-circle-fill"></i></div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($summary['suspended_users'] ?? 0) ?></div>
-          <div class="ux-stat__label">Suspended</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="ux-stat compact d-flex align-items-center gap-3">
-        <div class="ux-stat__icon ux-stat__icon--slate"><i class="bi bi-person-dash-fill"></i></div>
-        <div>
-          <div class="ux-stat__value"><?= (int) ($summary['inactive_users'] ?? 0) ?></div>
-          <div class="ux-stat__label">Deactivated</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <?php
+  $summaryStats = [
+      [
+          'label' => 'Total',
+          'value' => (int) ($summary['total_users'] ?? 0),
+          'icon' => 'bi-people',
+          'tone' => 'pending',
+          'url' => '/admin/users',
+      ],
+      [
+          'label' => 'Active',
+          'value' => (int) ($summary['active_users'] ?? 0),
+          'icon' => 'bi-person-check',
+          'tone' => 'success',
+          'url' => '/admin/users?status=' . rawurlencode(Status::USER_ACTIVE),
+      ],
+      [
+          'label' => 'Suspended',
+          'value' => (int) ($summary['suspended_users'] ?? 0),
+          'icon' => 'bi-pause-circle',
+          'tone' => 'warning',
+          'url' => '/admin/users?status=' . rawurlencode(Status::USER_SUSPENDED),
+      ],
+      [
+          'label' => 'Deactivated',
+          'value' => (int) ($summary['inactive_users'] ?? 0),
+          'icon' => 'bi-person',
+          'tone' => 'info',
+          'url' => '/admin/users?status=' . rawurlencode(Status::USER_INACTIVE),
+      ],
+  ];
+  $summaryStatsCompact = true;
+  require __DIR__ . '/../../partials/dashboard/summary_stats.php';
+  ?>
 
-  <div class="ux-card ux-data-card">
-    <div class="ux-card__header">
-      <h2 class="ux-data-card__title">User accounts</h2>
-      <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
+  <div class="ux-card ux-data-card" data-table-filter="tf-users">
+    <?php require __DIR__ . '/../../partials/shared/table_filter_form.php'; ?>
+    <div class="ux-card__header d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div class="d-flex flex-wrap align-items-center gap-3 min-w-0">
+        <h2 class="ux-data-card__title mb-0">
+          <i class="bi bi-person me-1" aria-hidden="true"></i>
+          User accounts
+        </h2>
+        <?php require __DIR__ . '/../../partials/shared/table_filter_tabs.php'; ?>
+      </div>
+      <?php require __DIR__ . '/../../partials/shared/table_toolbar.php'; ?>
     </div>
     <?php if ($users !== []): ?>
       <div class="user-bulk-bar">
@@ -198,7 +220,21 @@ $filterTabUrl = static function (string $value) use ($filters): string {
                     ?>
                   </td>
                   <td><span class="text-muted"><?= Helper::escape($userEmail !== '' ? $userEmail : '—') ?></span></td>
-                  <td><span class="ux-badge ux-badge--neutral"><?= Helper::escape($userRole !== '' ? user_profile_role_label($userRole) : '—') ?></span></td>
+                  <td>
+                    <?php
+                    $roleKey = strtolower($userRole);
+                    $roleIcon = match ($roleKey) {
+                        'doctor' => 'bi-heart-pulse',
+                        'admin', 'administrator' => 'bi-shield-lock',
+                        'patient' => 'bi-person',
+                        default => 'bi-person',
+                    };
+                    ?>
+                    <span class="ux-badge ux-badge--neutral ux-badge--role">
+                      <i class="bi <?= Helper::escape($roleIcon) ?>" aria-hidden="true"></i>
+                      <?= Helper::escape($userRole !== '' ? user_profile_role_label($userRole) : '—') ?>
+                    </span>
+                  </td>
                   <td><?= ux_status_badge($userStatus, Status::DOMAIN_USER) ?></td>
                   <td>
                     <?php if ($lastLogin !== ''): ?>
