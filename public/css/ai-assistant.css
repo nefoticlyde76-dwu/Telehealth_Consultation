@@ -199,20 +199,24 @@
   min-width: 0;
 }
 
-.medimate-header__title {
+.medimate-header__title,
+.dashboard-layout .medimate-header h2,
+.dashboard-layout .medimate-header__title {
   margin: 0;
   font-size: 17px;
   font-weight: 800;
   line-height: 1.2;
-  color: #fff;
+  color: #ffffff;
   white-space: nowrap;
 }
 
-.medimate-header__subtitle {
+.medimate-header__subtitle,
+.dashboard-layout .medimate-header p,
+.dashboard-layout .medimate-header__subtitle {
   margin: 3px 0 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.25;
-  color: rgba(255, 255, 255, 0.78);
+  color: #ffffff;
 }
 
 .medimate-header__actions,
@@ -227,7 +231,9 @@
 }
 
 .medimate-online,
-.medimate-header-status {
+.medimate-header-status,
+.dashboard-layout .medimate-online,
+.dashboard-layout .medimate-header-status {
   display: inline-flex;
   align-items: center;
   gap: 5px;
