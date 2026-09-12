@@ -76,37 +76,15 @@ if ($currentUser && $currentRole) {
           <?php endif; ?>
         </a>
         <a class="btn btn-primary" href="<?= \App\Helpers\Helper::url($dashboardUrl) ?>">Dashboard</a>
-        <div class="dropdown">
-          <button class="public-navbar-profile" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Account menu">
-            <?php
-            $avatarPath = $currentUser->profile_photo_path ?? null;
-            $avatarUserId = (int) ($currentUser->id ?? 0);
-            $fullName = $currentUser->full_name ?? 'User';
-            $avatarClass = 'user-avatar user-avatar--xs';
-            require __DIR__ . '/../shared/user_avatar.php';
-            ?>
-            <span class="public-navbar-profile__meta">
-              <strong><?= \App\Helpers\Helper::escape($currentUser->full_name ?? 'User') ?></strong>
-              <small><?= \App\Helpers\Helper::escape($publicRoleLabel) ?></small>
-            </span>
-            <i class="bi bi-chevron-down" aria-hidden="true"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end p-2">
-            <li>
-              <a href="<?= \App\Helpers\Helper::url($publicProfilePath) ?>" class="dropdown-item">
-                <i class="bi bi-person me-2" aria-hidden="true"></i>Profile
-              </a>
-            </li>
-            <li>
-              <form action="<?= \App\Helpers\Helper::url('/logout') ?>" method="POST">
-                <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape(\App\Core\Csrf::generate()) ?>">
-                <button type="submit" class="dropdown-item">
-                  <i class="bi bi-box-arrow-left me-2" aria-hidden="true"></i>Logout
-                </button>
-              </form>
-            </li>
-          </ul>
-        </div>
+        <?php
+        $accountUser = $currentUser;
+        $accountRoleLabel = $publicRoleLabel;
+        $accountRoleKey = (string) $currentRole;
+        $accountProfilePath = $publicProfilePath;
+        $accountShowTriggerMeta = true;
+        $accountTriggerClass = 'public-navbar-profile';
+        require __DIR__ . '/../shared/account_menu.php';
+        ?>
       <?php else: ?>
         <a
           class="btn btn-outline-primary<?= $loginActive ? ' is-active' : '' ?>"

@@ -2,7 +2,6 @@
 
 use App\Helpers\DashboardNav;
 use App\Helpers\Helper;
-use App\Core\Csrf;
 
 $dashboardRole = (string) ($dashboardRole ?? '');
 $showRightbar = (bool) ($showRightbar ?? false);
@@ -74,61 +73,15 @@ $topbarSearch = DashboardNav::searchTarget($dashboardRole);
         </a>
       <?php endif; ?>
 
-      <div class="dropdown">
-        <button class="btn profile-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Account menu">
-          <?php
-          $avatarPath = $user->profile_photo_path ?? null;
-          $avatarUserId = (int) ($user->id ?? 0);
-          $fullName = $user->full_name ?? 'User';
-          $avatarClass = 'user-avatar user-avatar--xs';
-          require __DIR__ . '/../shared/user_avatar.php';
-          ?>
-          <span class="text-start topbar-profile-meta d-none d-lg-block">
-            <strong class="d-block"><?= Helper::escape($user->full_name ?? 'User') ?></strong>
-            <small><?= Helper::escape($roleChip) ?></small>
-          </span>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end p-2">
-          <li>
-            <span class="dropdown-item-text">
-              <strong class="d-block"><?= Helper::escape($user->full_name ?? 'User') ?></strong>
-              <small class="text-muted"><?= Helper::escape($roleChip) ?></small>
-            </span>
-          </li>
-          <?php if (!empty($user->email)): ?>
-            <li><span class="dropdown-item-text text-muted small"><?= Helper::escape((string) $user->email) ?></span></li>
-          <?php endif; ?>
-          <li><hr class="dropdown-divider"></li>
-          <li>
-            <a href="<?= Helper::url($profilePath) ?>" class="dropdown-item">
-              <i class="bi bi-person me-2" aria-hidden="true"></i>
-              Profile
-            </a>
-          </li>
-          <li>
-            <a href="<?= Helper::url('/account/security') ?>" class="dropdown-item">
-              <i class="bi bi-shield-lock me-2" aria-hidden="true"></i>
-              Security
-            </a>
-          </li>
-          <li>
-            <a href="<?= Helper::url('/account/notifications/preferences') ?>" class="dropdown-item">
-              <i class="bi bi-sliders me-2" aria-hidden="true"></i>
-              Notification Preferences
-            </a>
-          </li>
-          <li><hr class="dropdown-divider"></li>
-          <li>
-            <form action="<?= Helper::url('/logout') ?>" method="POST">
-              <input type="hidden" name="_token" value="<?= Helper::escape(Csrf::generate()) ?>">
-              <button type="submit" class="dropdown-item">
-                <i class="bi bi-box-arrow-left me-2" aria-hidden="true"></i>
-                Logout
-              </button>
-            </form>
-          </li>
-        </ul>
-      </div>
+      <?php
+      $accountUser = $user ?? null;
+      $accountRoleLabel = $roleChip;
+      $accountRoleKey = $dashboardRole;
+      $accountProfilePath = $profilePath;
+      $accountShowTriggerMeta = true;
+      $accountTriggerClass = 'profile-trigger';
+      require __DIR__ . '/../shared/account_menu.php';
+      ?>
     </div>
   </div>
 </header>
