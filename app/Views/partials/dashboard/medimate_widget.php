@@ -31,7 +31,7 @@ $suggestionIcons = [
 ?>
 
 <div
-  class="medimate"
+  class="medimate medimate-widget"
   data-ai-assistant
   data-chat-endpoint="<?= Helper::escape($chatEndpoint) ?>"
   data-conversation-endpoint="<?= Helper::escape($conversationEndpoint) ?>"
@@ -42,13 +42,14 @@ $suggestionIcons = [
 >
   <button
     type="button"
-    class="medimate-fab"
+    class="medimate-fab medimate-launcher"
     data-medimate-open
     aria-label="Open MediMate AI"
     aria-expanded="false"
     aria-controls="medimate-panel"
   >
     <img src="<?= Helper::escape($medimateAvatar) ?>" alt="" width="70" height="70">
+    <span class="medimate-fab__online" aria-hidden="true"></span>
   </button>
 
   <section
@@ -61,17 +62,17 @@ $suggestionIcons = [
     aria-modal="false"
   >
     <header class="medimate-header">
-      <div class="medimate-header__identity">
-        <span class="medimate-header__icon" aria-hidden="true">
-          <img src="<?= Helper::escape($medimateAvatar) ?>" alt="" width="40" height="40">
+      <div class="medimate-header__identity medimate-header-identity">
+        <span class="medimate-header__icon medimate-header-avatar" aria-hidden="true">
+          <img src="<?= Helper::escape($medimateAvatar) ?>" alt="" width="52" height="52">
         </span>
         <div class="medimate-header__copy">
           <h2 id="medimate-title" class="medimate-header__title">MediMate AI</h2>
           <p class="medimate-header__subtitle">Your health information assistant</p>
         </div>
       </div>
-      <div class="medimate-header__actions">
-        <span class="medimate-online">
+      <div class="medimate-header__actions medimate-header-actions">
+        <span class="medimate-online medimate-header-status">
           <span class="medimate-online__dot" aria-hidden="true"></span>
           Online
         </span>
@@ -110,15 +111,17 @@ $suggestionIcons = [
       <div class="medimate-history__list" data-medimate-history-list></div>
     </div>
 
-    <div class="medimate-thread" data-ai-thread tabindex="0" aria-live="polite" aria-relevant="additions">
+    <div class="medimate-thread medimate-conversation" data-ai-thread tabindex="0" aria-live="polite" aria-relevant="additions">
       <div class="medimate-welcome" data-ai-welcome>
-        <div class="medimate-msg medimate-msg--assistant">
-          <span class="medimate-msg__avatar" aria-hidden="true">
-            <img src="<?= Helper::escape($medimateAvatar) ?>" alt="" width="32" height="32">
+        <div class="medimate-msg medimate-msg--assistant medimate-assistant-message">
+          <span class="medimate-msg__avatar medimate-avatar" aria-hidden="true">
+            <img src="<?= Helper::escape($medimateAvatar) ?>" alt="" width="36" height="36">
           </span>
           <div class="medimate-msg__col">
-            <span class="medimate-msg__label">MediMate AI</span>
-            <div class="medimate-msg__bubble">
+            <div class="medimate-msg__head">
+              <span class="medimate-msg__label">MediMate AI</span>
+            </div>
+            <div class="medimate-msg__bubble medimate-message-bubble">
               <p>Hello! I’m MediMate AI. I can provide general health information and help you understand topics before or after your consultation.</p>
             </div>
           </div>
@@ -147,25 +150,26 @@ $suggestionIcons = [
       <form class="medimate-composer" data-ai-form novalidate>
         <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">
         <label class="visually-hidden" for="medimate-input">Type your question</label>
-        <textarea
-          id="medimate-input"
-          class="medimate-input"
-          name="message"
-          rows="1"
-          maxlength="<?= (int) $maxMessageLength ?>"
-          placeholder="Type your question..."
-          data-ai-input
-          autocomplete="off"
-        ></textarea>
+        <div class="medimate-input-wrapper">
+          <span class="medimate-attach" aria-hidden="true">
+            <i class="bi bi-paperclip"></i>
+          </span>
+          <textarea
+            id="medimate-input"
+            class="medimate-input"
+            name="message"
+            rows="1"
+            maxlength="<?= (int) $maxMessageLength ?>"
+            placeholder="Type your question..."
+            data-ai-input
+            autocomplete="off"
+          ></textarea>
+        </div>
         <button type="submit" class="medimate-send" data-ai-send aria-label="Send message">
           <i class="bi bi-send-fill" aria-hidden="true"></i>
           <span>Send</span>
         </button>
       </form>
-      <p class="medimate-disclaimer">
-        <i class="bi bi-shield-check" aria-hidden="true"></i>
-        AI-generated information is for general educational purposes and does not replace advice from a qualified healthcare professional.
-      </p>
     </div>
   </section>
 </div>

@@ -50,6 +50,9 @@ expect_true(str_contains($view, 'Open MediMate AI'), 'Floating button has an acc
 expect_true(str_contains($view, 'images/MediMate.png'), 'Widget uses the MediMate avatar image');
 expect_true(str_contains($view, 'New chat'), 'Widget includes a New chat control');
 expect_true(str_contains($view, 'Previous conversations'), 'Widget includes conversation history');
+expect_true(!str_contains($view, 'AI-generated information'), 'Widget does not show the educational disclaimer');
+expect_true(!str_contains($view, 'general educational purposes'), 'Widget does not include the educational-purpose disclaimer');
+expect_true(!str_contains($source, 'AI-generated information'), 'Browser script does not render the educational disclaimer');
 expect_true(str_contains($source, 'start_new'), 'Browser script can start a new conversation');
 expect_true(str_contains($source, 'conversation_id'), 'Browser script sends conversation id');
 expect_true(!str_contains($view, 'bi-stars'), 'Widget no longer uses a generic sparkle icon');

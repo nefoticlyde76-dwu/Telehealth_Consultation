@@ -121,7 +121,7 @@
     closeTimer = window.setTimeout(function () {
       panel.hidden = true;
       openButton.focus();
-    }, reduceMotion ? 0 : 220);
+    }, reduceMotion ? 0 : 140);
   }
 
   function beginNewChat() {
@@ -302,8 +302,9 @@
       }
       const role = item.role === "assistant" ? "assistant" : "user";
       const text = typeof item.message === "string" ? item.message : "";
+      const createdAt = typeof item.created_at === "string" ? item.created_at : "";
       if (text.trim() !== "") {
-        appendMessage(role, text);
+        appendMessage(role, text, createdAt);
       }
     });
   }
@@ -484,8 +485,8 @@
     historyButton.setAttribute("aria-expanded", open ? "true" : "false");
   }
 
-  function appendMessage(role, text) {
-    const row = buildRow(role, false);
+  function appendMessage(role, text, createdAt) {
+    const row = buildRow(role, false, createdAt);
     fillBubble(row.querySelector(".medimate-msg__bubble"), text);
     thread.appendChild(row);
     scrollToLatest();
@@ -496,61 +497,99 @@
     const row = buildRow("assistant", true);
     const bubble = row.querySelector(".medimate-msg__bubble");
     const status = document.createElement("p");
+    status.className = "visually-hidden";
     status.textContent = "MediMate AI is thinking";
     const dots = document.createElement("span");
-    dots.className = "medimate-dots";
+    dots.className = "medimate-dots medimate-typing";
     dots.setAttribute("aria-hidden", "true");
     dots.innerHTML = "<span></span><span></span><span></span>";
-    status.appendChild(document.createTextNode(" "));
-    status.appendChild(dots);
     bubble.appendChild(status);
+    bubble.appendChild(dots);
     thread.appendChild(row);
     scrollToLatest();
     return row;
   }
 
-  function buildRow(role, pending) {
+  function buildRow(role, pending, createdAt) {
+    const isUser = role === "user";
     const row = document.createElement("div");
-    row.className = "medimate-msg medimate-msg--" + (role === "user" ? "user" : "assistant") + (pending ? " medimate-msg--pending" : "");
+    row.className = "medimate-msg medimate-message medimate-msg--" + (isUser ? "user medimate-user-message" : "assistant medimate-assistant-message") + (pending ? " medimate-msg--pending" : "");
     if (pending) {
       row.setAttribute("data-ai-pending", "1");
     }
 
-    if (role !== "user") {
+    if (!isUser) {
       row.appendChild(createAvatar());
     }
 
     const col = document.createElement("div");
     col.className = "medimate-msg__col";
 
-    if (role !== "user") {
+    if (!isUser) {
+      const head = document.createElement("div");
+      head.className = "medimate-msg__head";
       const label = document.createElement("span");
       label.className = "medimate-msg__label";
       label.textContent = "MediMate AI";
-      col.appendChild(label);
+      head.appendChild(label);
+      const time = formatMessageTime(createdAt);
+      if (time !== "") {
+        const timeEl = document.createElement("span");
+        timeEl.className = "medimate-msg__time";
+        timeEl.textContent = time;
+        head.appendChild(timeEl);
+      }
+      col.appendChild(head);
     }
 
     const bubble = document.createElement("div");
-    bubble.className = "medimate-msg__bubble";
-
+    bubble.className = "medimate-msg__bubble medimate-message-bubble";
     col.appendChild(bubble);
+
+    if (isUser) {
+      const meta = document.createElement("div");
+      meta.className = "medimate-msg__meta";
+      const time = formatMessageTime(createdAt);
+      if (time !== "") {
+        const timeEl = document.createElement("span");
+        timeEl.className = "medimate-msg__time";
+        timeEl.textContent = time;
+        meta.appendChild(timeEl);
+      }
+      const check = document.createElement("i");
+      check.className = "bi bi-check2-all medimate-msg__read";
+      check.setAttribute("aria-hidden", "true");
+      meta.appendChild(check);
+      col.appendChild(meta);
+    }
+
     row.appendChild(col);
     return row;
   }
 
   function createAvatar() {
     const avatar = document.createElement("span");
-    avatar.className = "medimate-msg__avatar";
+    avatar.className = "medimate-msg__avatar medimate-avatar";
     avatar.setAttribute("aria-hidden", "true");
     if (avatarSrc !== "") {
       const img = document.createElement("img");
       img.src = avatarSrc;
       img.alt = "";
-      img.width = 32;
-      img.height = 32;
+      img.width = 36;
+      img.height = 36;
       avatar.appendChild(img);
     }
     return avatar;
+  }
+
+  function formatMessageTime(value) {
+    const raw = value == null || String(value).trim() === "" ? new Date().toISOString() : String(value).trim();
+    const normalized = raw.indexOf("T") === -1 ? raw.replace(" ", "T") : raw;
+    const date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   }
 
   function stripMarkdown(text) {
@@ -558,14 +597,28 @@
     value = value.replace(/```[a-zA-Z0-9]*\n?([\s\S]*?)```/g, "$1");
     value = value.replace(/`([^`\n]+)`/g, "$1");
     value = value.replace(/^\s{0,3}#{1,6}\s+/gm, "");
-    value = value.replace(/^\s*[-*+]\s+/gm, "");
+    value = value.replace(/^\s*[-*+]\s+/gm, "• ");
     value = value.replace(/^\s*>\s+/gm, "");
     value = value.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
-    value = value.replace(/(\*\*|__)(.+?)\1/g, "$2");
-    value = value.replace(/(\*|_)([^*\n]+)\1/g, "$2");
-    value = value.replace(/[#*`]/g, "");
-    value = value.replace(/\*\*/g, "");
+    value = value.replace(/[#`]/g, "");
     return value.replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  function appendInline(target, text) {
+    const parts = String(text || "").split(/(\*\*[^*\n]+?\*\*|__[^_\n]+?__)/g);
+    parts.forEach(function (part) {
+      if (part === "") {
+        return;
+      }
+      const bold = part.match(/^(?:\*\*|__)(.+?)(?:\*\*|__)$/);
+      if (bold) {
+        const strong = document.createElement("strong");
+        strong.textContent = bold[1];
+        target.appendChild(strong);
+        return;
+      }
+      target.appendChild(document.createTextNode(part.replace(/\*/g, "")));
+    });
   }
 
   function fillBubble(bubble, text) {
@@ -573,22 +626,37 @@
       return;
     }
 
-    const paragraphs = stripMarkdown(text).split(/\n{2,}/);
+    const cleaned = stripMarkdown(text);
+    const paragraphs = cleaned.split(/\n{2,}/);
     if (paragraphs.length === 0 || (paragraphs.length === 1 && paragraphs[0] === "")) {
       const p = document.createElement("p");
-      p.textContent = stripMarkdown(text);
+      appendInline(p, cleaned);
       bubble.appendChild(p);
       return;
     }
 
     paragraphs.forEach(function (para) {
-      const p = document.createElement("p");
       const lines = para.split("\n");
+      const listLines = lines.filter(function (line) {
+        return /^[•]\s+/.test(line);
+      });
+      if (listLines.length > 0 && listLines.length === lines.length) {
+        const list = document.createElement("ul");
+        lines.forEach(function (line) {
+          const item = document.createElement("li");
+          appendInline(item, line.replace(/^[•]\s+/, ""));
+          list.appendChild(item);
+        });
+        bubble.appendChild(list);
+        return;
+      }
+
+      const p = document.createElement("p");
       lines.forEach(function (line, index) {
         if (index > 0) {
           p.appendChild(document.createElement("br"));
         }
-        p.appendChild(document.createTextNode(line));
+        appendInline(p, line);
       });
       bubble.appendChild(p);
     });
