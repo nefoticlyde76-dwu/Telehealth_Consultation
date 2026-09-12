@@ -5,17 +5,17 @@
    ============================================================ */
 
 .user-profile-page {
-  --up-navy: var(--dark-navy, #17375E);
-  --up-primary: var(--medical-blue, #0A6FB6);
-  --up-primary-soft: rgba(var(--medical-blue-rgb, 10, 111, 182), 0.08);
-  --up-text: var(--navy-black, #102A43);
-  --up-muted: var(--dark-gray, #4A5568);
-  --up-success: var(--emerald-green, #18A558);
-  --up-warning: #b45309;
-  --up-danger: var(--danger, #DC3545);
+  --up-navy: var(--dark-navy, #0B3558);
+  --up-primary: var(--medical-blue, #0B78C8);
+  --up-primary-soft: rgba(var(--medical-blue-rgb, 11, 120, 200), 0.08);
+  --up-text: var(--navy-black, #12375A);
+  --up-muted: var(--dark-gray, #60758A);
+  --up-success: var(--emerald-green, #18A56B);
+  --up-warning: #9d6a00;
+  --up-danger: var(--danger, #D95757);
   --up-destroy: #b42318;
-  --up-radius-card: 12px;
-  --up-radius-tile: 12px;
+  --up-radius-card: 18px;
+  --up-radius-tile: 14px;
   --up-gap: 20px;
   margin: 0;
   padding: 0 0 24px;
@@ -68,7 +68,7 @@
 
 .user-profile-page .user-profile-header__verified {
   font-size: 1rem;
-  color: var(--medical-blue, #0A6FB6);
+  color: var(--medical-blue, #0B78C8);
 }
 
 .user-profile-page .user-profile-header__subtitle {
@@ -361,8 +361,25 @@
 }
 
 .user-profile-card--manage {
-  background: color-mix(in srgb, var(--mint-green, #e7f8ef) 55%, #fff);
-  border-color: rgba(24, 165, 88, 0.18);
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(226, 246, 239, 0.94) 0%, rgba(248, 252, 255, 0.9) 52%, rgba(234, 245, 253, 0.96) 100%),
+    url("../images/stetescope.png") right -8px bottom -24px / 210px auto no-repeat;
+  border-color: #d8e6f1;
+}
+
+.user-profile-card--manage::after {
+  content: "Your Health\A Our Priority";
+  white-space: pre;
+  position: absolute;
+  right: 18px;
+  bottom: 88px;
+  font-size: 15px;
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.2;
+  color: rgba(11, 53, 88, 0.28);
+  pointer-events: none;
 }
 
 .user-profile-card--manage .user-profile-card__title i {

@@ -19,7 +19,7 @@ $emptyBadge = $emptyBadge ?? null;
 $emptyBadgeLabel = is_scalar($emptyBadge) ? trim((string) $emptyBadge) : '';
 ?>
 
-<div class="ux-empty<?= $emptyCompact ? ' ux-empty--compact' : '' ?><?= $emptyPositive ? ' ux-empty--positive' : '' ?><?= $emptyClass !== '' ? ' ' . \App\Helpers\Helper::escape($emptyClass) : '' ?> text-center">
+<div class="ux-empty app-empty-state<?= $emptyCompact ? ' ux-empty--compact' : '' ?><?= $emptyPositive ? ' ux-empty--positive' : '' ?><?= $emptyClass !== '' ? ' ' . \App\Helpers\Helper::escape($emptyClass) : '' ?> text-center">
   <div class="ux-empty__icon mx-auto mb-3" aria-hidden="true">
     <span class="ux-empty__sparkles">
       <span></span><span></span><span></span><span></span>

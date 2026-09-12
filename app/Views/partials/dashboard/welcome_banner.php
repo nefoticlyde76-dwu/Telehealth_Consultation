@@ -53,9 +53,9 @@ $welcomeDefaults = [
         'message' => 'Monitor the platform, manage users, and oversee telehealth operations.',
         'icon' => 'bi-shield-check',
         'role_description' => 'Manage the MBPHA TeleHealth platform',
-        'primary_label' => 'Manage System',
-        'primary_url' => '/admin/users',
-        'primary_icon' => 'bi-gear',
+        'primary_label' => 'Review Requests',
+        'primary_url' => '/admin/consultation-requests',
+        'primary_icon' => 'bi-clipboard2-check',
         'health_title' => 'Platform',
         'health_value' => 'Stay on track',
         'health_description' => 'Keep users, doctors, and requests in order',
@@ -181,6 +181,10 @@ $primaryUrl = $welcomeDefaults[$welcomeRole]['primary_url'];
 $primaryIcon = $welcomeDefaults[$welcomeRole]['primary_icon'];
 
 $visualUrl = Helper::asset('images/stetescope.png');
+$logoUrl = Helper::asset('images/LOGOS.png');
+$welcomeNow = Helper::now();
+$welcomeDateLabel = $welcomeNow->format('F j, Y');
+$welcomeTimeLabel = $welcomeNow->format('g:i A');
 ?>
 
 <section class="dashboard-welcome-banner dashboard-welcome-banner--<?= Helper::escape($welcomeRole) ?>" aria-label="Welcome">
@@ -194,6 +198,20 @@ $visualUrl = Helper::asset('images/stetescope.png');
         <?= Helper::escape($welcomeGreeting) ?><?php if ($welcomeNameLabel !== ''): ?>, <span class="welcome-greeting__name"><?= Helper::escape($welcomeNameLabel) ?></span><?php endif; ?>
       </h1>
       <p class="welcome-description"><?= Helper::escape($welcomeDescription) ?></p>
+      <div class="welcome-meta">
+        <span class="welcome-meta__item">
+          <i class="bi bi-calendar3" aria-hidden="true"></i>
+          <?= Helper::escape($welcomeDateLabel) ?>
+        </span>
+        <span class="welcome-meta__item">
+          <i class="bi bi-circle-fill" aria-hidden="true"></i>
+          You're online
+        </span>
+        <span class="welcome-meta__item">
+          <i class="bi bi-clock" aria-hidden="true"></i>
+          <?= Helper::escape($welcomeTimeLabel) ?>
+        </span>
+      </div>
     </div>
 
     <aside class="welcome-role-card">
@@ -208,6 +226,7 @@ $visualUrl = Helper::asset('images/stetescope.png');
 
     <div class="welcome-banner-visual" aria-hidden="true">
       <img class="welcome-banner-photo" src="<?= Helper::escape($visualUrl) ?>" alt="">
+      <img class="welcome-banner-logo" src="<?= Helper::escape($logoUrl) ?>" alt="">
       <span class="welcome-banner-visual__fade"></span>
     </div>
   </div>
@@ -229,6 +248,16 @@ $visualUrl = Helper::asset('images/stetescope.png');
         <span class="welcome-action-title"><?= Helper::escape($healthTitle) ?></span>
         <span class="welcome-action-value"><?= Helper::escape($healthValue) ?></span>
         <span class="welcome-action-description"><?= Helper::escape($healthDescription) ?></span>
+      </span>
+      <i class="bi bi-chevron-right welcome-action-arrow" aria-hidden="true"></i>
+    </a>
+
+    <a href="<?= Helper::url('/contact') ?>" class="welcome-action-card welcome-action-card--support">
+      <span class="welcome-action-icon" aria-hidden="true"><i class="bi bi-headset"></i></span>
+      <span class="welcome-action-content">
+        <span class="welcome-action-title">Need Help?</span>
+        <span class="welcome-action-value">Contact Support</span>
+        <span class="welcome-action-description">We're here for you</span>
       </span>
       <i class="bi bi-chevron-right welcome-action-arrow" aria-hidden="true"></i>
     </a>

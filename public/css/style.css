@@ -3594,10 +3594,10 @@ body.public-layout { padding-top: 0; }
   top: 0;
   width: 100%;
 }
-.public-navbar.navbar-dark .navbar-brand,
-.public-navbar.navbar-dark .nav-link,
-.public-navbar.navbar-dark .navbar-toggler-icon { color: var(--medical-blue) !important; }
-.public-navbar.navbar-dark .nav-link {
+.public-navbar .navbar-brand,
+.public-navbar .nav-link,
+.public-navbar .navbar-toggler-icon { color: var(--medical-blue) !important; }
+.public-navbar .nav-link {
   color: var(--navy-black) !important;
   font-size: 0.88rem;
   font-weight: 500;
@@ -3605,16 +3605,16 @@ body.public-layout { padding-top: 0; }
   border-radius: 10px;
   transition: background-color .15s ease, color .15s ease;
 }
-.public-navbar.navbar-dark .nav-link:hover,
-.public-navbar.navbar-dark .nav-link:focus-visible {
+.public-navbar .nav-link:hover,
+.public-navbar .nav-link:focus-visible {
   background: rgba(10, 111, 182, 0.06);
   color: var(--medical-blue) !important;
 }
-.public-navbar.navbar-dark .nav-link.active {
+.public-navbar .nav-link.active {
   color: var(--medical-blue) !important;
   background: rgba(10, 111, 182, 0.10);
 }
-.public-navbar.navbar-dark .btn-primary {
+.public-navbar .btn-primary {
   background: var(--medical-blue) !important;
   border-color: var(--medical-blue) !important;
   color: #fff !important;
@@ -3624,13 +3624,13 @@ body.public-layout { padding-top: 0; }
   font-weight: 600;
   font-size: 0.86rem;
 }
-.public-navbar.navbar-dark .btn-primary:hover,
-.public-navbar.navbar-dark .btn-primary:focus-visible {
+.public-navbar .btn-primary:hover,
+.public-navbar .btn-primary:focus-visible {
   background: var(--dark-navy) !important;
   border-color: var(--navy-black) !important;
   box-shadow: 0 14px 28px rgba(10, 111, 182, 0.28);
 }
-.public-navbar.navbar-dark .btn-outline-primary {
+.public-navbar .btn-outline-primary {
   color: var(--medical-blue) !important;
   border-color: rgba(10, 111, 182, 0.30) !important;
   background: #fff !important;
@@ -3639,8 +3639,8 @@ body.public-layout { padding-top: 0; }
   font-weight: 600;
   font-size: 0.86rem;
 }
-.public-navbar.navbar-dark .btn-outline-primary:hover,
-.public-navbar.navbar-dark .btn-outline-primary:focus-visible {
+.public-navbar .btn-outline-primary:hover,
+.public-navbar .btn-outline-primary:focus-visible {
   background: rgba(10, 111, 182, 0.05) !important;
   border-color: rgba(10, 111, 182, 0.42) !important;
   color: var(--medical-blue) !important;

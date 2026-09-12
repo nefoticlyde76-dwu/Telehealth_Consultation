@@ -4,38 +4,38 @@
      Medical Blue · Emerald Green · Dark Navy · Soft Cyan
      Light canvas + solid colour. Flat only — no decorative gradients.
      ============================================================ */
-  --medical-blue: #0A6FB6;
-  --emerald-green: #18A558;
-  --dark-navy: #17375E;
-  --soft-cyan: #40C4FF;
+  --medical-blue: #0B78C8;
+  --emerald-green: #18A56B;
+  --dark-navy: #0B3558;
+  --soft-cyan: #4EA4EE;
   --white: #FFFFFF;
 
-  --light-gray: #F5F7FA;
-  --medium-gray: #D9E2EC;
-  --dark-gray: #4A5568;
-  --navy-black: #102A43;
+  --light-gray: #F4F8FC;
+  --medium-gray: #D8E6F1;
+  --dark-gray: #60758A;
+  --navy-black: #12375A;
 
-  --royal-blue: #1565C0;
-  --mint-green: #D8F3E8;
-  --pale-blue: #E3F2FD;
-  --medical-blue-hover: #085A94;
-  --emerald-green-hover: #147A45;
-  --danger: #DC3545;
-  --warning: #F59E0B;
-  --success-dark: #147A45;
-  --success-text: #147A45;
-    --medical-blue-rgb: 10, 111, 182;
-  --emerald-green-rgb: 24, 165, 88;
-  --dark-navy-rgb: 23, 55, 94;
-  --soft-cyan-rgb: 64, 196, 255;
+  --royal-blue: #0B78C8;
+  --mint-green: #DDF5EA;
+  --pale-blue: #EAF5FD;
+  --medical-blue-hover: #0964A8;
+  --emerald-green-hover: #148058;
+  --danger: #D95757;
+  --warning: #D99A19;
+  --success-dark: #148058;
+  --success-text: #148058;
+    --medical-blue-rgb: 11, 120, 200;
+  --emerald-green-rgb: 24, 165, 107;
+  --dark-navy-rgb: 11, 53, 88;
+  --soft-cyan-rgb: 78, 164, 238;
   --white-rgb: 255, 255, 255;
-  --light-gray-rgb: 245, 247, 250;
-  --medium-gray-rgb: 217, 226, 236;
-  --dark-gray-rgb: 74, 85, 104;
-  --navy-black-rgb: 16, 42, 67;
-  --royal-blue-rgb: 21, 101, 192;
-  --mint-green-rgb: 216, 243, 232;
-  --pale-blue-rgb: 227, 242, 253;
+  --light-gray-rgb: 244, 248, 252;
+  --medium-gray-rgb: 216, 230, 241;
+  --dark-gray-rgb: 96, 117, 138;
+  --navy-black-rgb: 18, 55, 90;
+  --royal-blue-rgb: 11, 120, 200;
+  --mint-green-rgb: 221, 245, 234;
+  --pale-blue-rgb: 234, 245, 253;
 
   /* Backward-compatible LUNA aliases → new palette */
   --luna-light: var(--pale-blue);
@@ -95,13 +95,13 @@
   --ds-chart-line: var(--medical-blue);
   --ds-chart-fill: rgba(var(--medical-blue-rgb), 0.12);
   --ds-chart-grid: var(--medium-gray);
-  --ds-shadow-card: 0 1px 3px rgba(var(--dark-navy-rgb), 0.06);
-  --ds-shadow-overlay: 0 8px 24px rgba(var(--dark-navy-rgb), 0.10);
+  --ds-shadow-card: 0 2px 8px rgba(19, 58, 89, 0.04);
+  --ds-shadow-overlay: 0 12px 32px rgba(19, 58, 89, 0.09);
   --ds-radius-sm: 8px;
-  --ds-radius-md: 10px;
-  --ds-radius-lg: 12px;
-  --ds-radius-xl: 12px;
-  --ds-radius-hero: 12px;
+  --ds-radius-md: 14px;
+  --ds-radius-lg: 18px;
+  --ds-radius-xl: 22px;
+  --ds-radius-hero: 24px;
   --ds-radius-pill: 9999px;
   --ds-headline-green: var(--emerald-green);
   --ds-page: var(--light-gray);
@@ -114,13 +114,49 @@
   --ds-font: Poppins, Inter, "Segoe UI", -apple-system, Roboto, sans-serif;
 
   /* Chrome refinements — same MBPHA brand, calmer healthcare SaaS surfaces */
-  --ds-sidebar-bg: #12263F;
-  --ds-sidebar-bg-rgb: 18, 38, 63;
-  --ds-accent-purple: #5B5FC7;
-  --ds-accent-purple-rgb: 91, 95, 199;
-  --ds-accent-purple-bg: rgba(91, 95, 199, 0.10);
-  --ds-shadow-card: 0 1px 2px rgba(var(--dark-navy-rgb), 0.05);
+  --ds-sidebar-bg: #102B45;
+  --ds-sidebar-bg-rgb: 16, 43, 69;
+  --ds-accent-purple: #6A63C8;
+  --ds-accent-purple-rgb: 106, 99, 200;
+  --ds-accent-purple-bg: #EEEFFF;
+  --ds-shadow-card: 0 2px 8px rgba(19, 58, 89, 0.04);
   --surface-purple: var(--ds-accent-purple-bg);
+
+  --app-primary: #0B78C8;
+  --app-primary-dark: #0B3558;
+  --app-primary-deep: #102B45;
+  --app-primary-light: #EAF5FD;
+  --app-primary-soft: #DDF0FC;
+  --app-background: #F4F8FC;
+  --app-surface: #FFFFFF;
+  --app-surface-soft: #F8FBFE;
+  --app-border: #D8E6F1;
+  --app-border-strong: #C8DCEA;
+  --app-text: #12375A;
+  --app-text-strong: #0B3152;
+  --app-muted: #60758A;
+  --app-success: #18A56B;
+  --app-success-bg: #DDF5EA;
+  --app-warning: #D99A19;
+  --app-warning-bg: #FFF0CF;
+  --app-danger: #D95757;
+  --app-danger-bg: #FFE3E3;
+  --app-info: #277FC1;
+  --app-info-bg: #E4F2FF;
+  --app-purple: #7B61D1;
+  --app-purple-bg: #EEE9FF;
+  --app-radius-sm: 10px;
+  --app-radius-md: 14px;
+  --app-radius-lg: 18px;
+  --app-shadow-sm: 0 2px 8px rgba(19, 58, 89, 0.04);
+  --app-shadow-md: 0 6px 20px rgba(19, 58, 89, 0.06);
+  --app-shadow-lg: 0 12px 32px rgba(19, 58, 89, 0.09);
+  --role-patient: #0B78C8;
+  --role-patient-soft: #E7F4FD;
+  --role-doctor: #138C73;
+  --role-doctor-soft: #E2F6EF;
+  --role-admin: #6A63C8;
+  --role-admin-soft: #EEEFFF;
 
   --ds-navy-rgb: var(--dark-navy-rgb);
   --ds-accent-rgb: var(--medical-blue-rgb);
@@ -156,8 +192,8 @@
   --surface-slate: var(--light-gray);
   --surface-cyan-solid: rgba(var(--soft-cyan-rgb), 0.12);
 
-  --shadow-soft: 0 8px 20px rgba(var(--dark-navy-rgb), 0.08);
-  --shadow-card: 0 1px 2px rgba(var(--dark-navy-rgb), 0.06);
+  --shadow-soft: 0 6px 20px rgba(19, 58, 89, 0.06);
+  --shadow-card: 0 2px 8px rgba(19, 58, 89, 0.04);
   --shadow-brand: none;
   --shadow-success: none;
   --shadow-focus: 0 0 0 0.25rem rgba(var(--medical-blue-rgb), 0.16);
@@ -165,7 +201,7 @@
   --radius-sm: var(--ds-radius-sm);
   --radius-md: var(--ds-radius-md);
   --radius-lg: var(--ds-radius-lg);
-  --radius-xl: 16px;
+  --radius-xl: 22px;
   --radius-sm-new: var(--ds-radius-md);
   --r-table: var(--ds-radius-lg);
   --r-stat-icon: var(--ds-radius-sm);
@@ -212,7 +248,7 @@
   --bs-font-sans-serif: var(--ds-font);
   --bs-border-radius: var(--ds-radius-md);
   --bs-border-radius-lg: var(--ds-radius-lg);
-  --bs-border-radius-xl: 16px;
+  --bs-border-radius-xl: 22px;
 
   /* Table headers — Medical Blue is the Arctic Ocean primary treatment */
   --table-header-bg: var(--medical-blue);
@@ -223,7 +259,62 @@
   --table-row-header-bg: var(--pale-blue);
   --table-row-header-color: var(--dark-navy);
 }
+
+html[data-theme="dark"],
+.theme-dark {
+  --medical-blue: #4EA4EE;
+  --medical-blue-hover: #6BB4F2;
+  --dark-navy: #F0F6FB;
+  --navy-black: #F0F6FB;
+  --light-gray: #0B1724;
+  --medium-gray: #28475E;
+  --dark-gray: #A4B8C9;
+  --pale-blue: #17344C;
+  --mint-green: #16382C;
+  --white: #13283B;
+  --emerald-green: #34C18B;
+  --danger: #EE7777;
+  --warning: #E7B34B;
+  --ds-canvas: #0B1724;
+  --ds-card: #13283B;
+  --ds-border: #28475E;
+  --ds-text: #F0F6FB;
+  --ds-text-secondary: #A4B8C9;
+  --ds-text-muted: #A4B8C9;
+  --ds-sidebar-bg: #102B45;
+  --app-background: #0B1724;
+  --app-surface: #13283B;
+  --app-surface-soft: #17344C;
+  --app-border: #28475E;
+  --app-text: #F0F6FB;
+  --app-text-strong: #F0F6FB;
+  --app-muted: #A4B8C9;
+  --app-primary: #4EA4EE;
+  --app-success: #34C18B;
+  --app-warning: #E7B34B;
+  --app-danger: #EE7777;
+  --surface-page: #0B1724;
+  --surface-card: #13283B;
+  --text: #F0F6FB;
+  --text-muted: #A4B8C9;
+  --border: #28475E;
+  --color-background: #0B1724;
+  --color-surface: #13283B;
+  --color-text: #F0F6FB;
+  --color-text-muted: #A4B8C9;
+  --color-border: #28475E;
+  --bs-body-bg: #0B1724;
+  --bs-body-color: #F0F6FB;
+  --bs-border-color: #28475E;
+  --bs-heading-color: #F0F6FB;
+  --table-header-bg: #0B78C8;
+  --table-row-header-bg: #17344C;
+  --ds-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --ds-shadow-overlay: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
 html {
+
   scroll-behavior: smooth;
   margin: 0;
   padding: 0;

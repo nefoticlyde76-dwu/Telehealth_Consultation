@@ -285,7 +285,7 @@ body.public-layout .public-navbar .navbar-toggler-icon {
   filter: brightness(0);
 }
 
-body.public-layout .public-navbar.navbar-dark .nav-link {
+body.public-layout .public-navbar .nav-link {
   color: var(--dark-navy) !important;
   font-weight: 500;
   font-size: 14px;
@@ -298,31 +298,31 @@ body.public-layout .public-navbar.navbar-dark .nav-link {
   transition: background-color 160ms ease, color 160ms ease;
 }
 
-body.public-layout .public-navbar.navbar-dark .nav-link:hover {
+body.public-layout .public-navbar .nav-link:hover {
   color: var(--medical-blue) !important;
   background: rgba(10, 111, 182, 0.06) !important;
 }
 
-body.public-layout .public-navbar.navbar-dark .nav-link.active {
+body.public-layout .public-navbar .nav-link.active {
   background: rgba(64, 196, 255, 0.28) !important;
   color: var(--medical-blue) !important;
   font-weight: 600;
 }
 
-body.public-layout .public-navbar.navbar-dark .btn-outline-primary.is-active,
+body.public-layout .public-navbar .btn-outline-primary.is-active,
 body.public-layout .public-nav-offcanvas .btn-outline-primary.is-active {
   color: var(--medical-blue) !important;
   border-color: var(--medical-blue) !important;
   background: rgba(64, 196, 255, 0.22) !important;
 }
 
-body.public-layout .public-navbar.navbar-dark .btn-primary.is-active,
+body.public-layout .public-navbar .btn-primary.is-active,
 body.public-layout .public-nav-offcanvas .btn-primary.is-active {
   background: var(--dark-navy) !important;
   border-color: var(--navy-black) !important;
 }
 
-body.public-layout .public-navbar.navbar-dark .btn,
+body.public-layout .public-navbar .btn,
 body.public-layout .public-navbar .btn,
 body.public-layout .public-nav-offcanvas .btn {
   min-height: 44px;
@@ -341,15 +341,15 @@ body.public-layout .public-nav-offcanvas .btn {
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
-body.public-layout .public-navbar.navbar-dark .btn-outline-primary,
+body.public-layout .public-navbar .btn-outline-primary,
 body.public-layout .public-nav-offcanvas .btn-outline-primary {
   color: var(--medical-blue) !important;
   border: 1px solid var(--medium-gray) !important;
   background: var(--white) !important;
 }
 
-body.public-layout .public-navbar.navbar-dark .btn-outline-primary:hover,
-body.public-layout .public-navbar.navbar-dark .btn-outline-primary:focus-visible,
+body.public-layout .public-navbar .btn-outline-primary:hover,
+body.public-layout .public-navbar .btn-outline-primary:focus-visible,
 body.public-layout .public-nav-offcanvas .btn-outline-primary:hover,
 body.public-layout .public-nav-offcanvas .btn-outline-primary:focus-visible {
   color: var(--medical-blue) !important;
@@ -357,15 +357,15 @@ body.public-layout .public-nav-offcanvas .btn-outline-primary:focus-visible {
   background: var(--pale-blue) !important;
 }
 
-body.public-layout .public-navbar.navbar-dark .btn-primary,
+body.public-layout .public-navbar .btn-primary,
 body.public-layout .public-nav-offcanvas .btn-primary {
   background: var(--medical-blue) !important;
   border-color: var(--medical-blue) !important;
   color: var(--white) !important;
 }
 
-body.public-layout .public-navbar.navbar-dark .btn-primary:hover,
-body.public-layout .public-navbar.navbar-dark .btn-primary:focus-visible,
+body.public-layout .public-navbar .btn-primary:hover,
+body.public-layout .public-navbar .btn-primary:focus-visible,
 body.public-layout .public-nav-offcanvas .btn-primary:hover,
 body.public-layout .public-nav-offcanvas .btn-primary:focus-visible {
   background: var(--medical-blue-hover) !important;
@@ -1198,8 +1198,8 @@ body.public-page-layout {
   overflow: hidden;
   display: flex;
   align-items: flex-end;
-  min-height: 280px;
-  padding: 56px 0 48px;
+  min-height: 380px;
+  padding: 72px 0 56px;
   color: var(--lp-white);
   background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -1762,7 +1762,7 @@ body.home-landing-layout .pp-cta {
   body.home-landing-layout .lp-hero__cta,
   body.home-landing-layout .lp-hero__cta--secondary,
   body.home-landing-layout .lp-workflow__card,
-  body.public-layout .public-navbar.navbar-dark .nav-link,
+  body.public-layout .public-navbar .nav-link,
   body.public-layout .public-navbar .btn,
   .pp-step,
   .pp-cta__secondary {

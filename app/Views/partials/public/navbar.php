@@ -24,7 +24,7 @@ $loginActive = $currentPath === '/login';
 $registerActive = $currentPath === '/register';
 ?>
 <div class="public-agh-layer" aria-hidden="true"></div>
-<nav class="navbar navbar-expand-xl navbar-dark public-navbar" aria-label="MBPHA TeleHealth public navigation">
+<nav class="navbar navbar-expand-xl navbar-light public-navbar" aria-label="MBPHA TeleHealth public navigation">
   <div class="container">
     <?php
     $brandVariant = 'navbar';

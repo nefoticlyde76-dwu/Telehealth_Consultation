@@ -7,13 +7,14 @@ $pageLede = $pageLede ?? '';
 $pageBadge = $pageBadge ?? 'Milne Bay Provincial Health Authority';
 $pageTitleHtml = $pageTitleHtml ?? \App\Helpers\Helper::escape($pageTitle);
 $pageLedeHtml = $pageLedeHtml ?? \App\Helpers\Helper::escape($pageLede);
+$pageIntroVisual = (string) ($pageIntroVisual ?? '');
 ?>
-<header class="pp-intro">
+<header class="pp-intro medical-hero<?= $pageIntroVisual !== '' ? ' pp-intro--visual' : '' ?>">
   <div class="pp-intro__surface" aria-hidden="true"></div>
 
   <div class="pp-intro__inner">
     <span class="pp-intro__badge">
-      <i class="bi bi-shield-check" aria-hidden="true"></i>
+      <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
       <span class="pp-intro__badge-full"><?= \App\Helpers\Helper::escape($pageBadge) ?></span>
       <span class="pp-intro__badge-short">MBPHA</span>
     </span>
@@ -29,4 +30,13 @@ $pageLedeHtml = $pageLedeHtml ?? \App\Helpers\Helper::escape($pageLede);
       <p class="pp-intro__lede pp-intro__lede--short"><?= $pageLedeShortHtml ?></p>
     <?php endif; ?>
   </div>
+  <?php if ($pageIntroVisual === 'stethoscope'): ?>
+    <div class="pp-intro__visual" aria-hidden="true">
+      <p class="pp-intro__visual-tagline">Better Access<br>Better Health</p>
+      <img src="<?= \App\Helpers\Helper::asset('images/stetescope.png') ?>" alt="">
+    </div>
+  <?php endif; ?>
 </header>
+<?php
+$pageIntroVisual = '';
+?>

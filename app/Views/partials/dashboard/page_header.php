@@ -11,7 +11,7 @@ if (!in_array($pageHeaderHeadingTag, ['h1', 'h2'], true)) {
 }
 ?>
 
-<div class="ux-page-header">
+<div class="ux-page-header app-page-header">
   <div class="ux-page-header__left">
     <?php if ($pageHeaderBreadcrumbs !== []): ?>
       <nav aria-label="Breadcrumb">

@@ -178,7 +178,7 @@ body.home-landing-layout .lp-workflow__title-short,
   }
 
   .dashboard-layout .ux-summary-stats {
-    display: none !important;
+    display: block;
   }
 
   .dashboard-layout .dropdown-menu.notification-panel,

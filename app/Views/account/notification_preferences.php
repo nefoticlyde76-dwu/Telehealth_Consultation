@@ -22,7 +22,7 @@ $dashboardHome = \App\Services\AuthService::getRoleRedirectUrl($dashboardRole);
   </div>
 </section>
 
-<div class="ux-card" style="max-width: 640px;">
+<div class="ux-card app-form-card app-form-card--narrow">
   <div class="card-body p-4">
     <form method="POST" action="<?= Helper::url('/account/notifications/preferences') ?>">
       <input type="hidden" name="_token" value="<?= Helper::escape($csrfToken) ?>">

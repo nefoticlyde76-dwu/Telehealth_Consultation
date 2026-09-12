@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/style.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/design-system.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/dashboard-ui.css') ?>">
+  <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/app-ui.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/mbpha-calendar.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/wallet-heroes.css') ?>">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/user-profile.css') ?>">
@@ -60,7 +61,7 @@
       <?php require __DIR__ . '/../partials/dashboard/sidebar.php'; ?>
 
       <div class="dashboard-main">
-        <main class="dashboard-content" id="dashboard-main-content">
+        <main class="dashboard-content app-page" id="dashboard-main-content">
           <?= $content ?>
         </main>
       </div>
