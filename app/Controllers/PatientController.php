@@ -788,6 +788,7 @@ class PatientController extends Controller
             'formData' => $formData,
             'statusMessage' => Session::getFlash('status'),
             'csrfToken' => Csrf::generate(),
+            'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/booking-confirm.css') . '">',
         ], 'layouts/dashboard');
     }
 
