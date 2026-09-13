@@ -566,7 +566,7 @@
 /* ---------- Prescription ---------- */
 .cr-page .cr-rx {
   padding: 18px;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .cr-page .cr-rx__header {

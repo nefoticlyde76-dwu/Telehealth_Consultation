@@ -12,53 +12,46 @@ $recordStatus = (string) ($record['record_status'] ?? '');
 $isIssued = $prescriptions !== [];
 $patientName = (string) ($request['patient_name'] ?? 'Patient');
 $rxEditable = $canCreate;
+$consultationUrl = \App\Helpers\Helper::url('/doctor/consultations/' . $requestId);
 ?>
 
-<section class="mb-4">
+<section class="rx-page mb-4">
   <?php require __DIR__ . '/../../partials/shared/alerts.php'; ?>
 
-  <div class="ux-page-header d-flex flex-column flex-xl-row justify-content-between align-items-xl-start gap-3 mb-4">
+  <header class="ux-page-header rx-header">
     <div class="ux-page-header__left">
-      <ol class="ux-breadcrumb">
-        <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
-        <li><a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>">Consultations</a></li>
-        <li class="active">Prescription</li>
-      </ol>
-      <h2 class="ux-page-header__title">Prescription</h2>
-      <div class="mt-3">
-        <?php
-        $personName = $patientName;
-        $personPhoto = $request['patient_photo_path'] ?? null;
-        $personMeta = $isIssued
-          ? 'Issued prescription'
-          : 'Create a prescription for this completed consultation';
-        $personSize = 'sm';
-        require __DIR__ . '/../../partials/shared/person_row.php';
-        ?>
-      </div>
-      <p class="ux-page-header__subtitle mb-0 mt-2">
+      <nav aria-label="Breadcrumb">
+        <ol class="ux-breadcrumb">
+          <li><a href="<?= \App\Helpers\Helper::url('/doctor/dashboard') ?>">Dashboard</a></li>
+          <li><a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>">Consultations</a></li>
+          <li class="active">Prescription</li>
+        </ol>
+      </nav>
+      <p class="rx-page__eyebrow">Prescription</p>
+      <h1 class="ux-page-header__title">Prescription</h1>
+      <p class="ux-page-header__subtitle">
         <?= $isIssued
           ? 'Issued prescription for ' . \App\Helpers\Helper::escape($patientName) . '.'
-          : 'Create a prescription for the completed consultation with ' . \App\Helpers\Helper::escape($patientName) . '.' ?>
+          : 'Create and issue a prescription for this patient.' ?>
       </p>
     </div>
-    <div class="ux-page-header__right d-flex flex-wrap gap-2">
-      <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . $requestId) ?>" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-clipboard2-pulse me-1"></i>
+    <div class="ux-page-header__right rx-header__actions">
+      <a href="<?= $consultationUrl ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+        Back to Consultation
+      </a>
+      <a href="<?= $consultationUrl ?>" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-clipboard2-pulse me-1" aria-hidden="true"></i>
         Clinical record
       </a>
       <?php if ($isIssued): ?>
         <a href="<?= \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/download-prescription') ?>" class="btn btn-primary btn-sm">
-          <i class="bi bi-download me-1"></i>
+          <i class="bi bi-download me-1" aria-hidden="true"></i>
           Download Prescription
         </a>
       <?php endif; ?>
-      <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>
-        Consultations
-      </a>
     </div>
-  </div>
+  </header>
 
   <?php if ($status !== 'Completed' || $recordStatus !== \App\Models\ConsultationRecord::STATUS_FINAL): ?>
     <div class="alert alert-warning" role="alert">
@@ -77,33 +70,55 @@ $rxEditable = $canCreate;
   <?php endif; ?>
 
   <?php if ($canCreate): ?>
-    <form method="POST" action="<?= \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/prescription') ?>" id="rx-create-form" class="rx-page-form" novalidate>
+    <form
+      method="POST"
+      action="<?= \App\Helpers\Helper::url('/doctor/consultations/' . $requestId . '/prescription') ?>"
+      id="rx-create-form"
+      class="rx-page-form"
+      data-rx-patient-name="<?= \App\Helpers\Helper::escape($patientName) ?>"
+      novalidate
+    >
       <input type="hidden" name="_token" value="<?= \App\Helpers\Helper::escape($csrfToken) ?>">
       <?php require __DIR__ . '/../../partials/shared/_prescription_document.php'; ?>
-      <div class="d-flex flex-wrap gap-2 justify-content-center mt-3 rx-print-hide">
-        <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-secondary">
+
+      <section class="rx-review-card rx-screen-only" aria-labelledby="rx-review-heading">
+        <div class="rx-card__head">
+          <h2 class="rx-card__title" id="rx-review-heading">Review</h2>
+          <p class="rx-card__hint">Confirm the patient and medication details before saving.</p>
+        </div>
+        <div id="rx-review-summary" class="rx-review__body">
+          <p class="rx-review__empty">Enter a medication to see a concise summary here.</p>
+        </div>
+      </section>
+
+      <div class="rx-actions rx-print-hide">
+        <a href="<?= \App\Helpers\Helper::url('/doctor/consultations') ?>" class="btn btn-outline-secondary rx-actions__skip">
           Skip — no medication required
         </a>
+        <a href="<?= $consultationUrl ?>" class="btn btn-outline-secondary rx-actions__cancel">
+          Cancel
+        </a>
         <button type="button"
-                class="btn btn-primary"
+                class="btn btn-primary rx-actions__submit"
                 id="rx-finalize-btn"
                 data-bs-toggle="modal"
                 data-bs-target="#rx-save-modal">
-          <i class="bi bi-check2-circle me-1"></i>
+          <i class="bi bi-check2-circle me-1" aria-hidden="true"></i>
           Save Prescription
         </button>
       </div>
     </form>
 
     <div class="modal fade" id="rx-save-modal" tabindex="-1" aria-labelledby="rx-save-modal-label" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content rounded-3">
           <div class="modal-header border-bottom">
             <h2 class="modal-title h5" id="rx-save-modal-label">Save this prescription?</h2>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p class="mb-2">Review the medication details before saving. Patient and doctor identity are taken from the completed consultation and cannot be changed.</p>
+            <p class="mb-3">Review the medication details before saving. Patient and doctor identity are taken from the completed consultation and cannot be changed.</p>
+            <div id="rx-modal-review" class="rx-review__body rx-review__body--modal"></div>
             <p class="mb-0 text-muted small">Saving links this prescription to the finalized consultation. It cannot be edited afterwards.</p>
           </div>
           <div class="modal-footer">
