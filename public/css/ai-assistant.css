@@ -1,8 +1,8 @@
 .medimate {
-  --medimate-primary: #0788d9;
-  --medimate-primary-dark: #066daf;
-  --medimate-primary-deep: #07518a;
-  --medimate-primary-light: #eaf7fe;
+  --medimate-primary: var(--medical-blue, #0b7bc5);
+  --medimate-primary-dark: var(--medical-blue-hover, #0868a8);
+  --medimate-primary-deep: var(--dark-navy, #063b66);
+  --medimate-primary-light: var(--pale-blue, #eaf5fc);
   --medimate-surface: #ffffff;
   --medimate-background: #f8fcff;
   --medimate-assistant: #eaf5fc;

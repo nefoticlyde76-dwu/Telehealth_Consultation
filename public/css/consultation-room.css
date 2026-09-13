@@ -18,8 +18,8 @@
   --vc-surface: var(--white);
   --vc-border: var(--medium-gray);
   --vc-muted: var(--dark-gray);
-  --vc-radius: 14px;
-  --vc-radius-sm: 10px;
+  --vc-radius: var(--mbpha-radius-lg, 20px);
+  --vc-radius-sm: 12px;
 }
 
 /* ------------------------------
@@ -268,9 +268,9 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--table-header-color, var(--white));
-  background: var(--table-header-bg, var(--medical-blue));
-  border-bottom: 1px solid var(--table-header-border, rgba(255, 255, 255, 0.16));
+  color: var(--table-header-color, var(--welcome-text, #082f50));
+  background: var(--table-header-bg, var(--welcome-bg, #f4f9fd));
+  border-bottom: 1px solid var(--table-header-border, var(--welcome-border, #d8e6f0));
 }
 
 .vc-clinical-doc__table th,

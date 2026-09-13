@@ -10,7 +10,7 @@
   --soft-cyan: #19BDF4;
   --white: #FFFFFF;
 
-  --light-gray: #F3F7FB;
+  --light-gray: #F4F9FD;
   --medium-gray: #D8E6F0;
   --dark-gray: #637B91;
   --navy-black: #082F50;
@@ -29,7 +29,7 @@
   --dark-navy-rgb: 6, 59, 102;
   --soft-cyan-rgb: 25, 189, 244;
   --white-rgb: 255, 255, 255;
-  --light-gray-rgb: 243, 247, 251;
+  --light-gray-rgb: 244, 249, 253;
   --medium-gray-rgb: 216, 230, 240;
   --dark-gray-rgb: 99, 123, 145;
   --navy-black-rgb: 8, 47, 80;
@@ -95,11 +95,11 @@
   --ds-chart-line: var(--medical-blue);
   --ds-chart-fill: rgba(var(--medical-blue-rgb), 0.12);
   --ds-chart-grid: var(--medium-gray);
-  --ds-shadow-card: 0 6px 20px rgba(15, 58, 89, 0.07);
+  --ds-shadow-card: 0 10px 22px rgba(11, 82, 132, 0.08);
   --ds-shadow-overlay: 0 12px 32px rgba(15, 58, 89, 0.11);
   --ds-radius-sm: 8px;
   --ds-radius-md: 12px;
-  --ds-radius-lg: 16px;
+  --ds-radius-lg: 20px;
   --ds-radius-xl: 20px;
   --ds-radius-hero: 24px;
   --ds-radius-pill: 9999px;
@@ -126,7 +126,7 @@
   --app-primary-deep: #082F50;
   --app-primary-light: #EAF5FC;
   --app-primary-soft: #DDF2FD;
-  --app-background: #F3F7FB;
+  --app-background: #F4F9FD;
   --app-surface: #FFFFFF;
   --app-surface-soft: #F4F9FD;
   --app-border: #D8E6F0;
@@ -146,10 +146,41 @@
   --app-purple-bg: #EEE9FF;
   --app-radius-sm: 8px;
   --app-radius-md: 12px;
-  --app-radius-lg: 16px;
+  --app-radius-lg: 20px;
   --app-shadow-sm: 0 2px 8px rgba(15, 58, 89, 0.05);
-  --app-shadow-md: 0 6px 20px rgba(15, 58, 89, 0.07);
+  --app-shadow-md: 0 10px 22px rgba(11, 82, 132, 0.08);
   --app-shadow-lg: 0 12px 32px rgba(15, 58, 89, 0.11);
+
+  /* Welcome banner is the visual reference. These aliases must stay in sync. */
+  --mbpha-primary: var(--medical-blue);
+  --mbpha-primary-soft: #E6F3FF;
+  --mbpha-surface: var(--white);
+  --mbpha-background: #F4F9FD;
+  --mbpha-border: #D8E6F0;
+  --mbpha-text: #082F50;
+  --mbpha-muted: #637B91;
+  --mbpha-radius-sm: 8px;
+  --mbpha-radius-md: 12px;
+  --mbpha-radius-lg: 20px;
+  --mbpha-shadow-sm: 0 10px 22px rgba(11, 82, 132, 0.08);
+  --mbpha-shadow-md: 0 12px 32px rgba(15, 58, 89, 0.11);
+  --mbpha-space-1: 8px;
+  --mbpha-space-2: 12px;
+  --mbpha-space-3: 18px;
+  --mbpha-space-4: 24px;
+  --welcome-primary: var(--medical-blue);
+  --welcome-primary-dark: var(--dark-navy);
+  --welcome-bg: #F4F9FD;
+  --welcome-surface: #FFFFFF;
+  --welcome-border: #D8E6F0;
+  --welcome-text: #082F50;
+  --welcome-muted: #637B91;
+  --welcome-radius: 20px;
+  --welcome-shadow: 0 12px 32px rgba(15, 58, 89, 0.11);
+  --welcome-card-border: #DDECF7;
+  --welcome-icon-bg: #E6F3FF;
+  --welcome-chip-bg: #DDF3FF;
+  --welcome-chip-text: #0969C7;
   --role-patient: #0B7BC5;
   --role-patient-soft: #E7F4FD;
   --role-doctor: #14A86A;
@@ -249,10 +280,10 @@
   --bs-border-radius-lg: var(--ds-radius-lg);
   --bs-border-radius-xl: 22px;
 
-  /* Table headers — Medical Blue is the Arctic Ocean primary treatment */
-  --table-header-bg: var(--medical-blue);
-  --table-header-color: var(--white);
-  --table-header-border: rgba(var(--white-rgb), 0.16);
+  /* Table headers follow the Welcome Banner surface language */
+  --table-header-bg: var(--welcome-bg, #F4F9FD);
+  --table-header-color: var(--welcome-text, #082F50);
+  --table-header-border: var(--welcome-border, #D8E6F0);
   --table-header-secondary-bg: var(--dark-navy);
   --table-header-secondary-color: var(--white);
   --table-row-header-bg: var(--pale-blue);
@@ -306,7 +337,9 @@ html[data-theme="dark"],
   --bs-body-color: #F0F6FA;
   --bs-border-color: #29485D;
   --bs-heading-color: #F0F6FA;
-  --table-header-bg: #0B7BC5;
+  --table-header-bg: #17354C;
+  --table-header-color: #F0F6FA;
+  --table-header-border: #29485D;
   --table-row-header-bg: #17354C;
   --ds-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.18);
   --ds-shadow-overlay: 0 12px 28px rgba(0, 0, 0, 0.28);
@@ -547,7 +580,7 @@ textarea.form-control {
   --bs-table-accent-bg: transparent;
 }
 
-/* Primary data-table headers: Medical Blue (Arctic Ocean) + white text */
+/* Primary data-table headers: Welcome Banner surface + navy text */
 .table thead th,
 .table > thead > tr > th,
 .ux-table thead th,

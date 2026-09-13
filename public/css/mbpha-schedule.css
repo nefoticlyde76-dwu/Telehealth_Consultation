@@ -60,7 +60,7 @@
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid var(--medium-gray);
-  border-radius: 8px;
+  border-radius: var(--ds-radius-md, 12px);
   background: var(--white);
   color: var(--medical-blue);
   font-size: 0.8125rem;
@@ -202,7 +202,7 @@
   z-index: 4;
   background: var(--table-header-bg);
   color: var(--table-header-color);
-  border-right-color: rgba(var(--white-rgb), 0.18);
+  border-right-color: var(--medium-gray);
 }
 
 .mbpha-avail__table tbody th {

@@ -14,8 +14,8 @@
   --up-warning: #9d6a00;
   --up-danger: var(--danger, #D95757);
   --up-destroy: #b42318;
-  --up-radius-card: 18px;
-  --up-radius-tile: 14px;
+  --up-radius-card: var(--mbpha-radius-lg, 20px);
+  --up-radius-tile: 16px;
   --up-gap: 20px;
   margin: 0;
   padding: 0 0 24px;

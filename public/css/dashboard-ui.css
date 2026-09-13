@@ -34,7 +34,7 @@ html:has(body.dashboard-layout) {
   --dash-slate: var(--navy-black);
   --dash-slate-dark: var(--navy-black);
   --dash-muted: var(--dark-gray);
-  --dash-canvas: var(--light-gray);
+  --dash-canvas: var(--welcome-bg, #f4f9fd);
   --dash-white: var(--white);
   --dash-teal: var(--soft-cyan);
   --dash-teal-dark: var(--medical-blue);
@@ -56,8 +56,8 @@ html:has(body.dashboard-layout) {
   --dash-warning: #B45309;
   --dash-warning-bg: rgba(245, 158, 11, 0.14);
   --dash-radius: 12px;
-  --dash-radius-lg: 16px;
-  --dash-shadow: 0 6px 20px rgba(15, 58, 89, 0.07);
+  --dash-radius-lg: 20px;
+  --dash-shadow: 0 10px 22px rgba(11, 82, 132, 0.08);
   --dash-sidebar: 232px;
   --dash-sidebar-collapsed: 72px;
   --dash-rail-tile: 44px;
@@ -71,9 +71,9 @@ html:has(body.dashboard-layout) {
   --dash-sidebar-hover: rgba(255, 255, 255, 0.06);
   --dash-sidebar-active: #0c7bc6;
   --dash-heading: var(--dark-navy);
-  --table-header-bg: var(--medical-blue);
-  --table-header-color: var(--white);
-  --table-header-border: rgba(var(--white-rgb), 0.16);
+  --table-header-bg: var(--welcome-bg, #f4f9fd);
+  --table-header-color: var(--welcome-text, #082f50);
+  --table-header-border: var(--welcome-border, #d8e6f0);
   --table-header-secondary-bg: var(--dark-navy);
   --table-header-secondary-color: var(--white);
   --table-row-header-bg: var(--pale-blue);
@@ -1498,13 +1498,14 @@ html:has(body.dashboard-layout) {
   align-items: flex-start;
   gap: 14px;
   background: var(--dash-white) !important;
-  border: 1px solid var(--dash-border) !important;
-  border-radius: 12px !important;
+  border: 1px solid var(--welcome-card-border, var(--dash-border)) !important;
+  border-radius: var(--dash-radius-lg) !important;
   box-shadow: var(--dash-shadow) !important;
   padding: 18px 18px 16px !important;
   min-height: 118px;
   text-decoration: none;
   color: inherit;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .dashboard-layout .ux-stat--stack {
@@ -1516,9 +1517,9 @@ html:has(body.dashboard-layout) {
 }
 
 .dashboard-layout .ux-stat--stack .ux-stat__icon {
-  width: 36px;
-  height: 36px;
-  font-size: 16px;
+  width: 48px;
+  height: 48px;
+  font-size: 1.15rem;
 }
 
 .dashboard-layout .ux-stat--stack .ux-stat__label {
@@ -1719,8 +1720,12 @@ html:has(body.dashboard-layout) {
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.dashboard-layout .ux-card:hover {
-  border-color: rgba(64, 196, 255, 0.45) !important;
+.dashboard-layout .ux-card:hover,
+.dashboard-layout .ux-stat--link:hover,
+.dashboard-layout .ux-stat--link:focus-visible {
+  border-color: #c6e1f3 !important;
+  box-shadow: 0 10px 22px rgba(11, 82, 132, 0.08) !important;
+  transform: translateY(-2px);
 }
 
 .dashboard-layout .ux-card.shadow-sm,
@@ -1884,7 +1889,7 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .dashboard-inline-callout {
   background: var(--dash-canvas);
   border: 1px solid var(--dash-border);
-  border-radius: 10px;
+  border-radius: 16px;
   padding: 14px 16px;
 }
 
@@ -1902,7 +1907,7 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .ux-table-wrapper,
 .dashboard-layout .table-responsive {
   border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius);
+  border-radius: var(--dash-radius-lg);
   background: #fff;
   overflow: auto;
   overscroll-behavior: contain;
@@ -2176,12 +2181,11 @@ html:has(body.dashboard-layout) {
 
 /* ---------- Buttons ---------- */
 .dashboard-layout .btn {
-  transform: none !important;
-  box-shadow: none !important;
-  border-radius: 8px !important;
-  font-weight: 600;
+  box-shadow: none;
+  border-radius: var(--ds-radius-md, 12px) !important;
+  font-weight: 700;
   font-size: 13.5px;
-  min-height: 36px;
+  min-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2195,7 +2199,7 @@ html:has(body.dashboard-layout) {
 }
 
 .dashboard-layout .rounded-pill {
-  border-radius: 8px !important;
+  border-radius: var(--ds-radius-pill) !important;
 }
 
 .dashboard-layout .btn-primary,
@@ -2204,6 +2208,7 @@ html:has(body.dashboard-layout) {
   background: var(--dash-blue-action) !important;
   border-color: var(--dash-blue-action) !important;
   color: #fff !important;
+  box-shadow: 0 8px 18px rgba(11, 111, 211, 0.18);
 }
 
 .dashboard-layout .btn-primary:hover,
@@ -2212,6 +2217,8 @@ html:has(body.dashboard-layout) {
   background: var(--dash-blue-hover) !important;
   border-color: var(--dash-blue-hover) !important;
   color: #fff !important;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(11, 111, 211, 0.22);
 }
 
 .dashboard-layout .btn-outline-primary,
@@ -2288,8 +2295,8 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .form-control,
 .dashboard-layout .form-select {
   min-height: 42px;
-  border: 1px solid var(--dash-border-strong);
-  border-radius: 8px;
+  border: 1px solid var(--welcome-border, var(--dash-border-strong));
+  border-radius: var(--ds-radius-md, 12px);
   background: #fff;
   color: var(--dash-slate);
   font-size: 14px;
@@ -2421,7 +2428,7 @@ html:has(body.dashboard-layout) {
 
 /* ---------- Alerts ---------- */
 .dashboard-layout .alert {
-  border-radius: 10px !important;
+  border-radius: 16px !important;
   box-shadow: none !important;
   border: 1px solid transparent;
   padding: 12px 14px;
@@ -2658,8 +2665,8 @@ html:has(body.dashboard-layout) {
 }
 
 .dashboard-layout .modal-content {
-  border: 1px solid var(--dash-border);
-  border-radius: 12px;
+  border: 1px solid var(--welcome-border, var(--dash-border));
+  border-radius: var(--dash-radius-lg);
   box-shadow: var(--ds-shadow-overlay);
 }
 
@@ -4683,16 +4690,16 @@ html:has(body.dashboard-layout) {
 }
 
 .dashboard-layout .ux-section-heading__icon {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: var(--pale-blue);
+  border-radius: 50%;
+  background: var(--welcome-icon-bg, #e6f3ff);
   color: var(--medical-blue);
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .dashboard-layout .ux-section-heading__icon--success {
@@ -5905,16 +5912,17 @@ html:has(body.dashboard-layout) {
 
 .dashboard-layout .btn,
 .dashboard-layout .btn-sm {
-  border-radius: 10px !important;
+  border-radius: var(--ds-radius-md, 12px) !important;
 }
 
 .dashboard-layout .btn-sm {
-  min-height: 34px;
+  min-height: 36px;
+  border-radius: 10px !important;
 }
 
 .dashboard-layout .form-control,
 .dashboard-layout .form-select {
-  border-radius: 10px;
+  border-radius: var(--ds-radius-md, 12px);
   min-height: 40px;
 }
 
@@ -6123,13 +6131,13 @@ html:has(body.dashboard-layout) {
 .dashboard-layout .dashboard-welcome-banner {
   --welcome-primary: var(--medical-blue);
   --welcome-primary-dark: var(--dark-navy);
-  --welcome-bg: #f4f9fd;
-  --welcome-surface: #ffffff;
-  --welcome-border: #d8e6f0;
-  --welcome-text: #082f50;
-  --welcome-muted: #637b91;
-  --welcome-radius: 20px;
-  --welcome-shadow: 0 12px 32px rgba(15, 58, 89, 0.11);
+  --welcome-bg: var(--mbpha-background, #f4f9fd);
+  --welcome-surface: var(--mbpha-surface, #ffffff);
+  --welcome-border: var(--mbpha-border, #d8e6f0);
+  --welcome-text: var(--mbpha-text, #082f50);
+  --welcome-muted: var(--mbpha-muted, #637b91);
+  --welcome-radius: var(--mbpha-radius-lg, 20px);
+  --welcome-shadow: var(--mbpha-shadow-md, 0 12px 32px rgba(15, 58, 89, 0.11));
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
@@ -6573,12 +6581,18 @@ html:has(body.dashboard-layout) {
 
 @media (prefers-reduced-motion: reduce) {
   .dashboard-layout .welcome-action-card,
-  .dashboard-layout .welcome-primary-action {
+  .dashboard-layout .welcome-primary-action,
+  .dashboard-layout .ux-card,
+  .dashboard-layout .ux-stat,
+  .dashboard-layout .btn-primary {
     transition: none;
   }
 
   .dashboard-layout .welcome-action-card:hover,
-  .dashboard-layout .welcome-primary-action:hover {
+  .dashboard-layout .welcome-primary-action:hover,
+  .dashboard-layout .ux-card:hover,
+  .dashboard-layout .ux-stat--link:hover,
+  .dashboard-layout .btn-primary:hover {
     transform: none;
   }
 }

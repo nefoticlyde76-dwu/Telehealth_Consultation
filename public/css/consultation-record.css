@@ -22,12 +22,12 @@
   --cr-info-icon: var(--medical-blue);
   --cr-field-icon: var(--medical-blue);
 
-  --cr-shadow: none;
-  --cr-radius: 12px;
-  --cr-radius-inner: 10px;
-  --cr-radius-btn: 8px;
-  --cr-radius-icon: 8px;
-  --cr-font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --cr-shadow: var(--mbpha-shadow-sm, 0 10px 22px rgba(11, 82, 132, 0.08));
+  --cr-radius: var(--mbpha-radius-lg, 20px);
+  --cr-radius-inner: 12px;
+  --cr-radius-btn: 12px;
+  --cr-radius-icon: 50%;
+  --cr-font: Poppins, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --cr-section: 20px;
 
   max-width: 1280px;

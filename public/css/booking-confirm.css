@@ -1,16 +1,16 @@
 .booking-confirm-page {
-  --booking-primary: #0b78c7;
-  --booking-primary-dark: #086dae;
-  --booking-background: #f3f8fc;
-  --booking-surface: #ffffff;
-  --booking-surface-soft: #f3f8fc;
-  --booking-border: #d7e5ef;
-  --booking-text: #173d5d;
-  --booking-muted: #6d8296;
-  --booking-success: #149b68;
-  --booking-danger: #d95058;
-  --booking-radius: 16px;
-  --booking-shadow: 0 8px 25px rgba(21, 72, 105, 0.06);
+  --booking-primary: var(--mbpha-primary, #0b7bc5);
+  --booking-primary-dark: var(--medical-blue-hover, #0868a8);
+  --booking-background: var(--mbpha-background, #f4f9fd);
+  --booking-surface: var(--mbpha-surface, #ffffff);
+  --booking-surface-soft: var(--mbpha-background, #f4f9fd);
+  --booking-border: var(--mbpha-border, #d8e6f0);
+  --booking-text: var(--mbpha-text, #082f50);
+  --booking-muted: var(--mbpha-muted, #637b91);
+  --booking-success: var(--emerald-green, #18b96c);
+  --booking-danger: var(--danger, #dc5757);
+  --booking-radius: var(--mbpha-radius-lg, 20px);
+  --booking-shadow: var(--mbpha-shadow-sm, 0 10px 22px rgba(11, 82, 132, 0.08));
   -webkit-font-smoothing: antialiased;
   padding-bottom: 24px;
 }

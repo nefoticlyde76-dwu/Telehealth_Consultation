@@ -496,9 +496,9 @@
 }
 
 .dashboard-layout .ux-card:hover,
-.dashboard-layout .ux-stat:hover {
-  transform: none;
-  border-color: var(--ds-border) !important;
+.dashboard-layout .ux-stat:hover,
+.dashboard-layout .ux-stat--link:hover {
+  border-color: var(--welcome-card-border, #c6e1f3) !important;
   box-shadow: var(--ds-shadow-card) !important;
 }
 
@@ -521,11 +521,12 @@
 }
 
 .dashboard-layout .ux-stat__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--ds-radius-sm) !important;
+  width: 48px;
+  height: 48px;
+  border-radius: 50% !important;
   border: 0 !important;
   font-size: 18px;
+  background: var(--welcome-icon-bg, #e6f3ff);
 }
 
 .dashboard-layout .ux-stat__icon--mint,
@@ -936,15 +937,15 @@
 
 /* ---------- Empty states ---------- */
 .dashboard-layout .ux-empty {
-  background: var(--ds-canvas);
-  border: 1px dashed var(--ds-border-strong);
-  border-radius: var(--ds-radius-md);
+  background: var(--welcome-surface, #fff);
+  border: 1px solid var(--welcome-border, var(--ds-border));
+  border-radius: var(--ds-radius-lg);
 }
 
 .dashboard-layout .ux-empty__icon {
-  background: var(--ds-info-bg);
+  background: var(--welcome-icon-bg, var(--ds-info-bg));
   color: var(--ds-accent);
-  border-radius: var(--ds-radius-md);
+  border-radius: 50%;
 }
 
 /* ---------- Video consultation card ---------- */
