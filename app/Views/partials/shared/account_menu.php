@@ -76,13 +76,19 @@ $isAccountPath = static function (string $path) use ($currentAccountPath): bool 
 
   <div class="dropdown-menu dropdown-menu-end account-menu__panel" id="accountMenuPanel">
     <div class="account-menu__header">
-      <?php
-      $avatarPath = $accountPhotoPath;
-      $avatarUserId = $accountUserId;
-      $fullName = $accountName;
-      $avatarClass = 'user-avatar user-avatar--lg account-menu__avatar';
-      require __DIR__ . '/user_avatar.php';
-      ?>
+      <a
+        href="<?= Helper::url($accountProfilePath) ?>"
+        class="account-menu__avatar-link"
+        aria-label="View profile"
+      >
+        <?php
+        $avatarPath = $accountPhotoPath;
+        $avatarUserId = $accountUserId;
+        $fullName = $accountName;
+        $avatarClass = 'user-avatar user-avatar--lg account-menu__avatar';
+        require __DIR__ . '/user_avatar.php';
+        ?>
+      </a>
       <div class="account-menu__identity">
         <p class="account-menu__name"><?= Helper::escape($accountName) ?></p>
         <p class="account-menu__role account-menu__role--<?= Helper::escape($accountRoleKey) ?>"><?= Helper::escape($accountRoleLabel) ?></p>
