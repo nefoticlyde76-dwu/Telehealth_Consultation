@@ -181,6 +181,11 @@ body.home-landing-layout .lp-workflow__title-short,
     display: none !important;
   }
 
+  /* Consultation requests workspace: hide the page title bar on phone. */
+  .dashboard-layout .ux-review-workspace .ux-page-header {
+    display: none !important;
+  }
+
   .dashboard-layout .dropdown-menu.notification-panel,
   .dashboard-layout .dropdown-menu.notification-panel.show {
     position: fixed !important;
