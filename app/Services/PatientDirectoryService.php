@@ -96,10 +96,15 @@ class PatientDirectoryService
         }
 
         $offset = ($page - 1) * self::SLOT_PER_PAGE;
+        $colors = self::scheduleColors();
+        $slots = self::decorateSlotsWithColors(
+            DoctorAvailability::findAvailableForPatients($filters, self::SLOT_PER_PAGE, $offset),
+            $colors
+        );
 
         return [
             'filters' => $filters,
-            'slots' => DoctorAvailability::findAvailableForPatients($filters, self::SLOT_PER_PAGE, $offset),
+            'slots' => $slots,
             'summary' => self::getBrowseSummary(),
             'pagination' => [
                 'current_page' => $page,
@@ -109,6 +114,7 @@ class PatientDirectoryService
             ],
             'doctorOptions' => DoctorAvailability::getAvailableDoctorOptionsForPatients(),
             'specializationOptions' => Doctor::getSpecializationOptionsForPatients(),
+            'colors' => $colors,
         ];
     }
 
@@ -166,12 +172,15 @@ class PatientDirectoryService
             (string) $anchor['weekStart'],
             (string) $anchor['weekEnd']
         );
+        $colors = self::scheduleColors();
+        $slots = self::decorateSlotsWithColors($slots, $colors);
         $grid = DoctorAvailabilityService::getWeekGridScaffold($weekHint, $slots);
         $blocks = DoctorAvailabilityService::buildDayBlocks(
             $grid['days'],
             $slots,
             (string) $grid['todayDate'],
-            (string) $grid['nowHm']
+            (string) $grid['nowHm'],
+            ['colors' => $colors]
         );
 
         $openCells = 0;
@@ -198,6 +207,7 @@ class PatientDirectoryService
             'summary' => self::getBrowseSummary(),
             'doctorOptions' => DoctorAvailability::getAvailableDoctorOptionsForPatients(),
             'specializationOptions' => Doctor::getSpecializationOptionsForPatients(),
+            'colors' => $colors,
             'timezoneLabel' => $grid['timezoneLabel'],
         ];
     }
@@ -299,6 +309,35 @@ class PatientDirectoryService
         }
 
         return $parsed instanceof \DateTimeImmutable ? $parsed->format('g:i A') : $time;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private static function scheduleColors(): array
+    {
+        return DoctorAvailabilityService::scheduleColorsForDoctors(array_map(
+            static fn (array $doctor): int => (int) ($doctor['doctor_id'] ?? 0),
+            Doctor::getActiveDoctorsForSchedule()
+        ));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $slots
+     * @param array<int, array<string, mixed>> $colors
+     * @return list<array<string, mixed>>
+     */
+    private static function decorateSlotsWithColors(array $slots, array $colors): array
+    {
+        foreach ($slots as &$slot) {
+            $doctorId = (int) ($slot['doctor_id'] ?? 0);
+            $slot['color'] = is_array($colors[$doctorId] ?? null)
+                ? $colors[$doctorId]
+                : \App\Helpers\DoctorScheduleColor::forDoctorId($doctorId);
+        }
+        unset($slot);
+
+        return $slots;
     }
 
     private static function isValidDate(string $date): bool

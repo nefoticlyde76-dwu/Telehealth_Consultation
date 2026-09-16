@@ -37,7 +37,7 @@ $filterTabUrl = static function (string $value) use ($filters): string {
         <li class="active">Availability</li>
       </ol>
       <h2 class="ux-page-header__title">My Availability Schedule</h2>
-      <p class="ux-page-header__subtitle">Review saved slots, booked appointments, and one-off entries. Use the weekly schedule to set 30-minute times in bulk.</p>
+      <p class="ux-page-header__subtitle">This list shows only your slots. Use the weekly schedule to see every approved doctor's hours and avoid overlapping consultations.</p>
     </div>
     <div class="ux-page-header__right">
       <span class="ux-chip ux-badge--dotless">

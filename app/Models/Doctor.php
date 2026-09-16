@@ -416,6 +416,70 @@ class Doctor
         );
     }
 
+    /**
+     * Active doctors for the shared availability calendar filters and colour map.
+     *
+     * @return list<array{doctor_id:int,full_name:string,specialization:string,professional_title:string}>
+     */
+    public static function getActiveDoctorsForSchedule(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT
+                doctor.user_id AS doctor_id,
+                users.full_name,
+                doctor.specialization,
+                doctor.professional_title
+            FROM doctor
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'doctor'
+              AND users.status = 'active'
+            ORDER BY users.full_name ASC"
+        );
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $doctors = [];
+        foreach ($rows as $row) {
+            $doctors[] = [
+                'doctor_id' => (int) ($row['doctor_id'] ?? 0),
+                'full_name' => (string) ($row['full_name'] ?? 'Doctor'),
+                'specialization' => (string) ($row['specialization'] ?? ''),
+                'professional_title' => (string) ($row['professional_title'] ?? ''),
+            ];
+        }
+
+        return $doctors;
+    }
+
+    /**
+     * Specializations of active doctors for the shared calendar filter.
+     *
+     * @return list<string>
+     */
+    public static function getActiveSpecializationOptions(): array
+    {
+        $db = Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT DISTINCT doctor.specialization
+            FROM doctor
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id
+            WHERE roles.name = 'doctor'
+              AND users.status = 'active'
+              AND doctor.specialization IS NOT NULL
+              AND doctor.specialization != ''
+            ORDER BY doctor.specialization ASC"
+        );
+        $stmt->execute();
+
+        return array_map(
+            static fn (array $row): string => (string) $row['specialization'],
+            $stmt->fetchAll(PDO::FETCH_ASSOC) ?: []
+        );
+    }
+
     private static function appendManagementFilters(array $filters, array &$conditions, array &$parameters): void
     {
         $search = trim((string) ($filters['search'] ?? ''));

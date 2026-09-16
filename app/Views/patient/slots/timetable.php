@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\DoctorScheduleColor;
 use App\Helpers\Helper;
 
 $filters = is_array($filters ?? null) ? $filters : ['doctor_id' => 0, 'specialization' => '', 'consultation_date' => ''];
@@ -108,7 +109,7 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
     <div class="mbpha-avail__header">
       <div>
         <h3 class="mbpha-avail__title">Weekly schedule</h3>
-        <p class="mbpha-avail__hint mb-0">Filter by doctor if you already have a preference. Each block shows the doctor’s actual available hours.</p>
+        <p class="mbpha-avail__hint mb-0">Each colour belongs to one doctor. Filter by doctor or specialization, then tap a block to book those hours.</p>
       </div>
       <div class="mbpha-avail__week-nav" role="group" aria-label="Week navigation">
         <a class="mbpha-avail__week-btn" href="<?= $slotsUrl(['week' => $prevWeek]) ?>" aria-label="Previous week">
@@ -131,7 +132,7 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
       <?php endif; ?>
       <div class="mbpha-avail__tool">
         <label class="mbpha-avail__tool-label" for="book-doctor">Doctor</label>
-        <select id="book-doctor" class="form-select form-select-sm" name="doctor_id">
+        <select id="book-doctor" class="form-select form-select-sm" name="doctor_id" onchange="this.form.submit()">
           <option value="">All doctors</option>
           <?php foreach ($doctorOptions as $doctorOption): ?>
             <?php $optionDoctorId = (int) ($doctorOption['doctor_id'] ?? 0); ?>
@@ -143,7 +144,7 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
       </div>
       <div class="mbpha-avail__tool">
         <label class="mbpha-avail__tool-label" for="book-spec">Specialization</label>
-        <select id="book-spec" class="form-select form-select-sm" name="specialization">
+        <select id="book-spec" class="form-select form-select-sm" name="specialization" onchange="this.form.submit()">
           <option value="">All specializations</option>
           <?php foreach ($specializationOptions as $specializationOption): ?>
             <option value="<?= Helper::escape((string) $specializationOption) ?>" <?= ($filters['specialization'] ?? '') === $specializationOption ? 'selected' : '' ?>>
@@ -167,7 +168,7 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
       </div>
     <?php endif; ?>
 
-    <div class="mbpha-avail__legend" aria-label="Schedule legend">
+    <div class="mbpha-avail__legend" aria-label="Schedule status">
       <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-available"></span>Available — tap to book</span>
       <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-empty"></span>Unavailable</span>
     </div>
@@ -203,20 +204,31 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
                   <?php
                   $slotId = (int) ($block['id'] ?? 0);
                   $doctorName = (string) ($block['full_name'] ?? 'Doctor');
+                  $specialization = (string) ($block['specialization'] ?? '');
                   $rangeLabel = (string) ($block['range_label'] ?? '');
+                  $blockColor = is_array($block['color'] ?? null) ? $block['color'] : [];
+                  $ariaParts = array_filter([
+                      $dayName,
+                      $rangeLabel,
+                      'available with ' . $doctorName,
+                      $specialization,
+                  ]);
                   ?>
                   <a
-                    class="mbpha-avail__block is-available"
-                    style="top: <?= Helper::escape((string) ($block['top_pct'] ?? 0)) ?>%; height: <?= Helper::escape((string) ($block['height_pct'] ?? 0)) ?>%;"
+                    class="mbpha-avail__block is-colored is-available"
+                    style="<?= Helper::escape(DoctorScheduleColor::inlineBlockStyle($blockColor, $block)) ?>"
                     href="<?= Helper::url('/patient/consultation-requests/book/' . $slotId) ?>"
                     <?php if ((string) ($block['expires_at'] ?? '') !== ''): ?>
                     data-slot-expires-at="<?= Helper::escape((string) $block['expires_at']) ?>"
                     <?php endif; ?>
-                    aria-label="<?= Helper::escape($dayName . ', ' . $rangeLabel . ', available with ' . $doctorName) ?>"
+                    aria-label="<?= Helper::escape(implode(', ', $ariaParts)) ?>"
                   >
                     <strong><?= Helper::escape($rangeLabel) ?></strong>
                     <span><?= Helper::escape($doctorName) ?></span>
-                    <span>Book</span>
+                    <?php if ($specialization !== ''): ?>
+                      <span class="mbpha-avail__block-spec"><?= Helper::escape($specialization) ?></span>
+                    <?php endif; ?>
+                    <span class="mbpha-avail__block-status">Available</span>
                   </a>
                 <?php endforeach; ?>
               </div>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\DoctorScheduleColor;
 use App\Helpers\Helper;
 use App\Helpers\ListFilter;
 
@@ -159,13 +160,23 @@ $filterTabUrl = static function (string $value) use ($filters): string {
                 ?>
                 <tr<?= $slotExpiresAt !== '' ? ' data-slot-expires-at="' . \App\Helpers\Helper::escape($slotExpiresAt) . '"' : '' ?>>
                   <td>
-                    <?php
-                    $personName = (string) ($slot['full_name'] ?? 'Doctor');
-                    $personPhoto = $slot['profile_photo_path'] ?? null;
-                    $personMeta = (string) ($slot['professional_title'] ?? 'Medical Practitioner');
-                    $personSize = 'sm';
-                    require __DIR__ . '/../../partials/shared/person_row.php';
-                    ?>
+                    <div class="d-flex align-items-center gap-2">
+                      <?php
+                      $slotColor = is_array($slot['color'] ?? null) ? $slot['color'] : [];
+                      ?>
+                      <span
+                        class="mbpha-avail__legend-swatch is-doctor"
+                        style="<?= Helper::escape(DoctorScheduleColor::inlineSwatchStyle($slotColor)) ?>"
+                        aria-hidden="true"
+                      ></span>
+                      <?php
+                      $personName = (string) ($slot['full_name'] ?? 'Doctor');
+                      $personPhoto = $slot['profile_photo_path'] ?? null;
+                      $personMeta = (string) ($slot['professional_title'] ?? 'Medical Practitioner');
+                      $personSize = 'sm';
+                      require __DIR__ . '/../../partials/shared/person_row.php';
+                      ?>
+                    </div>
                   </td>
                   <td>
                     <span class="ux-badge ux-badge--neutral">

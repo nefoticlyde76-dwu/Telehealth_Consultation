@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Core\Csrf;
 use App\Core\Database;
+use App\Helpers\DoctorScheduleColor;
 use App\Helpers\Helper;
 use App\Helpers\ListFilter;
 use App\Helpers\Status;
+use App\Models\Doctor;
 use App\Models\DoctorAvailability;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -67,13 +69,28 @@ class DoctorAvailabilityService
         ];
     }
 
-    public static function weekQueryUrl(string $week = ''): string
+    public static function weekQueryUrl(string $week = '', array $filters = []): string
     {
+        $query = [];
         if ($week !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $week) === 1) {
-            return '/doctor/availability?week=' . rawurlencode($week);
+            $query['week'] = $week;
         }
 
-        return '/doctor/availability';
+        $doctorId = (int) ($filters['doctor_id'] ?? 0);
+        if ($doctorId > 0) {
+            $query['doctor_id'] = $doctorId;
+        }
+
+        $specialization = trim((string) ($filters['specialization'] ?? ''));
+        if ($specialization !== '') {
+            $query['specialization'] = $specialization;
+        }
+
+        if ($query === []) {
+            return '/doctor/availability';
+        }
+
+        return '/doctor/availability?' . http_build_query($query);
     }
 
     public static function formatClockLabel(string $time): string
@@ -132,10 +149,13 @@ class DoctorAvailabilityService
     /**
      * @param list<array<string, mixed>> $days
      * @param list<array<string, mixed>> $slots
+     * @param array{viewer_doctor_id?:int,colors?:array<int, array<string, mixed>>} $context
      * @return array<string, list<array<string, mixed>>>
      */
-    public static function buildDayBlocks(array $days, array $slots, string $todayDate, string $nowHm): array
+    public static function buildDayBlocks(array $days, array $slots, string $todayDate, string $nowHm, array $context = []): array
     {
+        $viewerDoctorId = (int) ($context['viewer_doctor_id'] ?? 0);
+        $colors = is_array($context['colors'] ?? null) ? $context['colors'] : [];
         $grouped = [];
         foreach ($days as $day) {
             $date = (string) ($day['date'] ?? '');
@@ -166,9 +186,15 @@ class DoctorAvailabilityService
                 continue;
             }
             $state = $status === 'Booked' ? 'booked' : 'available';
+            $doctorId = (int) ($slot['doctor_id'] ?? 0);
+            $color = is_array($colors[$doctorId] ?? null)
+                ? $colors[$doctorId]
+                : DoctorScheduleColor::forDoctorId($doctorId);
 
             $grouped[$date][] = [
                 'id' => (int) ($slot['id'] ?? 0),
+                'doctor_id' => $doctorId,
+                'owned' => $viewerDoctorId > 0 && $doctorId === $viewerDoctorId,
                 'date' => $date,
                 'start' => $start,
                 'end' => $end,
@@ -182,14 +208,31 @@ class DoctorAvailabilityService
                 'past' => $isPast,
                 'top_pct' => $layout['top_pct'],
                 'height_pct' => $layout['height_pct'],
+                'left_pct' => 0.0,
+                'width_pct' => 100.0,
                 'duration_minutes' => $layout['duration_minutes'],
                 'full_name' => (string) ($slot['full_name'] ?? ''),
                 'specialization' => (string) ($slot['specialization'] ?? ''),
+                'professional_title' => (string) ($slot['professional_title'] ?? ''),
+                'color' => $color,
                 'expires_at' => $status === 'Available' ? Helper::combineDateTimeIso($date, $end) : '',
             ];
         }
 
+        foreach ($grouped as $date => $dayBlocks) {
+            $grouped[$date] = self::applyOverlapLayout($dayBlocks);
+        }
+
         return $grouped;
+    }
+
+    /**
+     * @param list<int> $doctorIds
+     * @return array<int, array<string, mixed>>
+     */
+    public static function scheduleColorsForDoctors(array $doctorIds): array
+    {
+        return DoctorScheduleColor::assign($doctorIds);
     }
 
     public static function createAvailability(int $doctorId, array $input): array
@@ -404,6 +447,161 @@ class DoctorAvailabilityService
         ];
     }
 
+    /**
+     * @param array<string, mixed> $query
+     * @return array{doctor_id:int,specialization:string}
+     */
+    private static function normalizeSharedFilters(array $query): array
+    {
+        $doctorId = max(0, (int) ($query['doctor_id'] ?? 0));
+        $specialization = trim((string) ($query['specialization'] ?? ''));
+
+        $doctorIds = array_map(
+            static fn (array $doctor): int => (int) ($doctor['doctor_id'] ?? 0),
+            Doctor::getActiveDoctorsForSchedule()
+        );
+
+        if ($doctorId > 0 && !in_array($doctorId, $doctorIds, true)) {
+            $doctorId = 0;
+        }
+
+        $specializations = Doctor::getActiveSpecializationOptions();
+        if ($specialization !== '' && !in_array($specialization, $specializations, true)) {
+            $specialization = '';
+        }
+
+        return [
+            'doctor_id' => $doctorId,
+            'specialization' => $specialization,
+        ];
+    }
+
+    /**
+     * Place overlapping slots side by side so multiple doctors remain visible.
+     *
+     * @param list<array<string, mixed>> $blocks
+     * @return list<array<string, mixed>>
+     */
+    private static function applyOverlapLayout(array $blocks): array
+    {
+        $count = count($blocks);
+        if ($count === 0) {
+            return $blocks;
+        }
+
+        if ($count === 1) {
+            $blocks[0]['left_pct'] = 0.0;
+            $blocks[0]['width_pct'] = 100.0;
+            $blocks[0]['col'] = 0;
+            $blocks[0]['col_count'] = 1;
+
+            return $blocks;
+        }
+
+        usort($blocks, static function (array $left, array $right): int {
+            $startCmp = ((string) ($left['start'] ?? '')) <=> ((string) ($right['start'] ?? ''));
+            if ($startCmp !== 0) {
+                return $startCmp;
+            }
+
+            $durationCmp = ((int) ($right['duration_minutes'] ?? 0)) <=> ((int) ($left['duration_minutes'] ?? 0));
+            if ($durationCmp !== 0) {
+                return $durationCmp;
+            }
+
+            return ((int) ($left['doctor_id'] ?? 0)) <=> ((int) ($right['doctor_id'] ?? 0));
+        });
+
+        $starts = [];
+        $ends = [];
+        foreach ($blocks as $index => $block) {
+            $starts[$index] = self::minutesFromMidnight((string) ($block['start'] ?? '')) ?? 0;
+            $ends[$index] = self::minutesFromMidnight((string) ($block['end'] ?? '')) ?? 0;
+        }
+
+        $parent = range(0, $count - 1);
+        $find = static function (int $index) use (&$parent, &$find): int {
+            if ($parent[$index] !== $index) {
+                $parent[$index] = $find($parent[$index]);
+            }
+
+            return $parent[$index];
+        };
+        $union = static function (int $left, int $right) use (&$parent, $find): void {
+            $rootLeft = $find($left);
+            $rootRight = $find($right);
+            if ($rootLeft !== $rootRight) {
+                $parent[$rootRight] = $rootLeft;
+            }
+        };
+
+        for ($i = 0; $i < $count; $i++) {
+            for ($j = $i + 1; $j < $count; $j++) {
+                if ($starts[$i] < $ends[$j] && $starts[$j] < $ends[$i]) {
+                    $union($i, $j);
+                }
+            }
+        }
+
+        $groups = [];
+        for ($i = 0; $i < $count; $i++) {
+            $groups[$find($i)][] = $i;
+        }
+
+        $columns = array_fill(0, $count, 0);
+        $columnCounts = array_fill(0, $count, 1);
+
+        foreach ($groups as $members) {
+            usort($members, static function (int $left, int $right) use ($starts, $ends): int {
+                $startCmp = $starts[$left] <=> $starts[$right];
+                if ($startCmp !== 0) {
+                    return $startCmp;
+                }
+
+                return $ends[$right] <=> $ends[$left];
+            });
+
+            $columnEnds = [];
+            foreach ($members as $index) {
+                $placed = false;
+                foreach ($columnEnds as $column => $end) {
+                    if ($end <= $starts[$index]) {
+                        $columns[$index] = $column;
+                        $columnEnds[$column] = $ends[$index];
+                        $placed = true;
+                        break;
+                    }
+                }
+
+                if (!$placed) {
+                    $columns[$index] = count($columnEnds);
+                    $columnEnds[] = $ends[$index];
+                }
+            }
+
+            $groupColumns = max(1, count($columnEnds));
+            foreach ($members as $index) {
+                $columnCounts[$index] = $groupColumns;
+            }
+        }
+
+        $gap = 1.5;
+        foreach ($blocks as $index => &$block) {
+            $groupColumns = max(1, (int) $columnCounts[$index]);
+            $column = (int) $columns[$index];
+            $width = $groupColumns > 1
+                ? (100 - (($groupColumns - 1) * $gap)) / $groupColumns
+                : 100.0;
+            $block['left_pct'] = round($column * ($width + $gap), 3);
+            $block['width_pct'] = round($width, 3);
+            $block['col'] = $column;
+            $block['col_count'] = $groupColumns;
+        }
+        unset($block);
+
+        return $blocks;
+    }
+
     private static function normalizeFilters(array $query): array
     {
         $search = ListFilter::normalizeSearch((string) ($query['search'] ?? ''));
@@ -613,27 +811,40 @@ class DoctorAvailabilityService
     public static function getWeeklySchedulePageData(int $doctorId, array $query): array
     {
         SlotExpirationService::sweep();
+        $filters = self::normalizeSharedFilters($query);
         $weekHint = (string) ($query['week'] ?? '');
         $anchor = self::getWeekGridScaffold($weekHint);
-        $slots = DoctorAvailability::findInDateRangeForDoctor(
-            $doctorId,
+        $slots = DoctorAvailability::findSharedInDateRange(
             (string) $anchor['weekStart'],
-            (string) $anchor['weekEnd']
+            (string) $anchor['weekEnd'],
+            $filters
         );
+        $doctorOptions = Doctor::getActiveDoctorsForSchedule();
+        $specializationOptions = Doctor::getActiveSpecializationOptions();
+        $colors = self::scheduleColorsForDoctors(array_map(
+            static fn (array $doctor): int => (int) ($doctor['doctor_id'] ?? 0),
+            $doctorOptions
+        ));
         $grid = self::getWeekGridScaffold($weekHint, $slots);
         $blocks = self::buildDayBlocks(
             $grid['days'],
             $slots,
             (string) $grid['todayDate'],
-            (string) $grid['nowHm']
+            (string) $grid['nowHm'],
+            [
+                'viewer_doctor_id' => $doctorId,
+                'colors' => $colors,
+            ]
         );
 
         $availableCount = 0;
         $bookedCount = 0;
+        $ownAvailableCount = 0;
         $todayDate = (string) $grid['todayDate'];
         $nowHm = (string) $grid['nowHm'];
         foreach ($slots as $slot) {
             $status = (string) ($slot['status'] ?? '');
+            $slotDoctorId = (int) ($slot['doctor_id'] ?? 0);
             if ($status === 'Booked') {
                 $bookedCount++;
                 continue;
@@ -647,9 +858,13 @@ class DoctorAvailabilityService
                 continue;
             }
             $availableCount++;
+            if ($slotDoctorId === $doctorId) {
+                $ownAvailableCount++;
+            }
         }
 
         return [
+            'filters' => $filters,
             'weekStart' => $grid['weekStart'],
             'weekEnd' => $grid['weekEnd'],
             'weekLabel' => $grid['weekLabel'],
@@ -668,9 +883,14 @@ class DoctorAvailabilityService
             'counts' => [
                 'available' => $availableCount,
                 'booked' => $bookedCount,
+                'own_available' => $ownAvailableCount,
             ],
             'summary' => DoctorAvailability::getSummaryForDoctor($doctorId),
             'timezoneLabel' => $grid['timezoneLabel'],
+            'doctorOptions' => $doctorOptions,
+            'specializationOptions' => $specializationOptions,
+            'currentDoctorId' => $doctorId,
+            'colors' => $colors,
         ];
     }
 

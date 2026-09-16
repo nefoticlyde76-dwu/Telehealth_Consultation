@@ -445,22 +445,7 @@ class DoctorAvailability
     public static function findAvailableForPatients(array $filters = [], int $limit = 10, int $offset = 0): array
     {
         $db = Database::getInstance();
-        $sql = "SELECT
-                doctor_availability.id,
-                doctor_availability.consultation_date,
-                doctor_availability.start_time,
-                doctor_availability.end_time,
-                doctor_availability.notes,
-                doctor_availability.status,
-                doctor.user_id AS doctor_id,
-                doctor.professional_title,
-                doctor.specialization,
-                doctor.profile_photo_path,
-                users.full_name
-            FROM doctor_availability
-            INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
-            INNER JOIN users ON users.id = doctor.user_id
-            INNER JOIN roles ON roles.id = users.role_id";
+        $sql = self::sharedSlotSelectSql();
         $conditions = [
             "roles.name = 'doctor'",
             "users.status = 'active'",
@@ -497,22 +482,7 @@ class DoctorAvailability
         unset($filters['consultation_date']);
 
         $db = Database::getInstance();
-        $sql = "SELECT
-                doctor_availability.id,
-                doctor_availability.consultation_date,
-                doctor_availability.start_time,
-                doctor_availability.end_time,
-                doctor_availability.notes,
-                doctor_availability.status,
-                doctor.user_id AS doctor_id,
-                doctor.professional_title,
-                doctor.specialization,
-                doctor.profile_photo_path,
-                users.full_name
-            FROM doctor_availability
-            INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
-            INNER JOIN users ON users.id = doctor.user_id
-            INNER JOIN roles ON roles.id = users.role_id";
+        $sql = self::sharedSlotSelectSql();
         $conditions = [
             "roles.name = 'doctor'",
             "users.status = 'active'",
@@ -537,13 +507,54 @@ class DoctorAvailability
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    /**
+     * Available and booked slots for every active doctor in an inclusive date range.
+     * Ownership is unchanged: doctor_id remains the slot owner.
+     *
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public static function findSharedInDateRange(string $fromDate, string $toDate, array $filters = []): array
+    {
+        if ($fromDate === '' || $toDate === '') {
+            return [];
+        }
+
+        unset($filters['consultation_date']);
+
+        $db = Database::getInstance();
+        $sql = self::sharedSlotSelectSql();
+        $conditions = [
+            "roles.name = 'doctor'",
+            "users.status = 'active'",
+            "doctor_availability.status IN ('Available', 'Booked')",
+            'doctor_availability.consultation_date BETWEEN :range_from AND :range_to',
+        ];
+        $parameters = [
+            ':range_from' => $fromDate,
+            ':range_to' => $toDate,
+        ];
+
+        self::appendPatientFilters($filters, $conditions, $parameters);
+
+        $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        $sql .= ' ORDER BY doctor_availability.consultation_date ASC, doctor_availability.start_time ASC, users.full_name ASC LIMIT 500';
+
+        $stmt = $db->prepare($sql);
+        self::bindPatientParameters($stmt, $parameters);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
     public static function getAvailableDoctorOptionsForPatients(): array
     {
         $db = Database::getInstance();
         $stmt = $db->prepare(
             "SELECT DISTINCT
                 doctor.user_id AS doctor_id,
-                users.full_name
+                users.full_name,
+                doctor.specialization
             FROM doctor_availability
             INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
             INNER JOIN users ON users.id = doctor.user_id
@@ -618,6 +629,26 @@ class DoctorAvailability
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $row ?: null;
+    }
+
+    private static function sharedSlotSelectSql(): string
+    {
+        return "SELECT
+                doctor_availability.id,
+                doctor_availability.consultation_date,
+                doctor_availability.start_time,
+                doctor_availability.end_time,
+                doctor_availability.notes,
+                doctor_availability.status,
+                doctor.user_id AS doctor_id,
+                doctor.professional_title,
+                doctor.specialization,
+                doctor.profile_photo_path,
+                users.full_name
+            FROM doctor_availability
+            INNER JOIN doctor ON doctor.user_id = doctor_availability.doctor_id
+            INNER JOIN users ON users.id = doctor.user_id
+            INNER JOIN roles ON roles.id = users.role_id";
     }
 
     /**

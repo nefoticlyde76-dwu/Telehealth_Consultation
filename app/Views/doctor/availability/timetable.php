@@ -1,7 +1,9 @@
 <?php
 
+use App\Helpers\DoctorScheduleColor;
 use App\Helpers\Helper;
 
+$filters = is_array($filters ?? null) ? $filters : ['doctor_id' => 0, 'specialization' => ''];
 $weekStart = (string) ($weekStart ?? '');
 $weekLabel = (string) ($weekLabel ?? '');
 $isCurrentWeek = (bool) ($isCurrentWeek ?? false);
@@ -13,21 +15,33 @@ $intervals = is_array($intervals ?? null) ? $intervals : [];
 $blocks = is_array($blocks ?? null) ? $blocks : [];
 $counts = is_array($counts ?? null) ? $counts : [];
 $summary = is_array($summary ?? null) ? $summary : [];
+$doctorOptions = is_array($doctorOptions ?? null) ? $doctorOptions : [];
+$specializationOptions = is_array($specializationOptions ?? null) ? $specializationOptions : [];
 $timezoneLabel = (string) ($timezoneLabel ?? Helper::appTimezoneLabel());
 $csrfToken = (string) ($csrfToken ?? '');
 $gridStart = (string) ($gridStart ?? '08:00');
 $gridEnd = (string) ($gridEnd ?? '16:30');
 $todayDate = (string) ($todayDate ?? '');
 $nowHm = (string) ($nowHm ?? '');
+$currentDoctorId = (int) ($currentDoctorId ?? 0);
 $intervalCount = max(1, count($intervals));
 
-$availUrl = static function (array $query = []): string {
+$availUrl = static function (array $query = []) use ($filters): string {
+    $merged = [
+        'doctor_id' => (int) ($query['doctor_id'] ?? $filters['doctor_id'] ?? 0),
+        'specialization' => (string) ($query['specialization'] ?? $filters['specialization'] ?? ''),
+        'week' => (string) ($query['week'] ?? ''),
+    ];
+    if (isset($query['view'])) {
+        $merged['view'] = $query['view'];
+    }
+    $merged = array_filter($merged, static fn ($value) => $value !== '' && $value !== 0);
     $path = '/doctor/availability';
-    if ($query === []) {
+    if ($merged === []) {
         return Helper::url($path);
     }
 
-    return Helper::url($path . '?' . http_build_query($query));
+    return Helper::url($path . '?' . http_build_query($merged));
 };
 
 $formatGridTime = static function (string $hm): string {
@@ -36,12 +50,20 @@ $formatGridTime = static function (string $hm): string {
 };
 
 $createUrl = Helper::url('/doctor/availability/create' . ($weekStart !== '' ? '?week=' . rawurlencode($weekStart) : ''));
+$hasSharedFilters = (int) ($filters['doctor_id'] ?? 0) > 0 || ($filters['specialization'] ?? '') !== '';
+$hasVisibleSlots = false;
+foreach ($blocks as $dayBlocks) {
+    if (is_array($dayBlocks) && $dayBlocks !== []) {
+        $hasVisibleSlots = true;
+        break;
+    }
+}
 ?>
 
 <section class="mb-4">
   <?php
-  $pageHeaderTitle = 'Doctor Availability';
-  $pageHeaderSubtitle = 'Click a time on the grid for a quick start, or add any custom start and end time. Saved hours are placed on the schedule from their actual times. Booked appointments stay locked.';
+  $pageHeaderTitle = 'Shared Availability Calendar';
+  $pageHeaderSubtitle = 'See every approved doctor\'s hours so you can avoid overlapping consultations. You can add, edit, or delete only your own slots.';
   $pageHeaderIcon = 'bi-calendar-week';
   $pageHeaderHeadingTag = 'h2';
   $pageHeaderBreadcrumbs = [
@@ -60,7 +82,7 @@ $createUrl = Helper::url('/doctor/availability/create' . ($weekStart !== '' ? '?
   </button>
   <a href="<?= $availUrl(['view' => 'list']) ?>" class="btn btn-outline-primary">
     <i class="bi bi-list-ul me-2"></i>
-    Slot List
+    My Slot List
   </a>
   <?php
   $pageHeaderActions = ob_get_clean();
@@ -73,19 +95,19 @@ $createUrl = Helper::url('/doctor/availability/create' . ($weekStart !== '' ? '?
 <?php
 $summaryStats = [
     [
-        'label' => 'Available this week',
+        'label' => 'Open slots this week',
         'value' => (int) ($counts['available'] ?? 0),
         'icon' => 'bi-calendar-check',
         'tone' => 'navy',
     ],
     [
-        'label' => 'Booked appointments',
+        'label' => 'Booked this week',
         'value' => (int) ($counts['booked'] ?? 0),
         'icon' => 'bi-person',
         'tone' => 'info',
     ],
     [
-        'label' => 'Upcoming saved slots',
+        'label' => 'My upcoming slots',
         'value' => (int) ($summary['upcoming_slots'] ?? 0),
         'icon' => 'bi-clock',
         'tone' => 'success',
@@ -102,8 +124,8 @@ require __DIR__ . '/../../partials/dashboard/summary_stats.php';
       <div>
         <h3 class="mbpha-avail__title">Weekly Schedule</h3>
         <p class="mbpha-avail__hint mb-0">
-          The time labels are a guide only. Availability can start or end at any valid time.
-          Hours shown: <?= Helper::escape($formatGridTime($gridStart)) ?> – <?= Helper::escape($formatGridTime($gridEnd)) ?>.
+          Coloured blocks belong to individual doctors. Click an open time to add your own hours,
+          or click your block to edit it. Hours shown: <?= Helper::escape($formatGridTime($gridStart)) ?> – <?= Helper::escape($formatGridTime($gridEnd)) ?>.
         </p>
       </div>
       <div class="mbpha-avail__week-nav" role="group" aria-label="Week navigation">
@@ -121,11 +143,53 @@ require __DIR__ . '/../../partials/dashboard/summary_stats.php';
       </div>
     </div>
 
-    <div class="mbpha-avail__legend" aria-label="Schedule legend">
+    <form method="GET" action="<?= Helper::url('/doctor/availability') ?>" class="mbpha-avail__tools">
+      <?php if ($weekStart !== ''): ?>
+        <input type="hidden" name="week" value="<?= Helper::escape($weekStart) ?>">
+      <?php endif; ?>
+      <div class="mbpha-avail__tool">
+        <label class="mbpha-avail__tool-label" for="avail-doctor">Doctor</label>
+        <select id="avail-doctor" class="form-select form-select-sm" name="doctor_id" onchange="this.form.submit()">
+          <option value="">All doctors</option>
+          <?php foreach ($doctorOptions as $doctorOption): ?>
+            <?php $optionDoctorId = (int) ($doctorOption['doctor_id'] ?? 0); ?>
+            <option value="<?= $optionDoctorId ?>" <?= (int) ($filters['doctor_id'] ?? 0) === $optionDoctorId ? 'selected' : '' ?>><?= Helper::escape((string) ($doctorOption['full_name'] ?? 'Doctor')) ?><?= $optionDoctorId === $currentDoctorId ? ' (You)' : '' ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="mbpha-avail__tool">
+        <label class="mbpha-avail__tool-label" for="avail-spec">Specialization</label>
+        <select id="avail-spec" class="form-select form-select-sm" name="specialization" onchange="this.form.submit()">
+          <option value="">All specializations</option>
+          <?php foreach ($specializationOptions as $specializationOption): ?>
+            <option value="<?= Helper::escape((string) $specializationOption) ?>" <?= ($filters['specialization'] ?? '') === $specializationOption ? 'selected' : '' ?>>
+              <?= Helper::escape((string) $specializationOption) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="mbpha-avail__tool">
+        <noscript>
+          <button type="submit" class="btn btn-sm btn-primary">Apply</button>
+        </noscript>
+        <a href="<?= Helper::url('/doctor/availability' . ($weekStart !== '' ? '?week=' . rawurlencode($weekStart) : '')) ?>" class="btn btn-sm btn-outline-secondary">Reset</a>
+      </div>
+    </form>
+
+    <div class="mbpha-avail__legend" aria-label="Schedule status">
       <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-available"></span>Available</span>
       <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-booked"></span>Booked</span>
-      <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-empty"></span>Open time — click to add</span>
+      <span class="mbpha-avail__legend-item"><span class="mbpha-avail__legend-swatch is-empty"></span>Open time — click to add yours</span>
     </div>
+
+    <?php if (!$hasVisibleSlots): ?>
+      <div class="px-4 pb-3">
+        <div class="alert alert-info mb-0" role="status">
+          No consultation hours this week<?= $hasSharedFilters ? ' for the selected filter' : '' ?>.
+          Try another week or add your own availability.
+        </div>
+      </div>
+    <?php endif; ?>
 
     <div class="mbpha-avail__scroller">
       <div
@@ -191,13 +255,28 @@ require __DIR__ . '/../../partials/dashboard/summary_stats.php';
                   $blockState = (string) ($block['state'] ?? 'available');
                   $blockLocked = !empty($block['locked']);
                   $blockPast = !empty($block['past']);
+                  $blockOwned = !empty($block['owned']);
+                  $blockColor = is_array($block['color'] ?? null) ? $block['color'] : [];
+                  $doctorName = (string) ($block['full_name'] ?? 'Doctor');
+                  $specialization = (string) ($block['specialization'] ?? '');
+                  $statusLabel = $blockState === 'booked' ? 'Booked' : 'Available';
+                  $ariaParts = array_filter([
+                      (string) ($block['range_label'] ?? ''),
+                      $doctorName,
+                      $specialization,
+                      $statusLabel,
+                      $blockOwned ? 'your slot' : 'colleague slot',
+                  ]);
                   ?>
                   <button
                     type="button"
-                    class="mbpha-avail__block is-<?= Helper::escape($blockState) ?><?= $blockPast ? ' is-past' : '' ?>"
-                    style="top: <?= Helper::escape((string) ($block['top_pct'] ?? 0)) ?>%; height: <?= Helper::escape((string) ($block['height_pct'] ?? 0)) ?>%;"
+                    class="mbpha-avail__block is-colored is-<?= Helper::escape($blockState) ?><?= $blockPast ? ' is-past' : '' ?><?= $blockOwned ? ' is-own' : ' is-foreign' ?>"
+                    style="<?= Helper::escape(DoctorScheduleColor::inlineBlockStyle($blockColor, $block)) ?>"
                     data-avail-block
                     data-id="<?= $blockId ?>"
+                    data-owned="<?= $blockOwned ? '1' : '0' ?>"
+                    data-doctor-name="<?= Helper::escape($doctorName) ?>"
+                    data-specialization="<?= Helper::escape($specialization) ?>"
                     data-date="<?= Helper::escape((string) ($block['date'] ?? $date)) ?>"
                     data-start="<?= Helper::escape((string) ($block['start'] ?? '')) ?>"
                     data-end="<?= Helper::escape((string) ($block['end'] ?? '')) ?>"
@@ -207,10 +286,14 @@ require __DIR__ . '/../../partials/dashboard/summary_stats.php';
                     <?php if ($blockState === 'available' && (string) ($block['expires_at'] ?? '') !== ''): ?>
                     data-slot-expires-at="<?= Helper::escape((string) $block['expires_at']) ?>"
                     <?php endif; ?>
-                    aria-label="<?= Helper::escape((string) ($block['range_label'] ?? '') . ', ' . $blockState) ?>"
+                    aria-label="<?= Helper::escape(implode(', ', $ariaParts)) ?>"
                   >
                     <strong><?= Helper::escape((string) ($block['range_label'] ?? '')) ?></strong>
-                    <span><?= $blockState === 'booked' ? 'Booked' : 'Available' ?></span>
+                    <span><?= Helper::escape($doctorName) ?></span>
+                    <?php if ($specialization !== ''): ?>
+                      <span class="mbpha-avail__block-spec"><?= Helper::escape($specialization) ?></span>
+                    <?php endif; ?>
+                    <span class="mbpha-avail__block-status"><?= Helper::escape($statusLabel) ?></span>
                   </button>
                 <?php endforeach; ?>
               </div>
@@ -253,6 +336,9 @@ require __DIR__ . '/../../partials/dashboard/summary_stats.php';
           </p>
           <div class="alert alert-warning d-none mb-3" role="alert" data-avail-booked-note>
             This time is booked and cannot be edited.
+          </div>
+          <div class="alert alert-info d-none mb-3" role="alert" data-avail-foreign-note>
+            This slot belongs to another doctor. You can view it to avoid overlapping hours, but only they can change it.
           </div>
           <div class="availability-form">
             <div class="availability-field">

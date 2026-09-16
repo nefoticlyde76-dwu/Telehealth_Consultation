@@ -162,13 +162,16 @@ abstract class DatabaseTestCase extends TestCase
         return $userId;
     }
 
-    protected function createDoctor(string $name = 'PHPUnit Doctor'): int
+    protected function createDoctor(string $name = 'PHPUnit Doctor', string $specialization = 'General Practice'): int
     {
         $userId = $this->createUser('doctor', $name);
         $this->db()->prepare(
             "INSERT INTO doctor (user_id, professional_title, specialization)
-             VALUES (:id, 'Medical Officer', 'General Practice')"
-        )->execute([':id' => $userId]);
+             VALUES (:id, 'Medical Officer', :specialization)"
+        )->execute([
+            ':id' => $userId,
+            ':specialization' => $specialization,
+        ]);
 
         return $userId;
     }

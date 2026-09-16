@@ -214,6 +214,7 @@ class PatientController extends Controller
                 'doctorOptions' => $pageData['doctorOptions'],
                 'specializationOptions' => $pageData['specializationOptions'],
                 'statusMessage' => Session::getFlash('status'),
+                'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/mbpha-schedule.css') . '">',
             ], 'layouts/dashboard');
             return;
         }

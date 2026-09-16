@@ -17,6 +17,7 @@ function initializeMbphaAvailability(root) {
   const title = modalEl.querySelector("#availEditorModalLabel");
   const help = modalEl.querySelector("[data-avail-modal-help]");
   const bookedNote = modalEl.querySelector("[data-avail-booked-note]");
+  const foreignNote = modalEl.querySelector("[data-avail-foreign-note]");
   const dateInput = modalEl.querySelector("#avail-modal-date");
   const startInput = modalEl.querySelector("#avail-modal-start");
   const endInput = modalEl.querySelector("#avail-modal-end");
@@ -55,6 +56,9 @@ function initializeMbphaAvailability(root) {
     }
     if (bookedNote) {
       bookedNote.classList.add("d-none");
+    }
+    if (foreignNote) {
+      foreignNote.classList.add("d-none");
     }
     if (dateInput instanceof HTMLInputElement) {
       dateInput.value = values.date || "";
@@ -99,19 +103,33 @@ function initializeMbphaAvailability(root) {
     }
 
     const id = block.getAttribute("data-id") || "";
-    const locked = block.getAttribute("data-locked") === "1";
+    const owned = block.getAttribute("data-owned") !== "0";
+    const locked = block.getAttribute("data-locked") === "1" || !owned;
     const status = block.getAttribute("data-status") || "Available";
-    form.action = withId(editPattern, id);
+    const doctorName = block.getAttribute("data-doctor-name") || "another doctor";
+    const specialization = block.getAttribute("data-specialization") || "";
+    form.action = owned ? withId(editPattern, id) : createAction;
     if (title) {
-      title.textContent = locked ? "View Availability" : "Edit Availability";
+      title.textContent = !owned
+        ? "Colleague availability"
+        : locked
+          ? "View Availability"
+          : "Edit Availability";
     }
     if (help) {
-      help.textContent = locked
-        ? "This availability is already on the schedule."
-        : "Change the start or end time. The block will move to match.";
+      help.textContent = !owned
+        ? (specialization !== ""
+            ? `${doctorName} · ${specialization}. View only — you cannot change another doctor's slot.`
+            : `${doctorName}. View only — you cannot change another doctor's slot.`)
+        : locked
+          ? "This availability is already on the schedule."
+          : "Change the start or end time. The block will move to match.";
     }
     if (bookedNote) {
-      bookedNote.classList.toggle("d-none", status !== "Booked");
+      bookedNote.classList.toggle("d-none", owned && status !== "Booked");
+    }
+    if (foreignNote) {
+      foreignNote.classList.toggle("d-none", owned);
     }
     if (dateInput instanceof HTMLInputElement) {
       dateInput.value = block.getAttribute("data-date") || "";
@@ -126,14 +144,14 @@ function initializeMbphaAvailability(root) {
       notesInput.value = block.getAttribute("data-notes") || "";
     }
     if (deleteBtn instanceof HTMLElement) {
-      deleteBtn.classList.toggle("d-none", locked || id === "");
+      deleteBtn.classList.toggle("d-none", locked || id === "" || !owned);
     }
-    if (deleteForm instanceof HTMLFormElement && id !== "") {
-      deleteForm.action = withId(deletePattern, id);
+    if (deleteForm instanceof HTMLFormElement) {
+      deleteForm.action = owned && id !== "" ? withId(deletePattern, id) : "#";
     }
     if (fullFormLink instanceof HTMLAnchorElement) {
       fullFormLink.href = withId(editPattern, id);
-      fullFormLink.classList.toggle("d-none", locked);
+      fullFormLink.classList.toggle("d-none", locked || !owned);
     }
     setDisabled(locked);
     modal.show();
