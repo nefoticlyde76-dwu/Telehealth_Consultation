@@ -270,7 +270,7 @@ require __DIR__ . '/../../partials/dashboard/summary_stats.php';
                   ?>
                   <button
                     type="button"
-                    class="mbpha-avail__block is-colored is-<?= Helper::escape($blockState) ?><?= $blockPast ? ' is-past' : '' ?><?= $blockOwned ? ' is-own' : ' is-foreign' ?>"
+                    class="mbpha-avail__block is-colored is-<?= Helper::escape($blockState) ?><?= $blockPast ? ' is-past' : '' ?><?= $blockOwned ? ' is-own' : ' is-foreign' ?><?= !empty($block['compact']) ? ' is-compact' : '' ?>"
                     style="<?= Helper::escape(DoctorScheduleColor::inlineBlockStyle($blockColor, $block)) ?>"
                     data-avail-block
                     data-id="<?= $blockId ?>"

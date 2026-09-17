@@ -123,6 +123,19 @@ final class SharedAvailabilityCalendarTest extends DatabaseTestCase
         }
     }
 
+    public function testThirtyMinuteSlotFillsOneGridRow(): void
+    {
+        $layout = DoctorAvailabilityService::layoutBlock('15:00', '15:30');
+
+        $this->assertTrue((bool) ($layout['visible'] ?? false));
+        $this->assertSame(30, (int) ($layout['duration_minutes'] ?? 0));
+        $this->assertSame(14.0, (float) ($layout['top_rows'] ?? -1));
+        $this->assertSame(1.0, (float) ($layout['span_rows'] ?? 0));
+
+        $hour = DoctorAvailabilityService::layoutBlock('15:00', '16:00');
+        $this->assertSame(2.0, (float) ($hour['span_rows'] ?? 0));
+    }
+
     public function testDoctorColourAssignmentIsStable(): void
     {
         $first = DoctorScheduleColor::forDoctorId(42);

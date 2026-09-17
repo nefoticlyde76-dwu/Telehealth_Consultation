@@ -108,40 +108,54 @@ class DoctorAvailabilityService
     /**
      * Position an availability period on the visual time scale.
      *
-     * @return array{visible:bool,top_pct:float,height_pct:float,duration_minutes:int}
+     * @return array{visible:bool,top_pct:float,height_pct:float,top_rows:float,span_rows:float,duration_minutes:int}
      */
     public static function layoutBlock(string $startHm, string $endHm): array
     {
+        $hidden = [
+            'visible' => false,
+            'top_pct' => 0.0,
+            'height_pct' => 0.0,
+            'top_rows' => 0.0,
+            'span_rows' => 0.0,
+            'duration_minutes' => 0,
+        ];
+
         $start = self::minutesFromMidnight($startHm);
         $end = self::minutesFromMidnight($endHm);
         $gridStart = self::minutesFromMidnight(self::GRID_START);
         $gridEnd = self::minutesFromMidnight(self::GRID_END);
 
         if ($start === null || $end === null || $gridStart === null || $gridEnd === null || $end <= $start) {
-            return ['visible' => false, 'top_pct' => 0.0, 'height_pct' => 0.0, 'duration_minutes' => 0];
+            return $hidden;
         }
 
         $span = max(1, $gridEnd - $gridStart);
+        $step = max(1, self::GRID_STEP_MINUTES);
         $visStart = max($start, $gridStart);
         $visEnd = min($end, $gridEnd);
         if ($visEnd <= $visStart) {
-            return ['visible' => false, 'top_pct' => 0.0, 'height_pct' => 0.0, 'duration_minutes' => $end - $start];
+            return $hidden + ['duration_minutes' => $end - $start];
         }
 
-        $top = (($visStart - $gridStart) / $span) * 100;
-        $height = (($visEnd - $visStart) / $span) * 100;
-        $minHeight = (15 / $span) * 100;
-        if ($height < $minHeight) {
-            $height = $minHeight;
+        $topRows = ($visStart - $gridStart) / $step;
+        $spanRows = ($visEnd - $visStart) / $step;
+        $minSpanRows = 15 / $step;
+        if ($spanRows < $minSpanRows) {
+            $spanRows = $minSpanRows;
         }
-        if ($top + $height > 100) {
-            $height = max($minHeight, 100 - $top);
+
+        $rowCount = $span / $step;
+        if ($topRows + $spanRows > $rowCount) {
+            $spanRows = max($minSpanRows, $rowCount - $topRows);
         }
 
         return [
             'visible' => true,
-            'top_pct' => round($top, 3),
-            'height_pct' => round($height, 3),
+            'top_pct' => round(($topRows / $rowCount) * 100, 3),
+            'height_pct' => round(($spanRows / $rowCount) * 100, 3),
+            'top_rows' => round($topRows, 4),
+            'span_rows' => round($spanRows, 4),
             'duration_minutes' => $end - $start,
         ];
     }
@@ -208,9 +222,12 @@ class DoctorAvailabilityService
                 'past' => $isPast,
                 'top_pct' => $layout['top_pct'],
                 'height_pct' => $layout['height_pct'],
+                'top_rows' => $layout['top_rows'],
+                'span_rows' => $layout['span_rows'],
                 'left_pct' => 0.0,
                 'width_pct' => 100.0,
                 'duration_minutes' => $layout['duration_minutes'],
+                'compact' => ($layout['duration_minutes'] <= self::SLOT_MINUTES),
                 'full_name' => (string) ($slot['full_name'] ?? ''),
                 'specialization' => (string) ($slot['specialization'] ?? ''),
                 'professional_title' => (string) ($slot['professional_title'] ?? ''),

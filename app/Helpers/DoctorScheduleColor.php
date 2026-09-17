@@ -91,17 +91,17 @@ class DoctorScheduleColor
      */
     public static function inlineBlockStyle(array $color, array $layout): string
     {
-        $top = (float) ($layout['top_pct'] ?? 0);
-        $height = (float) ($layout['height_pct'] ?? 0);
+        $topRows = (float) ($layout['top_rows'] ?? 0);
+        $spanRows = (float) ($layout['span_rows'] ?? 0);
         $left = (float) ($layout['left_pct'] ?? 0);
         $width = (float) ($layout['width_pct'] ?? 100);
 
         return sprintf(
-            'top: %s%%; height: %s%%; left: %s%%; width: %s%%; --slot-bg: %s; --slot-border: %s; --slot-accent: %s; --slot-text: %s;',
-            self::formatPct($top),
-            self::formatPct($height),
-            self::formatPct($left),
-            self::formatPct($width),
+            'top: calc(%s * var(--avail-row-h)); height: calc(%s * var(--avail-row-h) - 2px); left: %s%%; width: %s%%; --slot-bg: %s; --slot-border: %s; --slot-accent: %s; --slot-text: %s;',
+            self::formatUnit($topRows),
+            self::formatUnit($spanRows > 0 ? $spanRows : 1.0),
+            self::formatUnit($left),
+            self::formatUnit($width),
             (string) ($color['bg'] ?? '#E8F1F8'),
             (string) ($color['border'] ?? '#9BB8D3'),
             (string) ($color['accent'] ?? '#0F4C81'),
@@ -125,8 +125,8 @@ class DoctorScheduleColor
         );
     }
 
-    private static function formatPct(float $value): string
+    private static function formatUnit(float $value): string
     {
-        return rtrim(rtrim(number_format($value, 3, '.', ''), '0'), '.');
+        return rtrim(rtrim(number_format($value, 4, '.', ''), '0'), '.');
     }
 }

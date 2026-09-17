@@ -215,7 +215,7 @@ $slotsUrl = static function (array $query = []) use ($filters): string {
                   ]);
                   ?>
                   <a
-                    class="mbpha-avail__block is-colored is-available"
+                    class="mbpha-avail__block is-colored is-available<?= !empty($block['compact']) ? ' is-compact' : '' ?>"
                     style="<?= Helper::escape(DoctorScheduleColor::inlineBlockStyle($blockColor, $block)) ?>"
                     href="<?= Helper::url('/patient/consultation-requests/book/' . $slotId) ?>"
                     <?php if ((string) ($block['expires_at'] ?? '') !== ''): ?>
