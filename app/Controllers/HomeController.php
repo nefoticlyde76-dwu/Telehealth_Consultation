@@ -12,21 +12,21 @@ class HomeController extends Controller
 {
     public function index(): void
     {
-        $this->render('home/index', array_merge(Seo::viewData('/'), [
+        $this->render('home/index', array_merge($this->publicPageData('/'), [
             'bodyClass' => 'public-layout home-landing-layout',
         ]));
     }
 
     public function about(): void
     {
-        $this->render('home/about', array_merge(Seo::viewData('/about'), [
+        $this->render('home/about', array_merge($this->publicPageData('/about'), [
             'bodyClass' => 'public-layout public-page-layout public-page-about',
         ]));
     }
 
     public function howItWorks(): void
     {
-        $this->render('home/how_it_works', array_merge(Seo::viewData('/how-it-works'), [
+        $this->render('home/how_it_works', array_merge($this->publicPageData('/how-it-works'), [
             'bodyClass' => 'public-layout public-page-layout public-page-how',
         ]));
     }
@@ -35,7 +35,7 @@ class HomeController extends Controller
     {
         $this->render('home/contact', array_merge(
             $this->contactPageData(),
-            Seo::viewData('/contact'),
+            $this->publicPageData('/contact'),
             [
                 'bodyClass' => 'public-layout public-page-layout public-page-contact',
             ]
@@ -84,6 +84,29 @@ class HomeController extends Controller
             'message' => 'Your inquiry has been received. Our team will review it through the configured contact channel.',
         ]);
         Helper::redirect('/contact');
+    }
+
+    /**
+     * Use local SEO titles when the helper is present; otherwise use plain titles.
+     *
+     * @return array{title: string, metaDescription?: string}
+     */
+    private function publicPageData(string $path): array
+    {
+        if (class_exists(Seo::class)) {
+            return Seo::viewData($path);
+        }
+
+        $titles = [
+            '/' => 'MBPHA TeleHealth Consultation System',
+            '/about' => 'About | MBPHA TeleHealth Consultation System',
+            '/how-it-works' => 'How It Works | MBPHA TeleHealth Consultation System',
+            '/contact' => 'Contact | MBPHA TeleHealth Consultation System',
+        ];
+
+        return [
+            'title' => $titles[$path] ?? 'MBPHA TeleHealth Consultation System',
+        ];
     }
 
     private function contactPageData(): array

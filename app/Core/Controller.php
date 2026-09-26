@@ -20,7 +20,11 @@ class Controller
 
     protected function render(string $view, array $data = [], string $layout = 'layouts/app'): void
     {
-        Seo::applyResponseHeaders($layout, $data);
+        if (class_exists(Seo::class)) {
+            Seo::applyResponseHeaders($layout, $data);
+        } elseif (!headers_sent()) {
+            header('X-Robots-Tag: noindex, nofollow', false);
+        }
 
         extract($data);
         ob_start();

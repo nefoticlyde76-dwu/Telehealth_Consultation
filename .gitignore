@@ -34,3 +34,10 @@ storage/complaint_images/**
 !storage/complaint_images/index.php
 
 storage/dompdf/**
+
+# Local-only SEO files. Keep on disk; do not track or redeploy.
+public/robots.txt
+public/sitemap.xml
+app/Helpers/Seo.php
+app/Views/partials/public/seo_head.php
+bin/test_seo.php
