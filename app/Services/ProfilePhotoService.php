@@ -246,7 +246,7 @@ class ProfilePhotoService
             header('Content-Type: ' . $photo['mime']);
             header('Content-Length: ' . (string) strlen($photo['bytes']));
             header('X-Content-Type-Options: nosniff');
-            header('X-Robots-Tag: noindex, nofollow');
+            header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet');
             header('Cache-Control: private, no-store, no-cache, must-revalidate');
             header('Pragma: no-cache');
             http_response_code(200);

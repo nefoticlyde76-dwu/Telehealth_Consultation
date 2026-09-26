@@ -145,7 +145,7 @@ class PrescriptionPdfService
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Content-Length: ' . strlen($binary));
         header('X-Content-Type-Options: nosniff');
-        header('X-Robots-Tag: noindex, nofollow');
+        header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet');
         header('Cache-Control: private, no-store, no-cache, must-revalidate');
         header('Pragma: public');
         echo $binary;

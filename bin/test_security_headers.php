@@ -58,6 +58,7 @@ expect_true(($headers['X-Frame-Options'] ?? '') === 'DENY', 'X-Frame-Options is 
 expect_true(!str_contains($csp, 'frame-ancestors'), 'CSP does not duplicate X-Frame-Options with frame-ancestors');
 expect_true(($headers['Referrer-Policy'] ?? '') === 'strict-origin-when-cross-origin', 'Referrer-Policy is strict-origin-when-cross-origin');
 expect_true(($headers['X-Content-Type-Options'] ?? '') === 'nosniff', 'X-Content-Type-Options is nosniff');
+expect_true(($headers['X-Robots-Tag'] ?? '') === 'noindex, nofollow, noarchive, nosnippet', 'X-Robots-Tag tells crawlers not to index');
 expect_true(str_contains($csp, "default-src 'self'"), 'CSP default-src is self');
 expect_true(str_contains($csp, 'https://cdn.jsdelivr.net'), 'CSP allows the Bootstrap/Chart.js/Daily jsDelivr CDN');
 expect_true(!str_contains($csp, 'fonts.googleapis.com'), 'CSP no longer allows Google Fonts stylesheets');

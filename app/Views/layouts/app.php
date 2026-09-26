@@ -4,19 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <?php
-  $seoHead = __DIR__ . '/../partials/public/seo_head.php';
-  if (is_file($seoHead)) {
-      require $seoHead;
-  } else {
-      $pageTitle = (isset($title) && is_string($title) && trim($title) !== '')
-          ? $title
-          : 'MBPHA TeleHealth Consultation System';
-      ?>
-  <title><?= \App\Helpers\Helper::escape($pageTitle) ?></title>
-  <meta name="robots" content="noindex, nofollow">
-      <?php
-  }
+  $pageTitle = (isset($title) && is_string($title) && trim($title) !== '')
+      ? $title
+      : 'MBPHA TeleHealth Consultation System';
   ?>
+  <title><?= \App\Helpers\Helper::escape($pageTitle) ?></title>
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/fonts.css') ?>">

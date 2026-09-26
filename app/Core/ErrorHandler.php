@@ -52,7 +52,7 @@ class ErrorHandler
             if (!headers_sent()) {
                 header('Content-Type: text/html; charset=utf-8');
             }
-            echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex, nofollow"><title>Unable to load page</title></head><body style="font-family: system-ui, sans-serif; background:' . \App\Helpers\Palette::LIGHT_GRAY . '; color:' . \App\Helpers\Palette::DARK_NAVY . '; padding:48px 24px;">';
+            echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex, nofollow, noarchive, nosnippet"><meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet"><title>Unable to load page</title></head><body style="font-family: system-ui, sans-serif; background:' . \App\Helpers\Palette::LIGHT_GRAY . '; color:' . \App\Helpers\Palette::DARK_NAVY . '; padding:48px 24px;">';
             echo '<h1 style="font-size:1.25rem;">Unable to load this page</h1>';
             echo '<p>Please refresh the page or try again. If the problem continues, contact MBPHA TeleHealth administration.</p>';
             echo '</body></html>';

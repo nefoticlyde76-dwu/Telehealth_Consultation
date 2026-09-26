@@ -22,8 +22,9 @@ class Controller
     {
         if (class_exists(Seo::class)) {
             Seo::applyResponseHeaders($layout, $data);
-        } elseif (!headers_sent()) {
-            header('X-Robots-Tag: noindex, nofollow', false);
+        }
+        if (!headers_sent()) {
+            header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet');
         }
 
         extract($data);
