@@ -12,7 +12,7 @@
 
 .mbpha-avail {
   --avail-cell-h: 44px;
-  --avail-row-h: 52px;
+  --avail-row-h: 26px;
   min-width: 0;
 }
 
@@ -28,21 +28,21 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
   flex-wrap: wrap;
-  padding: 20px 20px 12px;
+  padding: 12px 14px 8px;
 }
 
 .mbpha-avail__title {
-  margin: 0 0 4px;
-  font-size: 1.05rem;
+  margin: 0 0 2px;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-dark, #212529);
 }
 
 .mbpha-avail__hint {
-  max-width: 46rem;
-  font-size: 0.875rem;
+  max-width: 40rem;
+  font-size: 0.75rem;
   color: var(--text-muted, #6c757d);
 }
 
@@ -90,8 +90,8 @@
 .mbpha-avail__legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 16px;
-  padding: 0 20px 12px;
+  gap: 8px 12px;
+  padding: 0 14px 8px;
 }
 
 .mbpha-avail__legend-item {
@@ -148,8 +148,8 @@
 .mbpha-avail__tools {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 20px;
-  padding: 0 20px 16px;
+  gap: 8px 12px;
+  padding: 0 14px 10px;
   border-bottom: 1px solid var(--medium-gray);
 }
 
@@ -533,13 +533,14 @@
 
 /* Flexible calendar time-grid */
 .mbpha-avail__cal {
-  min-width: 720px;
+  width: 100%;
+  min-width: 0;
 }
 
 .mbpha-avail__cal-head,
 .mbpha-avail__cal-body {
   display: grid;
-  grid-template-columns: 88px repeat(7, minmax(92px, 1fr));
+  grid-template-columns: 56px repeat(7, minmax(0, 1fr));
 }
 
 .mbpha-avail__cal-head {
@@ -550,9 +551,9 @@
 
 .mbpha-avail__cal-time-head,
 .mbpha-avail__cal-day-head {
-  padding: 7px 4px;
+  padding: 4px 2px;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   color: var(--table-header-color);
   background: var(--table-header-bg);
@@ -611,10 +612,10 @@
 
 .mbpha-avail__cal-time {
   height: var(--avail-row-h);
-  padding: 0 8px;
+  padding: 0 6px;
   display: flex;
   align-items: flex-start;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 600;
   color: var(--dark-navy);
   line-height: 1.2;
@@ -681,14 +682,14 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1px;
-  padding: 4px 7px;
+  gap: 0;
+  padding: 1px 5px;
   border: 1px solid rgba(var(--medical-blue-rgb), 0.35);
   border-left: 3px solid var(--medical-blue);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--pale-blue);
   color: var(--medical-blue);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 600;
   line-height: 1.15;
   text-align: left;
@@ -753,7 +754,7 @@
 }
 
 .mbpha-avail__block.is-compact {
-  padding: 3px 6px;
+  padding: 1px 4px;
   gap: 0;
 }
 
@@ -782,12 +783,22 @@
 }
 
 @media (max-width: 767.98px) {
+  .mbpha-avail__scroller {
+    overflow-x: auto;
+  }
+
   .mbpha-avail__cal {
-    min-width: 680px;
+    min-width: 640px;
   }
 
   .mbpha-avail {
-    --avail-row-h: 48px;
+    --avail-row-h: 24px;
+  }
+}
+
+@media (max-height: 800px) {
+  .mbpha-avail__hint {
+    display: none;
   }
 }
 

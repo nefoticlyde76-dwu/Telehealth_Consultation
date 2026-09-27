@@ -250,6 +250,7 @@ class PatientController extends Controller
             'timezoneLabel' => $weekData['timezoneLabel'],
             'statusMessage' => Session::getFlash('status'),
             'pageStyles' => '<link rel="stylesheet" href="' . Helper::asset('css/mbpha-schedule.css') . '">',
+            'pageScripts' => '<script src="' . Helper::asset('js/mbpha-schedule.js') . '"></script>',
         ], 'layouts/dashboard');
     }
 

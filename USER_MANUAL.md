@@ -39,9 +39,11 @@ You can use MBPHA TeleHealth to:
 - Create a patient account and sign in securely
 - View doctors and the times they have opened for booking
 - Request a consultation and track whether it is approved
+- Cancel or reschedule your own booking when it is still early enough
 - Join an approved video consultation at the scheduled time
 - View and download consultation records and prescriptions after the visit
-- Allow doctors to publish their available times, conduct consultations, write notes, and issue prescriptions
+- Ask **MediMate AI** for general health information (patients only)
+- Allow doctors to publish their available times, see colleagues’ hours on a shared calendar, conduct consultations, write notes, and issue prescriptions
 - Allow administrators to review booking requests and manage user accounts
 
 ### Who can use it
@@ -190,7 +192,7 @@ The sidebar is the main menu. On a phone, open it with the menu button at the to
 | Group | Menu item | What it opens |
 |-------|-----------|---------------|
 | Overview | **Dashboard** | Your home page |
-| Schedule | **Availability** | Your published times |
+| Schedule | **Availability** | Shared calendar of all doctors’ hours, plus your own slot list |
 | Schedule | **Consultations** | Assigned consultations |
 | Updates | **Notifications** | Your notices |
 | Account | **Profile**, **Security**, **Preferences** | Your account settings |
@@ -222,7 +224,7 @@ Across the top you will usually see:
 
 The dashboard is the first page after sign-in. It summarises what needs attention:
 
-- Patients see upcoming and pending consultations, recent records, next available times, and notifications
+- Patients see upcoming and pending consultations, recent records, next available times, and notifications. A **MediMate AI** button is also available on most patient pages.
 - Doctors see today’s schedule, upcoming consultations, recent completed visits, and availability coverage
 - Administrators see pending requests, recent users, recent activity, and notifications
 
@@ -288,6 +290,8 @@ You will see:
 
 The main shortcut is **Book Consultation**.
 
+On most patient pages (but not inside the video room), a **MediMate AI** button appears at the bottom of the screen. See [Section 4.9](#49-medimate-ai).
+
 ### 4.2 Finding a doctor
 
 1. Open **Doctors** in the sidebar.
@@ -307,10 +311,11 @@ You cannot type any date and time you like. You must choose a time the doctor ha
 2. The page title is **Book a consultation**.
 3. Use the filters if you wish: **Doctor**, **Specialization**, and **Week** (Previous / This week / Next).
 4. Select **Apply**, or **Reset** to clear filters.
-5. Open hours are highlighted. The legend explains **Available — tap to book** and **Unavailable**.
-6. Select **Book** on the time you want.
+5. Open hours are highlighted. Each doctor has a colour so you can tell their times apart. A slot block shows the doctor’s name, specialisation, and time. If two doctors are open at the same hour, their blocks appear side by side.
+6. The legend explains **Available — tap to book** and **Unavailable**.
+7. Select **Book** on the time you want.
 
-You can also switch to **Slot list** for a table view, or start from the **Doctors** page.
+You can also switch to **Slot list** for a table view (the same doctor colours appear as small swatches), or start from the **Doctors** page.
 
 **Confirm the booking**
 
@@ -331,13 +336,41 @@ When you are not using filters, consultations are grouped as:
 
 - **Upcoming and active** — Pending and Approved
 - **Completed consultations** — finished visits, newest first
-- **Closed requests** — Rejected and Cancelled, kept for your records
+- **Closed requests** — Rejected, Cancelled, and No-Show, kept for your records
 
 You can also search by doctor or medication name, and filter by status, date, records, and sort order.
 
 Open a row to see **Consultation Details** (or **Consultation Record** when the visit is completed). The detail page shows status, date and time, doctor, **Reason for visit**, and the complaint image if you uploaded one.
 
-Patients cannot cancel, change, or reschedule a booking from this screen. If you need a change, contact MBPHA administration.
+**Cancel or reschedule your booking**
+
+If the booking is still **Pending** or **Approved**, and the appointment is still at least **24 hours away**, you will see **Reschedule** and **Cancel** on **My Consultations** and on the detail page.
+
+**To reschedule**
+
+1. Select **Reschedule**.
+2. On **Reschedule Consultation**, review the current appointment.
+3. Choose another **Available** time with the **same doctor**. You cannot move the booking to a different doctor from this page.
+4. Confirm. The previous time is released for other patients.
+
+A **Pending** request stays **Pending** and still needs administrator approval. An **Approved** request stays **Approved**; the video room is updated for the new time. The doctor is notified of the new appointment.
+
+**To cancel**
+
+1. Select **Cancel**.
+2. Confirm in the dialog. The booked time is released.
+3. Success message: *Your consultation booking has been cancelled.*
+
+You cannot undo a cancellation from this page. Book a new slot later if you still need a consultation.
+
+Cancel and reschedule are blocked when:
+
+- The status is no longer Pending or Approved
+- The appointment has already started
+- There are fewer than 24 hours remaining (you will see: *Bookings cannot be cancelled or rescheduled within 24 hours of the appointment.*)
+- There is no scheduled slot to move to (cancel may still be available)
+
+If the buttons are hidden or a note explains why a change is blocked, contact MBPHA administration. An administrator can still cancel a pending or approved request.
 
 ### 4.5 Joining a video consultation
 
@@ -359,6 +392,8 @@ Button labels you may see:
 When the room is open, you will see *Your video consultation room is available now.* Your browser will ask for camera and microphone permission the first time you join.
 
 If the consultation is still pending, you will see: *You can join once MBPHA administration approves the consultation.*
+
+If the consultation was marked **No-Show** or **Cancelled**, you cannot join. Book a new time if you still need care.
 
 ### 4.6 Viewing records and prescriptions
 
@@ -398,10 +433,38 @@ Patients receive in-app notices such as:
 
 - **Consultation Approved**
 - **Consultation Request Rejected**
+- **Upcoming Consultation** and **Appointment reminder** (when you are using the system near the appointment, including about 24 hours and 1 hour before)
 - **Consultation Completed**
 - **Prescription Available**
+- **Consultation No-Show** — the scheduled visit was marked as not attended
 
 Opening a notice usually takes you to that consultation. Booking approval is shown in the system as a notice. It is not sent as a separate booking-confirmation email.
+
+### 4.9 MediMate AI
+
+**MediMate AI** is a patient-only health information assistant. It is not a doctor and it does not replace a consultation.
+
+A circular MediMate button appears on most patient pages after you sign in. It does **not** appear inside the video consultation room.
+
+**How to use it**
+
+1. Select the MediMate button.
+2. Type a question, or choose a suggested topic such as *What is hypertension?*, *What is diabetes?*, *How can I prepare for my consultation?*, or *How do I book a consultation?*
+3. Read the reply in the chat panel.
+4. Use **New chat** to start a fresh conversation, or open previous conversations from the history list.
+
+MediMate can help with general health topics and with how to use this TeleHealth system (browse doctors, book a slot, track a booking, and join an approved video consultation).
+
+MediMate **cannot**:
+
+- Diagnose your condition
+- Prescribe medicine or tell you what dose to take
+- Tell you to start, stop, or change prescribed medication
+- Replace a booked consultation with an MBPHA doctor
+
+If your symptoms may be serious or look like an emergency (for example severe chest pain, trouble breathing, or sudden weakness), seek emergency medical care. MediMate is not an emergency service.
+
+If MediMate is temporarily unavailable, you will see a short message asking you to try again shortly. Close the panel and continue using the rest of the system as usual.
 
 ---
 
@@ -430,24 +493,30 @@ You will see:
 - **Recent Consultations**
 - Availability coverage for the coming days
 
-The shortcut **Manage Availability** opens your schedule. **Create Slot** in the top bar opens a one-off time entry.
+The shortcut **Manage Availability** opens the **Shared Availability Calendar**. **Create Slot** in the top bar opens a one-off time entry.
 
 A readiness reminder asks you to keep your phone number, specialisation, profile photo, and signature up to date.
 
 ### 5.3 Managing your availability
 
-Patients can book only the times you publish.
+Patients can book only the times you publish. The weekly view is a **Shared Availability Calendar**: you can see every approved doctor’s **Available** and **Booked** hours so you can avoid overlapping consultations.
 
-**Weekly schedule (default)**
+**Shared weekly schedule (default)**
 
-1. Open **Availability**.
+1. Open **Availability**. The page title is **Shared Availability Calendar**.
 2. Use Previous week / **This week** / Next week to move between weeks.
-3. Click an open time on the grid to add hours, or use **Add Availability**.
-4. Saved hours appear on the schedule. **Booked** times stay locked.
+3. Optionally filter by **Doctor** (including **You**) or **Specialization**. Select **Reset** to show everyone again.
+4. Each doctor has a colour. A slot block shows the doctor’s name, specialisation, date and time, and whether it is **Available** or **Booked**. If two doctors have hours at the same time, the blocks appear side by side.
+5. The legend explains **Available**, **Booked**, and **Open time — click to add yours**.
+6. Click an empty time on the grid to add **your** hours, or use **Add Availability**.
+7. Click **your** block to edit or delete it (only if it is still **Available**).
+8. Click another doctor’s block to **view** it only. You cannot edit or delete a colleague’s hours.
 
-**Slot list**
+Usual grid hours are **8:00 AM – 4:30 PM**, Papua New Guinea time.
 
-Select **Slot list** to review saved times in a table. You can search, filter by **Available** or **Booked**, and edit or delete only unbooked times.
+**My Slot List**
+
+Select **My Slot List** to review **only your** saved times in a table. You can search, filter by **Available** or **Booked**, and edit or delete only unbooked times. Use **Weekly Schedule** to return to the shared calendar.
 
 **Create a single time**
 
@@ -455,7 +524,7 @@ Select **Slot list** to review saved times in a table. You can search, filter by
 2. Enter **Consultation Date**, **Start Time**, **End Time**, and optional notes.
 3. Select **Create Availability**.
 
-New times are **Available** by default. Once a patient books a time, it becomes **Booked** and cannot be edited or deleted.
+New times are **Available** by default. Once a patient books a time, it becomes **Booked** and cannot be edited or deleted — even when it is your own slot.
 
 ### 5.4 Viewing assigned consultations
 
@@ -465,11 +534,13 @@ You will see assigned consultations grouped as:
 
 - **Upcoming and active** — Approved and Pending
 - **Completed consultations**
-- **Closed consultations** — Rejected and Cancelled
+- **Closed consultations** — Rejected, Cancelled, and No-Show
 
 You can search by patient name and filter by status and date.
 
 Doctors do **not** approve, reject, or cancel bookings. That is an administrator task. Pending consultations are visible for your information only.
+
+If a patient cancels or reschedules, you receive an in-app notice. After an approved consultation’s start time, you may mark it as **No-Show** if it was not attended. See [Section 5.12](#512-marking-a-consultation-as-no-show).
 
 ### 5.5 Joining and conducting a consultation
 
@@ -562,9 +633,31 @@ Upload your signature before you need to issue a prescription.
 Doctors receive in-app notices such as:
 
 - **New Consultation** — a booking with you has been approved
-- **Upcoming Consultation** — a consultation is due soon (this reminder appears when you are using the system near the appointment time)
+- **Consultation Cancelled** — the patient cancelled the booking
+- **Consultation Rescheduled** — the patient moved the booking to another of your times
+- **Upcoming Consultation** and **Appointment reminder** — a consultation is due soon (including about 24 hours and 1 hour before, when you are using the system)
+- **Consultation No-Show** — the visit was marked as not attended
 
 Opening a notice takes you to that consultation.
+
+### 5.12 Marking a consultation as No-Show
+
+Use **Mark as No-Show** when an **Approved** consultation was not attended. This is different from completing a visit and different from cancelling a booking.
+
+**When the button appears**
+
+- The consultation is **Approved**
+- The scheduled **start time** has already passed
+- You are on **Consultations**, the consultation detail page, or (for administrators) the request review page
+
+**How to mark it**
+
+1. Select **Mark as No-Show**.
+2. Confirm in the dialog *Mark this consultation as No-Show?*
+3. The booked slot is released. The consultation moves to **Closed** with status **No-Show**.
+4. The patient is notified in the system.
+
+You cannot undo No-Show from this page. You cannot mark No-Show before the start time, and you cannot use it on a Pending, Completed, Rejected, or Cancelled request.
 
 ---
 
@@ -598,15 +691,17 @@ The shortcut **Review Pending Requests** (or **Review Requests** in the top bar)
    - **Approve & Next** or **Approve Request**
    - **Reject & Next** or **Reject Request**
 6. For a pending or approved request, you may also **Cancel Request**.
-7. Use **Open full details** when you want the full-page view.
+7. For an **Approved** request whose start time has already passed, you may **Mark as No-Show** if the consultation was not attended. This is different from **Cancel Request**.
+8. Use **Open full details** when you want the full-page view.
 
 **What happens next**
 
 - **Approve** — the consultation is scheduled. The patient and doctor are notified in the system. The video room is prepared for the appointment.
 - **Reject** — the request is closed and that time becomes available again for other patients.
 - **Cancel** — the consultation is no longer active and the time is released where appropriate.
+- **No-Show** — the scheduled consultation is recorded as not attended. The time is released. The patient and doctor are notified.
 
-Once a request is **Rejected**, **Cancelled**, or **Completed**, no further approval actions are available.
+Once a request is **Rejected**, **Cancelled**, **Completed**, or **No-Show**, no further approval actions are available.
 
 You can filter the queue by search (patient, email, doctor, or request ID), status, doctor, and date.
 
@@ -674,7 +769,7 @@ Permanent deletion asks you to confirm carefully, including a confirmation phras
 
 Open **Audit Logs** (**Activity & Audit Logs**).
 
-This is a chronological list of important security and workflow events, such as approvals, rejections, cancellations, and account changes.
+This is a chronological list of important security and workflow events, such as approvals, rejections, cancellations, reschedules, no-shows, and account changes.
 
 You can search and filter by action, role, user, and date. Open an event to see more detail. This page is for review only. You do not edit consultation records here.
 
@@ -724,12 +819,22 @@ These are the most important end-to-end tasks, written as numbered steps.
 
 1. Sign in as a patient.
 2. Open **Book Consultation**, or open **Doctors** and choose a time.
-3. Select an **Available** time.
-4. Check the doctor and the date and time on **Confirm your selected consultation slot**.
-5. Enter your brief reason for consultation.
-6. Upload a complaint image if it will help the doctor (optional).
-7. Select **Submit Booking Request**.
-8. Confirm the success message and that the request appears under **My Consultations** with status **Pending**.
+3. Use **Doctor** or **Specialization** filters if you want a specific clinician. Each colour on the weekly schedule belongs to one doctor.
+4. Select an **Available** time.
+5. Check the doctor and the date and time on **Confirm your selected consultation slot**.
+6. Enter your brief reason for consultation.
+7. Upload a complaint image if it will help the doctor (optional).
+8. Select **Submit Booking Request**.
+9. Confirm the success message and that the request appears under **My Consultations** with status **Pending**.
+
+### How a patient cancels or reschedules a booking
+
+1. Sign in as a patient.
+2. Open **My Consultations** and open the **Pending** or **Approved** booking.
+3. Confirm the appointment is still at least 24 hours away.
+4. To move it: select **Reschedule**, choose another **Available** time with the same doctor, and confirm.
+5. To stop it: select **Cancel** and confirm. The time is released.
+6. If the buttons are not shown, the cutoff has passed or the status can no longer be changed. Contact MBPHA administration.
 
 ### How an administrator reviews a booking
 
@@ -737,7 +842,7 @@ These are the most important end-to-end tasks, written as numbered steps.
 2. Open **Consultation Requests**, or select **Review Requests**.
 3. Select the pending request.
 4. Read the complaint and check the date, time, patient, and doctor.
-5. Select **Approve Request** or **Reject Request**. Use **Cancel Request** only if the booking should be stopped.
+5. Select **Approve Request** or **Reject Request**. Use **Cancel Request** only if the booking should be stopped. After the start time of an approved visit that was not attended, use **Mark as No-Show**.
 6. Confirm that the status badge changes.
 
 ### How to join a video consultation
@@ -771,10 +876,27 @@ These are the most important end-to-end tasks, written as numbered steps.
 ### How a doctor publishes availability
 
 1. Sign in as the doctor.
-2. Open **Availability**.
-3. Add times on the weekly grid, or select **Create Availability**.
-4. Save the schedule.
-5. Confirm the new times show as **Available**.
+2. Open **Availability** to see the **Shared Availability Calendar**.
+3. Review colleagues’ coloured hours so you do not overlap their consultations.
+4. Click an empty time on the grid, or select **Add Availability** / **Create Availability**.
+5. Save the schedule.
+6. Confirm your new times show as **Available**. You can manage only your own slots; **My Slot List** shows your times only.
+
+### How a doctor marks a missed consultation as No-Show
+
+1. Sign in as the doctor.
+2. Open **Consultations** after the scheduled start time.
+3. Open the **Approved** consultation that was not attended.
+4. Select **Mark as No-Show** and confirm.
+5. Confirm the status changes to **No-Show** and the slot is released.
+
+### How a patient uses MediMate AI
+
+1. Sign in as a patient.
+2. Select the **MediMate AI** button (it does not appear in the video room).
+3. Type a general health or “how to use TeleHealth” question, or choose a suggested question.
+4. Read the reply. Start a **New chat** or open previous conversations if needed.
+5. Remember that MediMate cannot diagnose, prescribe, or replace a booked consultation.
 
 ### How a doctor activates an invited account
 
@@ -805,7 +927,8 @@ These statuses appear on bookings for every role.
 | **Pending** | The booking is waiting for administrator review. | Patients wait for a notice. Doctors wait. Administrators should review the request. |
 | **Approved** | The booking is accepted and scheduled. | Patient and doctor join at the scheduled time. |
 | **Rejected** | Administration did not accept the booking. | The patient may book a different available time. |
-| **Cancelled** | The booking was stopped and is no longer active. | The patient may book a different available time if needed. |
+| **Cancelled** | The booking was stopped by the patient or an administrator and is no longer active. | The patient may book a different available time if needed. |
+| **No-Show** | The approved consultation was not attended. This is recorded separately from cancellation. | The patient may book a different available time if needed. |
 | **Completed** | The doctor has finished the consultation and finalised the record. | Patients can view and download documents when they are available. |
 
 ### Clinical record statuses
@@ -857,9 +980,13 @@ These statuses appear on bookings for every role.
 | **Consultation Approved** | Patient | Your booking was approved. |
 | **Consultation Request Rejected** | Patient | Your booking was rejected. |
 | **New Consultation** | Doctor | An approved consultation has been assigned to you. |
-| **Upcoming Consultation** | Doctor | A consultation is due soon. |
+| **Consultation Cancelled** | Doctor | The patient cancelled the booking. |
+| **Consultation Rescheduled** | Doctor | The patient moved the booking to another of your times. |
+| **Upcoming Consultation** | Patient and doctor | A consultation is due soon. |
+| **Appointment reminder** | Patient and doctor | A reminder about 24 hours or 1 hour before the appointment (when someone is using the system). |
 | **Consultation Completed** | Patient | The visit is finished and the record is available. |
 | **Prescription Available** | Patient | The doctor issued a prescription. |
+| **Consultation No-Show** | Patient and doctor | The scheduled consultation was marked as not attended. |
 
 Most of these appear inside the system (the bell and the Notifications page). The emails the system currently sends are the **doctor invitation** email and the **password reset** email.
 
@@ -909,7 +1036,7 @@ Open **Preferences** (**Notification preferences**).
 
 You can turn these on or off:
 
-- **Appointment notices** — booking created, approved, assigned, rejected, and upcoming reminders
+- **Appointment notices** — booking created, approved, assigned, rejected, 24-hour and 1-hour reminders, and no-show notices
 - **Consultation notices** — completed visits and available prescriptions
 - **Email notices where the system already sends email**
 - **SMS notices (reserved)** — stored for later use; the system does not currently send SMS
@@ -966,6 +1093,12 @@ If you leave the system idle for a long time, you may need to sign in again.
 
 **What to do:** Return to **Book Consultation**, choose another **Available** time, and submit again. Make sure the reason for consultation is filled in.
 
+### Cannot cancel or reschedule
+
+**What may be happening:** There are fewer than 24 hours until the appointment, the visit has already started, or the status is no longer Pending or Approved.
+
+**What to do:** Read the note next to the booking. If **Reschedule** or **Cancel** is hidden, contact MBPHA administration. Reschedule can only move you to another **Available** time with the **same doctor**.
+
 ### No available appointment times
 
 **What may be happening:** No doctor has published open times for the week you are viewing.
@@ -1014,6 +1147,18 @@ Administrators cannot join the video room.
 
 **What to do:** Return to **Forgot password?** and request a new link. Use the newest email.
 
+### Cannot mark a consultation as No-Show
+
+**What may be happening:** The consultation is not **Approved**, or the scheduled start time has not been reached yet.
+
+**What to do:** Wait until the start time has passed. Use **Complete Consultation** if the visit did take place. Use **Cancel Request** (administrators only) if the booking should be stopped before it starts.
+
+### MediMate AI is unavailable
+
+**What may be happening:** The assistant is temporarily offline, or you are inside the video consultation room (MediMate is hidden there).
+
+**What to do:** Leave the video room if you need MediMate, then try the button again shortly. Book a consultation if you need clinical advice. MediMate cannot diagnose or prescribe.
+
 ### Doctor cannot issue a prescription
 
 **What may be happening:** The consultation is not completed, the record is not **Final**, or no signature is on file.
@@ -1046,7 +1191,16 @@ No. You can book only times a doctor has published as **Available**.
 When the booking is **Approved**, from 10 minutes before the start time until the scheduled end time.
 
 **Can I cancel or reschedule my own booking?**  
-Not from the patient screens. Ask MBPHA administration. An administrator can cancel a pending or approved request.
+Yes, from **My Consultations**, while the booking is **Pending** or **Approved** and at least 24 hours remain before the appointment. Reschedule stays with the same doctor. After the cutoff, ask MBPHA administration. An administrator can still cancel a pending or approved request.
+
+**Why do I see other doctors’ hours on Availability?**  
+The weekly view is a shared calendar. Every approved doctor can see colleagues’ **Available** and **Booked** times so they can avoid overlapping consultations. You can add, edit, or delete only your own slots.
+
+**What does No-Show mean?**  
+An approved consultation that was not attended. A doctor or administrator can mark it after the start time. It is not the same as **Cancelled** or **Completed**. The time is released so it can be used again if it has not already ended.
+
+**What is MediMate AI?**  
+A patient-only assistant for general health information and help using this TeleHealth system. It is not a doctor. It cannot diagnose, prescribe, or replace a consultation.
 
 **Who approves my booking?**  
 An administrator. Doctors do not approve or reject requests.
@@ -1055,7 +1209,7 @@ An administrator. Doctors do not approve or reject requests.
 You receive an in-app notification. Check the bell and **My Consultations**. The system’s regular emails are password-reset and doctor-invitation messages.
 
 **What if I miss the consultation time?**  
-The join button becomes **Consultation Ended**. You cannot enter the room after the scheduled end. Contact MBPHA if you need a new booking.
+The join button becomes **Consultation Ended**. You cannot enter the room after the scheduled end. The doctor or an administrator may mark the visit as **No-Show**. Book a new time, or contact MBPHA, if you still need a consultation.
 
 **Can I download my record immediately after the call?**  
 Only after the doctor completes the consultation and the record is **Final**. A prescription download appears only if a prescription was issued.
@@ -1089,13 +1243,16 @@ Consultation times are shown in Papua New Guinea time.
 - Sign out when you finish, especially on a shared computer.
 - Patients cannot change their name or email after registration. Ask administration if a correction is required.
 - Bookings are requests until an administrator approves them. Do not treat **Pending** as a confirmed appointment.
+- Patients may cancel or reschedule a Pending or Approved booking at least 24 hours before the appointment. After that cutoff, ask administration.
 - Join a few minutes early. The room opens 10 minutes before the start time and closes at the scheduled end.
+- **MediMate AI** gives general information only. It is not an emergency service and it cannot diagnose or prescribe.
+- Doctors should check the shared availability calendar before publishing hours so they do not overlap a colleague’s consultations.
 - Upload only images that help the doctor understand your complaint. Use JPG or PNG files of 5 MB or less.
 - Doctors should upload a signature before they need to prescribe. A saved prescription cannot be edited.
 - Administrators must not use this system to conduct clinical consultations or to change clinical notes.
 - Notifications inside the system are the main way patients and doctors learn about approvals, completions, and prescriptions.
 - The Contact form is not a booking channel and must not be used for sensitive medical information.
-- This manual describes the system as it is implemented today. Features that are not in the live system — such as messaging, payments, laboratory results, or SMS alerts — are not available.
+- This manual describes the system as it is implemented today. Features that are not in the live system — such as a patient messaging inbox, payments, laboratory results, or SMS alerts — are not available.
 
 ---
 

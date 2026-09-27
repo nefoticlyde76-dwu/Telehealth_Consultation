@@ -1,9 +1,48 @@
 document.addEventListener("DOMContentLoaded", () => {
+  initializeAvailabilityFit();
   const root = document.querySelector("[data-mbpha-avail]");
   if (root instanceof HTMLElement) {
     initializeMbphaAvailability(root);
   }
 });
+
+function initializeAvailabilityFit() {
+  const roots = Array.from(document.querySelectorAll(".mbpha-avail"));
+  if (roots.length === 0) {
+    return;
+  }
+
+  const fit = () => {
+    roots.forEach((root) => {
+      if (root instanceof HTMLElement) {
+        fitAvailabilityCalendar(root);
+      }
+    });
+  };
+
+  fit();
+  window.addEventListener("resize", fit);
+}
+
+function fitAvailabilityCalendar(root) {
+  const cal = root.querySelector(".mbpha-avail__cal");
+  const scroller = root.querySelector(".mbpha-avail__scroller");
+  if (!(cal instanceof HTMLElement) || !(scroller instanceof HTMLElement)) {
+    return;
+  }
+
+  const rows = Math.max(
+    1,
+    Number.parseFloat(cal.style.getPropertyValue("--avail-rows"))
+      || Number.parseFloat(getComputedStyle(cal).getPropertyValue("--avail-rows"))
+      || 17
+  );
+  const head = cal.querySelector(".mbpha-avail__cal-head");
+  const headHeight = head instanceof HTMLElement ? head.getBoundingClientRect().height : 36;
+  const available = window.innerHeight - scroller.getBoundingClientRect().top - headHeight - 16;
+  const rowHeight = Math.max(20, Math.min(28, available / rows));
+  root.style.setProperty("--avail-row-h", rowHeight.toFixed(2) + "px");
+}
 
 function initializeMbphaAvailability(root) {
   const modalEl = document.getElementById("availEditorModal");
