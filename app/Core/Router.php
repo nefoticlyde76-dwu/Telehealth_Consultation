@@ -33,7 +33,11 @@ class Router
     {
         SecurityHeadersMiddleware::apply();
 
-        $requestMethod = $_SERVER['REQUEST_METHOD'];
+        $requestMethod = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+        // Crawlers and monitors use HEAD. Serve the same route as GET.
+        if ($requestMethod === 'HEAD') {
+            $requestMethod = 'GET';
+        }
         $requestUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
         $requestUri = is_string($requestUri) ? $requestUri : '/';
 
