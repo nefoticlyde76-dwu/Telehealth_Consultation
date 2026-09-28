@@ -24,7 +24,7 @@ class Controller
             Seo::applyResponseHeaders($layout, $data);
         }
         if (!headers_sent()) {
-            header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet');
+            header('X-Robots-Tag: noindex, nofollow');
         }
 
         extract($data);

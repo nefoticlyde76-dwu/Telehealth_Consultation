@@ -9,8 +9,8 @@
       : 'MBPHA TeleHealth Consultation System';
   ?>
   <title><?= \App\Helpers\Helper::escape($pageTitle) ?></title>
-  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
-  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
   <link rel="stylesheet" href="<?= \App\Helpers\Helper::asset('css/fonts.css') ?>">

@@ -43,7 +43,7 @@ class SecurityHeadersMiddleware implements Middleware
             'X-Content-Type-Options' => 'nosniff',
             'Referrer-Policy' => 'strict-origin-when-cross-origin',
             'X-Frame-Options' => 'DENY',
-            'X-Robots-Tag' => 'noindex, nofollow, noarchive, nosnippet',
+            'X-Robots-Tag' => 'noindex, nofollow',
             'Content-Security-Policy' => self::contentSecurityPolicy(),
         ];
 

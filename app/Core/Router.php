@@ -83,7 +83,7 @@ class Router
 
         http_response_code(404);
         if (!headers_sent()) {
-            header('X-Robots-Tag: noindex, nofollow, noarchive, nosnippet');
+            header('X-Robots-Tag: noindex, nofollow');
         }
         echo "404 Not Found";
     }
